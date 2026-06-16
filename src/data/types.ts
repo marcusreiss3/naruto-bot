@@ -105,7 +105,16 @@ export interface MissionDef {
   objectives: MissionObjectiveDef[];
   rewards: MissionRewards;
   // tipo controla o handler que roda a logica
-  type: "FETCH_CAT" | "BANDIT_FIGHT";
+  type:
+    | "FETCH_CAT"
+    | "BANDIT_FIGHT"
+    | "ESCORT"
+    | "CLEAN_VILLAGE"
+    | "PURSE_THIEF"
+    | "GENIN_COMEDY"
+    | "DANGO_RUSH"
+    | "ROOF_CLEANUP"
+    | "ARCHIVE_SCROLLS";
   data?: Record<string, unknown>;
 }
 

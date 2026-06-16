@@ -108,13 +108,15 @@ Mostra o cenário do canal. Em combate, exibe posições, NPCs, armas dropadas (
 ## 10. Setar missão via `/admin`
 
 ```text
-/admin missao adicionar usuario:@jogador missao:gato_perdido      # canal: Praça
-/admin missao adicionar usuario:@jogador missao:lider_bandidos    # canal: Floresta
+/admin missao adicionar usuario:@jogador missao:gato_perdido          # canal: Praça
+/admin missao adicionar usuario:@jogador missao:lider_bandidos        # canal: Centro Comercial
+/admin missao adicionar usuario:@jogador missao:escolta_comerciante   # canal: Rota Comercial de Konoha
 /admin missao concluir usuario:@jogador missao:gato_perdido
 ```
 
 - **Gato (rank D, Praça):** `/mapa` posiciona o gato; persiga com `/missoes mover destino:<célula>`. Captura é automática ao alcançar a célula do gato.
-- **Bandidos (rank C, Floresta):** `/missoes interagir mensagem:"..."` conversa com o líder (IA Groq ou fallback). Após até 3 trocas o combate começa contra o líder + capangas.
+- **Bandidos (rank C, Centro Comercial → Floresta):** `/interagir npc` conversa com o mercador e a criança para descobrir as pistas; depois vá à Floresta e use `/mapa` para enfrentar o líder + capangas.
+- **Escolta do Comerciante (rank C, Rota Comercial de Konoha → Deserto):** encontre o comerciante e fale com ele via `/interagir npc` (qualquer membro da party). Após ~3 interações um **tronco** bloqueia a estrada — movam-se até ele e o destruam em combate (ele tem vida, mas não ataca). O comerciante agradece e manda seguir ao **Deserto**; lá, use `/mapa` para liberar a conversa. Após ~3 ações um **bandido** (≈ 4 capangas juntos) embosca a caravana. Derrotado o bandido, mais 2 interações e o bot narra a chegada à rota comercial de Sunagakure — missão completa.
 
 ---
 

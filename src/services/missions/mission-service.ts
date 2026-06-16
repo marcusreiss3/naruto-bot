@@ -44,10 +44,20 @@ export async function getInstance(instanceId: string) {
 // Acha a missão de bandidos ativa do personagem (independe do canal — ela cruza
 // o centro comercial e a floresta).
 export async function getActiveBanditInstance(charId: string) {
+  return getActiveInstanceByType(charId, "BANDIT_FIGHT");
+}
+
+// Acha a missão de escolta ativa do personagem (cruza a rota de Konoha e o deserto).
+export async function getActiveEscortInstance(charId: string) {
+  return getActiveInstanceByType(charId, "ESCORT");
+}
+
+// Primeira missão ativa do personagem com o tipo dado (independe do canal).
+export async function getActiveInstanceByType(charId: string, type: MissionDef["type"]) {
   const instances = await getActiveMissions(charId);
   for (const inst of instances) {
     const def = getMission(inst.missionId);
-    if (def?.type === "BANDIT_FIGHT") return { inst, def };
+    if (def?.type === type) return { inst, def };
   }
   return null;
 }

@@ -9,7 +9,7 @@ export interface RenderEntity {
   cell: string;
   label: string; // 1-3 chars
   color: string; // cor do anel/preenchimento
-  kind?: "PLAYER" | "NPC" | "CAT";
+  kind?: "PLAYER" | "NPC" | "CAT" | "MARKER";
   imageUrl?: string; // aparência remota (jogador)
   imageFile?: string; // arquivo local em assets/ (NPC)
   badge?: string; // número no canto superior direito (diferencia homônimos)
@@ -136,7 +136,7 @@ export const MapRenderer = {
     const rows = scenario.rows;
     const cols = scenario.cols;
     // entidades com stats entram no painel inferior
-    const roster = state.entities.filter((e) => e.kind !== "CAT" && e.hp !== undefined);
+    const roster = state.entities.filter((e) => e.kind !== "CAT" && e.kind !== "MARKER" && e.hp !== undefined);
     const ROW_H = 26;
     const panelH = roster.length ? 14 + roster.length * ROW_H + 8 : 0;
     const width = PAD_LEFT + cols * CELLW + 20;
@@ -260,7 +260,7 @@ export const MapRenderer = {
     // (mortos saem do mapa, ficam só no painel)
     const groups = new Map<string, RenderEntity[]>();
     for (const e of state.entities) {
-      if (e.kind === "CAT" || isDead(e)) continue;
+      if (e.kind === "CAT" || e.kind === "MARKER" || isDead(e)) continue;
       const arr = groups.get(e.cell) ?? [];
       arr.push(e);
       groups.set(e.cell, arr);
@@ -277,7 +277,7 @@ export const MapRenderer = {
     const tokenComposites: sharp.OverlayOptions[] = [];
     const entitiesWithToken = new Set<RenderEntity>();
     for (const e of state.entities) {
-      if (e.kind === "CAT" || isDead(e)) continue;
+      if (e.kind === "CAT" || e.kind === "MARKER" || isDead(e)) continue;
       if (!e.imageUrl && !e.imageFile) continue;
       const pos = cellTopLeft(e.cell);
       if (!pos) continue;
@@ -301,6 +301,12 @@ export const MapRenderer = {
     for (const e of state.entities) {
       const pos = cellTopLeft(e.cell);
       if (!pos) continue;
+      if (e.kind === "MARKER") {
+        const cx = pos.x + CELLW / 2;
+        const cy = pos.y + CELLH / 2;
+        top.push(`<text x="${cx}" y="${cy + 8}" font-size="26" text-anchor="middle">${esc(e.label)}</text>`);
+        continue;
+      }
       if (e.kind === "CAT") {
         const cx = pos.x + CELLW / 2;
         const cy = pos.y + CELLH / 2;

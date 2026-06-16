@@ -7,8 +7,11 @@ import { startCombat, getActiveSession } from "../combat/combat-engine.js";
 import { NpcAiService } from "../npc-ai/npc-ai-service.js";
 import { getPersona } from "../npc-ai/personas.js";
 import { sendAsPersona, formatPersonaLines } from "../discord/persona-webhook.js";
-import { partyMemberIds } from "../party/party-service.js";
 import { resolveBandit, type BanditState } from "./investigation.js";
+import { gatherPartyPlayers, cacheAttrs } from "./combat-party.js";
+import { onEscortCombatWon } from "./escort.js";
+import { onPurseTheftCombatWon } from "./purse-thief.js";
+import { onRoofCleanupCombatWon } from "./roof-cleanup.js";
 import {
   completeMission,
   getInstance,
@@ -218,51 +221,16 @@ async function runBanditTurn(o: BanditTurnOpts): Promise<void> {
 
     const guildId = o.guildId;
     // jogador que iniciou + membros da party (entram juntos no combate)
-    const players = [
-      {
-        charId: o.charId,
-        name: o.charName,
-        hpCurrent: o.hpCurrent,
-        hpMax: o.hpMax,
-        chakra: o.chakra,
-        energia: o.energia,
-        jutsuIds: o.jutsuIds,
-      },
-    ];
-    const attrsById = new Map<string, Record<string, number>>([[o.charId, o.attrs]]);
-    const caller = await prisma.userCharacter.findUnique({ where: { id: o.charId }, select: { discordId: true } });
-    if (caller) {
-      const ids = await partyMemberIds(guildId, caller.discordId);
-      for (const did of ids) {
-        if (did === caller.discordId) continue;
-        // garante o char do membro (cria se ainda não tiver), buscando o username
-        let username = did;
-        try {
-          const u = await o.channel?.client.users.fetch(did);
-          if (u) username = u.username;
-        } catch {
-          /* usa o id como nome se não achar */
-        }
-        const uc = await getOrCreateCharacter(did, guildId, username);
-        if (!uc.attributes || !uc.resources) continue;
-        players.push({
-          charId: uc.id,
-          name: uc.name,
-          hpCurrent: uc.hpCurrent,
-          hpMax: uc.hpMax,
-          chakra: uc.resources.chakra,
-          energia: uc.resources.energia,
-          jutsuIds: uc.jutsus.map((j) => j.jutsuId),
-        });
-        attrsById.set(uc.id, {
-          ninjutsu: uc.attributes.ninjutsu,
-          iryo: uc.attributes.iryo,
-          taijutsu: uc.attributes.taijutsu,
-          genjutsu: uc.attributes.genjutsu,
-          kenjutsu: uc.attributes.kenjutsu,
-        });
-      }
-    }
+    const { players, attrsById } = await gatherPartyPlayers(o.channel, guildId, {
+      charId: o.charId,
+      name: o.charName,
+      hpCurrent: o.hpCurrent,
+      hpMax: o.hpMax,
+      chakra: o.chakra,
+      energia: o.energia,
+      jutsuIds: o.jutsuIds,
+      attrs: o.attrs,
+    });
 
     const session = await startCombat({
       channelId: o.channelId,
@@ -272,17 +240,7 @@ async function runBanditTurn(o: BanditTurnOpts): Promise<void> {
       npcs,
       missionInstanceId: instanceId,
     });
-    // cacheia atributos de cada jogador
-    for (const p of session.participants) {
-      if (p.isNpc || !p.charId) continue;
-      const a = attrsById.get(p.charId);
-      if (a) {
-        await prisma.combatParticipant.update({
-          where: { id: p.id },
-          data: { flagsJson: JSON.stringify({ attrs: a }) },
-        });
-      }
-    }
+    await cacheAttrs(session, attrsById);
     clearBanditTimeout(o.channelId, o.charId); // combate começou
     await o.reply(
       `${fala}⚔️ **O combate começou!** ${thugs} capangas + o líder. ${players.length} ninja(s) na luta. Use \`/mapa\`.`,
@@ -311,15 +269,32 @@ export async function onCombatEnded(
   const npcsAlive = fresh.filter((p) => p.isNpc && p.hpCurrent > 0).length;
   const playersAlive = fresh.filter((p) => !p.isNpc && p.hpCurrent > 0).length;
 
-  if (npcsAlive === 0 && playersAlive > 0) {
-    await markObjective(inst.id, "derrotar_lider");
-    const result = await completeMission(inst.charId, inst.missionId);
-    if (result) {
-      const items = result.rewards.items?.map((i) => i.name).join(", ");
-      await interaction.followUp(
-        `✅ **Missão concluída: ${def.name}!**\nRecompensas: ${result.rewards.xp} XP, ${result.rewards.ryo} ryo${items ? `, ${items}` : ""}.`,
-      );
-    }
+  if (!(npcsAlive === 0 && playersAlive > 0)) return;
+
+  // escolta: cada combate apenas avança uma etapa (a missão conclui na narração final)
+  if (def.type === "ESCORT") {
+    await onEscortCombatWon(interaction, inst.id);
+    return;
+  }
+
+  if (def.type === "PURSE_THIEF") {
+    await onPurseTheftCombatWon(interaction, inst.id);
+    return;
+  }
+
+  if (def.type === "ROOF_CLEANUP") {
+    await onRoofCleanupCombatWon(interaction, inst.id);
+    return;
+  }
+
+  // bandidos: derrotar o líder + capangas conclui a missão
+  await markObjective(inst.id, "derrotar_lider");
+  const result = await completeMission(inst.charId, inst.missionId);
+  if (result) {
+    const items = result.rewards.items?.map((i) => i.name).join(", ");
+    await interaction.followUp(
+      `✅ **Missão concluída: ${def.name}!**\nRecompensas: ${result.rewards.xp} XP, ${result.rewards.ryo} ryo${items ? `, ${items}` : ""}.`,
+    );
   }
 }
 

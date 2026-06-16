@@ -6,6 +6,11 @@ import { disconnect } from "./db/client.js";
 import { runBanditMessage } from "./services/missions/mission-runtime.js";
 import { handleKidMessage } from "./services/missions/kid-dialogue.js";
 import { continueInvestigationMessage } from "./services/missions/investigation.js";
+import { continueEscortMessage } from "./services/missions/escort.js";
+import { continueCleanVillageMessage } from "./services/missions/clean-village.js";
+import { continuePurseTheftMessage } from "./services/missions/purse-thief.js";
+import { continueGeninComedyMessage } from "./services/missions/genin-comedy.js";
+import { continueDangoRushMessage } from "./services/missions/dango-rush.js";
 
 const client = new Client({
   intents: [
@@ -24,7 +29,12 @@ client.on(Events.MessageCreate, async (message) => {
   if (message.author.bot) return;
   try {
     if (await handleKidMessage(message)) return;
+    if (await continueCleanVillageMessage(message)) return;
+    if (await continuePurseTheftMessage(message)) return;
+    if (await continueGeninComedyMessage(message)) return;
+    if (await continueDangoRushMessage(message)) return;
     if (await continueInvestigationMessage(message)) return;
+    if (await continueEscortMessage(message)) return;
     await runBanditMessage(message);
   } catch (err) {
     log.error("Erro ao processar mensagem do diálogo:", err);

@@ -50,6 +50,8 @@ import { MapRenderer } from "../services/maps/renderer.js";
 import { buildSessionEntities, condenseLogs } from "../services/combat/combat-render.js";
 import { renderCatMission } from "../services/missions/cat-render.js";
 import { startKidDialogue } from "../services/missions/kid-dialogue.js";
+import { moverCleanVillage } from "../services/missions/clean-village.js";
+import { moverRoofCleanup } from "../services/missions/roof-cleanup.js";
 
 // Renderiza o mapa do combate + log enxuto num embed e envia.
 async function sendCombatView(
@@ -232,6 +234,10 @@ export async function mover(interaction: ChatInputCommandInteraction): Promise<v
 
   // sem combate ativo: pode ser a missao do gato neste canal
   if (!session || !me) {
+    const cleanHandled = await moverCleanVillage(interaction, dest);
+    if (cleanHandled) return;
+    const roofHandled = await moverRoofCleanup(interaction, dest);
+    if (roofHandled) return;
     const handled = await moverMissaoGato(interaction, dest);
     if (handled) return;
     await interaction.reply({ content: "❌ Você não está em combate aqui.", ephemeral: true });

@@ -27,6 +27,11 @@ export async function runNpcTurn(sessionId: string, npcId: string): Promise<stri
     .map((id) => getAbility(id))
     .filter((a): a is NonNullable<ReturnType<typeof getAbility>> => Boolean(a) && Boolean(a!.baseDamage));
 
+  // inimigo inanimado (ex: tronco): sem habilidades de dano, não se move nem ataca
+  if (abilities.length === 0) {
+    return [`🪵 ${npc.name} permanece imóvel.`];
+  }
+
   const inRange = (cell: string) =>
     abilities.find((a) => {
       const max = a.shape === "MELEE" ? Math.max(1, a.range) : a.range;

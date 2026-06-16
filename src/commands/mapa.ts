@@ -24,6 +24,13 @@ import {
   type BanditState,
 } from "../services/missions/investigation.js";
 import { triggerBanditForest } from "../services/missions/mission-runtime.js";
+import { resolveEscort, escortMapHandle } from "../services/missions/escort.js";
+import { cleanVillageMapHandle, resolveCleanVillage } from "../services/missions/clean-village.js";
+import { purseTheftMapHandle, resolvePurseTheft } from "../services/missions/purse-thief.js";
+import { geninComedyMapHandle, resolveGeninComedy } from "../services/missions/genin-comedy.js";
+import { dangoRushMapHandle, resolveDangoRush } from "../services/missions/dango-rush.js";
+import { resolveRoofCleanup, roofCleanupMapHandle } from "../services/missions/roof-cleanup.js";
+import { archiveScrollsMapHandle, resolveArchiveScrolls } from "../services/missions/archive-scrolls.js";
 
 export const mapa: Command = {
   data: new SlashCommandBuilder().setName("mapa").setDescription("Mostra o mapa do cenário deste canal"),
@@ -106,6 +113,55 @@ export const mapa: Command = {
           missionNote = `\n🎯 **${banditCtx.def.name}** — descubra as pistas no **Centro Comercial** antes de vir à Floresta.`;
         }
       }
+    }
+
+    // missão de escolta (rota de Konoha -> deserto -> Sunagakure)
+    const escortCtx = await resolveEscort(interaction.user.id, guildId);
+    if (escortCtx && !session) {
+      const note = await escortMapHandle(interaction, escortCtx, channelId, entities);
+      if (note) missionNote = note;
+    }
+
+    // missao de limpeza (Praca da Folha + Centro Comercial)
+    const cleanCtx = await resolveCleanVillage(interaction.user.id, guildId);
+    if (cleanCtx && !session) {
+      const note = await cleanVillageMapHandle(interaction, cleanCtx, entities);
+      if (note) missionNote += note;
+    }
+
+    // missao do ladrao de bolsas (Praca da Folha -> Beco de Konoha -> Praca)
+    const purseCtx = await resolvePurseTheft(interaction.user.id, guildId);
+    if (purseCtx && !session) {
+      const note = await purseTheftMapHandle(interaction, purseCtx, entities);
+      if (note) missionNote += note;
+    }
+
+    // missao da peca de comedia na Academia Genin
+    const geninCtx = await resolveGeninComedy(interaction.user.id, guildId);
+    if (geninCtx && !session) {
+      const note = await geninComedyMapHandle(interaction, geninCtx, entities);
+      if (note) missionNote += note;
+    }
+
+    // missao dos bolinhos no horario de pico (Centro Comercial)
+    const dangoCtx = await resolveDangoRush(interaction.user.id, guildId);
+    if (dangoCtx && !session) {
+      const note = await dangoRushMapHandle(interaction, dangoCtx, entities);
+      if (note) missionNote += note;
+    }
+
+    // missao de limpar o telhado da Academia Genin
+    const roofCtx = await resolveRoofCleanup(interaction.user.id, guildId);
+    if (roofCtx && !session) {
+      const note = await roofCleanupMapHandle(interaction, roofCtx, entities);
+      if (note) missionNote += note;
+    }
+
+    // missao de organizar pergaminhos na Mansao do Hokage
+    const archiveCtx = await resolveArchiveScrolls(interaction.user.id, guildId);
+    if (archiveCtx && !session) {
+      const note = await archiveScrollsMapHandle(interaction, archiveCtx, entities);
+      if (note) missionNote += note;
     }
 
     const png = await MapRenderer.renderScenario({ scenario, round, entities, drops });
