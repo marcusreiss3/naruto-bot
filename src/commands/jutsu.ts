@@ -1,0 +1,105 @@
+import {
+  SlashCommandBuilder,
+  SlashCommandSubcommandBuilder,
+  type AutocompleteInteraction,
+  type ChatInputCommandInteraction,
+} from "discord.js";
+import type { Command } from "./types.js";
+import { prisma } from "../db/client.js";
+import { ALL_ABILITIES } from "../data/index.js";
+import { getOrCreateCharacter } from "../services/characters/character-service.js";
+import {
+  getActiveSession,
+  numberSameNames,
+  displayName,
+  type SessionFull,
+} from "../services/combat/combat-engine.js";
+import { usar } from "./combate.js";
+
+// subcomando -> categoria de habilidade
+const CAT_BY_SUB: Record<string, string> = {
+  ninjutsu: "NINJUTSU",
+  taijutsu: "TAIJUTSU",
+  kenjutsu: "KENJUTSU",
+  iryo: "IRYO",
+  genjutsu: "GENJUTSU",
+  cla: "CLA",
+};
+
+const addCatSub = (name: string, label: string) => (s: SlashCommandSubcommandBuilder) =>
+  s
+    .setName(name)
+    .setDescription(`Usa um jutsu de ${label}`)
+    .addStringOption((o) =>
+      o.setName("habilidade").setDescription("Jutsu (comece a digitar)").setRequired(true).setAutocomplete(true),
+    )
+    .addStringOption((o) =>
+      o.setName("alvo").setDescription("Alvo (escolha pelo nome) ou célula (ex: C4)").setRequired(false).setAutocomplete(true),
+    );
+
+export const jutsu: Command = {
+  data: new SlashCommandBuilder()
+    .setName("jutsu")
+    .setDescription("Usa uma habilidade no combate")
+    .addSubcommand(addCatSub("ninjutsu", "Ninjutsu"))
+    .addSubcommand(addCatSub("taijutsu", "Taijutsu"))
+    .addSubcommand(addCatSub("kenjutsu", "Kenjutsu"))
+    .addSubcommand(addCatSub("iryo", "Iryō (médico)"))
+    .addSubcommand(addCatSub("genjutsu", "Genjutsu"))
+    .addSubcommand(addCatSub("cla", "Clã")),
+
+  execute(interaction: ChatInputCommandInteraction) {
+    return usar(interaction);
+  },
+
+  async autocomplete(interaction: AutocompleteInteraction) {
+    const sub = interaction.options.getSubcommand();
+    const focusedOpt = interaction.options.getFocused(true);
+    const focused = focusedOpt.value.toLowerCase();
+
+    // ----- alvo: participantes vivos, numerados -----
+    if (focusedOpt.name === "alvo") {
+      const session = await getActiveSession(interaction.channelId);
+      if (!session) {
+        await interaction.respond([]);
+        return;
+      }
+      const nums = numberSameNames(session.participants);
+      const meParticipant = await getMyParticipant(interaction, session);
+      const choices = session.participants
+        .filter((p) => p.hpCurrent > 0)
+        .map((p) => {
+          const enemy = meParticipant ? p.teamId !== meParticipant.teamId : p.isNpc;
+          const label = `${enemy ? "🔴" : "🔵"} ${displayName(p.name, nums.get(p.id))}`;
+          return { name: label.slice(0, 100), value: p.id };
+        })
+        .filter((c) => c.name.toLowerCase().includes(focused))
+        .slice(0, 25);
+      await interaction.respond(choices);
+      return;
+    }
+
+    // ----- habilidade: jutsus possuídos, filtrados pela categoria do subcomando -----
+    const cat = CAT_BY_SUB[sub];
+    const guildId = interaction.guildId ?? "global";
+    const char = await getOrCreateCharacter(interaction.user.id, guildId, interaction.user.username);
+    const ownedIds = char.jutsus.map((j) => j.jutsuId);
+    const choices = ALL_ABILITIES.filter((a) => ownedIds.includes(a.id) && (!cat || a.category === cat))
+      .filter((a) => a.name.toLowerCase().includes(focused) || a.id.includes(focused))
+      .slice(0, 25)
+      .map((a) => ({ name: a.name.slice(0, 100), value: a.id }));
+    await interaction.respond(choices);
+  },
+};
+
+async function getMyParticipant(
+  interaction: AutocompleteInteraction,
+  session: SessionFull,
+): Promise<SessionFull["participants"][number] | null> {
+  const char = await prisma.userCharacter.findFirst({
+    where: { discordId: interaction.user.id, guildId: interaction.guildId ?? "global" },
+    select: { id: true },
+  });
+  if (!char) return null;
+  return session.participants.find((p) => p.charId === char.id) ?? null;
+}

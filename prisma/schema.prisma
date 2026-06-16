@@ -1,0 +1,265 @@
+// Prisma schema - SQLite para dev, troque o provider/DATABASE_URL p/ Postgres em prod.
+// SQLite nao suporta enum nativo no Prisma -> usamos String + tipos no TS (src/config/enums.ts).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model UserCharacter {
+  id              String   @id @default(cuid())
+  discordId       String
+  guildId         String
+  name            String
+  level           Int      @default(1)
+  xp              Int      @default(0)
+  ryo             Int      @default(0)
+  attributePoints Int      @default(0)
+  hpCurrent       Int      @default(100)
+  hpMax           Int      @default(100)
+  // contador de evolucoes de maestria liberadas (1 a cada 15 niveis)
+  masteryPoints   Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  attributes CharacterAttributes?
+  resources  CharacterResourceState?
+  mastery    CharacterMastery?
+  clan       CharacterClan?
+  elements   CharacterElement[]
+  jutsus     CharacterJutsu[]
+  missions   MissionInstance[]
+  inventory  InventoryItem[]
+
+  @@unique([discordId, guildId])
+  @@index([guildId])
+}
+
+model CharacterAttributes {
+  id        String        @id @default(cuid())
+  character UserCharacter @relation(fields: [charId], references: [id], onDelete: Cascade)
+  charId    String        @unique
+  ninjutsu  Int           @default(1)
+  iryo      Int           @default(1)
+  taijutsu  Int           @default(1)
+  genjutsu  Int           @default(1)
+  kenjutsu  Int           @default(1)
+}
+
+model CharacterResourceState {
+  id        String        @id @default(cuid())
+  character UserCharacter @relation(fields: [charId], references: [id], onDelete: Cascade)
+  charId    String        @unique
+  chakra    Float         @default(100)
+  energia   Float         @default(100)
+}
+
+model CharacterMastery {
+  id             String        @id @default(cuid())
+  character      UserCharacter @relation(fields: [charId], references: [id], onDelete: Cascade)
+  charId         String        @unique
+  chakraMastery  String        @default("BASICO") // BASICO | CONTROLADO | MESTRE
+  energiaMastery String        @default("BASICO")
+}
+
+model CharacterElement {
+  id        String        @id @default(cuid())
+  character UserCharacter @relation(fields: [charId], references: [id], onDelete: Cascade)
+  charId    String
+  element   String // FOGO | AGUA | VENTO | TERRA | RAIO
+
+  @@unique([charId, element])
+}
+
+model CharacterClan {
+  id        String        @id @default(cuid())
+  character UserCharacter @relation(fields: [charId], references: [id], onDelete: Cascade)
+  charId    String        @unique
+  clanId    String
+}
+
+model CharacterJutsu {
+  id        String        @id @default(cuid())
+  character UserCharacter @relation(fields: [charId], references: [id], onDelete: Cascade)
+  charId    String
+  jutsuId   String
+
+  @@unique([charId, jutsuId])
+}
+
+model InventoryItem {
+  id        String        @id @default(cuid())
+  character UserCharacter @relation(fields: [charId], references: [id], onDelete: Cascade)
+  charId    String
+  itemId    String
+  name      String
+  qty       Int           @default(1)
+}
+
+// ---------------- Combate ----------------
+
+model CombatSession {
+  id            String   @id @default(cuid())
+  channelId     String
+  guildId       String
+  scenarioId    String
+  status        String   @default("ACTIVE") // ACTIVE | ENDED
+  round         Int      @default(1)
+  activeIndex   Int      @default(0)
+  turnOrderJson String   @default("[]") // array de participantId
+  missionInstanceId String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  participants CombatParticipant[]
+  drops        DroppedItem[]
+
+  @@index([channelId, status])
+}
+
+model CombatParticipant {
+  id           String        @id @default(cuid())
+  session      CombatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId    String
+  charId       String? // null = NPC
+  isNpc        Boolean       @default(false)
+  npcTemplate  String? // id do template de NPC
+  name         String
+  teamId       String        @default("A")
+  cell         String        @default("A1")
+  hpCurrent    Int
+  hpMax        Int
+  chakra       Float         @default(100)
+  energia      Float         @default(100)
+  actedCommon  Boolean       @default(false)
+  actedBonus   Boolean       @default(false)
+  actedMove    Boolean       @default(false)
+  // controle de corpo (Yamanaka): id do participante que controla este
+  controlledById String?
+  // flags voláteis: waterWalk, height, weaponDropped, etc.
+  flagsJson    String        @default("{}")
+  jutsuIdsJson String        @default("[]") // jutsus disponiveis (snapshot p/ NPC)
+  effects      EffectInstance[]
+
+  @@index([sessionId])
+}
+
+model EffectInstance {
+  id           String            @id @default(cuid())
+  participant  CombatParticipant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  participantId String
+  effectId     String // BURN | POISON | BLEED | STUN | SLOW | DISARM | CONFUSION | ROOT | ...
+  name         String
+  stacks       Int               @default(1)
+  duration     Int               @default(1)
+  sourceId     String? // participantId fonte
+  dataJson     String            @default("{}")
+}
+
+model DroppedItem {
+  id        String        @id @default(cuid())
+  session   CombatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId String
+  cell      String
+  itemId    String
+  name      String
+  kind      String        @default("WEAPON") // WEAPON | ITEM
+  ownerCharId String?
+}
+
+// ScenarioState: overrides persistentes por canal (opcional)
+model ScenarioState {
+  id         String @id @default(cuid())
+  channelId  String @unique
+  scenarioId String
+  dataJson   String @default("{}")
+}
+
+// ---------------- Missoes ----------------
+
+model MissionDefinition {
+  id          String @id
+  name        String
+  rank        String // D | C | B | A
+  description String
+  channelId   String?
+  dataJson    String @default("{}")
+}
+
+model MissionInstance {
+  id           String        @id @default(cuid())
+  character    UserCharacter @relation(fields: [charId], references: [id], onDelete: Cascade)
+  charId       String
+  missionId    String
+  status       String        @default("ACTIVE") // ACTIVE | COMPLETED | FAILED
+  stateJson    String        @default("{}")
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  objectives MissionObjectiveState[]
+
+  @@index([charId, status])
+}
+
+model MissionObjectiveState {
+  id          String          @id @default(cuid())
+  instance    MissionInstance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  instanceId  String
+  objectiveId String
+  done        Boolean         @default(false)
+  progress    Int             @default(0)
+}
+
+model NpcState {
+  id         String @id @default(cuid())
+  templateId String
+  name       String
+  hpCurrent  Int
+  dataJson   String @default("{}")
+}
+
+// ---------------- Party ----------------
+model Party {
+  id        String        @id @default(cuid())
+  guildId   String
+  leaderId  String // discordId do líder
+  createdAt DateTime      @default(now())
+  members   PartyMember[]
+
+  @@index([guildId])
+}
+
+model PartyMember {
+  id        String @id @default(cuid())
+  party     Party  @relation(fields: [partyId], references: [id], onDelete: Cascade)
+  partyId   String
+  guildId   String
+  discordId String
+
+  @@unique([guildId, discordId]) // 1 party por usuário por servidor
+  @@index([partyId])
+}
+
+// ---------------- Aparência ----------------
+// Reserva de personagem (aparência) por servidor.
+// characterKey = nome normalizado/token-sorted p/ dedup entre variações de imagem.
+model CharacterAppearance {
+  id            String   @id @default(cuid())
+  discordId     String
+  guildId       String
+  characterKey  String // normalizado p/ unicidade
+  characterName String // nome de exibição identificado pela IA
+  imageUrl      String
+  imageHash     String? // hash perceptual (dHash) p/ dedup de OCs
+  confidence    Float    @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([discordId, guildId]) // 1 aparência por usuário por servidor
+  @@unique([guildId, characterKey]) // 1 dono por personagem por servidor
+  @@index([guildId])
+}
