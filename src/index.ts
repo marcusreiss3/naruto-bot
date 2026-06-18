@@ -11,6 +11,12 @@ import { continueCleanVillageMessage } from "./services/missions/clean-village.j
 import { continuePurseTheftMessage } from "./services/missions/purse-thief.js";
 import { continueGeninComedyMessage } from "./services/missions/genin-comedy.js";
 import { continueDangoRushMessage } from "./services/missions/dango-rush.js";
+import { continueMedicinalHerbsMessage } from "./services/missions/medicinal-herbs.js";
+import { continueFestivalPrepMessage } from "./services/missions/festival-prep.js";
+import { continueNinkenTrackingMessage } from "./services/missions/ninken-tracking.js";
+import { continueMarketMediationMessage } from "./services/missions/market-mediation.js";
+import { continueDummySubstitutionMessage } from "./services/missions/dummy-substitution.js";
+import { continueWaspNestsMessage } from "./services/missions/wasp-nests.js";
 
 const client = new Client({
   intents: [
@@ -33,6 +39,12 @@ client.on(Events.MessageCreate, async (message) => {
     if (await continuePurseTheftMessage(message)) return;
     if (await continueGeninComedyMessage(message)) return;
     if (await continueDangoRushMessage(message)) return;
+    if (await continueMedicinalHerbsMessage(message)) return;
+    if (await continueFestivalPrepMessage(message)) return;
+    if (await continueNinkenTrackingMessage(message)) return;
+    if (await continueMarketMediationMessage(message)) return;
+    if (await continueWaspNestsMessage(message)) return;
+    if (await continueDummySubstitutionMessage(message)) return;
     if (await continueInvestigationMessage(message)) return;
     if (await continueEscortMessage(message)) return;
     await runBanditMessage(message);

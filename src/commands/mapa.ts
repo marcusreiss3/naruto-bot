@@ -31,6 +31,12 @@ import { geninComedyMapHandle, resolveGeninComedy } from "../services/missions/g
 import { dangoRushMapHandle, resolveDangoRush } from "../services/missions/dango-rush.js";
 import { resolveRoofCleanup, roofCleanupMapHandle } from "../services/missions/roof-cleanup.js";
 import { archiveScrollsMapHandle, resolveArchiveScrolls } from "../services/missions/archive-scrolls.js";
+import { medicinalHerbsMapHandle, resolveMedicinalHerbs } from "../services/missions/medicinal-herbs.js";
+import { festivalPrepMapHandle, resolveFestivalPrep } from "../services/missions/festival-prep.js";
+import { ninkenTrackingMapHandle, resolveNinkenTracking } from "../services/missions/ninken-tracking.js";
+import { marketMediationMapHandle, resolveMarketMediation } from "../services/missions/market-mediation.js";
+import { dummySubstitutionMapHandle, resolveDummySubstitution } from "../services/missions/dummy-substitution.js";
+import { resolveWaspNests, waspNestsMapHandle } from "../services/missions/wasp-nests.js";
 
 export const mapa: Command = {
   data: new SlashCommandBuilder().setName("mapa").setDescription("Mostra o mapa do cenário deste canal"),
@@ -161,6 +167,48 @@ export const mapa: Command = {
     const archiveCtx = await resolveArchiveScrolls(interaction.user.id, guildId);
     if (archiveCtx && !session) {
       const note = await archiveScrollsMapHandle(interaction, archiveCtx, entities);
+      if (note) missionNote += note;
+    }
+
+    // missao de ervas medicinais (Hospital de Konoha -> Floresta -> Hospital)
+    const herbsCtx = await resolveMedicinalHerbs(interaction.user.id, guildId);
+    if (herbsCtx && !session) {
+      const note = await medicinalHerbsMapHandle(interaction, herbsCtx, entities);
+      if (note) missionNote += note;
+    }
+
+    // missao de preparacao do festival da vila (Centro Comercial)
+    const festivalCtx = await resolveFestivalPrep(interaction.user.id, guildId);
+    if (festivalCtx && !session) {
+      const note = await festivalPrepMapHandle(interaction, festivalCtx, entities);
+      if (note) missionNote += note;
+    }
+
+    // missao do ninken em treinamento (Rota Comercial de Konoha -> Floresta -> Rota)
+    const ninkenCtx = await resolveNinkenTracking(interaction.user.id, guildId);
+    if (ninkenCtx && !session) {
+      const note = await ninkenTrackingMapHandle(interaction, ninkenCtx, entities);
+      if (note) missionNote += note;
+    }
+
+    // missao de mediacao entre vendedores no Centro Comercial
+    const marketCtx = await resolveMarketMediation(interaction.user.id, guildId);
+    if (marketCtx && !session) {
+      const note = await marketMediationMapHandle(interaction, marketCtx, entities);
+      if (note) missionNote += note;
+    }
+
+    // missao de treino de substituicao com bonecos danificados
+    const dummyCtx = await resolveDummySubstitution(interaction.user.id, guildId);
+    if (dummyCtx && !session) {
+      const note = await dummySubstitutionMapHandle(interaction, dummyCtx, entities);
+      if (note) missionNote += note;
+    }
+
+    // missao de remover ninhos de vespas perto da Academia
+    const waspCtx = await resolveWaspNests(interaction.user.id, guildId);
+    if (waspCtx && !session) {
+      const note = await waspNestsMapHandle(interaction, waspCtx, entities);
       if (note) missionNote += note;
     }
 

@@ -54,6 +54,14 @@ export const NPCS: NpcTemplate[] = [
     abilityIds: ["pombo_bicada"],
     image: "enemies/roof-pigeon.png",
   },
+  {
+    id: "wasp_swarm",
+    name: "Enxame de Vespas",
+    hpMax: 38,
+    attributes: { taijutsu: 4 },
+    abilityIds: ["vespa_ferroada"],
+    image: "enemies/wasp-swarm.png",
+  },
 ];
 
 const NPC_MAP = new Map<string, NpcTemplate>(NPCS.map((n) => [n.id, n]));

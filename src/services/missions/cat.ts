@@ -1,4 +1,5 @@
 import type { ScenarioDef } from "../../data/types.js";
+import type { RenderEntity } from "../maps/renderer.js";
 import { allCells, parseCell, toCell, distance, type Coord } from "../../utils/grid.js";
 import { pick, randInt, chance } from "../../utils/random.js";
 
@@ -14,6 +15,14 @@ export interface CatState {
   catCell: string;
   playerCell: string;
   turns: number;
+}
+
+interface CatPlayer {
+  discordId: string;
+  name: string;
+  hpCurrent: number;
+  hpMax: number;
+  resources?: { chakra: number; energia: number } | null;
 }
 
 function validCells(scenario: ScenarioDef): string[] {
@@ -113,4 +122,34 @@ export function catMissionStep(
   next.catCell = catFlee(scenario, state.catCell, playerDest, moveSteps);
   logs.push(`🐱 O gato se moveu para ${next.catCell}.`);
   return { state: next, captured: false, logs };
+}
+
+// Renderiza o mapa da missao do gato: jogador com aparencia + gato.
+export async function renderCatMission(
+  scenario: ScenarioDef,
+  state: CatState,
+  player: CatPlayer,
+  guildId: string,
+): Promise<Buffer> {
+  const [{ getAppearance }, { MapRenderer }] = await Promise.all([
+    import("../appearance/appearance-service.js"),
+    import("../maps/renderer.js"),
+  ]);
+  const entities: RenderEntity[] = [];
+  const p: RenderEntity = {
+    cell: state.playerCell,
+    label: player.name.slice(0, 3),
+    name: player.name,
+    color: "#3498db",
+    kind: "PLAYER",
+    hp: player.hpCurrent,
+    hpMax: player.hpMax,
+    chakra: player.resources?.chakra,
+    energia: player.resources?.energia,
+  };
+  const ap = await getAppearance(player.discordId, guildId);
+  if (ap) p.imageUrl = ap.imageUrl;
+  entities.push(p);
+  if (state.catCell) entities.push({ cell: state.catCell, label: "\u{1F431}", color: "#ffffff", kind: "CAT" });
+  return MapRenderer.renderScenario({ scenario, entities });
 }

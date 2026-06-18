@@ -10,6 +10,7 @@ export const DESERTO_CHANNEL_ID = "1516428050063954152";
 export const BECO_KONOHA_CHANNEL_ID = "1516452197976772679";
 export const ACADEMIA_GENIN_CHANNEL_ID = "1516456751099285564";
 export const MANSAO_HOKAGE_CHANNEL_ID = "1516470677962494084";
+export const HOSPITAL_KONOHA_CHANNEL_ID = "1516825458765987980";
 
 export const SCENARIOS: ScenarioDef[] = [
   {
@@ -138,6 +139,20 @@ export const SCENARIOS: ScenarioDef[] = [
     cells: {
       obstacles: ["A1", "A10", "F1", "F10", "B5", "C5", "D5", "E5"],
       height: ["A3", "A4", "A7", "A8"],
+    },
+  },
+  {
+    id: "hospital_konoha",
+    name: "Hospital de Konoha",
+    channelId: HOSPITAL_KONOHA_CHANNEL_ID,
+    rows: 6,
+    cols: 10,
+    description: "Ala movimentada do hospital, com ninjas medicos preparando remedios e curativos.",
+    terrain: "grass",
+    image: "hospital-konoha.png",
+    cells: {
+      obstacles: ["A1", "A10", "F1", "F10", "C5", "D5"],
+      height: ["A4", "A5", "A6", "A7"],
     },
   },
 ];

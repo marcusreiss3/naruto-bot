@@ -12,6 +12,7 @@ import { gatherPartyPlayers, cacheAttrs } from "./combat-party.js";
 import { onEscortCombatWon } from "./escort.js";
 import { onPurseTheftCombatWon } from "./purse-thief.js";
 import { onRoofCleanupCombatWon } from "./roof-cleanup.js";
+import { onWaspNestsCombatWon } from "./wasp-nests.js";
 import {
   completeMission,
   getInstance,
@@ -284,6 +285,11 @@ export async function onCombatEnded(
 
   if (def.type === "ROOF_CLEANUP") {
     await onRoofCleanupCombatWon(interaction, inst.id);
+    return;
+  }
+
+  if (def.type === "WASP_NESTS") {
+    await onWaspNestsCombatWon(interaction, inst.id);
     return;
   }
 

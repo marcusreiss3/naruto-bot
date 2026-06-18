@@ -20,7 +20,7 @@ import {
   setState,
   completeMission,
 } from "../services/missions/mission-service.js";
-import { catMissionStep, spawnCat, type CatState, type CatMissionData } from "../services/missions/cat.js";
+import { catMissionStep, renderCatMission, spawnCat, type CatState, type CatMissionData } from "../services/missions/cat.js";
 import { cellDistance } from "../services/combat/combat-math.js";
 import { BALANCE } from "../config/balance.js";
 import { getOrCreateCharacter } from "../services/characters/character-service.js";
@@ -48,7 +48,6 @@ import { onCombatEnded, onCombatLost } from "../services/missions/mission-runtim
 import { partyMemberIds } from "../services/party/party-service.js";
 import { MapRenderer } from "../services/maps/renderer.js";
 import { buildSessionEntities, condenseLogs } from "../services/combat/combat-render.js";
-import { renderCatMission } from "../services/missions/cat-render.js";
 import { startKidDialogue } from "../services/missions/kid-dialogue.js";
 import { moverCleanVillage } from "../services/missions/clean-village.js";
 import { moverRoofCleanup } from "../services/missions/roof-cleanup.js";

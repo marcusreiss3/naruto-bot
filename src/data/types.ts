@@ -114,7 +114,13 @@ export interface MissionDef {
     | "GENIN_COMEDY"
     | "DANGO_RUSH"
     | "ROOF_CLEANUP"
-    | "ARCHIVE_SCROLLS";
+    | "ARCHIVE_SCROLLS"
+    | "MEDICINAL_HERBS"
+    | "FESTIVAL_PREP"
+    | "NINKEN_TRACKING"
+    | "MARKET_MEDIATION"
+    | "DUMMY_SUBSTITUTION"
+    | "WASP_NESTS";
   data?: Record<string, unknown>;
 }
 
