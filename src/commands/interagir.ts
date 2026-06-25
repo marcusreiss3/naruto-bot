@@ -71,6 +71,36 @@ import {
   availableWaspNestsNpcs,
   type WaspNestsState,
 } from "../services/missions/wasp-nests.js";
+import {
+  interactCloneInvestigation,
+  resolveCloneInvestigation,
+  availableCloneInvestigationNpcs,
+  type CloneInvestigationState,
+} from "../services/missions/clone-investigation.js";
+import {
+  interactUrgentDeliveries,
+  resolveUrgentDeliveries,
+  availableUrgentDeliveriesNpcs,
+  type UrgentDeliveriesState,
+} from "../services/missions/urgent-deliveries.js";
+import {
+  interactFestivalSecurity,
+  resolveFestivalSecurity,
+  availableFestivalSecurityNpcs,
+  type FestivalSecurityState,
+} from "../services/missions/festival-security.js";
+import {
+  interactFalseNinjas,
+  resolveFalseNinjas,
+  availableFalseNinjasNpcs,
+  type FalseNinjasState,
+} from "../services/missions/false-ninjas.js";
+import {
+  interactSupplyDepot,
+  resolveSupplyDepot,
+  availableSupplyDepotNpcs,
+  type SupplyDepotState,
+} from "../services/missions/supply-depot-defense.js";
 
 export const interagir: Command = {
   data: new SlashCommandBuilder()
@@ -82,6 +112,15 @@ export const interagir: Command = {
 
   execute(interaction: ChatInputCommandInteraction) {
     const npc = interaction.options.getString("npc", true);
+    if (npc.startsWith("supply_depot_")) return interactSupplyDepot(interaction, npc);
+    if (npc.startsWith("false_ninjas_")) return interactFalseNinjas(interaction, npc);
+    if (npc === "festival_security_sayuri" || npc === "festival_fake_vendor" || npc === "festival_rogue_ninja") {
+      return interactFestivalSecurity(interaction, npc);
+    }
+    if (npc === "courier_emi" || npc.startsWith("delivery_")) return interactUrgentDeliveries(interaction, npc);
+    if (npc === "academy_instructor_yori_clone" || npc.startsWith("clone_kenta_")) {
+      return interactCloneInvestigation(interaction, npc);
+    }
     if (npc === "academy_instructor_yori_wasps") return interactWaspNests(interaction, npc);
     if (npc === "academy_instructor_yori") return interactDummySubstitution(interaction, npc);
     if (npc === "market_vendor_renzo" || npc === "market_vendor_aya" || npc === "market_vendors") return interactMarketMediation(interaction, npc);
@@ -165,6 +204,42 @@ export const interagir: Command = {
     if (wasps) {
       const state = readState<WaspNestsState>(wasps.inst.stateJson);
       choices.push(...availableWaspNestsNpcs(state, interaction.channelId).map((n) => ({ name: n.name, value: n.key })));
+    }
+
+    const clone = await resolveCloneInvestigation(interaction.user.id, guildId);
+    if (clone) {
+      const state = readState<CloneInvestigationState>(clone.inst.stateJson);
+      choices.push(...availableCloneInvestigationNpcs(state, interaction.channelId).map((n) => ({ name: n.name, value: n.key })));
+    }
+
+    const deliveries = await resolveUrgentDeliveries(interaction.user.id, guildId);
+    if (deliveries) {
+      const state = readState<UrgentDeliveriesState>(deliveries.inst.stateJson);
+      choices.push(...availableUrgentDeliveriesNpcs(state, interaction.channelId).map((n) => ({ name: n.name, value: n.key })));
+    }
+
+    const festivalSecurity = await resolveFestivalSecurity(interaction.user.id, guildId);
+    if (festivalSecurity) {
+      const state = readState<FestivalSecurityState>(festivalSecurity.inst.stateJson);
+      choices.push(...availableFestivalSecurityNpcs(state, interaction.channelId).map((n) => ({ name: n.name, value: n.key })));
+    }
+
+    const falseNinjas = await resolveFalseNinjas(interaction.user.id, guildId, interaction.channelId);
+    if (falseNinjas) {
+      const state = readState<FalseNinjasState>(falseNinjas.inst.stateJson);
+      choices.push(
+        ...availableFalseNinjasNpcs(state, interaction.channelId, falseNinjas.variant)
+          .map((n) => ({ name: n.name, value: n.key })),
+      );
+    }
+
+    const supplyDepot = await resolveSupplyDepot(interaction.user.id, guildId, interaction.channelId);
+    if (supplyDepot) {
+      const state = readState<SupplyDepotState>(supplyDepot.inst.stateJson);
+      choices.push(
+        ...availableSupplyDepotNpcs(state, interaction.channelId, supplyDepot.variant)
+          .map((n) => ({ name: n.name, value: n.key })),
+      );
     }
 
     await interaction.respond(

@@ -19,6 +19,23 @@ export interface StarterChar {
 // Monta a lista de jogadores de um combate de missão: quem disparou + os membros
 // da party dele (criados sob demanda). Retorna também o cache de atributos por
 // charId, para gravar nos flags da sessão depois (a engine lê atributos dos flags).
+export function gatherSoloPlayer(
+  starter: StarterChar,
+): { players: StartPlayer[]; attrsById: Map<string, Record<string, number>> } {
+  return {
+    players: [{
+      charId: starter.charId,
+      name: starter.name,
+      hpCurrent: starter.hpCurrent,
+      hpMax: starter.hpMax,
+      chakra: starter.chakra,
+      energia: starter.energia,
+      jutsuIds: starter.jutsuIds,
+    }],
+    attrsById: new Map([[starter.charId, starter.attrs]]),
+  };
+}
+
 export async function gatherPartyPlayers(
   channel: TextBasedChannel | null,
   guildId: string,

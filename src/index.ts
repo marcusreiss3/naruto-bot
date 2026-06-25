@@ -17,6 +17,11 @@ import { continueNinkenTrackingMessage } from "./services/missions/ninken-tracki
 import { continueMarketMediationMessage } from "./services/missions/market-mediation.js";
 import { continueDummySubstitutionMessage } from "./services/missions/dummy-substitution.js";
 import { continueWaspNestsMessage } from "./services/missions/wasp-nests.js";
+import { continueCloneInvestigationMessage } from "./services/missions/clone-investigation.js";
+import { continueUrgentDeliveriesMessage } from "./services/missions/urgent-deliveries.js";
+import { continueFestivalSecurityMessage } from "./services/missions/festival-security.js";
+import { continueFalseNinjasMessage } from "./services/missions/false-ninjas.js";
+import { continueSupplyDepotMessage } from "./services/missions/supply-depot-defense.js";
 
 const client = new Client({
   intents: [
@@ -44,6 +49,11 @@ client.on(Events.MessageCreate, async (message) => {
     if (await continueNinkenTrackingMessage(message)) return;
     if (await continueMarketMediationMessage(message)) return;
     if (await continueWaspNestsMessage(message)) return;
+    if (await continueCloneInvestigationMessage(message)) return;
+    if (await continueUrgentDeliveriesMessage(message)) return;
+    if (await continueFestivalSecurityMessage(message)) return;
+    if (await continueFalseNinjasMessage(message)) return;
+    if (await continueSupplyDepotMessage(message)) return;
     if (await continueDummySubstitutionMessage(message)) return;
     if (await continueInvestigationMessage(message)) return;
     if (await continueEscortMessage(message)) return;

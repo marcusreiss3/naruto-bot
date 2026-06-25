@@ -7,11 +7,10 @@ import {
 import { getMission } from "../../data/missions/index.js";
 import { getOrCreateCharacter } from "../characters/character-service.js";
 import { getActiveSession, startCombat } from "../combat/combat-engine.js";
-import { partyMemberIds } from "../party/party-service.js";
 import { NpcAiService } from "../npc-ai/npc-ai-service.js";
 import { getPersona } from "../npc-ai/personas.js";
 import { sendAsPersona, formatPersonaLines } from "../discord/persona-webhook.js";
-import { cacheAttrs, gatherPartyPlayers } from "./combat-party.js";
+import { cacheAttrs, gatherSoloPlayer } from "./combat-party.js";
 import {
   completeMission,
   getActiveInstanceByType,
@@ -75,22 +74,7 @@ export async function resolvePurseTheft(discordId: string, guildId: string): Pro
     where: { discordId_guildId: { discordId, guildId } },
     select: { id: true },
   });
-  if (own) {
-    const ctx = await findContextByCharId(own.id);
-    if (ctx) return ctx;
-  }
-
-  for (const did of await partyMemberIds(guildId, discordId)) {
-    if (did === discordId) continue;
-    const uc = await prisma.userCharacter.findUnique({
-      where: { discordId_guildId: { discordId: did, guildId } },
-      select: { id: true },
-    });
-    if (!uc) continue;
-    const ctx = await findContextByCharId(uc.id);
-    if (ctx) return ctx;
-  }
-  return null;
+  return own ? findContextByCharId(own.id) : null;
 }
 
 export function availablePurseNpcs(state: PurseTheftState, channelId: string): PurseNpcChoice[] {
@@ -203,7 +187,7 @@ export async function interactPurseTheft(interaction: ChatInputCommandInteractio
   const guildId = interaction.guildId ?? "global";
   const ctx = await resolvePurseTheft(interaction.user.id, guildId);
   if (!ctx) {
-    await interaction.reply({ content: "Voce (ou sua party) nao tem essa missao ativa.", ephemeral: true });
+    await interaction.reply({ content: "Voce nao tem essa missao ativa.", ephemeral: true });
     return;
   }
 
@@ -371,7 +355,7 @@ async function startThiefCombat(
     return;
   }
 
-  const { players, attrsById } = await gatherPartyPlayers(o.channel, o.guildId, {
+  const { players, attrsById } = gatherSoloPlayer({
     charId: o.char.id,
     name: o.char.name,
     hpCurrent: o.char.hpCurrent,
@@ -398,7 +382,7 @@ async function startThiefCombat(
   });
   await cacheAttrs(session, attrsById);
   if (o.channel && "send" in o.channel) {
-    await o.channel.send(`Combate iniciado contra o **Ladrao de Bolsas**! ${players.length} ninja(s) na luta. Use \`/mapa\`.`);
+    await o.channel.send("Combate iniciado contra o **Ladrao de Bolsas**! Use `/mapa`.");
   }
 }
 
