@@ -17,6 +17,7 @@ import { NpcAiService } from "../npc-ai/npc-ai-service.js";
 import { getPersona } from "../npc-ai/personas.js";
 import { sendAsPersona, formatPersonaLines } from "../discord/persona-webhook.js";
 import {
+  buildMissionCompleteEmbed,
   completeMission,
   getActiveInstanceByType,
   getInstance,
@@ -285,10 +286,7 @@ async function startCookingChallenge(
   await speak(channel, "(os bolinhos ficaram prontos)", "Agradeca ao ninja: as tres levas ficaram prontas no horario de pico.", 3);
   const result = await completeMission(inst.charId, inst.missionId);
   if (result) {
-    const items = result.rewards.items?.map((i) => i.name).join(", ");
-    await channel.send(
-      `Missao concluida: **${def.name}**!\nRecompensas: ${result.rewards.xp} XP, ${result.rewards.ryo} ryo${items ? `, ${items}` : ""}.`,
-    );
+    await channel.send({ embeds: [buildMissionCompleteEmbed(def.name, result.rewards)] });
   }
 }
 

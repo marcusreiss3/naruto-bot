@@ -13,7 +13,9 @@ import { onEscortCombatWon } from "./escort.js";
 import { onPurseTheftCombatWon } from "./purse-thief.js";
 import { onRoofCleanupCombatWon } from "./roof-cleanup.js";
 import { onWaspNestsCombatWon } from "./wasp-nests.js";
+import { onNightPatrolCombatWon } from "./night-patrol.js";
 import {
+  buildMissionCompleteEmbed,
   completeMission,
   getInstance,
   markObjective,
@@ -293,14 +295,16 @@ export async function onCombatEnded(
     return;
   }
 
+  if (def.type === "NIGHT_PATROL") {
+    await onNightPatrolCombatWon(interaction, inst.id);
+    return;
+  }
+
   // bandidos: derrotar o líder + capangas conclui a missão
   await markObjective(inst.id, "derrotar_lider");
   const result = await completeMission(inst.charId, inst.missionId);
   if (result) {
-    const items = result.rewards.items?.map((i) => i.name).join(", ");
-    await interaction.followUp(
-      `✅ **Missão concluída: ${def.name}!**\nRecompensas: ${result.rewards.xp} XP, ${result.rewards.ryo} ryo${items ? `, ${items}` : ""}.`,
-    );
+    await interaction.followUp({ embeds: [buildMissionCompleteEmbed(def.name, result.rewards)] });
   }
 }
 

@@ -1,5 +1,6 @@
 import { ENV, HAS_GROQ, HAS_GEMINI } from "../../config/env.js";
 import { log } from "../../utils/logger.js";
+import { downloadImageBuffer } from "./image-download.js";
 
 export interface IdentifiedCharacter {
   key: string; // normalizado p/ dedup (token-sorted)
@@ -23,6 +24,7 @@ export function normalizeCharacterKey(raw: string): string {
 
 // Abaixo deste valor o personagem é tratado como OC (evita nome alucinado).
 const OC_CONFIDENCE_THRESHOLD = 0.7;
+const VISION_API_TIMEOUT_MS = 30_000;
 
 const PROMPT = [
   "Você é um identificador RIGOROSO de personagens de anime/mangá/games/quadrinhos.",
@@ -30,16 +32,20 @@ const PROMPT = [
   '- "desenho": anime, mangá, cartoon, ilustração, arte digital, 3D estilizado.',
   '- "real": foto de pessoa real, foto realista, frame de filme/vídeo com gente real, cosplay.',
   "Depois, SE for 'desenho', identifique QUAL personagem conhecido está representado.",
+  "A aparência só é válida se parecer uma pessoa humana/humanoide em estilo anime/mangá/ilustração.",
+  "Mascotes, animais, criaturas cartunescas e personagens como Po, Angry Birds, Pokémon ou Sonic NÃO são aparências válidas.",
+  "Artes de Ordem Paranormal/RPG/OC podem parecer anime, mas NÃO force para um personagem de anime famoso. Se não reconhecer com certeza absoluta, retorne OC.",
   "REGRAS DE CONFIANÇA (siga à risca):",
   "- Só use confidence > 0.8 se reconhecer o personagem E a obra com CERTEZA quase absoluta.",
   "- Personagens de anime se parecem muito entre si (mesmo cabelo, olhos, estilo). NÃO confunda.",
   "- Se houver QUALQUER dúvida entre dois personagens parecidos, use confidence ABAIXO de 0.5.",
   "- NUNCA chute um nome famoso só por semelhança visual genérica.",
   "Responda APENAS com JSON válido neste formato:",
-  '{"tipo": "desenho"|"real", "character": "<nome>", "obra": "<obra>", "confidence": <0 a 1>}',
-  'Se tipo for "real", responda: {"tipo":"real","character":null,"obra":null,"confidence":0}',
-  'Se for desenho mas não identificar (OC, fan art, dúvida): {"tipo":"desenho","character":"OC","obra":null,"confidence":<0 a 1>}',
-  'Se não houver personagem/pessoa nenhum: {"tipo":"desenho","character":null,"obra":null,"confidence":0}',
+  '{"tipo": "desenho"|"real", "validAppearance": true|false, "character": "<nome>", "obra": "<obra>", "confidence": <0 a 1>}',
+  'Se tipo for "real", responda: {"tipo":"real","validAppearance":false,"character":null,"obra":null,"confidence":0}',
+  'Se for desenho mas não identificar (OC, fan art, dúvida): {"tipo":"desenho","validAppearance":true,"character":"OC","obra":null,"confidence":<0 a 1>}',
+  'Se for desenho mas NÃO parecer humano/humanoide de anime, responda: {"tipo":"desenho","validAppearance":false,"character":"<nome se souber>","obra":"<obra se souber>","confidence":<0 a 1>}',
+  'Se não houver personagem/pessoa nenhum: {"tipo":"desenho","validAppearance":false,"character":null,"obra":null,"confidence":0}',
   "Não escreva mais nada além do JSON.",
 ].join("\n");
 
@@ -48,20 +54,55 @@ interface RawResult {
   obra?: string | null;
   confidence?: number;
   tipo?: string | null;
+  validAppearance?: boolean | null;
 }
 
 // Resultado da identificação por imagem.
 export type Identification =
   | { kind: "CHARACTER"; result: IdentifiedCharacter }
   | { kind: "NOT_DRAWING" } // foto real / pessoa real
-  | { kind: "NO_SUBJECT" }; // sem personagem reconhecível
+  | { kind: "INVALID_APPEARANCE" } // desenho, mas nao parece humano/humanoide de anime
+  | { kind: "NO_SUBJECT" } // sem personagem reconhecível
+  | { kind: "VISION_OFFLINE" }; // IA de visão indisponível/fora do ar
 
 // Mapeia o JSON cru do modelo para uma Identification.
 function toIdentification(parsed: RawResult): Identification {
   if ((parsed.tipo ?? "").toLowerCase() === "real") return { kind: "NOT_DRAWING" };
+  if (!parsed.character && !parsed.obra && parsed.confidence === 0) return { kind: "NO_SUBJECT" };
+  if (parsed.validAppearance === false) return { kind: "INVALID_APPEARANCE" };
+  if (isDisallowedNonHuman(parsed)) return { kind: "INVALID_APPEARANCE" };
   const built = buildResult(parsed);
   if (!built) return { kind: "NO_SUBJECT" };
   return { kind: "CHARACTER", result: built };
+}
+
+function isDisallowedNonHuman(parsed: RawResult): boolean {
+  const character = normalizeCharacterKey(parsed.character ?? "");
+  const work = normalizeCharacterKey(parsed.obra ?? "");
+  if (!character && !work) return false;
+
+  const blockedWorks = ["angry birds", "digimon", "kung fu panda", "pokemon", "sonic"];
+  if (blockedWorks.some((blocked) => work.includes(blocked))) return true;
+
+  const blockedCharacters = ["panda", "pikachu", "po", "red", "sonic"];
+  return blockedCharacters.some(
+    (blocked) => character === blocked || character.startsWith(`${blocked} `) || character.endsWith(` ${blocked}`),
+  );
+}
+
+function canonicalWorkKey(work: string): string {
+  const key = normalizeCharacterKey(work);
+  if (!key) return "";
+
+  const franchiseAliases: { canonical: string; aliases: string[] }[] = [
+    {
+      canonical: "naruto",
+      aliases: ["boruto generations naruto next", "boruto naruto next generations", "naruto"],
+    },
+  ];
+
+  const match = franchiseAliases.find((group) => group.aliases.includes(key));
+  return match?.canonical ?? key;
 }
 
 // Constrói um IdentifiedCharacter a partir de nome/obra/confiança crus.
@@ -75,6 +116,7 @@ export function makeIdentified(
 
 // Converte o JSON cru do modelo num IdentifiedCharacter normalizado.
 function buildResult(parsed: RawResult): IdentifiedCharacter | null {
+  if (isDisallowedNonHuman(parsed)) return null;
   const charName = parsed.character?.trim();
   if (!charName) return null;
 
@@ -88,7 +130,7 @@ function buildResult(parsed: RawResult): IdentifiedCharacter | null {
   const obra = parsed.obra?.trim();
   // nome de exibição inclui a obra; key inclui a obra p/ não colidir homônimos.
   const name = obra && !isOc ? `${charName} (${obra})` : charName;
-  const key = obra && !isOc ? `${baseKey}|${normalizeCharacterKey(obra)}` : baseKey;
+  const key = obra && !isOc ? `${baseKey}|${canonicalWorkKey(obra)}` : baseKey;
 
   return { key, name, confidence, isOc };
 }
@@ -110,8 +152,7 @@ function logId(provider: string, id: Identification): void {
   }
 }
 
-// Identifica o personagem numa imagem. Prefere Gemini (melhor reconhecimento);
-// cai para o modelo de visão do Groq se Gemini não estiver configurado.
+// Identifica o personagem numa imagem. Prefere Gemini; cai para Groq se Gemini estiver sem cota/fora do ar.
 export async function identifyCharacter(imageUrl: string): Promise<Identification> {
   if (HAS_GEMINI) {
     const r = await callGemini(imageUrl);
@@ -120,25 +161,18 @@ export async function identifyCharacter(imageUrl: string): Promise<Identificatio
       return r;
     }
     log.warn("[visão] Gemini não retornou resultado; tentando Groq...");
-    if (HAS_GROQ) {
-      const g = await callGroq(imageUrl);
-      if (g) {
-        logId("Groq(fallback)", g);
-        return g;
-      }
-    }
-    return { kind: "NO_SUBJECT" };
   }
+
   if (HAS_GROQ) {
     const g = await callGroq(imageUrl);
     if (g) {
-      logId("Groq", g);
+      logId(HAS_GEMINI ? "Groq(fallback)" : "Groq", g);
       return g;
     }
-    return { kind: "NO_SUBJECT" };
   }
-  log.warn("Nenhuma IA de visão configurada (GEMINI_API_KEY/GROQ_API_KEY).");
-  return { kind: "NO_SUBJECT" };
+
+  log.warn("IA de visão indisponível: Gemini/Groq não configurados ou sem resposta.");
+  return { kind: "VISION_OFFLINE" };
 }
 
 // ---------------- Gemini ----------------
@@ -146,29 +180,21 @@ export async function identifyCharacter(imageUrl: string): Promise<Identificatio
 // Retorna null SÓ em falha de rede/HTTP/parse (p/ acionar fallback).
 async function callGemini(imageUrl: string): Promise<Identification | null> {
   // Gemini não busca URLs: baixa a imagem e envia em base64 inline.
-  let mime = "image/png";
-  let base64: string;
-  try {
-    const imgRes = await fetch(imageUrl);
-    if (!imgRes.ok) {
-      log.warn(`Falha ao baixar imagem p/ Gemini: HTTP ${imgRes.status}`);
-      return null;
-    }
-    mime = imgRes.headers.get("content-type")?.split(";")[0]?.trim() || mime;
-    const buf = Buffer.from(await imgRes.arrayBuffer());
-    base64 = buf.toString("base64");
-  } catch (err) {
-    log.warn("Falha ao baixar imagem p/ Gemini:", (err as Error).message);
-    return null;
-  }
+  const downloaded = await downloadImageBuffer(imageUrl, "Gemini");
+  if (!downloaded) return null;
+  const mime = downloaded.mime;
+  const base64 = downloaded.buffer.toString("base64");
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${ENV.GEMINI_MODEL}:generateContent?key=${ENV.GEMINI_API_KEY}`;
 
   let res: Response;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), VISION_API_TIMEOUT_MS);
   try {
     res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      signal: controller.signal,
       body: JSON.stringify({
         contents: [
           {
@@ -181,6 +207,8 @@ async function callGemini(imageUrl: string): Promise<Identification | null> {
   } catch (err) {
     log.warn("Gemini vision falhou (rede):", (err as Error).message);
     return null;
+  } finally {
+    clearTimeout(timeout);
   }
 
   if (!res.ok) {
@@ -205,6 +233,8 @@ async function callGemini(imageUrl: string): Promise<Identification | null> {
 
 async function callGroq(imageUrl: string): Promise<Identification | null> {
   let res: Response;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), VISION_API_TIMEOUT_MS);
   try {
     res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
@@ -212,6 +242,7 @@ async function callGroq(imageUrl: string): Promise<Identification | null> {
         "Content-Type": "application/json",
         Authorization: `Bearer ${ENV.GROQ_API_KEY}`,
       },
+      signal: controller.signal,
       body: JSON.stringify({
         model: ENV.GROQ_VISION_MODEL,
         max_tokens: 150,
@@ -231,6 +262,8 @@ async function callGroq(imageUrl: string): Promise<Identification | null> {
   } catch (err) {
     log.warn("Groq vision falhou (rede):", (err as Error).message);
     return null;
+  } finally {
+    clearTimeout(timeout);
   }
 
   if (!res.ok) {

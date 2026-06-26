@@ -1,7 +1,24 @@
+import { EmbedBuilder } from "discord.js";
 import { prisma } from "../../db/client.js";
 import { getMission } from "../../data/missions/index.js";
 import type { MissionDef } from "../../data/types.js";
 import { addXp } from "../characters/character-service.js";
+
+const CHECK_EMOJI = "<:check:1517556025614532658>";
+const RYO_EMOJI = "<:ryo:1517556469627748472>";
+const COMPLETE_COLOR = "#2ECC71";
+
+export function buildMissionCompleteEmbed(missionName: string, rewards: MissionDef["rewards"]): EmbedBuilder {
+  const rewardLines = [`**${rewards.xp} XP**`, `**${rewards.ryo}** ${RYO_EMOJI}`];
+  const items = rewards.items?.map((i) => `${i.name} x${i.qty}`).join(", ");
+  if (items) rewardLines.push(`Itens: ${items}`);
+
+  return new EmbedBuilder()
+    .setColor(COMPLETE_COLOR)
+    .setTitle(`${CHECK_EMOJI} Missão cumprida`)
+    .setDescription(`**${missionName}** foi concluída com sucesso.`)
+    .addFields({ name: "Recompensas", value: rewardLines.join("\n") });
+}
 
 export async function assignMission(charId: string, missionId: string): Promise<{ ok: boolean; error?: string }> {
   const def = getMission(missionId);

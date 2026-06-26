@@ -13,6 +13,7 @@ import { getPersona } from "../npc-ai/personas.js";
 import { sendAsPersona, formatPersonaLines } from "../discord/persona-webhook.js";
 import { cacheAttrs, gatherPartyPlayers } from "./combat-party.js";
 import {
+  buildMissionCompleteEmbed,
   completeMission,
   getActiveInstanceByType,
   getInstance,
@@ -345,10 +346,7 @@ async function runDialogue(o: {
       await setState(inst.id, state);
       const result = await completeMission(inst.charId, inst.missionId);
       if (result && o.channel && "send" in o.channel) {
-        const items = result.rewards.items?.map((i) => i.name).join(", ");
-        await o.channel.send(
-          `Missao concluida: **${def.name}**!\nRecompensas: ${result.rewards.xp} XP, ${result.rewards.ryo} ryo${items ? `, ${items}` : ""}.`,
-        );
+        await o.channel.send({ embeds: [buildMissionCompleteEmbed(def.name, result.rewards)] });
       }
       return;
     }

@@ -9,6 +9,7 @@ import { NpcAiService } from "../npc-ai/npc-ai-service.js";
 import { getPersona } from "../npc-ai/personas.js";
 import { sendAsPersona, formatPersonaLines } from "../discord/persona-webhook.js";
 import {
+  buildMissionCompleteEmbed,
   completeMission,
   getActiveInstanceByType,
   getInstance,
@@ -18,8 +19,8 @@ import {
 } from "./mission-service.js";
 import type { RenderEntity } from "../maps/renderer.js";
 
-type VendorKey = "market_vendor_renzo" | "market_vendor_aya";
-const RENZO_KEY: VendorKey = "market_vendor_renzo";
+type VendorKey = "market_vendor_hina" | "market_vendor_aya";
+const HINA_KEY: VendorKey = "market_vendor_hina";
 const AYA_KEY: VendorKey = "market_vendor_aya";
 const PAIR_KEY = "market_vendors";
 const PAIR_PERSONA = "market_vendors_pair";
@@ -34,17 +35,17 @@ interface VendorDef {
 
 const VENDORS: VendorDef[] = [
   {
-    key: RENZO_KEY,
-    name: "Renzo",
+    key: HINA_KEY,
+    name: "Hina",
     cell: "C3",
-    imageFile: "npcs/market-vendor-renzo.png",
-    objectiveId: "ouvir_renzo",
+    imageFile: "npcs/market_vendor_hina.png",
+    objectiveId: "ouvir_hina",
   },
   {
     key: AYA_KEY,
     name: "Aya",
     cell: "C7",
-    imageFile: "npcs/market-vendor-aya.png",
+    imageFile: "npcs/market_vendor_aya.png",
     objectiveId: "ouvir_aya",
   },
 ];
@@ -278,15 +279,12 @@ async function runMarketDialogue(
         channel,
         PAIR_PERSONA,
         playerMessage,
-        "A proposta do jogador e pacifica e razoavel. Revele que a bolsa estava atras de uma caixa e encerre com acordo entre Renzo e Aya.",
+        "A proposta do jogador e pacifica e razoavel. Revele que a bolsa estava atras de uma caixa e encerre com acordo entre Hina e Aya.",
         2,
       );
       const result = await completeMission(inst.charId, inst.missionId);
       if (result && channel && "send" in channel) {
-        const items = result.rewards.items?.map((i) => i.name).join(", ");
-        await channel.send(
-          `Missao concluida: **${def.name}**!\nRecompensas: ${result.rewards.xp} XP, ${result.rewards.ryo} ryo${items ? `, ${items}` : ""}.`,
-        );
+        await channel.send({ embeds: [buildMissionCompleteEmbed(def.name, result.rewards)] });
       }
       return;
     }

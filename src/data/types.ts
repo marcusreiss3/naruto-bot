@@ -120,7 +120,10 @@ export interface MissionDef {
     | "NINKEN_TRACKING"
     | "MARKET_MEDIATION"
     | "DUMMY_SUBSTITUTION"
-    | "WASP_NESTS";
+    | "WASP_NESTS"
+    | "ICHIRAKU_DELIVERY"
+    | "CLEAN_WATER"
+    | "NIGHT_PATROL";
   data?: Record<string, unknown>;
 }
 

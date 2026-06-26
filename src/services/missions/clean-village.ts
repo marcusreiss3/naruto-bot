@@ -22,6 +22,7 @@ import { sendAsPersona, formatPersonaLines } from "../discord/persona-webhook.js
 import { NpcAiService } from "../npc-ai/npc-ai-service.js";
 import { getPersona } from "../npc-ai/personas.js";
 import {
+  buildMissionCompleteEmbed,
   completeMission,
   getActiveInstanceByType,
   markObjective,
@@ -238,9 +239,7 @@ async function maybeComplete(
   if (!allClean(state) || !state.teenGone) return;
   const result = await completeMission(charId, missionId);
   if (!result || !channel || !("send" in channel)) return;
-  await channel.send(
-    `Missao concluida: **Limpar a Vila**!\nRecompensas: ${result.rewards.xp} XP, ${result.rewards.ryo} ryo.`,
-  );
+  await channel.send({ embeds: [buildMissionCompleteEmbed("Limpar a Vila", result.rewards)] });
 }
 
 export async function moverCleanVillage(interaction: ChatInputCommandInteraction, dest: string): Promise<boolean> {

@@ -17,7 +17,7 @@ import {
   removeJutsu,
 } from "../services/characters/character-service.js";
 import { CLANS, getAbility, ALL_ABILITIES, MISSIONS } from "../data/index.js";
-import { assignMission, removeMission, completeMission } from "../services/missions/mission-service.js";
+import { assignMission, removeMission, completeMission, buildMissionCompleteEmbed } from "../services/missions/mission-service.js";
 import { getActiveSession, endCombat } from "../services/combat/combat-engine.js";
 import { getAppearance, releaseAppearance } from "../services/appearance/appearance-service.js";
 
@@ -275,7 +275,12 @@ export const admin: Command = {
         await interaction.editReply(`✅ Missão \`${missao}\` removida de **${char.name}**.`);
       } else {
         const r = await completeMission(char.id, missao);
-        await interaction.editReply(r ? `✅ Missão concluída para **${char.name}**.` : "❌ Missão ativa não encontrada.");
+        const def = MISSIONS.find((m) => m.id === missao);
+        await interaction.editReply(
+          r
+            ? { embeds: [buildMissionCompleteEmbed(def?.name ?? missao, r.rewards).setFooter({ text: `Concluída para ${char.name}` })] }
+            : "❌ Missão ativa não encontrada.",
+        );
       }
       return;
     }

@@ -71,6 +71,24 @@ import {
   availableWaspNestsNpcs,
   type WaspNestsState,
 } from "../services/missions/wasp-nests.js";
+import {
+  interactIchirakuDelivery,
+  resolveIchirakuDelivery,
+  availableIchirakuDeliveryNpcs,
+  type IchirakuDeliveryState,
+} from "../services/missions/ichiraku-delivery.js";
+import {
+  interactCleanWater,
+  resolveCleanWater,
+  availableCleanWaterNpcs,
+  type CleanWaterState,
+} from "../services/missions/clean-water.js";
+import {
+  interactNightPatrol,
+  resolveNightPatrol,
+  availableNightPatrolNpcs,
+  type NightPatrolState,
+} from "../services/missions/night-patrol.js";
 
 export const interagir: Command = {
   data: new SlashCommandBuilder()
@@ -83,8 +101,11 @@ export const interagir: Command = {
   execute(interaction: ChatInputCommandInteraction) {
     const npc = interaction.options.getString("npc", true);
     if (npc === "academy_instructor_yori_wasps") return interactWaspNests(interaction, npc);
+    if (npc === "ninja_medico_haru_water") return interactCleanWater(interaction, npc);
+    if (npc === "ayame_ichiraku") return interactIchirakuDelivery(interaction, npc);
+    if (npc === "alley_troublemaker") return interactNightPatrol(interaction, npc);
     if (npc === "academy_instructor_yori") return interactDummySubstitution(interaction, npc);
-    if (npc === "market_vendor_renzo" || npc === "market_vendor_aya" || npc === "market_vendors") return interactMarketMediation(interaction, npc);
+    if (npc === "market_vendor_hina" || npc === "market_vendor_aya" || npc === "market_vendors") return interactMarketMediation(interaction, npc);
     if (npc === "ninken_trainer" || npc === "ninken_mugi") return interactNinkenTracking(interaction, npc);
     if (npc === "festival_organizer" || npc === "festival_cheater") return interactFestivalPrep(interaction, npc);
     if (npc === "ninja_medico_haru") return interactMedicinalHerbs(interaction, npc);
@@ -165,6 +186,24 @@ export const interagir: Command = {
     if (wasps) {
       const state = readState<WaspNestsState>(wasps.inst.stateJson);
       choices.push(...availableWaspNestsNpcs(state, interaction.channelId).map((n) => ({ name: n.name, value: n.key })));
+    }
+
+    const ichiraku = await resolveIchirakuDelivery(interaction.user.id, guildId);
+    if (ichiraku) {
+      const state = readState<IchirakuDeliveryState>(ichiraku.inst.stateJson);
+      choices.push(...availableIchirakuDeliveryNpcs(state, interaction.channelId).map((n) => ({ name: n.name, value: n.key })));
+    }
+
+    const water = await resolveCleanWater(interaction.user.id, guildId);
+    if (water) {
+      const state = readState<CleanWaterState>(water.inst.stateJson);
+      choices.push(...availableCleanWaterNpcs(state, interaction.channelId).map((n) => ({ name: n.name, value: n.key })));
+    }
+
+    const patrol = await resolveNightPatrol(interaction.user.id, guildId);
+    if (patrol) {
+      const state = readState<NightPatrolState>(patrol.inst.stateJson);
+      choices.push(...availableNightPatrolNpcs(state, interaction.channelId).map((n) => ({ name: n.name, value: n.key })));
     }
 
     await interaction.respond(

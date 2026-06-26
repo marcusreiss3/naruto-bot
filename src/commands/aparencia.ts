@@ -14,6 +14,7 @@ import {
 import type { Command } from "./types.js";
 import { isAdmin } from "../utils/permissions.js";
 import { HAS_GROQ, HAS_GEMINI } from "../config/env.js";
+import { log } from "../utils/logger.js";
 import {
   claimWithIdentified,
   getAppearance,
@@ -23,10 +24,8 @@ import {
   type IdentifiedCharacter,
   type MemberPresenceCheck,
 } from "../services/appearance/appearance-service.js";
+import { MAX_APPEARANCE_IMAGE_BYTES } from "../services/appearance/image-download.js";
 import { standardizeTypedName } from "../services/appearance/vision.js";
-
-// Acima desta confiança a IA salva direto, sem pedir confirmação.
-const AUTO_CONFIDENCE = 0.99;
 
 // Estado pendente de confirmação por usuário (guild:user -> dados).
 interface Pending {
@@ -160,14 +159,31 @@ export const aparencia: Command = {
       await interaction.reply({ content: "❌ Envie um arquivo de imagem.", ephemeral: true });
       return;
     }
-    if (!HAS_GROQ && !HAS_GEMINI) {
-      await interaction.reply({ content: "❌ Identificação por IA indisponível.", ephemeral: true });
+    if (attachment.size > MAX_APPEARANCE_IMAGE_BYTES) {
+      await interaction.reply({
+        content: `❌ Imagem muito grande. Envie uma imagem de até ${MAX_APPEARANCE_IMAGE_BYTES / 1024 / 1024}MB.`,
+        ephemeral: true,
+      });
+      return;
+    }
+    if (!HAS_GEMINI && !HAS_GROQ) {
+      await interaction.reply({
+        content: "❌ O sistema de aparência está off por enquanto. Tente de novo mais tarde.",
+        ephemeral: true,
+      });
       return;
     }
 
     await interaction.deferReply({ ephemeral: true });
 
-    const id = await identifyCharacter(attachment.url);
+    let id: Awaited<ReturnType<typeof identifyCharacter>>;
+    try {
+      id = await identifyCharacter(attachment.url);
+    } catch (err) {
+      log.error("Erro ao identificar aparencia:", err);
+      await interaction.editReply("❌ Não consegui analisar essa imagem agora. Tente uma imagem menor ou tente de novo em alguns instantes.");
+      return;
+    }
     if (id.kind === "NOT_DRAWING") {
       await interaction.editReply(
         "🚫 **Aparência recusada.** A imagem parece ser uma **foto real / pessoa real**.\n\nSó aceitamos **desenho/anime/mangá** (personagens ilustrados). Envie a arte de um personagem.",
@@ -178,27 +194,24 @@ export const aparencia: Command = {
       await interaction.editReply("❌ Não encontrei nenhum personagem nessa imagem. Tente outra mais nítida.");
       return;
     }
-    const identified = id.result;
-
-    // confiança altíssima e não-OC -> salva direto
-    if (!identified.isOc && identified.confidence >= AUTO_CONFIDENCE) {
-      const result = await claimWithIdentified(
-        interaction.user.id,
-        guildId,
-        attachment.url,
-        identified,
-        presenceChecker(interaction),
-      );
-      await interaction.editReply(renderResult(result, attachment.url));
+    if (id.kind === "VISION_OFFLINE") {
+      await interaction.editReply("❌ O sistema de aparência está off por enquanto. Tente de novo mais tarde.");
       return;
     }
+    if (id.kind === "INVALID_APPEARANCE") {
+      await interaction.editReply(
+        "🚫 **Aparência recusada.** Envie um personagem com aparência humana/humanoide de anime ou mangá. Mascotes, animais, criaturas cartunescas e personagens como Po, Angry Birds ou Sonic não são aceitos.",
+      );
+      return;
+    }
+    const identified = id.result;
 
-    // pede confirmação
+    // Sempre pede confirmação: modelos de visão podem alucinar personagem famoso com confiança alta.
     setPending(guildId, interaction.user.id, { imageUrl: attachment.url, identified });
 
     const desc = identified.isOc
       ? "Não reconheci um personagem canônico com certeza. É um personagem **original (OC)**?\n\nSe for um personagem conhecido, clique em **corrigir** e digite o nome (ex: `Luffy (One Piece)`)."
-      : `Acho que é **${identified.name}** (${(identified.confidence * 100).toFixed(0)}% de certeza).\nÉ isso mesmo?\n\nSe não, clique em **corrigir** e digite o nome (ex: \`Luffy (One Piece)\`).`;
+      : `Acho que é **${identified.name}** (${(identified.confidence * 100).toFixed(0)}% de certeza).\nÉ isso mesmo?\n\nSe não, clique em **corrigir** e digite o nome certo com a obra (ex: \`Naruto Uzumaki (Naruto)\`) ou marque como OC.`;
 
     const embed = new EmbedBuilder()
       .setTitle("🤔 Confirme a aparência")

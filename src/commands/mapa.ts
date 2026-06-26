@@ -37,6 +37,9 @@ import { ninkenTrackingMapHandle, resolveNinkenTracking } from "../services/miss
 import { marketMediationMapHandle, resolveMarketMediation } from "../services/missions/market-mediation.js";
 import { dummySubstitutionMapHandle, resolveDummySubstitution } from "../services/missions/dummy-substitution.js";
 import { resolveWaspNests, waspNestsMapHandle } from "../services/missions/wasp-nests.js";
+import { ichirakuDeliveryMapHandle, resolveIchirakuDelivery } from "../services/missions/ichiraku-delivery.js";
+import { cleanWaterMapHandle, resolveCleanWater } from "../services/missions/clean-water.js";
+import { nightPatrolMapHandle, resolveNightPatrol } from "../services/missions/night-patrol.js";
 
 export const mapa: Command = {
   data: new SlashCommandBuilder().setName("mapa").setDescription("Mostra o mapa do cenário deste canal"),
@@ -209,6 +212,27 @@ export const mapa: Command = {
     const waspCtx = await resolveWaspNests(interaction.user.id, guildId);
     if (waspCtx && !session) {
       const note = await waspNestsMapHandle(interaction, waspCtx, entities);
+      if (note) missionNote += note;
+    }
+
+    // missao de entrega urgente do Ichiraku (Centro Comercial -> Academia/Hospital/Mansao)
+    const ichirakuCtx = await resolveIchirakuDelivery(interaction.user.id, guildId);
+    if (ichirakuCtx && !session) {
+      const note = await ichirakuDeliveryMapHandle(interaction, ichirakuCtx, entities);
+      if (note) missionNote += note;
+    }
+
+    // missao de coleta de agua limpa (Hospital -> Floresta/Rota Comercial -> Hospital)
+    const waterCtx = await resolveCleanWater(interaction.user.id, guildId);
+    if (waterCtx && !session) {
+      const note = await cleanWaterMapHandle(interaction, waterCtx, entities);
+      if (note) missionNote += note;
+    }
+
+    // missao de patrulha noturna no Beco de Konoha
+    const patrolCtx = await resolveNightPatrol(interaction.user.id, guildId);
+    if (patrolCtx && !session) {
+      const note = await nightPatrolMapHandle(interaction, patrolCtx, entities);
       if (note) missionNote += note;
     }
 

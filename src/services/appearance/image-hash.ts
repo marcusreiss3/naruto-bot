@@ -1,21 +1,13 @@
 import sharp from "sharp";
 import { log } from "../../utils/logger.js";
+import { downloadImageBuffer } from "./image-download.js";
 
 // dHash perceptual: redimensiona p/ 9x8 cinza, compara pixels adjacentes em
 // cada linha (8 comparações x 8 linhas = 64 bits). Robusto a resize/recompressão.
 export async function perceptualHashFromUrl(url: string): Promise<string | null> {
-  let buf: Buffer;
-  try {
-    const res = await fetch(url);
-    if (!res.ok) {
-      log.warn(`[hash] download falhou HTTP ${res.status}`);
-      return null;
-    }
-    buf = Buffer.from(await res.arrayBuffer());
-  } catch (err) {
-    log.warn("[hash] download falhou:", (err as Error).message);
-    return null;
-  }
+  const downloaded = await downloadImageBuffer(url, "hash");
+  if (!downloaded) return null;
+  const buf = downloaded.buffer;
 
   try {
     const W = 9;

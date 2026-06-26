@@ -15,6 +15,7 @@ import { prisma } from "../db/client.js";
 import { getScenarioByChannel, getScenarioById, ALL_ABILITIES } from "../data/index.js";
 import { moveRange } from "../services/characters/formulas.js";
 import {
+  buildMissionCompleteEmbed,
   getActiveInstanceForChannel,
   readState,
   setState,
@@ -383,9 +384,10 @@ async function moverMissaoGato(interaction: ChatInputCommandInteraction, dest: s
   await setState(ctx.inst.id, step.state);
 
   const logs = [`🏃 **${char.name}** foi para **${dest}**.`, ...step.logs];
+  let missionCompleteEmbed: EmbedBuilder | null = null;
   if (step.captured) {
     const result = await completeMission(char.id, ctx.def.id);
-    if (result) logs.push(`✅ Recompensas: ${result.rewards.xp} XP, ${result.rewards.ryo} ryo.`);
+    if (result) missionCompleteEmbed = buildMissionCompleteEmbed(ctx.def.name, result.rewards);
   }
 
   const png = await renderCatMission(scenario, step.state, char, guildId);
@@ -394,7 +396,7 @@ async function moverMissaoGato(interaction: ChatInputCommandInteraction, dest: s
     .setColor(0x2ecc71)
     .setDescription(logs.join("\n").slice(0, 4000))
     .setImage("attachment://gato.png");
-  await interaction.reply({ embeds: [embed], files: [file] });
+  await interaction.reply({ embeds: missionCompleteEmbed ? [embed, missionCompleteEmbed] : [embed], files: [file] });
 
   // criança agradece (webhook), aguarda 1 resposta do jogador
   if (step.captured) {

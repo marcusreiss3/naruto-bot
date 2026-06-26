@@ -62,6 +62,14 @@ export const NPCS: NpcTemplate[] = [
     abilityIds: ["vespa_ferroada"],
     image: "enemies/wasp-swarm.png",
   },
+  {
+    id: "alley_troublemaker",
+    name: "Arruaceiro do Beco",
+    hpMax: 50,
+    attributes: { taijutsu: 5, kenjutsu: 2 },
+    abilityIds: ["tai_soco_forte"],
+    aiPersona: "alley_troublemaker",
+  },
 ];
 
 const NPC_MAP = new Map<string, NpcTemplate>(NPCS.map((n) => [n.id, n]));

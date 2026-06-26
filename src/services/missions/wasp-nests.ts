@@ -20,6 +20,7 @@ import { getPersona } from "../npc-ai/personas.js";
 import { partyMemberIds } from "../party/party-service.js";
 import { cacheAttrs, gatherPartyPlayers } from "./combat-party.js";
 import {
+  buildMissionCompleteEmbed,
   completeMission,
   getActiveInstanceByType,
   getInstance,
@@ -186,7 +187,7 @@ export async function resolveWaspNests(discordId: string, guildId: string): Prom
 
 export function availableWaspNestsNpcs(state: WaspNestsState, channelId: string): WaspNestsChoice[] {
   if (channelId !== ACADEMIA_GENIN_CHANNEL_ID) return [];
-  if (state.stage === "INTRO") return [{ key: INSTRUCTOR_KEY, name: "Yori Umino (ninhos de vespas)" }];
+  if ((state.stage ?? "INTRO") === "INTRO") return [{ key: INSTRUCTOR_KEY, name: "Yori Umino (ninhos de vespas)" }];
   return [];
 }
 
@@ -197,15 +198,16 @@ export async function waspNestsMapHandle(
 ): Promise<string | null> {
   if (interaction.channelId !== ACADEMIA_GENIN_CHANNEL_ID) return null;
   let state = ensureState(ctx.inst.stateJson);
-  if (state.stage === "DONE") return null;
+  const stage = state.stage ?? "INTRO";
+  if (stage === "DONE") return null;
 
   entities.push(instructorEntity(), ...nestEntities(state));
 
-  if (state.stage === "INTRO") {
+  if (stage === "INTRO") {
     return `\nMissao ativa: **${ctx.def.name}** - fale com Yori usando \`/interagir npc\` antes de tocar nos ninhos ${BEE}.`;
   }
 
-  if (state.stage === "FIGHT") {
+  if (stage === "FIGHT") {
     if (!(await getActiveSession(interaction.channelId))) {
       state.combatStarted = true;
       await setState(ctx.inst.id, state);
@@ -529,9 +531,6 @@ export async function onWaspNestsCombatWon(
   await setState(inst.id, state);
   const result = await completeMission(inst.charId, inst.missionId);
   if (result) {
-    const items = result.rewards.items?.map((i) => i.name).join(", ");
-    await interaction.followUp(
-      `Missao concluida: **${def.name}**!\nRecompensas: ${result.rewards.xp} XP, ${result.rewards.ryo} ryo${items ? `, ${items}` : ""}.`,
-    );
+    await interaction.followUp({ embeds: [buildMissionCompleteEmbed(def.name, result.rewards)] });
   }
 }

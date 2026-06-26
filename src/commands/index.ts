@@ -9,7 +9,8 @@ import { missoes } from "./missoes.js";
 import { interagir } from "./interagir.js";
 import { admin } from "./admin.js";
 import { aparencia } from "./aparencia.js";
+import { clear } from "./clear.js";
 
-export const commands: Command[] = [perfil, mapa, combate, mover, jutsu, party, missoes, interagir, admin, aparencia];
+export const commands: Command[] = [perfil, mapa, combate, mover, jutsu, party, missoes, interagir, admin, aparencia, clear];
 
 export const commandMap = new Map<string, Command>(commands.map((c) => [c.data.name, c]));

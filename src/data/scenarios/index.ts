@@ -81,8 +81,9 @@ export const SCENARIOS: ScenarioDef[] = [
     terrain: "grass",
     image: "trade-route-konoha.png",
     cells: {
-      trees: ["A2", "A8", "F3", "F9"],
-      obstacles: ["C5", "D5"],
+      trees: ["E1", "F10", "A6", "A4", "A7", "A8"],
+      obstacles: ["C5", "C6", "D5", "D6", "F4", "D8", "C3"],
+      height: ["A2"],
     },
   },
   {
@@ -123,8 +124,8 @@ export const SCENARIOS: ScenarioDef[] = [
     terrain: "grass",
     image: "academy-genin.png",
     cells: {
-      obstacles: ["A1", "A10", "F1", "F10", "C5", "D5"],
-      height: ["A4", "A5", "A6", "A7"],
+      obstacles: ["D4", "E7", "B6", "B7", "B8", "A1", "A10"],
+      height: ["B1", "C1", "D1", "B2", "C2", "D2", "B9", "B10", "C9", "C10", "D9", "D10", "A3", "A4", "A5", "A6", "A7", "A8", "F1", "F10"],
     },
   },
   {
@@ -137,8 +138,7 @@ export const SCENARIOS: ScenarioDef[] = [
     terrain: "grass",
     image: "hokage-mansion.png",
     cells: {
-      obstacles: ["A1", "A10", "F1", "F10", "B5", "C5", "D5", "E5"],
-      height: ["A3", "A4", "A7", "A8"],
+      obstacles: ["B5", "B6", "B7"],
     },
   },
   {
@@ -151,8 +151,7 @@ export const SCENARIOS: ScenarioDef[] = [
     terrain: "grass",
     image: "hospital-konoha.png",
     cells: {
-      obstacles: ["A1", "A10", "F1", "F10", "C5", "D5"],
-      height: ["A4", "A5", "A6", "A7"],
+      obstacles: ["D4", "D7", "F1", "F2", "F3", "F8", "F9", "F10", "E10", "D10", "C10", "B10", "A10", "A1", "B1", "C1", "D1", "E1"],
     },
   },
 ];

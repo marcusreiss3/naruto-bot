@@ -13,6 +13,7 @@ import { partyMemberIds } from "../party/party-service.js";
 import type { RenderEntity } from "../maps/renderer.js";
 import { gatherPartyPlayers, cacheAttrs, type StarterChar } from "./combat-party.js";
 import {
+  buildMissionCompleteEmbed,
   completeMission,
   getActiveEscortInstance,
   getInstance,
@@ -308,12 +309,8 @@ async function escortDialogue(
           "📜 **A caravana cruza as últimas dunas e chega à rota comercial de Sunagakure.** O comerciante se despede agradecido, com seus tecidos a salvo.",
         );
         const result = await completeMission(inst.charId, inst.missionId);
-        if (result) {
-          const items = result.rewards.items?.map((i) => i.name).join(", ");
-          await sysSend(
-            channel,
-            `✅ **Missão concluída: ${def.name}!**\nRecompensas: ${result.rewards.xp} XP, ${result.rewards.ryo} ryo${items ? `, ${items}` : ""}.`,
-          );
+        if (result && channel && "send" in channel) {
+          await channel.send({ embeds: [buildMissionCompleteEmbed(def.name, result.rewards)] });
         }
         return;
       }

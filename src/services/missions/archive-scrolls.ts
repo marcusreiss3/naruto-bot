@@ -16,6 +16,7 @@ import { getAppearance } from "../appearance/appearance-service.js";
 import { partyMemberIds } from "../party/party-service.js";
 import {
   completeMission,
+  buildMissionCompleteEmbed,
   getActiveInstanceByType,
   getInstance,
   markObjective,
@@ -26,6 +27,7 @@ import type { RenderEntity } from "../maps/renderer.js";
 
 const SCROLL = "\u{1F4DC}";
 const START_CELL = "C3";
+const activeArchivePuzzles = new Set<string>();
 
 interface ArchiveScroll {
   id: string;
@@ -144,16 +146,21 @@ export async function archiveScrollsMapHandle(
   if (state.completed) {
     return `\nMissao ativa: **${ctx.def.name}** - os arquivos ja foram organizados.`;
   }
-  if (state.running) {
+
+  if (activeArchivePuzzles.has(ctx.inst.id)) {
     return `\nMissao ativa: **${ctx.def.name}** - o puzzle dos pergaminhos ja esta em andamento no canal.`;
   }
 
+  // Reinicia se o stateJson ficou com running=true de um processo anterior.
   state.running = true;
   state.step = 0;
   state.mistakes = 0;
   state.selected = [];
   await setState(ctx.inst.id, state);
-  void startArchivePuzzle(interaction.channel, ctx.inst.id, interaction.user.id).catch(() => undefined);
+  activeArchivePuzzles.add(ctx.inst.id);
+  void startArchivePuzzle(interaction.channel, ctx.inst.id, interaction.user.id)
+    .catch(() => undefined)
+    .finally(() => activeArchivePuzzles.delete(ctx.inst.id));
   return `\nMissao ativa: **${ctx.def.name}** - organize os pergaminhos no puzzle enviado no canal.`;
 }
 
@@ -186,19 +193,12 @@ function buildEmbed(state: ArchiveScrollsState, def: NonNullable<ReturnType<type
   const selected = state.selected?.length
     ? state.selected.map((id, i) => `${i + 1}. ${ORDER.find((s) => s.id === id)?.label ?? id}`).join("\n")
     : "Nenhum pergaminho colocado ainda.";
-  const clues = ORDER.map((s) => `- **${s.short}:** ${s.clue}`).join("\n");
   return new EmbedBuilder()
     .setColor(0x8e44ad)
     .setTitle("Arquivos da Mansao do Hokage")
     .setDescription(
       [
         "Organize os pergaminhos na ordem correta das prateleiras.",
-        "",
-        "**Dica do arquivista:**",
-        "Arquivos sempre comecam com o selo da Folha, terminam com o decreto do Hokage, e no meio seguem registro, genealogia e rota.",
-        "",
-        "**Pistas do arquivista:**",
-        clues,
         "",
         `**Ordem atual:**\n${selected}`,
         "",
@@ -215,11 +215,13 @@ function buildMenu(instanceId: string, state: ArchiveScrollsState): ActionRowBui
       .setCustomId(`archive:${instanceId}:${step}`)
       .setPlaceholder(`Escolha o pergaminho da posicao ${step}`)
       .addOptions(
-        ORDER.filter((s) => !selected.has(s.id)).map((s) => ({
-          label: s.label,
-          description: s.clue.slice(0, 100),
-          value: s.id,
-        })),
+        ORDER.filter((s) => !selected.has(s.id))
+          .sort(() => Math.random() - 0.5) // embaralha as opcoes
+          .map((s) => ({
+            label: s.label,
+            description: s.clue.slice(0, 100),
+            value: s.id,
+          })),
       ),
   );
 }
@@ -288,10 +290,7 @@ async function startArchivePuzzle(
   });
   const result = await completeMission(inst.charId, inst.missionId);
   if (result) {
-    const items = result.rewards.items?.map((i) => i.name).join(", ");
-    await channel.send(
-      `Missao concluida: **${def.name}**!\nRecompensas: ${result.rewards.xp} XP, ${result.rewards.ryo} ryo${items ? `, ${items}` : ""}.`,
-    );
+    await channel.send({ embeds: [buildMissionCompleteEmbed(def.name, result.rewards)] });
   }
 }
 

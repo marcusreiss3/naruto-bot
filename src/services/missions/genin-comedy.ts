@@ -9,6 +9,7 @@ import { NpcAiService } from "../npc-ai/npc-ai-service.js";
 import { getPersona } from "../npc-ai/personas.js";
 import { sendAsPersona, formatPersonaLines } from "../discord/persona-webhook.js";
 import {
+  buildMissionCompleteEmbed,
   completeMission,
   getActiveInstanceByType,
   getInstance,
@@ -50,7 +51,7 @@ const CHILDREN: GeninChild[] = [
     objectiveId: "agradar_ren",
     taste: "piadas inteligentes, charadas, trocadilhos, viradas e humor com palavras",
     clue: "Ren gosta de charadas, trocadilhos e piadas ninja espertas.",
-    successWords: ["trocadilho", "charada", "piada", "enigma", "palavra", "virada", "pergunta", "resposta", "inteligente"],
+    successWords: ["trocadilho", "charada", "piada", "enigma", "palavra", "virada"],
   },
   {
     key: "genin_mika",
@@ -180,17 +181,45 @@ function normalize(text: string): string {
 
 function pressureIntent(text: string): boolean {
   const t = normalize(text);
-  return /\b(pression|insist|pergunt|question|observo|observar|investig|provoc|cutuc|tento entender|qual seu gosto|do que voce gosta|do que gosta|prefere)\b/.test(t);
+  const preferenceQuestions = [
+    "qual seu gosto",
+    "do que voce gosta",
+    "do que gosta",
+    "voce gosta",
+    "gosta de",
+    "o que voce gosta",
+    "o que gosta",
+    "o que voce acha legal",
+    "o que acha legal",
+    "voce acha legal",
+    "o que voce prefere",
+    "voce prefere",
+    "o que voce curte",
+    "o que curte",
+    "quer ver",
+    "quer assistir",
+    "te faz rir",
+    "como te faco rir",
+    "como faco voce rir",
+    "o que te agrada",
+  ];
+  return (
+    /\b(pression|insist|pergunt|question|observo|observar|investig|provoc|cutuc|tento entender)\b/.test(t) ||
+    preferenceQuestions.some((phrase) => t.includes(phrase))
+  );
 }
 
 function fallbackJudge(child: GeninChild, message: string, clueRevealed: boolean): boolean {
   const t = normalize(message);
+  if (pressureIntent(message)) return false;
+  if (child.key === "genin_ren" && /\bpor que\b/.test(t) && /\bporque\b/.test(t)) return true;
   if (child.successWords.some((word) => t.includes(normalize(word)))) return true;
   if (clueRevealed && t.includes("engrac") && t.length >= 25) return true;
   return false;
 }
 
 async function judgeComedyAction(child: GeninChild, message: string, clueRevealed: boolean): Promise<boolean> {
+  if (pressureIntent(message)) return false;
   if (!HAS_GROQ) return fallbackJudge(child, message, clueRevealed);
   try {
     const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -210,7 +239,8 @@ async function judgeComedyAction(child: GeninChild, message: string, clueReveale
               "Voce valida uma acao de peca de comedia para uma crianca genin.",
               `Crianca: ${child.name}. Gosto: ${child.taste}.`,
               "Responda somente PASSA ou FALHA.",
-              "Passe se a acao claramente tenta agradar esse gosto, mesmo simples.",
+              "Passe somente se o jogador performar uma cena, piada, gesto ou fala teatral que claramente tenta agradar esse gosto.",
+              "Falhe se o jogador apenas perguntar o gosto, pedir dica, combinar o que fazer, conversar fora da cena ou usar palavras-chave soltas sem atuar.",
             ].join(" "),
           },
           { role: "user", content: message.slice(0, 500) },
@@ -334,12 +364,12 @@ export async function continueGeninComedyMessage(message: Message): Promise<bool
 async function maybeComplete(channel: TextBasedChannel | null, ctx: GeninComedyContext, state: GeninComedyState): Promise<void> {
   if (!CHILDREN.every((child) => state.passed?.[child.key])) {
     const next = CHILDREN.find((child) => !state.passed?.[child.key]);
-    if (next && channel && "send" in channel) await channel.send(`Teste de **${next.name}** ainda falta. Use \`/interagir npc\`.`);
+    if (next && channel && "send" in channel) await channel.send(`A cena de **${next.name}** ainda falta. Use \`/interagir npc\`.`);
     return;
   }
   const result = await completeMission(ctx.ownerCharId, ctx.def.id);
   if (result && channel && "send" in channel) {
-    await channel.send(`Missao concluida: **${ctx.def.name}**!\nRecompensas: ${result.rewards.xp} XP, ${result.rewards.ryo} ryo.`);
+    await channel.send({ embeds: [buildMissionCompleteEmbed(ctx.def.name, result.rewards)] });
   }
 }
 

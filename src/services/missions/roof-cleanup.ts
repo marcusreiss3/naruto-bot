@@ -17,6 +17,7 @@ import { MapRenderer, type RenderEntity } from "../maps/renderer.js";
 import { partyMemberIds } from "../party/party-service.js";
 import { cacheAttrs, gatherPartyPlayers } from "./combat-party.js";
 import {
+  buildMissionCompleteEmbed,
   completeMission,
   getActiveInstanceByType,
   getInstance,
@@ -272,8 +273,6 @@ export async function onRoofCleanupCombatWon(
   await markObjective(inst.id, "derrotar_pombos");
   const result = await completeMission(inst.charId, inst.missionId);
   if (result) {
-    await interaction.followUp(
-      `Missao concluida: **${def.name}**!\nRecompensas: ${result.rewards.xp} XP, ${result.rewards.ryo} ryo.`,
-    );
+    await interaction.followUp({ embeds: [buildMissionCompleteEmbed(def.name, result.rewards)] });
   }
 }
