@@ -14,8 +14,7 @@ import { getAppearance } from "../appearance/appearance-service.js";
 import { cellDistance } from "../combat/combat-math.js";
 import { getActiveSession, startCombat } from "../combat/combat-engine.js";
 import { MapRenderer, type RenderEntity } from "../maps/renderer.js";
-import { partyMemberIds } from "../party/party-service.js";
-import { cacheAttrs, gatherPartyPlayers } from "./combat-party.js";
+import { cacheAttrs, gatherSoloPlayer } from "./combat-party.js";
 import {
   buildMissionCompleteEmbed,
   completeMission,
@@ -66,22 +65,7 @@ export async function resolveRoofCleanup(discordId: string, guildId: string): Pr
     where: { discordId_guildId: { discordId, guildId } },
     select: { id: true },
   });
-  if (own) {
-    const ctx = await findContextByCharId(own.id);
-    if (ctx) return ctx;
-  }
-
-  for (const did of await partyMemberIds(guildId, discordId)) {
-    if (did === discordId) continue;
-    const uc = await prisma.userCharacter.findUnique({
-      where: { discordId_guildId: { discordId: did, guildId } },
-      select: { id: true },
-    });
-    if (!uc) continue;
-    const ctx = await findContextByCharId(uc.id);
-    if (ctx) return ctx;
-  }
-  return null;
+  return own ? findContextByCharId(own.id) : null;
 }
 
 export async function roofCleanupMapHandle(
@@ -230,7 +214,7 @@ async function startPigeonCombat(
     return;
   }
 
-  const { players, attrsById } = await gatherPartyPlayers(channel, guildId, {
+  const { players, attrsById } = gatherSoloPlayer({
     charId: char.id,
     name: char.name,
     hpCurrent: char.hpCurrent,

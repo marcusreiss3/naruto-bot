@@ -123,7 +123,12 @@ export interface MissionDef {
     | "WASP_NESTS"
     | "ICHIRAKU_DELIVERY"
     | "CLEAN_WATER"
-    | "NIGHT_PATROL";
+    | "NIGHT_PATROL"
+    | "CLONE_INVESTIGATION"
+    | "URGENT_DELIVERIES"
+    | "FESTIVAL_SECURITY"
+    | "FALSE_NINJAS"
+    | "SUPPLY_DEPOT_DEFENSE";
   data?: Record<string, unknown>;
 }
 

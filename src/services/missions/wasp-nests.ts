@@ -17,8 +17,7 @@ import { formatPersonaLines, sendAsPersona } from "../discord/persona-webhook.js
 import type { RenderEntity } from "../maps/renderer.js";
 import { NpcAiService } from "../npc-ai/npc-ai-service.js";
 import { getPersona } from "../npc-ai/personas.js";
-import { partyMemberIds } from "../party/party-service.js";
-import { cacheAttrs, gatherPartyPlayers } from "./combat-party.js";
+import { cacheAttrs, gatherSoloPlayer } from "./combat-party.js";
 import {
   buildMissionCompleteEmbed,
   completeMission,
@@ -167,22 +166,7 @@ export async function resolveWaspNests(discordId: string, guildId: string): Prom
     where: { discordId_guildId: { discordId, guildId } },
     select: { id: true },
   });
-  if (own) {
-    const ctx = await findContextByCharId(own.id);
-    if (ctx) return ctx;
-  }
-
-  for (const did of await partyMemberIds(guildId, discordId)) {
-    if (did === discordId) continue;
-    const uc = await prisma.userCharacter.findUnique({
-      where: { discordId_guildId: { discordId: did, guildId } },
-      select: { id: true },
-    });
-    if (!uc) continue;
-    const ctx = await findContextByCharId(uc.id);
-    if (ctx) return ctx;
-  }
-  return null;
+  return own ? findContextByCharId(own.id) : null;
 }
 
 export function availableWaspNestsNpcs(state: WaspNestsState, channelId: string): WaspNestsChoice[] {
@@ -281,7 +265,7 @@ export async function interactWaspNests(interaction: ChatInputCommandInteraction
   const guildId = interaction.guildId ?? "global";
   const ctx = await resolveWaspNests(interaction.user.id, guildId);
   if (!ctx) {
-    await interaction.reply({ content: "Voce (ou sua party) nao tem essa missao ativa.", ephemeral: true });
+    await interaction.reply({ content: "Voce nao tem essa missao ativa.", ephemeral: true });
     return;
   }
   const state = ensureState(ctx.inst.stateJson);
@@ -478,7 +462,7 @@ async function startWaspCombat(
   }
 
   const char = await getOrCreateCharacter(actorDiscordId, guildId, actorUsername);
-  const { players, attrsById } = await gatherPartyPlayers(channel, guildId, {
+  const { players, attrsById } = gatherSoloPlayer({
     charId: char.id,
     name: char.name,
     hpCurrent: char.hpCurrent,
@@ -505,7 +489,7 @@ async function startWaspCombat(
   });
   await cacheAttrs(session, attrsById);
   if (channel && "send" in channel) {
-    await channel.send(`Um enxame de vespas avancou perto da Academia! ${players.length} ninja(s) na luta. Use \`/mapa\`.`);
+    await channel.send("Um enxame de vespas avancou perto da Academia! Use `/mapa`.");
   }
 }
 

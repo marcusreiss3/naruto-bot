@@ -40,6 +40,11 @@ import { resolveWaspNests, waspNestsMapHandle } from "../services/missions/wasp-
 import { ichirakuDeliveryMapHandle, resolveIchirakuDelivery } from "../services/missions/ichiraku-delivery.js";
 import { cleanWaterMapHandle, resolveCleanWater } from "../services/missions/clean-water.js";
 import { nightPatrolMapHandle, resolveNightPatrol } from "../services/missions/night-patrol.js";
+import { cloneInvestigationMapHandle, resolveCloneInvestigation } from "../services/missions/clone-investigation.js";
+import { resolveUrgentDeliveries, urgentDeliveriesMapHandle } from "../services/missions/urgent-deliveries.js";
+import { festivalSecurityMapHandle, resolveFestivalSecurity } from "../services/missions/festival-security.js";
+import { falseNinjasMapHandle, resolveFalseNinjas } from "../services/missions/false-ninjas.js";
+import { resolveSupplyDepot, supplyDepotMapHandle } from "../services/missions/supply-depot-defense.js";
 
 export const mapa: Command = {
   data: new SlashCommandBuilder().setName("mapa").setDescription("Mostra o mapa do cenário deste canal"),
@@ -233,6 +238,41 @@ export const mapa: Command = {
     const patrolCtx = await resolveNightPatrol(interaction.user.id, guildId);
     if (patrolCtx && !session) {
       const note = await nightPatrolMapHandle(interaction, patrolCtx, entities);
+      if (note) missionNote += note;
+    }
+
+    // missao de identificar o clone infiltrado na Academia
+    const cloneCtx = await resolveCloneInvestigation(interaction.user.id, guildId);
+    if (cloneCtx && !session) {
+      const note = await cloneInvestigationMapHandle(interaction, cloneCtx, entities);
+      if (note) missionNote += note;
+    }
+
+    // missao de entregas oficiais entre a Mansao, Academia, Hospital e Mercado
+    const deliveriesCtx = await resolveUrgentDeliveries(interaction.user.id, guildId);
+    if (deliveriesCtx && !session) {
+      const note = await urgentDeliveriesMapHandle(interaction, deliveriesCtx, entities);
+      if (note) missionNote += note;
+    }
+
+    // missao rank C de seguranca do festival no Centro Comercial
+    const festivalSecurityCtx = await resolveFestivalSecurity(interaction.user.id, guildId);
+    if (festivalSecurityCtx && !session) {
+      const note = await festivalSecurityMapHandle(interaction, festivalSecurityCtx, entities);
+      if (note) missionNote += note;
+    }
+
+    // missao rank C dos falsos ninjas, configurada pela vila
+    const falseNinjasCtx = await resolveFalseNinjas(interaction.user.id, guildId, interaction.channelId);
+    if (falseNinjasCtx && !session) {
+      const note = await falseNinjasMapHandle(interaction, falseNinjasCtx, entities);
+      if (note) missionNote += note;
+    }
+
+    // missao rank C de defesa do deposito regional
+    const supplyDepotCtx = await resolveSupplyDepot(interaction.user.id, guildId, interaction.channelId);
+    if (supplyDepotCtx && !session) {
+      const note = await supplyDepotMapHandle(interaction, supplyDepotCtx, entities);
       if (note) missionNote += note;
     }
 

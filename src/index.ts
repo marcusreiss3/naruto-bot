@@ -20,6 +20,11 @@ import { continueWaspNestsMessage } from "./services/missions/wasp-nests.js";
 import { continueIchirakuDeliveryMessage } from "./services/missions/ichiraku-delivery.js";
 import { continueCleanWaterMessage } from "./services/missions/clean-water.js";
 import { continueNightPatrolMessage } from "./services/missions/night-patrol.js";
+import { continueCloneInvestigationMessage } from "./services/missions/clone-investigation.js";
+import { continueUrgentDeliveriesMessage } from "./services/missions/urgent-deliveries.js";
+import { continueFestivalSecurityMessage } from "./services/missions/festival-security.js";
+import { continueFalseNinjasMessage } from "./services/missions/false-ninjas.js";
+import { continueSupplyDepotMessage } from "./services/missions/supply-depot-defense.js";
 
 const client = new Client({
   intents: [
@@ -50,6 +55,11 @@ client.on(Events.MessageCreate, async (message) => {
     if (await continueIchirakuDeliveryMessage(message)) return;
     if (await continueCleanWaterMessage(message)) return;
     if (await continueNightPatrolMessage(message)) return;
+    if (await continueCloneInvestigationMessage(message)) return;
+    if (await continueUrgentDeliveriesMessage(message)) return;
+    if (await continueFestivalSecurityMessage(message)) return;
+    if (await continueFalseNinjasMessage(message)) return;
+    if (await continueSupplyDepotMessage(message)) return;
     if (await continueDummySubstitutionMessage(message)) return;
     if (await continueInvestigationMessage(message)) return;
     if (await continueEscortMessage(message)) return;

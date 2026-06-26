@@ -12,7 +12,6 @@ import {
 import { prisma } from "../../db/client.js";
 import { CENTRO_COMERCIAL_CHANNEL_ID } from "../../data/scenarios/index.js";
 import { getMission } from "../../data/missions/index.js";
-import { partyMemberIds } from "../party/party-service.js";
 import { NpcAiService } from "../npc-ai/npc-ai-service.js";
 import { getPersona } from "../npc-ai/personas.js";
 import { sendAsPersona, formatPersonaLines } from "../discord/persona-webhook.js";
@@ -90,22 +89,7 @@ export async function resolveDangoRush(discordId: string, guildId: string): Prom
     where: { discordId_guildId: { discordId, guildId } },
     select: { id: true },
   });
-  if (own) {
-    const ctx = await findContextByCharId(own.id);
-    if (ctx) return ctx;
-  }
-
-  for (const did of await partyMemberIds(guildId, discordId)) {
-    if (did === discordId) continue;
-    const uc = await prisma.userCharacter.findUnique({
-      where: { discordId_guildId: { discordId: did, guildId } },
-      select: { id: true },
-    });
-    if (!uc) continue;
-    const ctx = await findContextByCharId(uc.id);
-    if (ctx) return ctx;
-  }
-  return null;
+  return own ? findContextByCharId(own.id) : null;
 }
 
 export function availableDangoRushNpcs(state: DangoRushState, channelId: string): DangoRushChoice[] {
@@ -157,7 +141,7 @@ export async function interactDangoRush(interaction: ChatInputCommandInteraction
   const guildId = interaction.guildId ?? "global";
   const ctx = await resolveDangoRush(interaction.user.id, guildId);
   if (!ctx) {
-    await interaction.reply({ content: "Voce (ou sua party) nao tem essa missao ativa.", ephemeral: true });
+    await interaction.reply({ content: "Voce nao tem essa missao ativa.", ephemeral: true });
     return;
   }
   if (interaction.channelId !== CENTRO_COMERCIAL_CHANNEL_ID || npcKey !== NPC_KEY) {

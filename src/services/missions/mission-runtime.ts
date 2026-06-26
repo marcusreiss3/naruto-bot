@@ -14,6 +14,9 @@ import { onPurseTheftCombatWon } from "./purse-thief.js";
 import { onRoofCleanupCombatWon } from "./roof-cleanup.js";
 import { onWaspNestsCombatWon } from "./wasp-nests.js";
 import { onNightPatrolCombatWon } from "./night-patrol.js";
+import { onFestivalSecurityCombatWon } from "./festival-security.js";
+import { onFalseNinjasCombatWon } from "./false-ninjas.js";
+import { onSupplyDepotCombatWon } from "./supply-depot-defense.js";
 import {
   buildMissionCompleteEmbed,
   completeMission,
@@ -297,6 +300,21 @@ export async function onCombatEnded(
 
   if (def.type === "NIGHT_PATROL") {
     await onNightPatrolCombatWon(interaction, inst.id);
+    return;
+  }
+
+  if (def.type === "FESTIVAL_SECURITY") {
+    await onFestivalSecurityCombatWon(interaction, inst.id);
+    return;
+  }
+
+  if (def.type === "FALSE_NINJAS") {
+    await onFalseNinjasCombatWon(interaction, inst.id);
+    return;
+  }
+
+  if (def.type === "SUPPLY_DEPOT_DEFENSE") {
+    await onSupplyDepotCombatWon(interaction, inst.id);
     return;
   }
 

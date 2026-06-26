@@ -13,7 +13,6 @@ import { MANSAO_HOKAGE_CHANNEL_ID } from "../../data/scenarios/index.js";
 import { getMission } from "../../data/missions/index.js";
 import { getOrCreateCharacter } from "../characters/character-service.js";
 import { getAppearance } from "../appearance/appearance-service.js";
-import { partyMemberIds } from "../party/party-service.js";
 import {
   completeMission,
   buildMissionCompleteEmbed,
@@ -112,22 +111,7 @@ export async function resolveArchiveScrolls(discordId: string, guildId: string):
     where: { discordId_guildId: { discordId, guildId } },
     select: { id: true },
   });
-  if (own) {
-    const ctx = await findContextByCharId(own.id);
-    if (ctx) return ctx;
-  }
-
-  for (const did of await partyMemberIds(guildId, discordId)) {
-    if (did === discordId) continue;
-    const uc = await prisma.userCharacter.findUnique({
-      where: { discordId_guildId: { discordId: did, guildId } },
-      select: { id: true },
-    });
-    if (!uc) continue;
-    const ctx = await findContextByCharId(uc.id);
-    if (ctx) return ctx;
-  }
-  return null;
+  return own ? findContextByCharId(own.id) : null;
 }
 
 export async function archiveScrollsMapHandle(
