@@ -45,6 +45,15 @@ import { resolveUrgentDeliveries, urgentDeliveriesMapHandle } from "../services/
 import { festivalSecurityMapHandle, resolveFestivalSecurity } from "../services/missions/festival-security.js";
 import { falseNinjasMapHandle, resolveFalseNinjas } from "../services/missions/false-ninjas.js";
 import { resolveSupplyDepot, supplyDepotMapHandle } from "../services/missions/supply-depot-defense.js";
+import { missingChildMapHandle, resolveMissingChild } from "../services/missions/missing-child.js";
+import { insectPlagueMapHandle, resolveInsectPlague } from "../services/missions/insect-plague.js";
+import { interceptedCodeMapHandle, resolveInterceptedCode } from "../services/missions/intercepted-code.js";
+import { caveRescueMapHandle, resolveCaveRescue } from "../services/missions/cave-rescue.js";
+import { itinerantFestivalMapHandle, resolveItinerantFestival } from "../services/missions/itinerant-festival.js";
+import { resolveRouteTraps, routeTrapsMapHandle } from "../services/missions/route-traps.js";
+import { hospitalTheftMapHandle, resolveHospitalTheft } from "../services/missions/hospital-theft.js";
+import { damagedBridgeMapHandle, resolveDamagedBridge } from "../services/missions/damaged-bridge.js";
+import { floodRescueMapHandle, resolveFloodRescue } from "../services/missions/flood-rescue.js";
 
 export const mapa: Command = {
   data: new SlashCommandBuilder().setName("mapa").setDescription("Mostra o mapa do cenário deste canal"),
@@ -273,6 +282,69 @@ export const mapa: Command = {
     const supplyDepotCtx = await resolveSupplyDepot(interaction.user.id, guildId, interaction.channelId);
     if (supplyDepotCtx && !session) {
       const note = await supplyDepotMapHandle(interaction, supplyDepotCtx, entities);
+      if (note) missionNote += note;
+    }
+
+    // missao rank C da crianca desaparecida, com investigacao por varios locais
+    const missingChildCtx = await resolveMissingChild(interaction.user.id, guildId, interaction.channelId);
+    if (missingChildCtx && !session) {
+      const note = await missingChildMapHandle(interaction, missingChildCtx, entities);
+      if (note) missionNote += note;
+    }
+
+    // missao rank C da praga de insetos controlados por chakra
+    const insectPlagueCtx = await resolveInsectPlague(interaction.user.id, guildId, interaction.channelId);
+    if (insectPlagueCtx && !session) {
+      const note = await insectPlagueMapHandle(interaction, insectPlagueCtx, entities);
+      if (note) missionNote += note;
+    }
+
+    // missao rank C da mensagem criptografada interceptada
+    const interceptedCodeCtx = await resolveInterceptedCode(interaction.user.id, guildId, interaction.channelId);
+    if (interceptedCodeCtx && !session) {
+      const note = await interceptedCodeMapHandle(interaction, interceptedCodeCtx, entities);
+      if (note) missionNote += note;
+    }
+
+    // missao rank C de resgate na caverna
+    const caveRescueCtx = await resolveCaveRescue(interaction.user.id, guildId, interaction.channelId);
+    if (caveRescueCtx && !session) {
+      const note = await caveRescueMapHandle(interaction, caveRescueCtx, entities);
+      if (note) missionNote += note;
+    }
+
+    // missao rank C de protecao de festival itinerante
+    const itinerantFestivalCtx = await resolveItinerantFestival(interaction.user.id, guildId, interaction.channelId);
+    if (itinerantFestivalCtx && !session) {
+      const note = await itinerantFestivalMapHandle(interaction, itinerantFestivalCtx, entities);
+      if (note) missionNote += note;
+    }
+
+    // missao rank C de armadilhas na rota comercial
+    const routeTrapsCtx = await resolveRouteTraps(interaction.user.id, guildId, interaction.channelId);
+    if (routeTrapsCtx && !session) {
+      const note = await routeTrapsMapHandle(interaction, routeTrapsCtx, entities);
+      if (note) missionNote += note;
+    }
+
+    // missao rank C de roubo de remedios no hospital
+    const hospitalTheftCtx = await resolveHospitalTheft(interaction.user.id, guildId, interaction.channelId);
+    if (hospitalTheftCtx && !session) {
+      const note = await hospitalTheftMapHandle(interaction, hospitalTheftCtx, entities);
+      if (note) missionNote += note;
+    }
+
+    // missao rank C da ponte danificada na rota comercial
+    const damagedBridgeCtx = await resolveDamagedBridge(interaction.user.id, guildId, interaction.channelId);
+    if (damagedBridgeCtx && !session) {
+      const note = await damagedBridgeMapHandle(interaction, damagedBridgeCtx, entities);
+      if (note) missionNote += note;
+    }
+
+    // missao rank C de resgate em rio/enchente
+    const floodRescueCtx = await resolveFloodRescue(interaction.user.id, guildId, interaction.channelId);
+    if (floodRescueCtx && !session) {
+      const note = await floodRescueMapHandle(interaction, floodRescueCtx, entities);
       if (note) missionNote += note;
     }
 

@@ -119,6 +119,60 @@ import {
   availableSupplyDepotNpcs,
   type SupplyDepotState,
 } from "../services/missions/supply-depot-defense.js";
+import {
+  interactMissingChild,
+  resolveMissingChild,
+  availableMissingChildNpcs,
+  type MissingChildState,
+} from "../services/missions/missing-child.js";
+import {
+  interactInsectPlague,
+  resolveInsectPlague,
+  availableInsectPlagueNpcs,
+  type InsectPlagueState,
+} from "../services/missions/insect-plague.js";
+import {
+  interactInterceptedCode,
+  resolveInterceptedCode,
+  availableInterceptedCodeNpcs,
+  type InterceptedCodeState,
+} from "../services/missions/intercepted-code.js";
+import {
+  interactCaveRescue,
+  resolveCaveRescue,
+  availableCaveRescueNpcs,
+  type CaveRescueState,
+} from "../services/missions/cave-rescue.js";
+import {
+  interactItinerantFestival,
+  resolveItinerantFestival,
+  availableItinerantFestivalNpcs,
+  type ItinerantFestivalState,
+} from "../services/missions/itinerant-festival.js";
+import {
+  interactRouteTraps,
+  resolveRouteTraps,
+  availableRouteTrapsNpcs,
+  type RouteTrapsState,
+} from "../services/missions/route-traps.js";
+import {
+  interactHospitalTheft,
+  resolveHospitalTheft,
+  availableHospitalTheftNpcs,
+  type HospitalTheftState,
+} from "../services/missions/hospital-theft.js";
+import {
+  interactDamagedBridge,
+  resolveDamagedBridge,
+  availableDamagedBridgeNpcs,
+  type DamagedBridgeState,
+} from "../services/missions/damaged-bridge.js";
+import {
+  interactFloodRescue,
+  resolveFloodRescue,
+  availableFloodRescueNpcs,
+  type FloodRescueState,
+} from "../services/missions/flood-rescue.js";
 
 export const interagir: Command = {
   data: new SlashCommandBuilder()
@@ -130,6 +184,15 @@ export const interagir: Command = {
 
   execute(interaction: ChatInputCommandInteraction) {
     const npc = interaction.options.getString("npc", true);
+    if (npc.startsWith("flood_rescue_")) return interactFloodRescue(interaction, npc);
+    if (npc.startsWith("damaged_bridge_")) return interactDamagedBridge(interaction, npc);
+    if (npc.startsWith("hospital_theft_")) return interactHospitalTheft(interaction, npc);
+    if (npc.startsWith("route_traps_")) return interactRouteTraps(interaction, npc);
+    if (npc.startsWith("itinerant_festival_")) return interactItinerantFestival(interaction, npc);
+    if (npc.startsWith("cave_rescue_")) return interactCaveRescue(interaction, npc);
+    if (npc.startsWith("intercepted_code_")) return interactInterceptedCode(interaction, npc);
+    if (npc.startsWith("insect_plague_")) return interactInsectPlague(interaction, npc);
+    if (npc.startsWith("missing_child_")) return interactMissingChild(interaction, npc);
     if (npc.startsWith("supply_depot_")) return interactSupplyDepot(interaction, npc);
     if (npc.startsWith("false_ninjas_")) return interactFalseNinjas(interaction, npc);
     if (npc === "festival_security_sayuri" || npc === "festival_fake_vendor" || npc === "festival_rogue_ninja") {
@@ -277,6 +340,87 @@ export const interagir: Command = {
       const state = readState<SupplyDepotState>(supplyDepot.inst.stateJson);
       choices.push(
         ...availableSupplyDepotNpcs(state, interaction.channelId, supplyDepot.variant)
+          .map((n) => ({ name: n.name, value: n.key })),
+      );
+    }
+
+    const missingChild = await resolveMissingChild(interaction.user.id, guildId, interaction.channelId);
+    if (missingChild) {
+      const state = readState<MissingChildState>(missingChild.inst.stateJson);
+      choices.push(
+        ...availableMissingChildNpcs(state, interaction.channelId, missingChild.variant)
+          .map((n) => ({ name: n.name, value: n.key })),
+      );
+    }
+
+    const insectPlague = await resolveInsectPlague(interaction.user.id, guildId, interaction.channelId);
+    if (insectPlague) {
+      const state = readState<InsectPlagueState>(insectPlague.inst.stateJson);
+      choices.push(
+        ...availableInsectPlagueNpcs(state, interaction.channelId, insectPlague.variant)
+          .map((n) => ({ name: n.name, value: n.key })),
+      );
+    }
+
+    const interceptedCode = await resolveInterceptedCode(interaction.user.id, guildId, interaction.channelId);
+    if (interceptedCode) {
+      const state = readState<InterceptedCodeState>(interceptedCode.inst.stateJson);
+      choices.push(
+        ...availableInterceptedCodeNpcs(state, interaction.channelId, interceptedCode.variant)
+          .map((n) => ({ name: n.name, value: n.key })),
+      );
+    }
+
+    const caveRescue = await resolveCaveRescue(interaction.user.id, guildId, interaction.channelId);
+    if (caveRescue) {
+      const state = readState<CaveRescueState>(caveRescue.inst.stateJson);
+      choices.push(
+        ...availableCaveRescueNpcs(state, interaction.channelId, caveRescue.variant)
+          .map((n) => ({ name: n.name, value: n.key })),
+      );
+    }
+
+    const itinerantFestival = await resolveItinerantFestival(interaction.user.id, guildId, interaction.channelId);
+    if (itinerantFestival) {
+      const state = readState<ItinerantFestivalState>(itinerantFestival.inst.stateJson);
+      choices.push(
+        ...availableItinerantFestivalNpcs(state, interaction.channelId, itinerantFestival.variant)
+          .map((n) => ({ name: n.name, value: n.key })),
+      );
+    }
+
+    const routeTraps = await resolveRouteTraps(interaction.user.id, guildId, interaction.channelId);
+    if (routeTraps) {
+      const state = readState<RouteTrapsState>(routeTraps.inst.stateJson);
+      choices.push(
+        ...availableRouteTrapsNpcs(state, interaction.channelId, routeTraps.variant)
+          .map((n) => ({ name: n.name, value: n.key })),
+      );
+    }
+
+    const hospitalTheft = await resolveHospitalTheft(interaction.user.id, guildId, interaction.channelId);
+    if (hospitalTheft) {
+      const state = readState<HospitalTheftState>(hospitalTheft.inst.stateJson);
+      choices.push(
+        ...availableHospitalTheftNpcs(state, interaction.channelId, hospitalTheft.variant)
+          .map((n) => ({ name: n.name, value: n.key })),
+      );
+    }
+
+    const damagedBridge = await resolveDamagedBridge(interaction.user.id, guildId, interaction.channelId);
+    if (damagedBridge) {
+      const state = readState<DamagedBridgeState>(damagedBridge.inst.stateJson);
+      choices.push(
+        ...availableDamagedBridgeNpcs(state, interaction.channelId, damagedBridge.variant)
+          .map((n) => ({ name: n.name, value: n.key })),
+      );
+    }
+
+    const floodRescue = await resolveFloodRescue(interaction.user.id, guildId, interaction.channelId);
+    if (floodRescue) {
+      const state = readState<FloodRescueState>(floodRescue.inst.stateJson);
+      choices.push(
+        ...availableFloodRescueNpcs(state, interaction.channelId, floodRescue.variant)
           .map((n) => ({ name: n.name, value: n.key })),
       );
     }

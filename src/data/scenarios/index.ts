@@ -11,6 +11,7 @@ export const BECO_KONOHA_CHANNEL_ID = "1516452197976772679";
 export const ACADEMIA_GENIN_CHANNEL_ID = "1516456751099285564";
 export const MANSAO_HOKAGE_CHANNEL_ID = "1516470677962494084";
 export const HOSPITAL_KONOHA_CHANNEL_ID = "1516825458765987980";
+export const CAVERNA_CHANNEL_ID = "1521879431168131132";
 
 export const SCENARIOS: ScenarioDef[] = [
   {
@@ -152,6 +153,20 @@ export const SCENARIOS: ScenarioDef[] = [
     image: "hospital-konoha.png",
     cells: {
       obstacles: ["D4", "D7", "F1", "F2", "F3", "F8", "F9", "F10", "E10", "D10", "C10", "B10", "A10", "A1", "B1", "C1", "D1", "E1"],
+    },
+  },
+  {
+    id: "caverna",
+    name: "Caverna",
+    channelId: CAVERNA_CHANNEL_ID,
+    rows: 6,
+    cols: 10,
+    description: "Galeria escura de uma mina antiga. Rochas soltas bloqueiam caminhos e ecoam qualquer movimento.",
+    terrain: "sand",
+    image: "cave.png",
+    cells: {
+      obstacles: ["A1", "A2", "A9", "A10", "B1", "B10", "C4", "C7", "D4", "D7", "E1", "E10", "F1", "F2", "F9", "F10"],
+      height: ["B3", "B8", "E3", "E8"],
     },
   },
 ];

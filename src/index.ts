@@ -25,6 +25,15 @@ import { continueUrgentDeliveriesMessage } from "./services/missions/urgent-deli
 import { continueFestivalSecurityMessage } from "./services/missions/festival-security.js";
 import { continueFalseNinjasMessage } from "./services/missions/false-ninjas.js";
 import { continueSupplyDepotMessage } from "./services/missions/supply-depot-defense.js";
+import { continueMissingChildMessage } from "./services/missions/missing-child.js";
+import { continueInsectPlagueMessage } from "./services/missions/insect-plague.js";
+import { continueInterceptedCodeMessage } from "./services/missions/intercepted-code.js";
+import { continueCaveRescueMessage } from "./services/missions/cave-rescue.js";
+import { continueItinerantFestivalMessage } from "./services/missions/itinerant-festival.js";
+import { continueRouteTrapsMessage } from "./services/missions/route-traps.js";
+import { continueHospitalTheftMessage } from "./services/missions/hospital-theft.js";
+import { continueDamagedBridgeMessage } from "./services/missions/damaged-bridge.js";
+import { continueFloodRescueMessage } from "./services/missions/flood-rescue.js";
 
 const client = new Client({
   intents: [
@@ -60,6 +69,15 @@ client.on(Events.MessageCreate, async (message) => {
     if (await continueFestivalSecurityMessage(message)) return;
     if (await continueFalseNinjasMessage(message)) return;
     if (await continueSupplyDepotMessage(message)) return;
+    if (await continueMissingChildMessage(message)) return;
+    if (await continueInsectPlagueMessage(message)) return;
+    if (await continueInterceptedCodeMessage(message)) return;
+    if (await continueCaveRescueMessage(message)) return;
+    if (await continueItinerantFestivalMessage(message)) return;
+    if (await continueRouteTrapsMessage(message)) return;
+    if (await continueHospitalTheftMessage(message)) return;
+    if (await continueDamagedBridgeMessage(message)) return;
+    if (await continueFloodRescueMessage(message)) return;
     if (await continueDummySubstitutionMessage(message)) return;
     if (await continueInvestigationMessage(message)) return;
     if (await continueEscortMessage(message)) return;

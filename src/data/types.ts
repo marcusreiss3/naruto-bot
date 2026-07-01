@@ -128,7 +128,16 @@ export interface MissionDef {
     | "URGENT_DELIVERIES"
     | "FESTIVAL_SECURITY"
     | "FALSE_NINJAS"
-    | "SUPPLY_DEPOT_DEFENSE";
+    | "SUPPLY_DEPOT_DEFENSE"
+    | "MISSING_CHILD"
+    | "CHAKRA_INSECT_PLAGUE"
+    | "INTERCEPTED_CODE"
+    | "CAVE_RESCUE"
+    | "ITINERANT_FESTIVAL_GUARD"
+    | "ROUTE_TRAPS"
+    | "HOSPITAL_THEFT"
+    | "DAMAGED_BRIDGE"
+    | "FLOOD_RESCUE";
   data?: Record<string, unknown>;
 }
 

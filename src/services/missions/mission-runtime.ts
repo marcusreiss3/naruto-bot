@@ -17,6 +17,13 @@ import { onNightPatrolCombatWon } from "./night-patrol.js";
 import { onFestivalSecurityCombatWon } from "./festival-security.js";
 import { onFalseNinjasCombatWon } from "./false-ninjas.js";
 import { onSupplyDepotCombatWon } from "./supply-depot-defense.js";
+import { onMissingChildCombatWon } from "./missing-child.js";
+import { onInsectPlagueCombatWon } from "./insect-plague.js";
+import { onInterceptedCodeCombatWon } from "./intercepted-code.js";
+import { onCaveRescueCombatWon } from "./cave-rescue.js";
+import { onItinerantFestivalCombatWon } from "./itinerant-festival.js";
+import { onDamagedBridgeCombatWon } from "./damaged-bridge.js";
+import { onFloodRescueCombatWon } from "./flood-rescue.js";
 import {
   buildMissionCompleteEmbed,
   completeMission,
@@ -315,6 +322,41 @@ export async function onCombatEnded(
 
   if (def.type === "SUPPLY_DEPOT_DEFENSE") {
     await onSupplyDepotCombatWon(interaction, inst.id);
+    return;
+  }
+
+  if (def.type === "MISSING_CHILD") {
+    await onMissingChildCombatWon(interaction, inst.id);
+    return;
+  }
+
+  if (def.type === "CHAKRA_INSECT_PLAGUE") {
+    await onInsectPlagueCombatWon(interaction, inst.id);
+    return;
+  }
+
+  if (def.type === "INTERCEPTED_CODE") {
+    await onInterceptedCodeCombatWon(interaction, inst.id);
+    return;
+  }
+
+  if (def.type === "CAVE_RESCUE") {
+    await onCaveRescueCombatWon(interaction, inst.id);
+    return;
+  }
+
+  if (def.type === "ITINERANT_FESTIVAL_GUARD") {
+    await onItinerantFestivalCombatWon(interaction, inst.id);
+    return;
+  }
+
+  if (def.type === "DAMAGED_BRIDGE") {
+    await onDamagedBridgeCombatWon(interaction, inst.id);
+    return;
+  }
+
+  if (def.type === "FLOOD_RESCUE") {
+    await onFloodRescueCombatWon(interaction, inst.id);
     return;
   }
 
