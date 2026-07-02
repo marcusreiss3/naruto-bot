@@ -5,7 +5,7 @@ import {
   type ChatInputCommandInteraction,
 } from "discord.js";
 import type { Command } from "./types.js";
-import { getScenarioByChannel } from "../data/index.js";
+import { getScenarioByChannel, getScenarioById } from "../data/index.js";
 import { MapRenderer, type RenderEntity } from "../services/maps/renderer.js";
 import { getActiveSession } from "../services/combat/combat-engine.js";
 import { buildSessionEntities } from "../services/combat/combat-render.js";
@@ -54,6 +54,8 @@ import { resolveRouteTraps, routeTrapsMapHandle } from "../services/missions/rou
 import { hospitalTheftMapHandle, resolveHospitalTheft } from "../services/missions/hospital-theft.js";
 import { damagedBridgeMapHandle, resolveDamagedBridge } from "../services/missions/damaged-bridge.js";
 import { floodRescueMapHandle, resolveFloodRescue } from "../services/missions/flood-rescue.js";
+import { districtNightPatrolMapHandle, resolveDistrictNightPatrol } from "../services/missions/district-night-patrol.js";
+import { enemyOutpostMapHandle, resolveEnemyOutpostInfiltration } from "../services/missions/enemy-outpost-infiltration.js";
 
 export const mapa: Command = {
   data: new SlashCommandBuilder().setName("mapa").setDescription("Mostra o mapa do cenário deste canal"),
@@ -72,7 +74,8 @@ export const mapa: Command = {
 
     const guildId = interaction.guildId ?? "global";
 
-    const session = await getActiveSession(channelId);
+    let session = await getActiveSession(channelId);
+    let renderScenario = session ? getScenarioById(session.scenarioId) ?? scenario : scenario;
     if (session) {
       round = session.round;
       entities.push(...(await buildSessionEntities(session, guildId)));
@@ -271,6 +274,13 @@ export const mapa: Command = {
       if (note) missionNote += note;
     }
 
+    // missao rank C de patrulha noturna no distrito comercial
+    const districtNightPatrolCtx = await resolveDistrictNightPatrol(interaction.user.id, guildId);
+    if (districtNightPatrolCtx && !session) {
+      const note = await districtNightPatrolMapHandle(interaction, districtNightPatrolCtx, entities);
+      if (note) missionNote += note;
+    }
+
     // missao rank C dos falsos ninjas, configurada pela vila
     const falseNinjasCtx = await resolveFalseNinjas(interaction.user.id, guildId, interaction.channelId);
     if (falseNinjasCtx && !session) {
@@ -348,12 +358,32 @@ export const mapa: Command = {
       if (note) missionNote += note;
     }
 
-    const png = await MapRenderer.renderScenario({ scenario, round, entities, drops });
+    // missao rank B de infiltracao no posto inimigo
+    const enemyOutpostCtx = await resolveEnemyOutpostInfiltration(interaction.user.id, guildId);
+    if (enemyOutpostCtx && !session) {
+      const note = await enemyOutpostMapHandle(interaction, enemyOutpostCtx);
+      if (note) missionNote += note;
+    }
+
+    if (!session) {
+      const freshSession = await getActiveSession(channelId);
+      if (freshSession) {
+        session = freshSession;
+        renderScenario = getScenarioById(session.scenarioId) ?? renderScenario;
+        round = session.round;
+        entities.length = 0;
+        drops.length = 0;
+        entities.push(...(await buildSessionEntities(session, guildId)));
+        session.drops.forEach((d) => drops.push({ cell: d.cell }));
+      }
+    }
+
+    const png = await MapRenderer.renderScenario({ scenario: renderScenario, round, entities, drops });
     const file = new AttachmentBuilder(png, { name: "mapa.png" });
 
     const embed = new EmbedBuilder()
-      .setTitle(`🗺️ ${scenario.name}`)
-      .setDescription(`${scenario.description}${missionNote}`)
+      .setTitle(`🗺️ ${renderScenario.name}`)
+      .setDescription(`${renderScenario.description}${missionNote}`)
       .setColor(0x2ecc71)
       .setImage("attachment://mapa.png");
 

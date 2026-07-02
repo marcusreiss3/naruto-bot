@@ -173,6 +173,12 @@ import {
   availableFloodRescueNpcs,
   type FloodRescueState,
 } from "../services/missions/flood-rescue.js";
+import {
+  interactDistrictNightPatrol,
+  resolveDistrictNightPatrol,
+  availableDistrictNightPatrolNpcs,
+  type DistrictNightPatrolState,
+} from "../services/missions/district-night-patrol.js";
 
 export const interagir: Command = {
   data: new SlashCommandBuilder()
@@ -198,6 +204,7 @@ export const interagir: Command = {
     if (npc === "festival_security_sayuri" || npc === "festival_fake_vendor" || npc === "festival_rogue_ninja") {
       return interactFestivalSecurity(interaction, npc);
     }
+    if (npc === "district_patrol_scout") return interactDistrictNightPatrol(interaction, npc);
     if (npc === "courier_emi" || npc.startsWith("delivery_")) return interactUrgentDeliveries(interaction, npc);
     if (npc === "academy_instructor_yori_clone" || npc.startsWith("clone_kenta_")) {
       return interactCloneInvestigation(interaction, npc);
@@ -324,6 +331,12 @@ export const interagir: Command = {
     if (festivalSecurity) {
       const state = readState<FestivalSecurityState>(festivalSecurity.inst.stateJson);
       choices.push(...availableFestivalSecurityNpcs(state, interaction.channelId).map((n) => ({ name: n.name, value: n.key })));
+    }
+
+    const districtNightPatrol = await resolveDistrictNightPatrol(interaction.user.id, guildId);
+    if (districtNightPatrol) {
+      const state = readState<DistrictNightPatrolState>(districtNightPatrol.inst.stateJson);
+      choices.push(...availableDistrictNightPatrolNpcs(state, interaction.channelId).map((n) => ({ name: n.name, value: n.key })));
     }
 
     const falseNinjas = await resolveFalseNinjas(interaction.user.id, guildId, interaction.channelId);

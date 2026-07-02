@@ -11,6 +11,7 @@ import {
   MANSAO_HOKAGE_CHANNEL_ID,
   HOSPITAL_KONOHA_CHANNEL_ID,
   CAVERNA_CHANNEL_ID,
+  CAMPO_ABERTO_CHANNEL_ID,
 } from "../scenarios/index.js";
 
 export const MISSIONS: MissionDef[] = [
@@ -443,7 +444,7 @@ export const MISSIONS: MissionDef[] = [
       { id: "pista_crianca", description: "Descobrir quem são os ladrões (Criança)" },
       { id: "derrotar_lider", description: "Derrotar o líder e os capangas na Floresta" },
     ],
-    rewards: { xp: 220, ryo: 180, items: [{ itemId: "katana_bandida", name: "Katana Bandida", qty: 1 }] },
+    rewards: { xp: 220, ryo: 180 },
     data: { thugs: 3, maxDialogue: 3, forestChannelId: FLORESTA_CHANNEL_ID, npcMaxTurns: 3 },
   },
   {
@@ -467,7 +468,6 @@ export const MISSIONS: MissionDef[] = [
     rewards: {
       xp: 245,
       ryo: 200,
-      items: [{ itemId: "insignia_seguranca_festival", name: "Insignia de Seguranca do Festival", qty: 1 }],
     },
     data: {
       commercialChannelId: CENTRO_COMERCIAL_CHANNEL_ID,
@@ -479,6 +479,32 @@ export const MISSIONS: MissionDef[] = [
       stepTimeoutMs: 60_000,
       weakTemplate: "festival_bandit",
       leaderTemplate: "festival_rogue_ninja",
+    },
+  },
+  {
+    id: "patrulha_noturna_distrito",
+    name: "Patrulha Noturna no Distrito",
+    rank: "C",
+    description:
+      "Moradores relatam sombras correndo pelos telhados do Centro Comercial durante a noite. Patrulhe os pontos suspeitos, preserve pistas antes que esfriem e sobreviva a emboscada dos criminosos.",
+    channelId: CENTRO_COMERCIAL_CHANNEL_ID,
+    type: "DISTRICT_NIGHT_PATROL",
+    objectives: [
+      { id: "chegar_distrito", description: "Ir ao Centro Comercial de Konoha e usar /mapa" },
+      { id: "patrulhar_telhados", description: "Patrulhar os telhados e avaliar as pistas antes que esfriem" },
+      { id: "confrontar_batedor", description: "Confrontar o batedor dos telhados usando /interagir npc" },
+      { id: "derrotar_quadrilha", description: "Derrotar a quadrilha que preparou a emboscada" },
+    ],
+    rewards: {
+      xp: 255,
+      ryo: 210,
+    },
+    data: {
+      variantId: "KONOHA",
+      scoutTurns: 2,
+      stepTimeoutMs: 75_000,
+      weakTemplate: "district_rooftop_thief",
+      leaderTemplate: "district_rooftop_leader",
     },
   },
   {
@@ -505,7 +531,6 @@ export const MISSIONS: MissionDef[] = [
     rewards: {
       xp: 250,
       ryo: 205,
-      items: [{ itemId: "bandana_falsa_apreendida", name: "Bandana Falsa Apreendida", qty: 1 }],
     },
     data: {
       variantId: "KONOHA",
@@ -545,7 +570,6 @@ export const MISSIONS: MissionDef[] = [
     rewards: {
       xp: 270,
       ryo: 220,
-      items: [{ itemId: "selo_almoxarifado_vila", name: "Selo do Almoxarifado da Vila", qty: 1 }],
     },
     data: {
       variantId: "KONOHA",
@@ -579,7 +603,6 @@ export const MISSIONS: MissionDef[] = [
     rewards: {
       xp: 260,
       ryo: 215,
-      items: [{ itemId: "broche_himura", name: "Broche da Familia Himura", qty: 1 }],
     },
     data: {
       variantId: "KONOHA",
@@ -615,7 +638,6 @@ export const MISSIONS: MissionDef[] = [
     rewards: {
       xp: 255,
       ryo: 210,
-      items: [{ itemId: "frasco_kikaichu_selado", name: "Frasco de Kikaichu Selado", qty: 1 }],
     },
     data: {
       variantId: "KONOHA",
@@ -649,7 +671,6 @@ export const MISSIONS: MissionDef[] = [
     rewards: {
       xp: 265,
       ryo: 215,
-      items: [{ itemId: "cifra_interceptada", name: "Cifra Interceptada", qty: 1 }],
     },
     data: {
       variantId: "KONOHA",
@@ -686,7 +707,6 @@ export const MISSIONS: MissionDef[] = [
     rewards: {
       xp: 275,
       ryo: 225,
-      items: [{ itemId: "lanterna_de_mina", name: "Lanterna de Mina", qty: 1 }],
     },
     data: {
       variantId: "KONOHA",
@@ -722,7 +742,6 @@ export const MISSIONS: MissionDef[] = [
     rewards: {
       xp: 270,
       ryo: 220,
-      items: [{ itemId: "passe_trupe_itinerante", name: "Passe da Trupe Itinerante", qty: 1 }],
     },
     data: {
       variantId: "KONOHA",
@@ -758,7 +777,6 @@ export const MISSIONS: MissionDef[] = [
     rewards: {
       xp: 250,
       ryo: 205,
-      items: [{ itemId: "selo_patrulha_rota", name: "Selo da Patrulha da Rota", qty: 1 }],
     },
     data: {
       variantId: "KONOHA",
@@ -791,7 +809,6 @@ export const MISSIONS: MissionDef[] = [
     rewards: {
       xp: 255,
       ryo: 210,
-      items: [{ itemId: "vale_tratamento_hospitalar", name: "Vale de Tratamento Hospitalar", qty: 1 }],
     },
     data: {
       variantId: "KONOHA",
@@ -827,7 +844,6 @@ export const MISSIONS: MissionDef[] = [
     rewards: {
       xp: 275,
       ryo: 225,
-      items: [{ itemId: "corda_reforcada_da_rota", name: "Corda Reforcada da Rota", qty: 1 }],
     },
     data: {
       variantId: "KONOHA",
@@ -866,7 +882,6 @@ export const MISSIONS: MissionDef[] = [
     rewards: {
       xp: 275,
       ryo: 225,
-      items: [{ itemId: "boia_de_resgate_reforcada", name: "Boia de Resgate Reforcada", qty: 1 }],
     },
     data: {
       variantId: "KONOHA",
@@ -894,7 +909,7 @@ export const MISSIONS: MissionDef[] = [
       { id: "derrotar_bandido", description: "Derrotar o bandido do deserto" },
       { id: "escoltar_suna", description: "Levar o comerciante em segurança até a rota de Sunagakure" },
     ],
-    rewards: { xp: 260, ryo: 210, items: [{ itemId: "tecido_suna", name: "Tecido Fino de Suna", qty: 1 }] },
+    rewards: { xp: 260, ryo: 210 },
     data: {
       desertChannelId: DESERTO_CHANNEL_ID,
       logTemplate: "tronco",
@@ -904,6 +919,30 @@ export const MISSIONS: MissionDef[] = [
       afterLogTalks: 1, // depois do tronco -> manda ir ao deserto
       desertTalks: 3, // no deserto -> emboscada do bandido
       afterBanditTalks: 2, // depois do bandido -> chegada a Suna (fim)
+    },
+  },
+  {
+    id: "infiltracao_posto_inimigo",
+    name: "Infiltracao no Posto Inimigo",
+    rank: "B",
+    description:
+      "Um posto avancado inimigo foi localizado no Campo Aberto. O time deve invadir o local e eliminar os guardas antes que reforcos sejam chamados.",
+    channelId: CAMPO_ABERTO_CHANNEL_ID,
+    type: "ENEMY_OUTPOST_INFILTRATION",
+    objectives: [
+      { id: "chegar_campo_aberto", description: "Chegar ao Campo Aberto e usar /mapa" },
+      { id: "invadir_posto", description: "Invadir o posto avancado inimigo" },
+      { id: "eliminar_inimigos", description: "Eliminar os guardas e o comandante do posto" },
+    ],
+    rewards: {
+      xp: 480,
+      ryo: 420,
+    },
+    data: {
+      outpostScenarioId: "posto_inimigo",
+      guardTemplate: "enemy_outpost_guard",
+      commanderTemplate: "enemy_outpost_commander",
+      guardCount: 3,
     },
   },
 ];

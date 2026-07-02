@@ -12,6 +12,7 @@ export const ACADEMIA_GENIN_CHANNEL_ID = "1516456751099285564";
 export const MANSAO_HOKAGE_CHANNEL_ID = "1516470677962494084";
 export const HOSPITAL_KONOHA_CHANNEL_ID = "1516825458765987980";
 export const CAVERNA_CHANNEL_ID = "1521879431168131132";
+export const CAMPO_ABERTO_CHANNEL_ID = "1522249926845923339";
 
 export const SCENARIOS: ScenarioDef[] = [
   {
@@ -167,6 +168,36 @@ export const SCENARIOS: ScenarioDef[] = [
     cells: {
       obstacles: ["A1", "A2", "A9", "A10", "B1", "B10", "C4", "C7", "D4", "D7", "E1", "E10", "F1", "F2", "F9", "F10"],
       height: ["B3", "B8", "E3", "E8"],
+    },
+  },
+  {
+    id: "campo_aberto",
+    name: "Campo Aberto",
+    channelId: CAMPO_ABERTO_CHANNEL_ID,
+    rows: 6,
+    cols: 10,
+    description: "Terreno amplo fora das vilas, usado para deslocamento, emboscadas e combates em area aberta.",
+    terrain: "grass",
+    image: "open-field.png",
+    cells: {
+      trees: ["A2", "B9", "E1", "F8"],
+      obstacles: ["C5", "D5"],
+      height: ["A6", "F4"],
+    },
+  },
+  {
+    id: "posto_inimigo",
+    name: "Posto Inimigo",
+    channelId: "mission:posto_inimigo",
+    rows: 6,
+    cols: 10,
+    description: "Um posto avancado inimigo montado no campo aberto, com barricadas, torres baixas e rotas de fuga estreitas.",
+    terrain: "grass",
+    image: "enemy-outpost.png",
+    cells: {
+      obstacles: ["B5", "B6", "C5", "D6", "E5", "E6"],
+      height: ["A8", "A9", "B8", "F2", "F3"],
+      trees: ["A1", "C10", "F10"],
     },
   },
 ];

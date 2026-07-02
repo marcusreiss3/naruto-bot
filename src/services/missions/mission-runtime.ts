@@ -24,6 +24,8 @@ import { onCaveRescueCombatWon } from "./cave-rescue.js";
 import { onItinerantFestivalCombatWon } from "./itinerant-festival.js";
 import { onDamagedBridgeCombatWon } from "./damaged-bridge.js";
 import { onFloodRescueCombatWon } from "./flood-rescue.js";
+import { onDistrictNightPatrolCombatWon } from "./district-night-patrol.js";
+import { onEnemyOutpostCombatWon } from "./enemy-outpost-infiltration.js";
 import {
   buildMissionCompleteEmbed,
   completeMission,
@@ -315,6 +317,11 @@ export async function onCombatEnded(
     return;
   }
 
+  if (def.type === "DISTRICT_NIGHT_PATROL") {
+    await onDistrictNightPatrolCombatWon(interaction, inst.id);
+    return;
+  }
+
   if (def.type === "FALSE_NINJAS") {
     await onFalseNinjasCombatWon(interaction, inst.id);
     return;
@@ -357,6 +364,11 @@ export async function onCombatEnded(
 
   if (def.type === "FLOOD_RESCUE") {
     await onFloodRescueCombatWon(interaction, inst.id);
+    return;
+  }
+
+  if (def.type === "ENEMY_OUTPOST_INFILTRATION") {
+    await onEnemyOutpostCombatWon(interaction, inst.id);
     return;
   }
 

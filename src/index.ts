@@ -34,6 +34,7 @@ import { continueRouteTrapsMessage } from "./services/missions/route-traps.js";
 import { continueHospitalTheftMessage } from "./services/missions/hospital-theft.js";
 import { continueDamagedBridgeMessage } from "./services/missions/damaged-bridge.js";
 import { continueFloodRescueMessage } from "./services/missions/flood-rescue.js";
+import { continueDistrictNightPatrolMessage } from "./services/missions/district-night-patrol.js";
 
 const client = new Client({
   intents: [
@@ -67,6 +68,7 @@ client.on(Events.MessageCreate, async (message) => {
     if (await continueCloneInvestigationMessage(message)) return;
     if (await continueUrgentDeliveriesMessage(message)) return;
     if (await continueFestivalSecurityMessage(message)) return;
+    if (await continueDistrictNightPatrolMessage(message)) return;
     if (await continueFalseNinjasMessage(message)) return;
     if (await continueSupplyDepotMessage(message)) return;
     if (await continueMissingChildMessage(message)) return;

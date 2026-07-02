@@ -89,6 +89,23 @@ export const NPCS: NpcTemplate[] = [
     image: "enemies/festival-rogue-ninja.png",
   },
   {
+    id: "district_rooftop_thief",
+    name: "Criminoso dos Telhados",
+    hpMax: 78,
+    attributes: { taijutsu: 8, kenjutsu: 7 },
+    abilityIds: ["tai_soco_forte", "ken_corte_simples"],
+    image: "enemies/rooftop-thief.png",
+  },
+  {
+    id: "district_rooftop_leader",
+    name: "Chefe dos Telhados",
+    hpMax: 180,
+    attributes: { taijutsu: 12, kenjutsu: 14, ninjutsu: 8 },
+    abilityIds: ["ken_corte_simples", "ken_corte_linha", "tai_soco_forte", "gen_confusao"],
+    aiPersona: "district_patrol_scout_konoha",
+    image: "enemies/rooftop-thief-leader.png",
+  },
+  {
     id: "false_ninja_grunt",
     name: "Falso Ninja",
     hpMax: 72,
@@ -239,6 +256,22 @@ export const NPCS: NpcTemplate[] = [
     abilityIds: ["ken_corte_simples", "ken_corte_linha", "tai_soco_forte", "suiton_suijinheki"],
     aiPersona: "flood_rescue_bandit_konoha",
     image: "enemies/river-bandit-leader.png",
+  },
+  {
+    id: "enemy_outpost_guard",
+    name: "Guarda do Posto",
+    hpMax: 125,
+    attributes: { taijutsu: 13, kenjutsu: 12, ninjutsu: 6 },
+    abilityIds: ["tai_soco_forte", "ken_corte_simples", "ken_corte_linha"],
+    image: "enemies/enemy-outpost-guard.png",
+  },
+  {
+    id: "enemy_outpost_commander",
+    name: "Comandante do Posto",
+    hpMax: 275,
+    attributes: { taijutsu: 16, kenjutsu: 18, ninjutsu: 14 },
+    abilityIds: ["ken_corte_simples", "ken_corte_linha", "tai_soco_forte", "katon_goukakyuu"],
+    image: "enemies/enemy-outpost-commander.png",
   },
 ];
 

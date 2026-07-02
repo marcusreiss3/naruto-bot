@@ -137,6 +137,8 @@ export interface MissionDef {
     | "ROUTE_TRAPS"
     | "HOSPITAL_THEFT"
     | "DAMAGED_BRIDGE"
+    | "DISTRICT_NIGHT_PATROL"
+    | "ENEMY_OUTPOST_INFILTRATION"
     | "FLOOD_RESCUE";
   data?: Record<string, unknown>;
 }
