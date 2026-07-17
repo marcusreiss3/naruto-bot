@@ -56,6 +56,15 @@ import { damagedBridgeMapHandle, resolveDamagedBridge } from "../services/missio
 import { floodRescueMapHandle, resolveFloodRescue } from "../services/missions/flood-rescue.js";
 import { districtNightPatrolMapHandle, resolveDistrictNightPatrol } from "../services/missions/district-night-patrol.js";
 import { enemyOutpostMapHandle, resolveEnemyOutpostInfiltration } from "../services/missions/enemy-outpost-infiltration.js";
+import { marketFireMapHandle, resolveMarketFire } from "../services/missions/market-fire.js";
+import { nukeninHuntMapHandle, resolveNukeninHunt } from "../services/missions/nukenin-hunt.js";
+import { resolveRiverSmuggling, riverSmugglingMapHandle } from "../services/missions/river-smuggling.js";
+import { desertAmbushMapHandle, resolveDesertAmbush } from "../services/missions/desert-ambush.js";
+import { bandanaCollectorMapHandle, resolveBandanaCollector } from "../services/missions/bandana-collector.js";
+import { resolveYukiHeir, yukiHeirMapHandle } from "../services/missions/yuki-heir.js";
+import { corpsePulseMapHandle, resolveCorpsePulse } from "../services/missions/corpse-pulse.js";
+import { eliteMaskMapHandle, resolveEliteMask } from "../services/missions/elite-mask.js";
+import { forbiddenBellMapHandle, resolveForbiddenBell } from "../services/missions/forbidden-bell.js";
 
 export const mapa: Command = {
   data: new SlashCommandBuilder().setName("mapa").setDescription("Mostra o mapa do cenário deste canal"),
@@ -362,6 +371,69 @@ export const mapa: Command = {
     const enemyOutpostCtx = await resolveEnemyOutpostInfiltration(interaction.user.id, guildId);
     if (enemyOutpostCtx && !session) {
       const note = await enemyOutpostMapHandle(interaction, enemyOutpostCtx);
+      if (note) missionNote += note;
+    }
+
+    // missao rank C de incendio nas barracas do Centro Comercial
+    const marketFireCtx = await resolveMarketFire(interaction.user.id, guildId);
+    if (marketFireCtx && !session) {
+      const note = await marketFireMapHandle(interaction, marketFireCtx, entities);
+      if (note) missionNote += note;
+    }
+
+    // missao rank C de cacada ao nukenin menor
+    const nukeninHuntCtx = await resolveNukeninHunt(interaction.user.id, guildId);
+    if (nukeninHuntCtx && !session) {
+      const note = await nukeninHuntMapHandle(interaction, nukeninHuntCtx, entities);
+      if (note) missionNote += note;
+    }
+
+    // missao rank C de contrabando no Rio
+    const riverSmugglingCtx = await resolveRiverSmuggling(interaction.user.id, guildId);
+    if (riverSmugglingCtx && !session) {
+      const note = await riverSmugglingMapHandle(interaction, riverSmugglingCtx, entities);
+      if (note) missionNote += note;
+    }
+
+    // missao rank C de emboscada no Deserto
+    const desertAmbushCtx = await resolveDesertAmbush(interaction.user.id, guildId);
+    if (desertAmbushCtx && !session) {
+      const note = await desertAmbushMapHandle(interaction, desertAmbushCtx, entities);
+      if (note) missionNote += note;
+    }
+
+    // missao rank C do colecionador de bandanas
+    const bandanaCollectorCtx = await resolveBandanaCollector(interaction.user.id, guildId);
+    if (bandanaCollectorCtx && !session) {
+      const note = await bandanaCollectorMapHandle(interaction, bandanaCollectorCtx, entities);
+      if (note) missionNote += note;
+    }
+
+    // missao rank B do herdeiro do Cla Yuki, com origem baseada na vila do jogador
+    const yukiHeirCtx = await resolveYukiHeir(interaction.user.id, guildId, interaction.channelId);
+    if (yukiHeirCtx && !session) {
+      const note = await yukiHeirMapHandle(interaction, yukiHeirCtx, entities);
+      if (note) missionNote += note;
+    }
+
+    // missao rank B do pulso do cadaver em Konoha
+    const corpsePulseCtx = await resolveCorpsePulse(interaction.user.id, guildId, interaction.channelId);
+    if (corpsePulseCtx && !session) {
+      const note = await corpsePulseMapHandle(interaction, corpsePulseCtx, entities);
+      if (note) missionNote += note;
+    }
+
+    // missao rank B da Mascara de Cinzas em Konoha
+    const eliteMaskCtx = await resolveEliteMask(interaction.user.id, guildId, interaction.channelId);
+    if (eliteMaskCtx && !session) {
+      const note = await eliteMaskMapHandle(interaction, eliteMaskCtx, entities);
+      if (note) missionNote += note;
+    }
+
+    // missao rank B do Sino Que Nao Deve Tocar
+    const forbiddenBellCtx = await resolveForbiddenBell(interaction.user.id, guildId, interaction.channelId);
+    if (forbiddenBellCtx && !session) {
+      const note = await forbiddenBellMapHandle(interaction, forbiddenBellCtx, entities);
       if (note) missionNote += note;
     }
 

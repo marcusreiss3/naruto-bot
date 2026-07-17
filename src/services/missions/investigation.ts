@@ -40,7 +40,7 @@ export const INVEST_NPCS: InvestNpc[] = [
     key: "mercador",
     name: "Mercador",
     cell: "C3",
-    imageFile: "npcs/merchant-konoha.png",
+    imageFile: "npcs/merchant.png",
     persona: "merchant_konoha",
     clue: "merchant",
     objective: "pista_mercador",

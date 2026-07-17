@@ -2,11 +2,11 @@ import { describe, it, expect } from "vitest";
 import { moveRange, costAfterMastery, maxHp } from "../src/services/characters/formulas.js";
 
 describe("formulas", () => {
-  it("movimento = 2 + floor(taijutsu/5)", () => {
+  it("movimento = 2 + floor(taijutsu/15)", () => {
     expect(moveRange(0)).toBe(2);
-    expect(moveRange(4)).toBe(2);
-    expect(moveRange(5)).toBe(3);
-    expect(moveRange(12)).toBe(4);
+    expect(moveRange(14)).toBe(2);
+    expect(moveRange(15)).toBe(3);
+    expect(moveRange(30)).toBe(4);
   });
 
   it("maestria reduz custo", () => {

@@ -26,6 +26,7 @@ import { partyMemberIds } from "../party/party-service.js";
 import { cacheAttrs, gatherPartyPlayers, type StarterChar } from "./combat-party.js";
 import {
   completeMission,
+  buildMissionCompleteEmbed,
   getActiveMissions,
   getInstance,
   markObjective,
@@ -74,14 +75,14 @@ const KONOHA_VARIANT: InsectPlagueVariant = {
     key: "insect_plague_clerk_konoha",
     name: "Kaede Mori (ordem agricola)",
     persona: "insect_plague_clerk_konoha",
-    imageFile: "npcs/mission-clerk-konoha.png",
+    imageFile: "npcs/mission-clerk.png",
     cell: "C3",
   },
   stockmaster: {
     key: "insect_plague_stockmaster_konoha",
     name: "Mako Akimichi (estoque)",
     persona: "insect_plague_stockmaster_konoha",
-    imageFile: "npcs/food-stockmaster-konoha.png",
+    imageFile: "npcs/food-stockmaster.png",
     cell: "D4",
   },
   handler: {
@@ -550,10 +551,7 @@ async function runDialogue(
       await setState(inst.id, state);
       const result = await completeMission(inst.charId, inst.missionId);
       if (result && channel && "send" in channel) {
-        const items = result.rewards.items?.map((item) => item.name).join(", ");
-        await channel.send(
-          `Missao concluida: **${def.name}**!\nRecompensas: ${result.rewards.xp} XP, ${result.rewards.ryo} ryo${items ? `, ${items}` : ""}.`,
-        );
+        await channel.send({ embeds: [buildMissionCompleteEmbed(def.name, result.rewards)] });
       }
       return;
     }

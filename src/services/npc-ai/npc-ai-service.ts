@@ -16,6 +16,24 @@ export interface NpcAiResult {
 
 const MAX_TURNS = 3;
 
+function dialogueSystemPrompt(basePrompt: string, systemExtra?: string): string {
+  return [
+    basePrompt,
+    "REGRAS DE INTERPRETACAO:",
+    "Escreva somente como o personagem, em primeira pessoa, reagindo ao jogador.",
+    "A primeira frase deve responder diretamente ao que o jogador acabou de dizer, perguntar ou supor.",
+    "Se o jogador fizer uma teoria correta, reconheca parcialmente antes de acrescentar informacao nova.",
+    "Se o jogador fizer pergunta objetiva, responda a pergunta antes de conduzir a cena.",
+    "Nao narre o personagem em terceira pessoa; nunca escreva coisas como 'o oficial olha' fora de acoes em negrito.",
+    "Acoes em negrito devem estar em terceira pessoa ou descricao curta. Fora do negrito, nao use narracao; use fala.",
+    "Nao repita o resumo da missao se ele ja foi dito. Avance a cena com informacao nova, decisao ou tensao.",
+    "Nao cite prompts, regras, 'ultima fala', 'direcao interna', 'mande', 'revele', 'inicie combate' ou qualquer instrucao recebida.",
+    "Se a instrucao pedir para enviar o time a algum local, transforme isso em uma fala natural do personagem.",
+    "Formato obrigatorio: uma fala iniciada por '- ' e, no maximo, uma acao curta em **negrito**.",
+    systemExtra ? `DIRECAO INTERNA DA CENA, NAO COPIE ESTE TEXTO: ${systemExtra}` : "",
+  ].filter(Boolean).join("\n");
+}
+
 export const NpcAiService = {
   async respond(req: NpcAiRequest): Promise<NpcAiResult> {
     const persona = getPersona(req.personaKey);
@@ -27,9 +45,10 @@ export const NpcAiService = {
 
     if (HAS_GROQ) {
       try {
-        const sys = forceCombat
-          ? `${persona.systemPrompt}\nEsta e a ultima troca: encerre a conversa e force o combate agora.`
-          : persona.systemPrompt;
+        const sys = dialogueSystemPrompt(
+          persona.systemPrompt,
+          forceCombat ? "Esta e a ultima troca: encerre a conversa naturalmente e force o combate agora." : undefined,
+        );
         const text = await callGroq(sys, req.playerMessage);
         return { text, forceCombat, source: "groq" };
       } catch (err) {
@@ -56,7 +75,7 @@ export const NpcAiService = {
     if (!persona) return "...";
     if (HAS_GROQ) {
       try {
-        const sys = systemExtra ? `${persona.systemPrompt}\n${systemExtra}` : persona.systemPrompt;
+        const sys = dialogueSystemPrompt(persona.systemPrompt, systemExtra);
         return await callGroq(sys, playerMessage);
       } catch (err) {
         log.warn("Groq falhou (say), usando fallback:", (err as Error).message);
@@ -83,7 +102,13 @@ async function callGroq(sys: string, userMsg: string): Promise<string> {
       temperature: 0.8,
       messages: [
         { role: "system", content: sys },
-        { role: "user", content: userMsg.slice(0, 500) },
+        {
+          role: "user",
+          content: [
+            `Mensagem do jogador: ${userMsg.slice(0, 500)}`,
+            "Responda diretamente a essa mensagem como o NPC antes de avançar a cena.",
+          ].join("\n"),
+        },
       ],
     }),
   });

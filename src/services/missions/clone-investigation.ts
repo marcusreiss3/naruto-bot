@@ -17,6 +17,7 @@ import { NpcAiService } from "../npc-ai/npc-ai-service.js";
 import { getPersona } from "../npc-ai/personas.js";
 import {
   completeMission,
+  buildMissionCompleteEmbed,
   getActiveInstanceByType,
   getInstance,
   markObjective,
@@ -379,7 +380,7 @@ async function startAccusation(
             embeds: [
               new EmbedBuilder()
                 .setColor(0xc0392b)
-                .setTitle("Investigacao encerrada")
+                .setTitle("<:investigation:1523544296379383949> Investigacao encerrada")
                 .setDescription("Acusacoes erradas demais fizeram os clones se dispersarem antes da identificacao."),
             ],
             components: [],
@@ -399,7 +400,7 @@ async function startAccusation(
         embeds: [
           new EmbedBuilder()
             .setColor(0x2ecc71)
-            .setTitle("Kenta verdadeiro identificado")
+            .setTitle("<:investigation_check:1523545905255547001> Kenta verdadeiro identificado")
             .setDescription("As tres provas apontam para o Kenta perto da porta. Ele desfaz os clones e aceita ajudar na arrumacao."),
         ],
         components: [],
@@ -413,9 +414,7 @@ async function startAccusation(
       );
       const result = await completeMission(inst.charId, inst.missionId);
       if (result) {
-        await channel.send(
-          `Missao concluida: **${def.name}**!\nRecompensas: ${result.rewards.xp} XP, ${result.rewards.ryo} ryo.`,
-        );
+        await channel.send({ embeds: [buildMissionCompleteEmbed(def.name, result.rewards)] });
       }
       return;
     } catch {

@@ -26,6 +26,15 @@ import { onDamagedBridgeCombatWon } from "./damaged-bridge.js";
 import { onFloodRescueCombatWon } from "./flood-rescue.js";
 import { onDistrictNightPatrolCombatWon } from "./district-night-patrol.js";
 import { onEnemyOutpostCombatWon } from "./enemy-outpost-infiltration.js";
+import { onMarketFireCombatWon } from "./market-fire.js";
+import { onNukeninHuntCombatWon } from "./nukenin-hunt.js";
+import { onRiverSmugglingCombatWon } from "./river-smuggling.js";
+import { onDesertAmbushCombatWon } from "./desert-ambush.js";
+import { onBandanaCollectorCombatWon } from "./bandana-collector.js";
+import { onYukiHeirCombatWon } from "./yuki-heir.js";
+import { onCorpsePulseCombatWon } from "./corpse-pulse.js";
+import { onEliteMaskCombatWon } from "./elite-mask.js";
+import { onForbiddenBellCombatWon } from "./forbidden-bell.js";
 import {
   buildMissionCompleteEmbed,
   completeMission,
@@ -369,6 +378,51 @@ export async function onCombatEnded(
 
   if (def.type === "ENEMY_OUTPOST_INFILTRATION") {
     await onEnemyOutpostCombatWon(interaction, inst.id);
+    return;
+  }
+
+  if (def.type === "MARKET_FIRE") {
+    await onMarketFireCombatWon(interaction, inst.id);
+    return;
+  }
+
+  if (def.type === "NUKENIN_HUNT") {
+    await onNukeninHuntCombatWon(interaction, inst.id);
+    return;
+  }
+
+  if (def.type === "RIVER_SMUGGLING") {
+    await onRiverSmugglingCombatWon(interaction, inst.id);
+    return;
+  }
+
+  if (def.type === "DESERT_AMBUSH") {
+    await onDesertAmbushCombatWon(interaction, inst.id);
+    return;
+  }
+
+  if (def.type === "BANDANA_COLLECTOR") {
+    await onBandanaCollectorCombatWon(interaction, inst.id);
+    return;
+  }
+
+  if (def.type === "YUKI_HEIR") {
+    await onYukiHeirCombatWon(interaction, inst.id);
+    return;
+  }
+
+  if (def.type === "CORPSE_PULSE") {
+    await onCorpsePulseCombatWon(interaction, inst.id);
+    return;
+  }
+
+  if (def.type === "ELITE_MASK") {
+    await onEliteMaskCombatWon(interaction, inst.id);
+    return;
+  }
+
+  if (def.type === "FORBIDDEN_BELL") {
+    await onForbiddenBellCombatWon(interaction, inst.id);
     return;
   }
 

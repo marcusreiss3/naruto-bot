@@ -93,7 +93,6 @@ export interface MissionObjectiveDef {
 export interface MissionRewards {
   xp: number;
   ryo: number;
-  items?: { itemId: string; name: string; qty: number }[];
 }
 
 export interface MissionDef {
@@ -139,7 +138,16 @@ export interface MissionDef {
     | "DAMAGED_BRIDGE"
     | "DISTRICT_NIGHT_PATROL"
     | "ENEMY_OUTPOST_INFILTRATION"
-    | "FLOOD_RESCUE";
+    | "FLOOD_RESCUE"
+    | "MARKET_FIRE"
+    | "NUKENIN_HUNT"
+    | "RIVER_SMUGGLING"
+    | "DESERT_AMBUSH"
+    | "BANDANA_COLLECTOR"
+    | "YUKI_HEIR"
+    | "CORPSE_PULSE"
+    | "ELITE_MASK"
+    | "FORBIDDEN_BELL";
   data?: Record<string, unknown>;
 }
 

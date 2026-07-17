@@ -476,6 +476,17 @@ export async function useAbility(
     if (targets.length === 0) logs.push("⚠️ Nenhum alvo válido na área.");
   }
 
+  // sangramento: esforco fisico reabre a ferida do proprio atacante
+  if (ability.category === "TAIJUTSU" || ability.category === "KENJUTSU") {
+    const extra = bleedExtraOnPhysical(actor.effects);
+    if (extra > 0) {
+      const hp = Math.max(0, actor.hpCurrent - extra);
+      await prisma.combatParticipant.update({ where: { id: actor.id }, data: { hpCurrent: hp } });
+      logs.push(`🩸 ${actor.name} forçou o corte e perdeu ${extra} HP (HP ${hp}/${actor.hpMax}).`);
+      if (hp <= 0) logs.push(`☠️ ${actor.name} foi derrotado!`);
+    }
+  }
+
   return { ok: true, logs, hits };
 
   function fail(error: string): UseAbilityResult {
@@ -555,7 +566,6 @@ export async function resolveHit(
   // limpa flag de undodgeable do atacante (consumido)
   if (attacker?.flags.nextUndodgeable) await setFlag(attacker.id, "nextUndodgeable", false);
 
-  // dano extra de sangramento ao usar fisico? (isso e no atacante; aqui aplicamos on-hit do alvo)
   const newHp = Math.max(0, target.hpCurrent - damage);
   await prisma.combatParticipant.update({ where: { id: target.id }, data: { hpCurrent: newHp } });
   if (damage > 0) logs.push(`💥 ${target.name} recebeu ${damage} de dano (HP ${newHp}/${target.hpMax}).`);
@@ -574,7 +584,7 @@ export async function resolveHit(
   }
 
   // desarme: cria item dropado
-  if (damage >= 0 && ability.effects?.some((e) => e.effectId === "DISARM")) {
+  if (damage > 0 && ability.effects?.some((e) => e.effectId === "DISARM")) {
     await prisma.droppedItem.create({
       data: {
         sessionId: s.id,

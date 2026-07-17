@@ -1,8 +1,9 @@
-import { EmbedBuilder, SlashCommandBuilder, type ChatInputCommandInteraction } from "discord.js";
+﻿import { EmbedBuilder, SlashCommandBuilder, type ChatInputCommandInteraction } from "discord.js";
 import type { Command } from "./types.js";
 import { getMission, MISSIONS } from "../data/index.js";
 import { getOrCreateCharacter } from "../services/characters/character-service.js";
 import { getActiveMissions } from "../services/missions/mission-service.js";
+
 export const missoes: Command = {
   data: new SlashCommandBuilder()
     .setName("missoes")
@@ -28,13 +29,25 @@ async function minhas(interaction: ChatInputCommandInteraction): Promise<void> {
     await interaction.reply({ content: "Você não tem missões ativas.", ephemeral: true });
     return;
   }
+
   const embed = new EmbedBuilder().setTitle("📋 Suas missões").setColor(0x3498db);
   for (const inst of insts) {
     const def = getMission(inst.missionId);
     if (!def) continue;
-    const objs = inst.objectives
-      .map((o) => `${o.done ? "✅" : "⬜"} ${def.objectives.find((d) => d.id === o.objectiveId)?.description ?? o.objectiveId}`)
-      .join("\n");
+
+    const objectiveStates = new Map(inst.objectives.map((objective) => [objective.objectiveId, objective.done]));
+    const visibleObjectives: string[] = [];
+    for (const objective of def.objectives) {
+      const done = objectiveStates.get(objective.id) ?? false;
+      if (done) {
+        visibleObjectives.push(`✅ ${objective.description}`);
+        continue;
+      }
+      visibleObjectives.push(`⬜ ${objective.description}`);
+      break;
+    }
+    const objs = visibleObjectives.join("\n");
+
     embed.addFields({ name: `[${def.rank}] ${def.name}`, value: `${def.description}\n${objs}` });
   }
   await interaction.reply({ embeds: [embed], ephemeral: true });

@@ -27,6 +27,7 @@ import { partyMemberIds } from "../party/party-service.js";
 import { cacheAttrs, gatherPartyPlayers, type StarterChar } from "./combat-party.js";
 import {
   completeMission,
+  buildMissionCompleteEmbed,
   getActiveMissions,
   getInstance,
   markObjective,
@@ -81,7 +82,7 @@ const KONOHA_VARIANT: MissingChildVariant = {
     key: "missing_child_parent_konoha",
     name: "Akio Himura (pai aflito)",
     persona: "missing_child_parent_konoha",
-    imageFile: "npcs/rich-father-konoha.png",
+    imageFile: "npcs/rich-father.png",
     cell: "C3",
   },
   vendor: {
@@ -104,7 +105,7 @@ const KONOHA_VARIANT: MissingChildVariant = {
     key: "missing_child_ayaka_konoha",
     name: "Ayaka Himura",
     persona: "missing_child_ayaka_konoha",
-    imageFile: "npcs/rich-girl-konoha.png",
+    imageFile: "npcs/rich-girl.png",
     cell: "B4",
   },
   kidnapper: {
@@ -599,10 +600,7 @@ async function runDialogue(
       await setState(inst.id, state);
       const result = await completeMission(inst.charId, inst.missionId);
       if (result && channel && "send" in channel) {
-        const items = result.rewards.items?.map((item) => item.name).join(", ");
-        await channel.send(
-          `Missao concluida: **${def.name}**!\nRecompensas: ${result.rewards.xp} XP, ${result.rewards.ryo} ryo${items ? `, ${items}` : ""}.`,
-        );
+        await channel.send({ embeds: [buildMissionCompleteEmbed(def.name, result.rewards)] });
       }
       return;
     }

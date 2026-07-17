@@ -35,6 +35,15 @@ import { continueHospitalTheftMessage } from "./services/missions/hospital-theft
 import { continueDamagedBridgeMessage } from "./services/missions/damaged-bridge.js";
 import { continueFloodRescueMessage } from "./services/missions/flood-rescue.js";
 import { continueDistrictNightPatrolMessage } from "./services/missions/district-night-patrol.js";
+import { continueMarketFireMessage } from "./services/missions/market-fire.js";
+import { continueNukeninHuntMessage } from "./services/missions/nukenin-hunt.js";
+import { continueRiverSmugglingMessage } from "./services/missions/river-smuggling.js";
+import { continueDesertAmbushMessage } from "./services/missions/desert-ambush.js";
+import { continueBandanaCollectorMessage } from "./services/missions/bandana-collector.js";
+import { continueYukiHeirMessage } from "./services/missions/yuki-heir.js";
+import { continueCorpsePulseMessage } from "./services/missions/corpse-pulse.js";
+import { continueEliteMaskMessage } from "./services/missions/elite-mask.js";
+import { continueForbiddenBellMessage } from "./services/missions/forbidden-bell.js";
 
 const client = new Client({
   intents: [
@@ -80,6 +89,15 @@ client.on(Events.MessageCreate, async (message) => {
     if (await continueHospitalTheftMessage(message)) return;
     if (await continueDamagedBridgeMessage(message)) return;
     if (await continueFloodRescueMessage(message)) return;
+    if (await continueMarketFireMessage(message)) return;
+    if (await continueNukeninHuntMessage(message)) return;
+    if (await continueRiverSmugglingMessage(message)) return;
+    if (await continueDesertAmbushMessage(message)) return;
+    if (await continueBandanaCollectorMessage(message)) return;
+    if (await continueYukiHeirMessage(message)) return;
+    if (await continueCorpsePulseMessage(message)) return;
+    if (await continueEliteMaskMessage(message)) return;
+    if (await continueForbiddenBellMessage(message)) return;
     if (await continueDummySubstitutionMessage(message)) return;
     if (await continueInvestigationMessage(message)) return;
     if (await continueEscortMessage(message)) return;

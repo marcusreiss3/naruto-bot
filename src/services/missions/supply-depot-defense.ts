@@ -24,6 +24,7 @@ import { partyMemberIds } from "../party/party-service.js";
 import { cacheAttrs, gatherPartyPlayers, type StarterChar } from "./combat-party.js";
 import {
   completeMission,
+  buildMissionCompleteEmbed,
   getActiveMissions,
   getInstance,
   markObjective,
@@ -69,14 +70,14 @@ const KONOHA_VARIANT: SupplyDepotVariant = {
     key: "supply_depot_clerk_konoha",
     name: "Kaede Mori (ordem de defesa)",
     persona: "supply_depot_clerk_konoha",
-    imageFile: "npcs/mission-clerk-konoha.png",
+    imageFile: "npcs/mission-clerk.png",
     cell: "C3",
   },
   quartermaster: {
     key: "supply_depot_quartermaster_konoha",
     name: "Hideo Sarutobi (almoxarife)",
     persona: "supply_depot_quartermaster_konoha",
-    imageFile: "npcs/depot-quartermaster-konoha.png",
+    imageFile: "npcs/depot-quartermaster.png",
     cell: "C3",
   },
   workers: [
@@ -84,7 +85,7 @@ const KONOHA_VARIANT: SupplyDepotVariant = {
       key: "supply_depot_worker_sora",
       name: "Sora (estoquista)",
       persona: "supply_depot_worker_sora",
-      imageFile: "npcs/depot-worker-konoha.png",
+      imageFile: "npcs/depot-worker.png",
       cell: "B3",
       objectiveId: "inspecionar_sora",
       fixedClue: "Sora assinou o registro da manha e sabe que as caixas medicas usam lacre verde.",
@@ -93,7 +94,7 @@ const KONOHA_VARIANT: SupplyDepotVariant = {
       key: "supply_depot_worker_mina",
       name: "Mina (carregadora)",
       persona: "supply_depot_worker_mina",
-      imageFile: "npcs/depot-worker-konoha.png",
+      imageFile: "npcs/depot-worker.png",
       cell: "D4",
       objectiveId: "inspecionar_mina",
       fixedClue: "Mina assinou o registro da manha e sabe que a entrada oeste esta com a fechadura quebrada.",
@@ -102,7 +103,7 @@ const KONOHA_VARIANT: SupplyDepotVariant = {
       key: "supply_depot_worker_tetsu",
       name: "Tetsu (funcionario novo)",
       persona: "supply_depot_worker_tetsu",
-      imageFile: "npcs/depot-worker-konoha.png",
+      imageFile: "npcs/depot-worker.png",
       cell: "E7",
       objectiveId: "inspecionar_tetsu",
       fixedClue: "Tetsu nao aparece no registro e afirma, incorretamente, que as armas ficam na entrada leste.",
@@ -576,10 +577,7 @@ async function runDialogue(
       await setState(inst.id, state);
       const result = await completeMission(inst.charId, inst.missionId);
       if (result && channel && "send" in channel) {
-        const items = result.rewards.items?.map((item) => item.name).join(", ");
-        await channel.send(
-          `Missao concluida: **${def.name}**!\nRecompensas: ${result.rewards.xp} XP, ${result.rewards.ryo} ryo${items ? `, ${items}` : ""}.`,
-        );
+        await channel.send({ embeds: [buildMissionCompleteEmbed(def.name, result.rewards)] });
       }
       return;
     }

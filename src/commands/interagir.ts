@@ -179,6 +179,60 @@ import {
   availableDistrictNightPatrolNpcs,
   type DistrictNightPatrolState,
 } from "../services/missions/district-night-patrol.js";
+import {
+  interactMarketFire,
+  resolveMarketFire,
+  availableMarketFireNpcs,
+  type MarketFireState,
+} from "../services/missions/market-fire.js";
+import {
+  interactNukeninHunt,
+  resolveNukeninHunt,
+  availableNukeninHuntNpcs,
+  type NukeninHuntState,
+} from "../services/missions/nukenin-hunt.js";
+import {
+  interactRiverSmuggling,
+  resolveRiverSmuggling,
+  availableRiverSmugglingNpcs,
+  type RiverSmugglingState,
+} from "../services/missions/river-smuggling.js";
+import {
+  interactDesertAmbush,
+  resolveDesertAmbush,
+  availableDesertAmbushNpcs,
+  type DesertAmbushState,
+} from "../services/missions/desert-ambush.js";
+import {
+  interactBandanaCollector,
+  resolveBandanaCollector,
+  availableBandanaCollectorNpcs,
+  type BandanaCollectorState,
+} from "../services/missions/bandana-collector.js";
+import {
+  interactYukiHeir,
+  resolveYukiHeir,
+  availableYukiHeirNpcs,
+  type YukiHeirState,
+} from "../services/missions/yuki-heir.js";
+import {
+  interactCorpsePulse,
+  resolveCorpsePulse,
+  availableCorpsePulseNpcs,
+  type CorpsePulseState,
+} from "../services/missions/corpse-pulse.js";
+import {
+  interactEliteMask,
+  resolveEliteMask,
+  availableEliteMaskNpcs,
+  type EliteMaskState,
+} from "../services/missions/elite-mask.js";
+import {
+  interactForbiddenBell,
+  resolveForbiddenBell,
+  availableForbiddenBellNpcs,
+  type ForbiddenBellState,
+} from "../services/missions/forbidden-bell.js";
 
 export const interagir: Command = {
   data: new SlashCommandBuilder()
@@ -190,6 +244,10 @@ export const interagir: Command = {
 
   execute(interaction: ChatInputCommandInteraction) {
     const npc = interaction.options.getString("npc", true);
+    if (npc.startsWith("forbidden_bell_")) return interactForbiddenBell(interaction, npc);
+    if (npc.startsWith("elite_mask_")) return interactEliteMask(interaction, npc);
+    if (npc.startsWith("corpse_")) return interactCorpsePulse(interaction, npc);
+    if (npc.startsWith("yuki_")) return interactYukiHeir(interaction, npc);
     if (npc.startsWith("flood_rescue_")) return interactFloodRescue(interaction, npc);
     if (npc.startsWith("damaged_bridge_")) return interactDamagedBridge(interaction, npc);
     if (npc.startsWith("hospital_theft_")) return interactHospitalTheft(interaction, npc);
@@ -199,6 +257,17 @@ export const interagir: Command = {
     if (npc.startsWith("intercepted_code_")) return interactInterceptedCode(interaction, npc);
     if (npc.startsWith("insect_plague_")) return interactInsectPlague(interaction, npc);
     if (npc.startsWith("missing_child_")) return interactMissingChild(interaction, npc);
+    if (npc === "market_fire_sayuri" || npc === "market_arsonist") return interactMarketFire(interaction, npc);
+    if (npc === "nukenin_clerk_konoha" || npc === "nukenin_informant" || npc === "minor_nukenin") {
+      return interactNukeninHunt(interaction, npc);
+    }
+    if (npc === "river_smuggling_clerk" || npc === "river_boatman") return interactRiverSmuggling(interaction, npc);
+    if (npc === "desert_caravan_master" || npc === "desert_raider_captain") {
+      return interactDesertAmbush(interaction, npc);
+    }
+    if (npc === "bandana_collector_clerk" || npc === "bandana_collector_boss") {
+      return interactBandanaCollector(interaction, npc);
+    }
     if (npc.startsWith("supply_depot_")) return interactSupplyDepot(interaction, npc);
     if (npc.startsWith("false_ninjas_")) return interactFalseNinjas(interaction, npc);
     if (npc === "festival_security_sayuri" || npc === "festival_fake_vendor" || npc === "festival_rogue_ninja") {
@@ -436,6 +505,60 @@ export const interagir: Command = {
         ...availableFloodRescueNpcs(state, interaction.channelId, floodRescue.variant)
           .map((n) => ({ name: n.name, value: n.key })),
       );
+    }
+
+    const marketFire = await resolveMarketFire(interaction.user.id, guildId);
+    if (marketFire) {
+      const state = readState<MarketFireState>(marketFire.inst.stateJson);
+      choices.push(...availableMarketFireNpcs(state, interaction.channelId).map((n) => ({ name: n.name, value: n.key })));
+    }
+
+    const nukeninHunt = await resolveNukeninHunt(interaction.user.id, guildId);
+    if (nukeninHunt) {
+      const state = readState<NukeninHuntState>(nukeninHunt.inst.stateJson);
+      choices.push(...availableNukeninHuntNpcs(state, interaction.channelId).map((n) => ({ name: n.name, value: n.key })));
+    }
+
+    const riverSmuggling = await resolveRiverSmuggling(interaction.user.id, guildId);
+    if (riverSmuggling) {
+      const state = readState<RiverSmugglingState>(riverSmuggling.inst.stateJson);
+      choices.push(...availableRiverSmugglingNpcs(state, interaction.channelId).map((n) => ({ name: n.name, value: n.key })));
+    }
+
+    const desertAmbush = await resolveDesertAmbush(interaction.user.id, guildId);
+    if (desertAmbush) {
+      const state = readState<DesertAmbushState>(desertAmbush.inst.stateJson);
+      choices.push(...availableDesertAmbushNpcs(state, interaction.channelId).map((n) => ({ name: n.name, value: n.key })));
+    }
+
+    const bandanaCollector = await resolveBandanaCollector(interaction.user.id, guildId);
+    if (bandanaCollector) {
+      const state = readState<BandanaCollectorState>(bandanaCollector.inst.stateJson);
+      choices.push(...availableBandanaCollectorNpcs(state, interaction.channelId).map((n) => ({ name: n.name, value: n.key })));
+    }
+
+    const yukiHeir = await resolveYukiHeir(interaction.user.id, guildId, interaction.channelId);
+    if (yukiHeir) {
+      const state = readState<YukiHeirState>(yukiHeir.inst.stateJson);
+      choices.push(...availableYukiHeirNpcs(state, interaction.channelId).map((n) => ({ name: n.name, value: n.key })));
+    }
+
+    const corpsePulse = await resolveCorpsePulse(interaction.user.id, guildId, interaction.channelId);
+    if (corpsePulse) {
+      const state = readState<CorpsePulseState>(corpsePulse.inst.stateJson);
+      choices.push(...availableCorpsePulseNpcs(state, interaction.channelId).map((n) => ({ name: n.name, value: n.key })));
+    }
+
+    const eliteMask = await resolveEliteMask(interaction.user.id, guildId, interaction.channelId);
+    if (eliteMask) {
+      const state = readState<EliteMaskState>(eliteMask.inst.stateJson);
+      choices.push(...availableEliteMaskNpcs(state, interaction.channelId).map((n) => ({ name: n.name, value: n.key })));
+    }
+
+    const forbiddenBell = await resolveForbiddenBell(interaction.user.id, guildId, interaction.channelId);
+    if (forbiddenBell) {
+      const state = readState<ForbiddenBellState>(forbiddenBell.inst.stateJson);
+      choices.push(...availableForbiddenBellNpcs(state, interaction.channelId).map((n) => ({ name: n.name, value: n.key })));
     }
 
     await interaction.respond(

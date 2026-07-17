@@ -19,6 +19,7 @@ import { getPersona } from "../npc-ai/personas.js";
 import { partyMemberIds } from "../party/party-service.js";
 import {
   completeMission,
+  buildMissionCompleteEmbed,
   getActiveMissions,
   getInstance,
   markObjective,
@@ -83,6 +84,8 @@ const KONOHA_VARIANT: HospitalTheftVariant = {
 const VARIANTS: Record<string, HospitalTheftVariant> = {
   KONOHA: KONOHA_VARIANT,
 };
+const INVESTIGATION_EMOJI = "<:investigation:1523544296379383949>";
+const INVESTIGATION_CHECK_EMOJI = "<:investigation_check:1523545905255547001>";
 
 const EVIDENCE = [
   {
@@ -453,14 +456,15 @@ async function runDialogue(
 
 function storageEmbed(state: HospitalTheftState, result?: string): EmbedBuilder {
   const found = new Set(state.evidence ?? []);
+  const titleEmoji = found.size >= EVIDENCE.length ? INVESTIGATION_CHECK_EMOJI : INVESTIGATION_EMOJI;
   return new EmbedBuilder()
     .setColor(0x1abc9c)
-    .setTitle("Deposito de Remedios")
+    .setTitle(`${titleEmoji} Deposito de Remedios`)
     .setDescription(
       [
         "Procurem pistas sem contaminar os remedios restantes.",
         "",
-        ...EVIDENCE.map((entry) => `${found.has(entry.id) ? "\u2705" : "\u26AA"} **${entry.label}:** ${found.has(entry.id) ? entry.clue : "ainda nao examinada"}`),
+        ...EVIDENCE.map((entry) => `${found.has(entry.id) ? INVESTIGATION_CHECK_EMOJI : INVESTIGATION_EMOJI} **${entry.label}:** ${found.has(entry.id) ? entry.clue : "ainda nao examinada"}`),
         "",
         `Pistas encontradas: **${found.size}/${EVIDENCE.length}**`,
         result ?? "",
@@ -597,14 +601,8 @@ async function startDecisionPanel(
         new EmbedBuilder()
           .setColor(ending.id === "arrest" ? 0xe74c3c : ending.id === "convince" ? 0x2ecc71 : 0x3498db)
           .setTitle(ending.title)
-          .setDescription(
-            [
-              ending.text,
-              result
-                ? `\nMissao concluida: **${def.name}**!\nRecompensas: ${result.rewards.xp} XP, ${result.rewards.ryo} ryo${result.rewards.items?.length ? `, ${result.rewards.items.map((item) => item.name).join(", ")}` : ""}.`
-                : "",
-            ].filter(Boolean).join("\n"),
-          ),
+          .setDescription(ending.text),
+        ...(result ? [buildMissionCompleteEmbed(def.name, result.rewards)] : []),
       ],
       components: [],
     });

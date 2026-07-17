@@ -18,8 +18,10 @@ import {
 } from "../services/characters/character-service.js";
 import { CLANS, getAbility, ALL_ABILITIES, MISSIONS } from "../data/index.js";
 import { assignMission, removeMission, completeMission, buildMissionCompleteEmbed } from "../services/missions/mission-service.js";
-import { getActiveSession, endCombat } from "../services/combat/combat-engine.js";
+import { getActiveSession, getSessionById, endCombat, type SessionFull } from "../services/combat/combat-engine.js";
+import { onCombatEnded } from "../services/missions/mission-runtime.js";
 import { getAppearance, releaseAppearance } from "../services/appearance/appearance-service.js";
+import { villageFromMember, VILLAGE_NAMES } from "../services/village-service.js";
 
 const attrChoices = ATTRIBUTES.map((a) => ({ name: a, value: a }));
 const resourceChoices = RESOURCES.map((r) => ({ name: r, value: r }));
@@ -91,6 +93,12 @@ export const admin: Command = {
             .setDescription("Remove um jutsu")
             .addUserOption((o) => o.setName("usuario").setDescription("Usuário").setRequired(true))
             .addStringOption((o) => o.setName("jutsu").setDescription("Jutsu").setAutocomplete(true).setRequired(true)),
+        )
+        .addSubcommand((s) =>
+          s
+            .setName("matar-inimigos")
+            .setDescription("Jutsu admin: derrota todos os inimigos do combate")
+            .addChannelOption((o) => o.setName("canal").setDescription("Canal (padrao: atual)").setRequired(false)),
         ),
     )
     .addSubcommandGroup((g) =>
@@ -194,7 +202,10 @@ export const admin: Command = {
     if (focused.name === "jutsu") {
       choices = ALL_ABILITIES.map((a) => ({ name: `${a.name} (${a.id})`.slice(0, 100), value: a.id }));
     } else if (focused.name === "missao") {
-      choices = MISSIONS.map((m) => ({ name: `${m.name} [${m.rank}] (${m.id})`.slice(0, 100), value: m.id }));
+      const rankOrder = { A: 0, B: 1, C: 2, D: 3 } as const;
+      choices = [...MISSIONS]
+        .sort((a, b) => (rankOrder[a.rank] ?? 9) - (rankOrder[b.rank] ?? 9))
+        .map((m) => ({ name: `${m.name} [${m.rank}] (${m.id})`.slice(0, 100), value: m.id }));
     }
     const filtered = choices
       .filter((c) => c.name.toLowerCase().includes(q) || c.value.toLowerCase().includes(q))
@@ -252,6 +263,44 @@ export const admin: Command = {
     }
 
     if (group === "jutsu") {
+      if (sub === "matar-inimigos") {
+        const ch = interaction.options.getChannel("canal");
+        const channelId = ch?.id ?? interaction.channelId;
+        const session = await getActiveSession(channelId);
+        if (!session) {
+          await interaction.editReply("Nenhum combate ativo nesse canal.");
+          return;
+        }
+        const enemiesAlive = session.participants.filter((p) => p.isNpc && p.hpCurrent > 0);
+        const playersAlive = session.participants.filter((p) => !p.isNpc && p.hpCurrent > 0);
+        if (enemiesAlive.length === 0) {
+          await interaction.editReply("Nao ha inimigos vivos nesse combate.");
+          return;
+        }
+        if (playersAlive.length === 0) {
+          await interaction.editReply("Nao ha jogadores vivos para receber a vitoria.");
+          return;
+        }
+
+        await prisma.combatParticipant.updateMany({
+          where: { sessionId: session.id, isNpc: true, hpCurrent: { gt: 0 } },
+          data: { hpCurrent: 0 },
+        });
+        const fresh = await getSessionById(session.id);
+        if (!fresh) {
+          await interaction.editReply("Inimigos derrotados, mas nao consegui recarregar o combate.");
+          return;
+        }
+        await endCombat(session.id);
+        await persistCombatResources(fresh);
+        await interaction.editReply(`Jutsu admin aplicado: **${enemiesAlive.length}** inimigo(s) derrotado(s).`);
+        if (interaction.channel && "send" in interaction.channel) {
+          await interaction.channel.send("Jutsu admin aplicado. Todos os inimigos em campo foram derrotados.");
+        }
+        await onCombatEnded(interaction, fresh);
+        return;
+      }
+
       const char = await getChar();
       const jutsu = interaction.options.getString("jutsu", true);
       if (!getAbility(jutsu)) {
@@ -268,11 +317,28 @@ export const admin: Command = {
       const char = await getChar();
       const missao = interaction.options.getString("missao", true);
       if (sub === "adicionar") {
-        const r = await assignMission(char.id, missao);
-        await interaction.editReply(r.ok ? `✅ Missão \`${missao}\` atribuída a **${char.name}**.` : `❌ ${r.error}`);
+        let initialState: Record<string, unknown> | undefined;
+        if (missao === "herdeiro_cla_yuki") {
+          const user = interaction.options.getUser("usuario", true);
+          const member = interaction.guild ? await interaction.guild.members.fetch(user.id).catch(() => null) : null;
+          initialState = { villageId: villageFromMember(member) };
+        }
+        const r = await assignMission(char.id, missao, initialState);
+        const origin = initialState?.villageId
+          ? ` Origem: **${VILLAGE_NAMES[initialState.villageId as keyof typeof VILLAGE_NAMES]}**.`
+          : "";
+        await interaction.editReply(r.ok ? `✅ Missão \`${missao}\` atribuída a **${char.name}**.${origin}` : `❌ ${r.error}`);
       } else if (sub === "remover") {
-        await removeMission(char.id, missao);
-        await interaction.editReply(`✅ Missão \`${missao}\` removida de **${char.name}**.`);
+        const removed = await removeMission(char.id, missao);
+        if (removed.instances === 0) {
+          await interaction.editReply(`Nenhum dado da missao \`${missao}\` encontrado para **${char.name}**.`);
+          return;
+        }
+        await interaction.editReply(
+          `Missao \`${missao}\` resetada para **${char.name}**. ` +
+            `Apaguei ${removed.instances} instancia(s), ${removed.objectives} objetivo(s) e ${removed.combats} combate(s) vinculado(s).`,
+        );
+        return;
       } else {
         const r = await completeMission(char.id, missao);
         const def = MISSIONS.find((m) => m.id === missao);
@@ -373,3 +439,19 @@ export const admin: Command = {
     }
   },
 };
+
+async function persistCombatResources(session: SessionFull): Promise<void> {
+  for (const p of session.participants) {
+    if (p.isNpc || !p.charId) continue;
+    await prisma.userCharacter.update({
+      where: { id: p.charId },
+      data: { hpCurrent: Math.max(1, p.hpCurrent) },
+    });
+    await prisma.characterResourceState
+      .update({
+        where: { charId: p.charId },
+        data: { chakra: p.chakra, energia: p.energia },
+      })
+      .catch(() => undefined);
+  }
+}

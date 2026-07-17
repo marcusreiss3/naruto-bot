@@ -25,6 +25,7 @@ import { partyMemberIds } from "../party/party-service.js";
 import { cacheAttrs, gatherPartyPlayers, type StarterChar } from "./combat-party.js";
 import {
   completeMission,
+  buildMissionCompleteEmbed,
   getActiveMissions,
   getInstance,
   markObjective,
@@ -70,7 +71,7 @@ const KONOHA_VARIANT: FalseNinjasVariant = {
     key: "false_ninjas_clerk_konoha",
     name: "Kaede Mori (escriva de missoes)",
     persona: "false_ninjas_clerk_konoha",
-    imageFile: "npcs/mission-clerk-konoha.png",
+    imageFile: "npcs/mission-clerk.png",
     cell: "C3",
   },
   witnesses: [
@@ -87,7 +88,7 @@ const KONOHA_VARIANT: FalseNinjasVariant = {
       key: "false_ninjas_aya",
       name: "Aya (tecidos)",
       persona: "false_ninjas_aya",
-      imageFile: "npcs/market-vendor-aya.png",
+      imageFile: "npcs/market_vendor_aya.png",
       cell: "D7",
       objectiveId: "ouvir_aya_falso_ninja",
       fixedClue: "A ordem mostrada nao tinha numero de registro e usava um selo da Folha torto.",
@@ -96,7 +97,7 @@ const KONOHA_VARIANT: FalseNinjasVariant = {
       key: "false_ninjas_merchant",
       name: "Daichi (ferragens)",
       persona: "false_ninjas_merchant",
-      imageFile: "npcs/merchant-konoha.png",
+      imageFile: "npcs/merchant.png",
       cell: "E4",
       objectiveId: "ouvir_daichi_falso_ninja",
       fixedClue: "O grupo seguia para a rota comercial e carregava o dinheiro numa caixa marcada.",
@@ -106,7 +107,7 @@ const KONOHA_VARIANT: FalseNinjasVariant = {
     key: "false_ninjas_victims_konoha",
     name: "Comerciantes lesados",
     persona: "false_ninjas_victims_konoha",
-    imageFile: "npcs/market-vendors.png",
+    imageFile: "npcs/market_vendors_pair.png",
     cell: "C5",
   },
   impostor: {
@@ -627,10 +628,7 @@ async function runDialogue(
       await setState(inst.id, state);
       const result = await completeMission(inst.charId, inst.missionId);
       if (result && channel && "send" in channel) {
-        const items = result.rewards.items?.map((item) => item.name).join(", ");
-        await channel.send(
-          `Missao concluida: **${def.name}**!\nRecompensas: ${result.rewards.xp} XP, ${result.rewards.ryo} ryo${items ? `, ${items}` : ""}.`,
-        );
+        await channel.send({ embeds: [buildMissionCompleteEmbed(def.name, result.rewards)] });
       }
       return;
     }
