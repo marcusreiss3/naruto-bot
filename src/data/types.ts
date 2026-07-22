@@ -50,6 +50,12 @@ export interface Ability {
   // flags especiais
   unblockable?: boolean;
   undodgeable?: boolean;
+  // reacao PARRY contra jutsu de categoria BUKIJUTSU: em vez de reduzir o
+  // dano, redireciona o golpe inteiro de volta no atacante (Explosao Defensiva)
+  reflectsProjectiles?: boolean;
+  // bonus fixo de esquiva (pontos percentuais 0..1) quando usada como reacao
+  // DODGE (Tecnica de Substituicao)
+  reactionDodgeBonus?: number;
   // ignora obstaculos, arvores e fumaca na validacao da linha de visao
   pierceObstacles?: boolean;
   // exige um alvo inicial Encharcado e salta para todos os outros Encharcados

@@ -125,6 +125,37 @@ export const BALANCE = {
       ninjutsuDamageReduction: 0.6, // corta 60% do dano de NINJUTSU recebido
       reflectFraction: 0.3, // 30% do que foi barrado volta no atacante
     },
+    // Corrosao (Vapor): nevoa que derrete o que atinge. Dano por turno leve
+    // (metade da Queimadura) — o payoff nao e' dano, e' derreter a Barreira do
+    // alvo: a cada tick, tambem consome pontos de SHIELD, ignorando-a.
+    CORROSION: {
+      defaultDuration: 3,
+      dmgPerTurn: 5,
+      shieldCorrodePerStack: 8, // pontos de Barreira derretidos por turno, por acumulo
+    },
+    // Desidratacao (Calor): o calor extremo suga a agua do corpo do alvo,
+    // deixando-o fraco. Diferente da Queimadura (que so corta TAI/BUKI), corta
+    // o dano de QUALQUER categoria que o alvo debilitado causar.
+    DEHYDRATION: {
+      defaultDuration: 2,
+      dmgReductionPerStack: 0.15, // -15% de todo dano causado pelo alvo, por acumulo
+    },
+    // Magma (Lava): mesma forma do Cristalizado (acumula ate um gatilho), mas
+    // com dano leve por turno enquanto acumula — a lava esfria sobre o corpo.
+    // Ao encher, endurece e prende (ROOT) o alvo, sem Atordoar como o Cristal.
+    MAGMA: {
+      defaultDuration: 3,
+      dmgPerTurn: 4,
+      hardenAtStacks: 4,
+      hardenRootDuration: 2,
+    },
+    // Minado (Explosao): pavio de tempo. Nao causa dano enquanto o pavio
+    // queima — so estoura tudo de uma vez no ultimo tick, quando a duracao
+    // chega a zero. Diferente do Cristal/Lava, o gatilho e' TEMPO, nao stack.
+    MINADO: {
+      defaultDuration: 2,
+      explodeDamagePerStack: 20,
+    },
   },
 
   // ---- Deslocamento (empurrao / puxao) ----

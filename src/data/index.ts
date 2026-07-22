@@ -1,9 +1,15 @@
 import type { Ability, ClanDef } from "./types.js";
 import { ELEMENTAL } from "./jutsus/elemental.js";
 import { SUPPORT } from "./jutsus/support.js";
+import { FUNDAMENTOS as FUNDAMENTOS_ABILITIES } from "./jutsus/fundamentals.js";
 import { CLAN_ABILITIES, CLANS } from "./clans/index.js";
 
-export const ALL_ABILITIES: Ability[] = [...ELEMENTAL, ...SUPPORT, ...CLAN_ABILITIES];
+export const ALL_ABILITIES: Ability[] = [
+  ...ELEMENTAL,
+  ...SUPPORT,
+  ...FUNDAMENTOS_ABILITIES,
+  ...CLAN_ABILITIES,
+];
 
 const ABILITY_MAP = new Map<string, Ability>(ALL_ABILITIES.map((a) => [a.id, a]));
 const CLAN_MAP = new Map<string, ClanDef>(CLANS.map((c) => [c.id, c]));

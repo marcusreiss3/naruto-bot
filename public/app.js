@@ -1,7 +1,10 @@
 "use strict";
 
 // Metadados visuais dos elementos (o servidor manda os dados; isto é só estética).
+// FUNDAMENTOS não é um elemento de verdade (é a árvore de ninjutsu básico,
+// pré-requisito) — por isso sempre aparece desbloqueada, ver buildElemBar.
 const ELEMENTS = [
+  { id: "FUNDAMENTOS", name: "Fundamentos", icon: "📜", color: "#8a8a8a" },
   { id: "FOGO", name: "Fogo", icon: "", img: "/assets/icons/footer/katon.png", color: "#e2492d" },
   { id: "AGUA", name: "Água", icon: "", img: "/assets/icons/footer/suiton.png", color: "#2b7fd4" },
   { id: "VENTO", name: "Vento", icon: "", img: "/assets/icons/footer/futon.png", color: "#2fa36b" },
@@ -10,6 +13,10 @@ const ELEMENTS = [
   // Kekkei genkai. Sem PNG em /assets/icons/footer ainda -> cai no emoji (o
   // buildElemBar usa e.icon quando e.img esta ausente). Idem no ELEMENT_BG.
   { id: "CRISTAL", name: "Cristal", icon: "💎", color: "#1fa8a0" },
+  { id: "VAPOR", name: "Vapor", icon: "♨️", color: "#8fb9b3" },
+  { id: "CALOR", name: "Calor", icon: "🔥", color: "#d9662b" },
+  { id: "LAVA", name: "Lava", icon: "🌋", color: "#b23a1f" },
+  { id: "EXPLOSAO", name: "Explosão", icon: "💣", color: "#c9a227" },
 ];
 // Imagem de fundo por elemento (public/assets/bg). Ausente = sem imagem, só o gradiente.
 const ELEMENT_BG = {
@@ -39,6 +46,16 @@ const GLOSSARY = [
   { re: "Cristalizado", tip: "Cristalizado: cristais cravados no corpo do alvo. Cada acúmulo tira 8% de esquiva e 1 de movimento, e não causa dano por turno. Ao juntar 4 acúmulos o cristal se fecha: o alvo é selado (Atordoamento + preso ao chão) e os acúmulos zeram." },
   { re: "selad[oa](?:s)?|selar", tip: "Selado: o casulo de cristal fechou. O alvo fica Atordoado 1 rodada e preso ao chão por 2." },
   { re: "Prisma", tip: "Prisma: casulo de luz sobre você. Corta 60% do dano de Ninjutsu recebido e devolve 30% do que barrou no atacante. Em troca, você fica imóvel e golpes físicos passam inteiros." },
+  // ---- kekkei genkai: Vapor ----
+  { re: "Corrosão", tip: "Corrosão: névoa corrosiva no corpo do alvo. Causa dano leve por turno e derrete a Barreira (SHIELD) do alvo a cada rodada, ignorando-a por completo." },
+  // ---- kekkei genkai: Calor ----
+  { re: "Desidrata(?:d[oa])?(?:s)?|Desidratação", tip: "Desidratação: o calor sugou a água do corpo do alvo. Corta uma % de TODO o dano que ele causar (não só físico) enquanto durar." },
+  // ---- kekkei genkai: Lava ----
+  { re: "Magma", tip: "Magma: lava acumulada no corpo do alvo. Causa dano leve por turno; ao juntar acúmulos suficientes, endurece e prende o alvo (Imobilização), sem Atordoar." },
+  { re: "endureceu|endurecer", tip: "Endureceu: o Magma acumulado fechou. O alvo fica preso no lugar (Imobilização), mas continua podendo agir." },
+  // ---- kekkei genkai: Explosão ----
+  { re: "Minado", tip: "Minado: carga explosiva plantada no corpo do alvo. Não causa dano nenhum enquanto o pavio queima — detona tudo de uma vez quando a duração termina." },
+  { re: "defletiu|redireciona(?:r)?", tip: "Explosão Defensiva: contra um projétil (arma arremessada), apara e devolve o golpe inteiro no atacante em vez de só reduzir o dano." },
 ];
 const GLOSSARY_RE = new RegExp("(" + GLOSSARY.map((g) => g.re).join("|") + ")", "gi");
 
@@ -97,7 +114,7 @@ async function boot() {
   if (!state.hasChar) return show("nochar");
   show("app");
   buildElemBar();
-  activeEl = state.char.elements[0] || "FOGO";
+  activeEl = state.char.elements[0] || "FUNDAMENTOS";
   updateTop();
   renderTree(activeEl);
   lastSig = sigOf(state);
@@ -130,7 +147,7 @@ function buildElemBar() {
   const bar = $("elembar");
   bar.innerHTML = "";
   for (const e of ELEMENTS) {
-    const unlocked = state.char.elements.includes(e.id);
+    const unlocked = e.id === "FUNDAMENTOS" || state.char.elements.includes(e.id);
     const div = document.createElement("div");
     div.className = "elem" + (unlocked ? "" : " locked");
     div.style.setProperty("--ec", e.color);
@@ -229,8 +246,9 @@ function openModal(n) {
   $("mName").textContent = n.name;
   $("mDesc").innerHTML = highlightEffects(n.desc);
   const rank = $("mRank");
+  const kindLabel = n.kind === "PASSIVE" ? "Passiva" : n.kind === "ELEMENT" ? "Sorteio de Elemento" : "";
   if (n.rank) { rank.textContent = "Rank " + n.rank; rank.classList.remove("hidden"); }
-  else { rank.textContent = n.kind === "PASSIVE" ? "Passiva" : ""; rank.classList.toggle("hidden", n.kind !== "PASSIVE"); }
+  else { rank.textContent = kindLabel; rank.classList.toggle("hidden", !kindLabel); }
   $("mMeta").innerHTML =
     `<span>Custo: <b>${n.cost}</b></span>` +
     `<span>Nível: <b>${n.reqLevel}</b></span>` +
@@ -285,7 +303,8 @@ async function doBuy() {
       closeModal();
       return;
     }
-    toast(`Desbloqueado: ${modalNode.name}!`);
+    const elName = out.grantedElement && ELEMENTS.find((e) => e.id === out.grantedElement)?.name;
+    toast(elName ? `Elemento sorteado: ${elName}! 🎴` : `Desbloqueado: ${modalNode.name}!`);
     closeModal();
     // recarrega o estado autoritativo e re-renderiza
     state = await fetchState();

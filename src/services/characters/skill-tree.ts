@@ -9,8 +9,19 @@
 // REGRA DE OURO: nada vindo do cliente é confiável. buyNode revalida TUDO
 // contra o banco dentro de uma transação. O front só manda o nodeId.
 import { prisma } from "../../db/client.js";
-import type { Element } from "../../config/enums.js";
+import { ELEMENTS, isKekkeiGenkai, type Element } from "../../config/enums.js";
 import { ELEMENT_TREES, getNode, type SkillNodeDef } from "../../data/element-trees/index.js";
+import { FUNDAMENTOS } from "../../data/element-trees/fundamentals.js";
+
+// Elementos basicos = os que um personagem pode ganhar por sorteio na arvore
+// de Fundamentos. Kekkei genkai fica de fora (so entra via /admin).
+const BASIC_ELEMENTS: Element[] = ELEMENTS.filter((e) => !isKekkeiGenkai(e));
+
+// Pura e testavel: dado o que o personagem ja tem, quais elementos basicos
+// ainda podem sair no sorteio (funda_elemento_1..5).
+export function remainingBasicElements(owned: Element[]): Element[] {
+  return BASIC_ELEMENTS.filter((e) => !owned.includes(e));
+}
 
 export type NodeStatus = "OWNED" | "BUYABLE" | "LOCKED";
 
@@ -74,7 +85,11 @@ export async function loadSnapshot(discordId: string, guildId: string): Promise<
 // Motivo pelo qual um nó NÃO pode ser comprado agora (null = pode).
 export function lockReason(snap: CharSnapshot, node: SkillNodeDef): string | null {
   if (snap.owned.has(node.id)) return "Já adquirido.";
-  if (!snap.elements.includes(node.element)) return `Requer o elemento ${node.element}.`;
+  // nos de Fundamentos nao tem `element` (nao sao de nenhuma natureza de
+  // chakra) — pulam essa exigencia de proposito.
+  if (node.element && !snap.elements.includes(node.element)) {
+    return `Requer o elemento ${node.element}.`;
+  }
   for (const req of node.requires) {
     if (!snap.owned.has(req)) {
       const parent = getNode(req);
@@ -98,11 +113,21 @@ export function viewTree(snap: CharSnapshot, element: Element): NodeView[] {
   });
 }
 
+// Mesma logica de viewTree, mas pra arvore de Fundamentos (sem `element`).
+export function viewFundamentosTree(snap: CharSnapshot): NodeView[] {
+  return FUNDAMENTOS.map((node) => {
+    if (snap.owned.has(node.id)) return { ...node, status: "OWNED" };
+    const reason = lockReason(snap, node);
+    return reason ? { ...node, status: "LOCKED", reason } : { ...node, status: "BUYABLE" };
+  });
+}
+
 export interface BuyResult {
   ok: boolean;
   error?: string;
   pointsLeft?: number;
   grantedAbilityId?: string;
+  grantedElement?: Element; // no ELEMENT: qual elemento saiu no sorteio
 }
 
 // COMPRA AUTORITATIVA. Revalida contra o banco dentro da transação para evitar
@@ -144,6 +169,17 @@ export async function buyNode(
       grantedAbilityId = node.grantsAbilityId;
     }
 
-    return { ok: true, pointsLeft: snap.points - node.cost, grantedAbilityId };
+    // ELEMENT (arvore de Fundamentos): sorteia um elemento basico entre os
+    // que o personagem ainda nao tem. E' assim que o jogador ganha o 1o ao
+    // 5o elemento — kekkei genkai fica fora, so entra via /admin.
+    let grantedElement: Element | undefined;
+    if (node.kind === "ELEMENT") {
+      const pool = remainingBasicElements(snap.elements);
+      if (pool.length === 0) return { ok: false, error: "Todos os elementos básicos já foram concedidos." };
+      grantedElement = pool[Math.floor(Math.random() * pool.length)];
+      await tx.characterElement.create({ data: { charId: char.id, element: grantedElement } });
+    }
+
+    return { ok: true, pointsLeft: snap.points - node.cost, grantedAbilityId, grantedElement };
   });
 }

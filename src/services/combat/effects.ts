@@ -33,6 +33,10 @@ const DEFAULT_DURATIONS: Partial<Record<EffectId, number>> = {
   HASTE: E.HASTE.defaultDuration,
   CRYSTALLIZED: E.CRYSTALLIZED.defaultDuration,
   PRISM: E.PRISM.defaultDuration,
+  CORROSION: E.CORROSION.defaultDuration,
+  DEHYDRATION: E.DEHYDRATION.defaultDuration,
+  MAGMA: E.MAGMA.defaultDuration,
+  MINADO: E.MINADO.defaultDuration,
 };
 
 export function defaultDurationFor(effectId: EffectId): number {
@@ -48,6 +52,12 @@ export function clampDuration(effectId: EffectId, duration: number): number {
 // Multiplicador de dano de Taijutsu do alvo conforme stacks de queimadura.
 export function burnTaijutsuMultiplier(burnStacks: number): number {
   return Math.max(0, 1 - E.BURN.taijutsuDmgReductionPerStack * burnStacks);
+}
+
+// Multiplicador de dano de QUALQUER categoria do alvo desidratado (Calor).
+// Diferente do burnTaijutsuMultiplier, nao se limita a TAI/BUKI.
+export function dehydrationMultiplier(stacks: number): number {
+  return Math.max(0, 1 - E.DEHYDRATION.dmgReductionPerStack * stacks);
 }
 
 // Aplica stacks de queimadura; retorna stacks resultantes + dano explosivo (se atingiu o cap).
@@ -218,6 +228,49 @@ export function refractDamage(
   };
 }
 
+// ----------------------------------------------------------------- VAPOR (KG)
+// Corrosao: nevoa que derrete o que atinge. O dano por turno e' leve de
+// proposito (metade da Queimadura) — o que faz o efeito valer e' o quanto ele
+// derrete de Barreira do portador a cada tick, ignorando-a por completo.
+
+// Acumulos de corrosao ativos no alvo.
+export function corrosionStacks(activeEffects: EffectState[]): number {
+  return activeEffects
+    .filter((e) => isActive(e, "CORROSION"))
+    .reduce((total, e) => total + e.stacks, 0);
+}
+
+// Quanto de Barreira (SHIELD) a Corrosao derrete neste tick.
+export function corrosionShieldDrain(activeEffects: EffectState[]): number {
+  return corrosionStacks(activeEffects) * E.CORROSION.shieldCorrodePerStack;
+}
+
+// ------------------------------------------------------------------ LAVA (KG)
+// Magma e' um hibrido: tem dano por turno como a Queimadura (mas leve) E
+// acumula ate um gatilho como o Cristalizado. Ao encher, a lava esfria e
+// endurece — prende o alvo (ROOT), mas NAO atordoa como o selamento do Cristal.
+
+// Aplica acumulos de magma; se encher, a lava endurece (mesmo contrato de
+// applyCrystalStacks, payoff mais fraco: so ROOT, sem STUN).
+export function applyMagmaStacks(
+  currentStacks: number,
+  addStacks: number,
+  opts?: { hardenAtStacks?: number },
+): { stacks: number; hardened: boolean } {
+  const hardenAt = opts?.hardenAtStacks ?? E.MAGMA.hardenAtStacks;
+  const total = currentStacks + addStacks;
+  if (total >= hardenAt) return { stacks: 0, hardened: true };
+  return { stacks: total, hardened: false };
+}
+
+// -------------------------------------------------------------- EXPLOSAO (KG)
+// Minado e' um pavio de tempo: nao causa dano enquanto queima, so no ultimo
+// tick (quando a duracao chega a zero) — e ai estoura tudo de uma vez. Ao
+// contrario de BURN/CRYSTALLIZED/MAGMA, o gatilho e' TEMPO, nao acumulo.
+export function minadoExplosionDamage(stacks: number, duration: number): number {
+  return duration - 1 <= 0 ? stacks * E.MINADO.explodeDamagePerStack : 0;
+}
+
 // Processa o dano-por-turno de UM efeito (chamado no inicio do turno do portador).
 export function tickEffect(effect: EffectState): TurnTickResult {
   let damage = 0;
@@ -230,6 +283,15 @@ export function tickEffect(effect: EffectState): TurnTickResult {
       break;
     case "BLEED":
       damage = E.BLEED.dmgPerTurn;
+      break;
+    case "CORROSION":
+      damage = E.CORROSION.dmgPerTurn;
+      break;
+    case "MAGMA":
+      damage = E.MAGMA.dmgPerTurn;
+      break;
+    case "MINADO":
+      damage = minadoExplosionDamage(effect.stacks, effect.duration);
       break;
     default:
       damage = 0;

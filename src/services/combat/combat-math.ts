@@ -38,6 +38,8 @@ export interface DamageContext {
   scenarioDmgMult?: number;
   // reducao de dano de tai/ken por queimadura do atacante (multiplicador 0..1)
   burnTaiMult?: number;
+  // reducao de TODO o dano do atacante por desidratacao (Calor), multiplicador 0..1
+  weakenMult?: number;
   weaponDamage?: number;
   // bonus de altura (atacante em arvore)
   heightBonus?: boolean;
@@ -50,6 +52,7 @@ export function computeDamage(ability: Ability, ctx: DamageContext): number {
   if (ability.category === "TAIJUTSU" || ability.category === "BUKIJUTSU") {
     if (ctx.burnTaiMult !== undefined) dmg *= ctx.burnTaiMult;
   }
+  if (ctx.weakenMult !== undefined) dmg *= ctx.weakenMult;
   if (ability.category === "BUKIJUTSU") dmg += ctx.weaponDamage ?? 0;
   if (ctx.scenarioDmgMult) dmg *= ctx.scenarioDmgMult;
   if (ctx.heightBonus) dmg *= 1.1;

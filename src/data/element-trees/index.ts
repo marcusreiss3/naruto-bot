@@ -13,13 +13,17 @@
 // abilities que serão escritas quando o roster real existir.
 // ============================================================================
 import type { Element } from "../../config/enums.js";
+import { FUNDAMENTOS } from "./fundamentals.js";
 
-export type NodeKind = "JUTSU" | "PASSIVE";
+export type NodeKind = "JUTSU" | "PASSIVE" | "ELEMENT";
 export type NodeRank = "D" | "C" | "B" | "A" | "S";
 
 export interface SkillNodeDef {
   id: string;
-  element: Element;
+  // ausente para nos da arvore de Fundamentos (Clonagem/Substituicao/
+  // Caminhada Aquatica/rolagem de elemento): eles nao pertencem a nenhuma
+  // natureza de chakra, entao lockReason pula a exigencia de elemento.
+  element?: Element;
   name: string;
   kind: NodeKind;
   rank?: NodeRank; // só em JUTSU
@@ -216,6 +220,59 @@ const CRISTAL: SkillNodeDef[] = [
   C.jutsu("cristal_oito_paredes", "Oito Paredes de Cristal de Jade", "🏯", "S", "Ápice", 0, 8, ["cristal_faceta"], 38, 28, "Fecha uma área imensa em oito paredes de cristal. Crava 3 acúmulos de Cristalizado em todos os atingidos, o bastante para selar quem já tiver um cristal no corpo. Gasta quase todo o chakra."),
 ];
 
+// ----------------------------------------------------------------- VAPOR (KG)
+// Kekkei genkai: nao e' sorteado, so entra via /admin, igual Cristal. Kit
+// inicial com 4 nos (mais tecnicas virao depois) — a arvore sobe reta
+// (Ponto de Ebulicao -> Nevoa -> Punho -> Chute), sem ramo ainda.
+const VP = make("VAPOR");
+const VAPOR: SkillNodeDef[] = [
+  VP.pass("vapor_raiz", "Ponto de Ebulição", "♨️", "Raiz", 0, 0, [], 1, 1, "Passiva sempre ativa: todos os seus jutsus de Vapor causam +120% de dano.", true),
+  VP.jutsu("vapor_nevoa", "Névoa Qualificada", "☁️", "C", "Névoa", 0, 1, ["vapor_raiz"], 1, 4, "Cria uma nuvem de névoa extremamente corrosiva e a libera pela boca. Derrete o que atinge, cravando Corrosão em todos os alvos na área."),
+  VP.jutsu("vapor_punho", "Punho em Propulsão", "👊", "B", "Propulsão", 0, 2, ["vapor_nevoa"], 9, 9, "Usa o estilo de Ebulição para se propulsionar num soco à queima-roupa, misturando ninjutsu com taijutsu. O vapor residual do impacto pode cravar Corrosão."),
+  VP.jutsu("vapor_chute", "Chute em Propulsão", "🦵", "A", "Propulsão", 0, 3, ["vapor_punho"], 16, 15, "Versão aprimorada do Punho em Propulsão: mais velocidade e poder de impacto usando a força das pernas junto da propulsão do estilo Ebulição. Crava Corrosão com força total."),
+];
+
+// ----------------------------------------------------------------- CALOR (KG)
+// Kekkei genkai, mesmo nivel do Vapor: kit inicial de 3 nos + 1 passiva raiz,
+// arvore reta (Disparo -> Esfera -> Assassinato), sem ramo ainda.
+const CL = make("CALOR");
+const CALOR: SkillNodeDef[] = [
+  CL.pass("calor_raiz", "Ebulição Corporal", "🔥", "Raiz", 0, 0, [], 1, 1, "Passiva sempre ativa: todos os seus jutsus de Calor causam +120% de dano.", true),
+  CL.jutsu("calor_disparo", "Disparo das Bolas de Calor", "🔴", "C", "Calor", 0, 1, ["calor_raiz"], 1, 4, "Dispara quatro esferas de calor extremo contra a área do oponente. Quem é atingido desidrata e fica fraco."),
+  CL.jutsu("calor_esfera", "Esfera de Calor", "🟠", "B", "Calor", 0, 2, ["calor_disparo"], 9, 9, "Uma única esfera de calor que suga a água do corpo do alvo ao acertar, evaporando qualquer Encharcado nele e deixando-o desidratado e fraco."),
+  CL.jutsu("calor_assassinato", "Assassinato de Calor Extremo", "☀️", "A", "Calor", 0, 3, ["calor_esfera"], 16, 15, "Envolve a área ao redor do alvo num calor imenso, causando queimaduras graves em todos que estiverem perto."),
+];
+
+// ----------------------------------------------------------------- LAVA (KG)
+// Kekkei genkai mais forte que Vapor/Calor (2.25x), mais fraco que Cristal
+// (2.295x) — pedido explicito do usuario. Kit de 4 nos (um a mais que
+// Vapor/Calor) ja da espaco pra raiz + apice, igual o Cristal, em vez de uma
+// raiz unica.
+const LV = make("LAVA");
+const LAVA: SkillNodeDef[] = [
+  LV.pass("lava_raiz", "Núcleo Magmático", "🌋", "Raiz", 0, 0, [], 1, 1, "Passiva sempre ativa: todos os seus jutsus de Lava causam +50% de dano.", true),
+  LV.jutsu("lava_balas", "Técnica das Balas de Lava", "🔴", "C", "Lava", 0, 1, ["lava_raiz"], 1, 4, "Dispara vários resquícios de lava em sequência contra o alvo, cravando Magma a cada acerto."),
+  LV.jutsu("lava_solucao", "Solução Misteriosa", "🌋", "B", "Lava", 0, 2, ["lava_balas"], 9, 9, "Libera um grande arco de lava pela boca, que desaba de cima para baixo sobre a área do alvo, cravando Magma em todos atingidos."),
+  LV.jutsu("lava_rio", "Rio de Rochas Flamejantes", "🪨", "A", "Lava", 0, 3, ["lava_solucao"], 16, 15, "Expele um rio de lava que se solidifica em múltiplos pedregulhos disparados com força tremenda, empurrando o alvo e cravando Magma."),
+  LV.pass("lava_apice", "Coração do Vulcão", "🔥", "Ápice", 0, 4, ["lava_rio"], 26, 20, "Passiva: +50% de dano com jutsus de Lava (2,25x no total, com a raiz)."),
+  LV.jutsu("lava_huaguo", "Monte Huaguo", "🌺", "S", "Ápice", 0, 5, ["lava_apice"], 34, 26, "Cria um pequeno vulcão que explode violentamente, espalhando rocha derretida em todas as direções como uma flor gigante — o bastante para endurecer na hora qualquer Magma já acumulado no alvo."),
+];
+
+// -------------------------------------------------------------- EXPLOSAO (KG)
+// Mesmo nivel do Lava: 2.25x (raiz+apice), kit de 4 nos. A ordem de rank NAO
+// segue a ordem em que o usuario mandou as tecnicas — reordenei por poder:
+// Cortina de Fumaca (utilidade, sem dano) fica B em vez de ultima, e Punho de
+// Mina Terrestre (a explosao "enorme") vira o apice S.
+const EX = make("EXPLOSAO");
+const EXPLOSAO: SkillNodeDef[] = [
+  EX.pass("explosao_raiz", "Núcleo Detonante", "💣", "Raiz", 0, 0, [], 1, 1, "Passiva sempre ativa: todos os seus jutsus de Explosão causam +50% de dano.", true),
+  EX.jutsu("explosao_defensiva", "Explosão Defensiva", "🖐️", "C", "Explosão", 0, 1, ["explosao_raiz"], 1, 4, "Cria uma pequena explosão na palma da mão para se defender. Contra um projétil como uma kunai, apara e redireciona o golpe de volta contra quem o arremessou; contra qualquer outro ataque, funciona como um aparo comum."),
+  EX.jutsu("explosao_cortina", "Explosão: Cortina de Fumaça", "💨", "B", "Explosão", 0, 2, ["explosao_defensiva"], 9, 9, "Produz uma cortina de fumaça, como uma bomba de fumaça, obstruindo a visão inimiga e ocultando seus movimentos."),
+  EX.jutsu("explosao_impacto", "Explosão: Impacto", "👊", "A", "Explosão", 0, 3, ["explosao_cortina"], 16, 15, "Desfere um soco no solo e libera chakra explosivo numa onda de choque, lançando detritos que ferem os oponentes na área e os deixam sem equilíbrio."),
+  EX.pass("explosao_apice", "Estilo Explosão Pleno", "🔥", "Ápice", 0, 4, ["explosao_impacto"], 26, 20, "Passiva: +50% de dano com jutsus de Explosão (2,25x no total, com a raiz)."),
+  EX.jutsu("explosao_mina", "Punho de Mina Terrestre", "⛏️", "S", "Ápice", 0, 5, ["explosao_apice"], 34, 26, "Usa o Estilo Explosão para plantar uma carga no ponto de contato físico. O golpe inicial já dói, mas duas rodadas depois uma explosão enorme detona no local."),
+];
+
 export const ELEMENT_TREES: Record<Element, SkillNodeDef[]> = {
   FOGO,
   TERRA,
@@ -223,10 +280,16 @@ export const ELEMENT_TREES: Record<Element, SkillNodeDef[]> = {
   VENTO,
   RAIO,
   CRISTAL,
+  VAPOR,
+  CALOR,
+  LAVA,
+  EXPLOSAO,
 };
 
+// FUNDAMENTOS nao entra em ELEMENT_TREES (nao pertence a nenhum elemento),
+// mas entra no indice global — e' aqui que getNode/allNodes/buyNode o acham.
 const NODE_INDEX: Map<string, SkillNodeDef> = new Map(
-  Object.values(ELEMENT_TREES).flat().map((n) => [n.id, n]),
+  [...Object.values(ELEMENT_TREES).flat(), ...FUNDAMENTOS].map((n) => [n.id, n]),
 );
 
 // Ícones PNG por nó (public/assets/icons/<subpasta>). Ausente = usa o emoji do nó.
@@ -360,6 +423,20 @@ const NODE_ABILITY: Record<string, string> = {
   cristal_dragao: "shouton_dragao_cadente",
   cristal_fio_luz: "shouton_fio_luz",
   cristal_oito_paredes: "shouton_oito_paredes",
+  vapor_nevoa: "vapor_nevoa_qualificada",
+  vapor_punho: "vapor_punho_propulsao",
+  vapor_chute: "vapor_chute_propulsao",
+  calor_disparo: "calor_disparo_bolas",
+  calor_esfera: "calor_esfera",
+  calor_assassinato: "calor_assassinato_extremo",
+  lava_balas: "lava_tecnica_balas",
+  lava_solucao: "lava_solucao_misteriosa",
+  lava_rio: "lava_rio_rochas",
+  lava_huaguo: "lava_monte_huaguo",
+  explosao_cortina: "explosao_cortina_fumaca",
+  explosao_mina: "explosao_punho_mina",
+  // funda_* (Fundamentos) ja' declara grantsAbilityId direto no proprio no
+  // (nao passa pela fabrica make().jutsu()), entao nao precisa de ponte aqui.
 };
 for (const [nodeId, abilityId] of Object.entries(NODE_ABILITY)) {
   const n = NODE_INDEX.get(nodeId);

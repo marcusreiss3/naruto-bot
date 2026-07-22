@@ -3,13 +3,13 @@
 // Os 5 elementos basicos + os kekkei genkai. Kekkei genkai e' um elemento como
 // qualquer outro para a engine (arvore, requisitos, passivas); a diferenca e'
 // que ele NAO e' sorteado: so entra via /admin. Ver KEKKEI_GENKAI abaixo.
-export const ELEMENTS = ["FOGO", "AGUA", "VENTO", "TERRA", "RAIO", "CRISTAL"] as const;
+export const ELEMENTS = ["FOGO", "AGUA", "VENTO", "TERRA", "RAIO", "CRISTAL", "VAPOR", "CALOR", "LAVA", "EXPLOSAO"] as const;
 export type Element = (typeof ELEMENTS)[number];
 
 // Subconjunto de ELEMENTS que e' kekkei genkai (linhagem sanguinea). Usado para
 // rotular na UI e para separar a faixa de balanceamento no teste das passivas:
 // KG bate mais forte que elemento basico de proposito.
-export const KEKKEI_GENKAI = ["CRISTAL"] as const;
+export const KEKKEI_GENKAI = ["CRISTAL", "VAPOR", "CALOR", "LAVA", "EXPLOSAO"] as const;
 export type KekkeiGenkai = (typeof KEKKEI_GENKAI)[number];
 
 export function isKekkeiGenkai(element: Element): boolean {
@@ -23,6 +23,10 @@ export const ELEMENT_LABELS: Record<Element, string> = {
   TERRA: "Terra",
   RAIO: "Raio",
   CRISTAL: "Cristal",
+  VAPOR: "Vapor",
+  CALOR: "Calor",
+  LAVA: "Lava",
+  EXPLOSAO: "Explosão",
 };
 
 // Os 9 atributos do personagem. Ordem = ordem de exibicao no /perfil e no menu.
@@ -109,6 +113,10 @@ export const EFFECT_IDS = [
   // ---- exclusivos de kekkei genkai ----
   "CRYSTALLIZED", // cristalizado: acumulos de cristal travam esquiva e movimento; ao encher, selam
   "PRISM", // prisma: casulo de luz que reduz ninjutsu recebido e reflete parte, mas prende no lugar
+  "CORROSION", // corrosao: nevoa de Vapor que da dano leve por turno e derrete Barreira do portador
+  "DEHYDRATION", // desidratacao: Calor suga a agua do corpo, corta o dano de TUDO que o alvo causar (nao so tai/buki)
+  "MAGMA", // magma: Lava acumula, queima leve, e ao encher endurece e prende (ROOT) o alvo
+  "MINADO", // minado: Explosao planta uma carga no contato que detona sozinha ao fim da duracao
 ] as const;
 
 // Terreno temporario criado por jutsu (camada por cima do cenario estatico).
@@ -140,6 +148,10 @@ export const EFFECT_LABELS: Record<EffectId, string> = {
   HASTE: "Aceleração",
   CRYSTALLIZED: "Cristalizado",
   PRISM: "Prisma",
+  CORROSION: "Corrosão",
+  DEHYDRATION: "Desidratação",
+  MAGMA: "Magma",
+  MINADO: "Minado",
 };
 
 export function effectLabel(effectId: string): string {

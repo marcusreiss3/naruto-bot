@@ -241,6 +241,57 @@ export const PASSIVES: PassiveDef[] = [
     terrainDurationBonus: 1,
     effectDurationBonus: { effectId: "CRYSTALLIZED", bonus: 1 },
   },
+
+  // --------------------------------------------------- VAPOR (kekkei genkai)
+  // KEKKEI GENKAI tambem, mas o kit ainda e' so 3 jutsus (sem ramo, sem apice
+  // S ainda) — entao o multiplicador todo mora numa unica passiva raiz, em vez
+  // de raiz+apice como o Cristal. Fechado abaixo do Cristal (2.295x) de
+  // proposito: menos tecnicas = curva um degrau atras, ainda dentro da faixa
+  // de kekkei genkai (2.2 a 2.5) testada em tests/passives.test.ts. Quando
+  // Vapor ganhar mais nos (e' so o kit inicial), da pra dividir isso em
+  // raiz + passiva de apice, igual o Cristal.
+  {
+    nodeId: "vapor_raiz",
+    element: "VAPOR",
+    damageMult: 2.2, // piso da faixa de KG — Cristal fecha em 2.295x
+  },
+
+  // ---------------------------------------------------- CALOR (kekkei genkai)
+  // Mesmo nivel do Vapor: kit inicial de 3 jutsus, entao a curva toda mora
+  // numa unica passiva raiz (2.2x, o piso da faixa de KG).
+  {
+    nodeId: "calor_raiz",
+    element: "CALOR",
+    damageMult: 2.2,
+  },
+
+  // ----------------------------------------------------- LAVA (kekkei genkai)
+  // Pedido explicito: um pouco mais forte que Vapor/Calor (2.2x), mais fraco
+  // que Cristal (2.295x). Kit de 4 jutsus ja da espaco pra raiz+apice, entao
+  // fecha 2.25x = 1.5 * 1.5 — bem no meio das duas faixas.
+  {
+    nodeId: "lava_raiz",
+    element: "LAVA",
+    damageMult: 1.5,
+  },
+  {
+    nodeId: "lava_apice",
+    element: "LAVA",
+    damageMult: 1.5, // 1.5 * 1.5 = 2.25
+  },
+
+  // ------------------------------------------------- EXPLOSAO (kekkei genkai)
+  // Mesmo nivel do Lava: 2.25x = 1.5 * 1.5.
+  {
+    nodeId: "explosao_raiz",
+    element: "EXPLOSAO",
+    damageMult: 1.5,
+  },
+  {
+    nodeId: "explosao_apice",
+    element: "EXPLOSAO",
+    damageMult: 1.5, // 1.5 * 1.5 = 2.25
+  },
 ];
 
 export const PASSIVE_INDEX: Map<string, PassiveDef> = new Map(PASSIVES.map((p) => [p.nodeId, p]));

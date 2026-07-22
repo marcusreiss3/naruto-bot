@@ -16,12 +16,15 @@ import {
 import {
   applyBurnStacks,
   applyCrystalStacks,
+  applyMagmaStacks,
   applyCrystalToMove,
   applyHasteToMove,
   applySlowToMove,
   crystalDodgePenalty,
   isPrismed,
   refractDamage,
+  corrosionShieldDrain,
+  dehydrationMultiplier,
   bleedExtraOnPhysical,
   burnTaijutsuMultiplier,
   clampDuration,
@@ -835,6 +838,7 @@ export async function useAbility(
       ? scenario.elementModifiers?.[ability.element]?.dmgMult
       : undefined;
     const burnMult = burnTaijutsuMultiplier(stacksOf(actor, "BURN"));
+    const weakenMult = dehydrationMultiplier(stacksOf(actor, "DEHYDRATION"));
     const heightBonus = onHeight(actor);
     for (const t of targets) {
       // dano condicional (ex: Fio d'Agua so vale contra alvo Encharcado) precisa
@@ -848,6 +852,7 @@ export async function useAbility(
         attrValue: getAttr(actor, ability.scalingAttribute ?? "ninjutsu"),
         scenarioDmgMult: (scenarioMod ?? 1) * perTarget.damageMult * executeMult,
         burnTaiMult: burnMult,
+        weakenMult,
         heightBonus,
       });
       hits.push({ targetId: t.id, ability, rawDamage: raw });
@@ -929,6 +934,8 @@ export async function resolveHit(
       attackerHeight: attacker ? onHeight(attacker) : false,
       reactionBonus:
         (target.flags.reactionBuff ? 0.1 : 0) +
+        // Tecnica de Substituicao (Fundamentos): reacao de esquiva com bonus proprio
+        (reactAb?.reactionDodgeBonus ?? 0) +
         hasteDodgeBonus(target.effects) +
         (physical ? 0 : defenseMods.ninjutsuDodgeBonus) -
         // cada acumulo de cristal trava mais um pouco o corpo do alvo
@@ -944,14 +951,31 @@ export async function resolveHit(
   } else if ((reaction === "BLOCK" || reaction === "PARRY") && !ability.unblockable) {
     const reactAb = opts.reactionAbilityId ? getAbility(opts.reactionAbilityId) : undefined;
     if (reactAb) await payReaction(target, reactAb);
-    const base = reaction === "PARRY" ? BALANCE.parryReductionBase : BALANCE.blockReductionBase;
-    // Fio de Navalha (Vento) corta parte da reducao: o corte passa pela guarda
-    const factor = base * (1 - (atkMods?.armorPierce ?? 0));
-    const reduced = Math.round(damage * (1 - factor));
-    logs.push(
-      `🛡️ ${target.name} ${reaction === "PARRY" ? "aparou" : "bloqueou"} e reduziu o dano de ${damage} para ${reduced}.`,
-    );
-    damage = reduced;
+    // Explosao Defensiva (Explosao): apara um projetil (BUKIJUTSU) e devolve
+    // o golpe INTEIRO no proprio atacante, em vez de so reduzir o dano. Contra
+    // qualquer outra categoria, funciona como um aparo comum (cai no else).
+    if (reaction === "PARRY" && reactAb?.reflectsProjectiles && ability.category === "BUKIJUTSU") {
+      const reflected = damage;
+      damage = 0;
+      logs.push(`💥 ${target.name} defletiu o projétil de volta!`);
+      if (reflected > 0 && attacker && attacker.hpCurrent > 0) {
+        const hpAtk = Math.max(0, attacker.hpCurrent - reflected);
+        await prisma.combatParticipant.update({ where: { id: attacker.id }, data: { hpCurrent: hpAtk } });
+        logs.push(
+          `🗡️ O projétil voltou em ${attacker.name} e causou ${reflected} de dano (HP ${hpAtk}/${attacker.hpMax}).`,
+        );
+        if (hpAtk <= 0) logs.push(`☠️ ${attacker.name} foi derrotado pelo próprio golpe!`);
+      }
+    } else {
+      const base = reaction === "PARRY" ? BALANCE.parryReductionBase : BALANCE.blockReductionBase;
+      // Fio de Navalha (Vento) corta parte da reducao: o corte passa pela guarda
+      const factor = base * (1 - (atkMods?.armorPierce ?? 0));
+      const reduced = Math.round(damage * (1 - factor));
+      logs.push(
+        `🛡️ ${target.name} ${reaction === "PARRY" ? "aparou" : "bloqueou"} e reduziu o dano de ${damage} para ${reduced}.`,
+      );
+      damage = reduced;
+    }
 
     // Pele de Pedra (Terra): defender rende Barreira para o proximo golpe
     if (ownedNodes(target).includes("terra_raiz")) {
@@ -967,6 +991,9 @@ export async function resolveHit(
 
   // limpa flag de undodgeable do atacante (consumido)
   if (attacker?.flags.nextUndodgeable) await setFlag(attacker.id, "nextUndodgeable", false);
+  // Tecnica de Clonagem (Fundamentos): o bonus de esquiva so vale pro
+  // PROXIMO golpe recebido — a ilusao se desfaz depois de proteger uma vez.
+  if (target.flags.reactionBuff) await setFlag(target.id, "reactionBuff", false);
 
   // Prisma (Cristal): o casulo de luz refrata o ninjutsu recebido e devolve
   // parte no atacante. Vem ANTES da Barreira: a luz desvia o golpe antes de ele
@@ -1041,6 +1068,9 @@ export async function resolveHit(
         logs.push(
           `💎🔒 O cristal fechou sobre ${target.name}: **selado** (Atordoamento + Imobilização).`,
         );
+      }
+      if (r.hardened) {
+        logs.push(`🌋🔒 A lava endureceu sobre ${target.name}: **preso** (Imobilização).`);
       }
       if (r.explosion) {
         hpAfterEffects = Math.max(0, hpAfterEffects - r.explosion);
@@ -1225,7 +1255,7 @@ export async function applyEffect(
   duration: number,
   // passivas do ATACANTE que mudam a queimadura (Brasas Persistentes, Combustao)
   burnOpts?: { extraStacks?: number; explodeAtStacks?: number; explodeDamage?: number },
-): Promise<{ explosion?: number; sealed?: boolean }> {
+): Promise<{ explosion?: number; sealed?: boolean; hardened?: boolean }> {
   const dur = clampDuration(effectId as EffectId, duration);
 
   // cristal: acumula ate SELAR. Mesma forma da queimadura, payoff invertido —
@@ -1251,6 +1281,30 @@ export async function applyEffect(
       await applyEffect(participantId, "ROOT", 1, C.sealRootDuration);
     }
     return { sealed: sealed || undefined };
+  }
+
+  // magma: mesma forma do cristal (acumula ate um gatilho), mas o payoff e'
+  // mais fraco — so ROOT ao endurecer, sem STUN.
+  if (effectId === "MAGMA") {
+    const existing = await prisma.effectInstance.findFirst({
+      where: { participantId, effectId: "MAGMA" },
+    });
+    const { stacks: newStacks, hardened } = applyMagmaStacks(existing?.stacks ?? 0, stacks);
+    if (existing) {
+      await prisma.effectInstance.update({
+        where: { id: existing.id },
+        data: { stacks: newStacks, duration: Math.max(existing.duration, dur) },
+      });
+    } else {
+      await prisma.effectInstance.create({
+        data: { participantId, effectId, name: "Magma", stacks: newStacks, duration: dur },
+      });
+    }
+    if (hardened) {
+      const M = BALANCE.effects.MAGMA;
+      await applyEffect(participantId, "ROOT", 1, M.hardenRootDuration);
+    }
+    return { hardened: hardened || undefined };
   }
 
   // queimadura: stacks acumulam e podem explodir
@@ -1366,7 +1420,11 @@ async function processTurnStart(sessionId: string, participantId: string, logs: 
   // tick de efeitos (dano por turno + decremento de duracao)
   let hp = p.hpCurrent;
   const remaining: EffectState[] = [];
+  const snapshot: EffectState[] = [];
+  let corrosaoStacks = 0;
   for (const e of p.effects) {
+    snapshot.push({ effectId: e.effectId as any, stacks: e.stacks, duration: e.duration });
+    if (e.effectId === "CORROSION") corrosaoStacks += e.stacks;
     const res = tickEffect({ effectId: e.effectId as any, stacks: e.stacks, duration: e.duration });
     if (res.damage > 0) {
       hp = Math.max(0, hp - res.damage);
@@ -1380,6 +1438,18 @@ async function processTurnStart(sessionId: string, participantId: string, logs: 
     }
   }
 
+  // Corrosao (Vapor): a cada turno, derrete parte da Barreira do portador —
+  // ignora o escudo por completo em vez de ser absorvida por ele.
+  if (corrosaoStacks > 0) {
+    const wanted = corrosionShieldDrain([{ effectId: "CORROSION", stacks: corrosaoStacks, duration: 1 }]);
+    const pool = shieldPoints(snapshot);
+    const drained = Math.min(wanted, pool);
+    if (drained > 0) {
+      await consumeShield(participantId, drained);
+      logs.push(`🧪 A Corrosão derreteu ${drained} de Barreira de ${p.name}.`);
+    }
+  }
+
   // terreno: comecar o turno em chamas queima; comecar dentro d'agua encharca
   const session = await prisma.combatSession.findUnique({ where: { id: sessionId } });
   if (session) {
@@ -1390,9 +1460,15 @@ async function processTurnStart(sessionId: string, participantId: string, logs: 
       logs.push(`🔥 ${p.name} está em chamas e sofreu ${burn} de dano.`);
     }
     // e' isso que faz o rastro d'agua valer a pena: quem pisa nele fica exposto
-    // a Raio. Sem dano, so o marcador.
+    // a Raio. Sem dano, so o marcador. Tecnica da Caminhada Aquatica (Fundamentos)
+    // livra o portador tanto do penalti de movimento (ja' tratado em outro
+    // lugar) quanto de ficar Encharcado.
     const scenario = getScenarioById(session.scenarioId);
-    if (scenario && effectiveWater(scenario, patches, session.round).has(p.cell)) {
+    if (
+      !flags.waterWalk &&
+      scenario &&
+      effectiveWater(scenario, patches, session.round).has(p.cell)
+    ) {
       if (!remaining.some((e) => e.effectId === "WET")) {
         await applyEffect(p.id, "WET", 1, defaultDurationFor("WET"));
         logs.push(`💧 ${p.name} está na água e ficou Encharcado.`);

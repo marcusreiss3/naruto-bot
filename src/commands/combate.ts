@@ -758,6 +758,20 @@ async function agua(interaction: ChatInputCommandInteraction): Promise<void> {
     await interaction.reply({ content: "❌ Ação bônus já usada.", ephemeral: true });
     return;
   }
+  // Tecnica da Caminhada Aquatica (Fundamentos): so quem comprou o jutsu
+  // pode ligar/desligar o andar sobre a agua.
+  if (!me.isNpc && me.charId) {
+    const has = await prisma.characterJutsu.findFirst({
+      where: { charId: me.charId, jutsuId: "tecnica_caminhada_aquatica" },
+    });
+    if (!has) {
+      await interaction.reply({
+        content: "❌ Você não aprendeu a Técnica da Caminhada Aquática.",
+        ephemeral: true,
+      });
+      return;
+    }
+  }
   const flags = me.flags;
   flags.waterWalk = !flags.waterWalk;
   await prisma.combatParticipant.update({
