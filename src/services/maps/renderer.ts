@@ -26,11 +26,21 @@ export interface RenderDrop {
   label?: string;
 }
 
+// Area destacada no mapa (preview de jutsu: cone, linha, raio).
+export interface RenderHighlight {
+  cells: string[];
+  color: string; // cor do preenchimento translucido
+}
+
 export interface RenderState {
   scenario: ScenarioDef;
   round?: number;
   entities: RenderEntity[];
   drops?: RenderDrop[];
+  // desenhado sobre o terreno e sob as fichas
+  highlight?: RenderHighlight;
+  // celula de origem do preview (marcada com um alvo)
+  highlightOrigin?: string;
 }
 
 const CELLW = 60;
@@ -212,6 +222,25 @@ export const MapRenderer = {
       }
     }
 
+    // ----- area destacada (preview de jutsu) -----
+    if (state.highlight) {
+      for (const cell of state.highlight.cells) {
+        const pos = cellTopLeft(cell);
+        if (!pos) continue;
+        base.push(
+          `<rect x="${pos.x}" y="${pos.y}" width="${CELLW - 2}" height="${CELLH - 2}" fill="${state.highlight.color}" fill-opacity="0.45" stroke="${state.highlight.color}" stroke-opacity="0.9" stroke-width="2" rx="3"/>`,
+        );
+      }
+      if (state.highlightOrigin) {
+        const pos = cellTopLeft(state.highlightOrigin);
+        if (pos) {
+          base.push(
+            `<rect x="${pos.x}" y="${pos.y}" width="${CELLW - 2}" height="${CELLH - 2}" fill="none" stroke="#ffffff" stroke-opacity="0.9" stroke-width="2" stroke-dasharray="4 3" rx="3"/>`,
+          );
+        }
+      }
+    }
+
     for (const d of state.drops ?? []) {
       const pos = cellTopLeft(d.cell);
       if (!pos) continue;
@@ -221,7 +250,9 @@ export const MapRenderer = {
     }
 
     const legendY = PAD_TOP + gridH + 20;
-    const legend = "🌲 árvore   ⬆️ altura   💧 água   ⬛ obstáculo   🔴 arma";
+    const legend = state.highlight
+      ? "🌲 árvore   ⬆️ altura   💧 água   ⬛ obstáculo   🔴 arma   ▨ área do jutsu"
+      : "🌲 árvore   ⬆️ altura   💧 água   ⬛ obstáculo   🔴 arma";
     base.push(
       `<text x="${PAD_LEFT}" y="${legendY}" fill="#9aa4b2" font-family="sans-serif" font-size="13">${legend}</text>`,
     );

@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { moveRange, costAfterMastery, maxHp } from "../src/services/characters/formulas.js";
+import { BALANCE } from "../src/config/balance.js";
 
 describe("formulas", () => {
   it("movimento = 2 + floor(taijutsu/15)", () => {
@@ -18,7 +19,8 @@ describe("formulas", () => {
   });
 
   it("hp escala com nivel e taijutsu", () => {
-    expect(maxHp(1, 1)).toBe(100 + 5 + 3);
+    const { hpBase, hpPerLevel, hpPerTaijutsu } = BALANCE;
+    expect(maxHp(1, 1)).toBe(hpBase + hpPerLevel + hpPerTaijutsu);
     expect(maxHp(10, 10)).toBeGreaterThan(maxHp(1, 1));
   });
 });

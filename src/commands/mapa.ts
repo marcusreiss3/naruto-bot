@@ -70,7 +70,10 @@ export const mapa: Command = {
   data: new SlashCommandBuilder().setName("mapa").setDescription("Mostra o mapa do cenário deste canal"),
   async execute(interaction: ChatInputCommandInteraction) {
     const channelId = interaction.channelId;
-    const scenario = getScenarioByChannel(channelId);
+    let session = await getActiveSession(channelId);
+    const scenario = session
+      ? getScenarioById(session.scenarioId) ?? getScenarioByChannel(channelId)
+      : getScenarioByChannel(channelId);
     if (!scenario) {
       await interaction.reply({ content: "❌ Este canal não tem um cenário configurado.", ephemeral: true });
       return;
@@ -83,8 +86,7 @@ export const mapa: Command = {
 
     const guildId = interaction.guildId ?? "global";
 
-    let session = await getActiveSession(channelId);
-    let renderScenario = session ? getScenarioById(session.scenarioId) ?? scenario : scenario;
+    let renderScenario = scenario;
     if (session) {
       round = session.round;
       entities.push(...(await buildSessionEntities(session, guildId)));

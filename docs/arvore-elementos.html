@@ -1,0 +1,803 @@
+<title>Arquitetura — Árvores de Habilidade Elementais</title>
+<style>
+  :root{
+    --fogo:#e2492d; --agua:#2b7fd4; --vento:#2fa36b; --terra:#a9772f; --raio:#8a5cd6; --cristal:#1fa8a0;
+    --ink:#1c1c1e; --muted:#5b5b62; --line:#d7d7dd; --bg:#ffffff; --soft:#f5f5f7;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+    font-family:"Segoe UI",system-ui,Arial,sans-serif;font-size:12.5px;line-height:1.5;}
+  .page{padding:26px 30px;max-width:900px;margin:0 auto;}
+  h1{font-size:30px;margin:0 0 4px;letter-spacing:-.5px;}
+  h2{font-size:21px;margin:0 0 10px;padding-bottom:6px;border-bottom:3px solid var(--ink);}
+  h3{font-size:15px;margin:16px 0 6px;}
+  h4{font-size:13px;margin:12px 0 4px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;}
+  p{margin:6px 0;}
+  small,.muted{color:var(--muted);}
+  code{background:var(--soft);padding:1px 5px;border-radius:4px;font-family:"Cascadia Code",Consolas,monospace;font-size:11.5px;}
+  pre{background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:12px 14px;
+    font-family:"Cascadia Code",Consolas,monospace;font-size:11px;line-height:1.45;overflow:auto;white-space:pre;}
+  table{border-collapse:collapse;width:100%;margin:8px 0 12px;font-size:11.3px;}
+  th,td{border:1px solid var(--line);padding:5px 7px;text-align:left;vertical-align:top;}
+  th{background:var(--soft);font-weight:600;}
+  td.c,th.c{text-align:center;white-space:nowrap;}
+  .rank{display:inline-block;min-width:20px;text-align:center;font-weight:700;border-radius:4px;padding:0 5px;color:#fff;font-size:11px;}
+  .rD{background:#8a8a92;} .rC{background:#4a8f4a;} .rB{background:#2b7fd4;} .rA{background:#c9761d;} .rS{background:#c0392b;}
+  .pill{display:inline-block;border-radius:20px;padding:1px 9px;font-size:10.5px;font-weight:600;border:1px solid var(--line);background:#fff;}
+  .new{background:#fff4e0;border-color:#e6b866;color:#8a5a12;}
+  .cover{min-height:88vh;display:flex;flex-direction:column;justify-content:center;}
+  .cover .sub{font-size:15px;color:var(--muted);margin-top:2px;}
+  .elhead{border-bottom-color:var(--el);color:var(--el);}
+  .elhead .tag{float:right;font-size:11px;font-weight:600;background:var(--el);color:#fff;padding:2px 10px;border-radius:20px;}
+  .box{border:1px solid var(--line);border-left:5px solid var(--el);border-radius:8px;padding:10px 14px;margin:10px 0;background:#fff;}
+  .role{font-size:13px;font-weight:600;}
+  .legend td:first-child{white-space:nowrap;}
+  ul{margin:6px 0 6px 18px;padding:0;}
+  li{margin:3px 0;}
+
+  /* ---- Árvore visual ---- */
+  .tree{page-break-inside:avoid;margin:14px 0 16px;text-align:center;}
+  .tcenter{display:flex;justify-content:center;}
+  .tstem{width:2px;height:12px;background:var(--el);margin:0 auto;}
+  .tspan{height:2px;background:var(--el);width:66%;margin:0 auto;}
+  .tbranches{display:flex;gap:16px;justify-content:center;align-items:flex-start;}
+  .tbranch{flex:1;display:flex;flex-direction:column;align-items:center;}
+  .bh{font-size:9.5px;text-transform:uppercase;letter-spacing:.4px;font-weight:700;color:var(--el);margin:0 0 8px;text-align:center;}
+  .tnode{width:154px;border:1.5px solid var(--el);border-radius:8px;padding:5px 8px;background:#fff;font-size:10.5px;font-weight:600;line-height:1.3;}
+  .tnode small{display:block;font-weight:400;color:var(--muted);font-size:9px;margin-top:1px;}
+  .tpass{border-style:dashed;background:var(--soft);font-weight:500;}
+  .troot{background:var(--el);color:#fff;border-color:var(--el);width:auto;min-width:180px;}
+  .troot small{color:rgba(255,255,255,.88);}
+  .tconv{border-width:2.5px;border-style:double;width:auto;min-width:220px;font-size:12px;}
+  .tconn{width:2px;height:10px;background:var(--el);}
+  .rk{display:inline-block;min-width:15px;text-align:center;font-weight:800;border-radius:3px;padding:0 3px;color:#fff;font-size:9px;vertical-align:middle;margin-right:2px;}
+
+  /* ---- Árvore espinha: tronco central + ramificações em profundidades diferentes ---- */
+  .st{page-break-inside:avoid;margin:14px 0 18px;}
+  .st-row{display:flex;align-items:center;justify-content:center;}
+  .st-link{width:2px;height:14px;background:var(--el);margin:0 auto;}
+  .st-mid{flex:0 0 168px;display:flex;justify-content:center;}
+  .st-side{flex:0 0 224px;display:flex;align-items:center;}
+  .st-side.l{justify-content:flex-end;}
+  .st-side.r{justify-content:flex-start;}
+  .st-harm{height:2px;background:var(--el);flex:0 0 20px;}
+  .st-off{display:flex;flex-direction:column;align-items:center;}
+  .boff{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:var(--el);margin-bottom:4px;text-align:center;}
+
+  @media print{
+    .page{padding:14mm 14mm;max-width:none;}
+    h2{page-break-before:always;}
+    .cover h2,.nobreak h2{page-break-before:avoid;}
+    table,pre,.box,.tree,.st{page-break-inside:avoid;}
+    .cover{page-break-after:always;min-height:0;height:88vh;}
+  }
+</style>
+
+<div class="page cover nobreak">
+  <h1>Árvores de Habilidade Elementais</h1>
+  <div class="sub">Arquitetura de sistema — Ninjutsu de Fogo, Terra, Água, Vento, Raio e o kekkei genkai de Cristal</div>
+  <p style="margin-top:26px;max-width:640px;">
+    Documento de design. Define, para cada elemento: identidade de combate,
+    árvore de talentos ramificada (jutsus + passivas), estatísticas propostas de cada técnica
+    (rank, forma, alcance, dano, custo, efeitos), interações com o cenário, combos entre elementos
+    e ganchos para o futuro sistema de <code>/fugir</code>.
+  </p>
+  <p style="max-width:640px;" class="muted">
+    Os números seguem as convenções já vivas em <code>src/config/balance.ts</code>
+    (dano = <code>base + atributo × escala</code>, escala de Ninjutsu = 2.0) e usam os efeitos
+    reais de <code>src/config/enums.ts</code>. Onde algo novo é proposto, está marcado
+    <span class="pill new">NOVO</span> e detalhado no apêndice técnico.
+  </p>
+  <div class="box" style="--el:#1c1c1e;border-left-color:#1c1c1e;margin-top:24px;">
+    <b>Como ler os ranks.</b> O rank é o poder canônico da técnica (base no anime/mangá).
+    O <i>tier</i> é a profundidade dela na árvore. Cada elemento tem pelo menos um jutsu rank A e um rank S.
+    <div style="margin-top:6px;">
+      <span class="rank rD">D</span> aquecimento &nbsp;
+      <span class="rank rC">C</span> genin+ &nbsp;
+      <span class="rank rB">B</span> chunin &nbsp;
+      <span class="rank rA">A</span> jounin / assinatura &nbsp;
+      <span class="rank rS">S</span> kage / custo altíssimo de chakra
+    </div>
+    <div style="margin-top:6px;" class="muted">Rank S custa de 70 a 80% do chakra. Algumas técnicas ainda possuem regra própria; Kirin, por exemplo, só pode ser usado uma vez por combate.</div>
+  </div>
+  <div class="box" style="--el:var(--cristal);border-left-color:var(--cristal);margin-top:18px;">
+    <b>Kekkei genkai.</b> Além dos cinco elementos básicos existem os elementos de <i>linhagem sanguínea</i>.
+    Para a engine um kekkei genkai é um elemento como qualquer outro — tem árvore, passivas e requisitos
+    iguais. Três coisas o separam:
+    <ul style="margin:6px 0 0;">
+      <li><b>Não é sorteado.</b> Afinidade básica cai por acaso; kekkei genkai só entra pelo <code>/admin</code>.</li>
+      <li><b>Bate mais forte.</b> As passivas de dano fecham em <b>~2,30×</b> em vez dos ~2,015× dos básicos (+14%).
+        O teste de balanceamento usa uma faixa separada (2,2–2,5×) para eles.</li>
+      <li><b>Tem efeitos próprios.</b> Estados de combate que nenhum elemento básico consegue produzir.</li>
+    </ul>
+    <div style="margin-top:6px;" class="muted">Implementado hoje: <b>Cristal (Shōton)</b>.</div>
+  </div>
+</div>
+
+<!-- ============================ LEGENDA / SISTEMA ============================ -->
+<div class="page">
+  <h2>Legenda do sistema</h2>
+
+  <h3>Progressão da árvore</h3>
+  <p>
+    Cada elemento tem sua própria árvore. O personagem só acessa uma árvore se tiver recebido aquela
+    <b>afinidade elemental</b>; a afinidade é definida aleatoriamente, não comprada na árvore. Os nós são
+    comprados com <b>Pontos de Ninjutsu (PN)</b>, e a moeda é o
+    <b>próprio atributo Ninjutsu</b>: cada ponto investido em Ninjutsu no <code>/atributos</code> vira
+    <b>1 PN</b> para gastar na árvore (você ganha <b>4 pontos de atributo por nível</b>). Comprar um nó
+    <b>não reduz</b> o atributo. Ninjutsu funciona como orçamento da árvore; o dano base das técnicas não
+    escala com esse atributo:
+    <br><code>disponível = Ninjutsu − (soma dos custos dos nós já comprados)</code>.
+  </p>
+  <p class="muted">
+    Ou seja: quem despeja tudo em Ninjutsu tem uma árvore farta mas pega leve nos outros atributos;
+    quem espalha, escolhe poucos ramos. A escolha dos ramos é o que dá identidade ao build. O site
+    <b>Pergaminho das Técnicas</b> valida cada compra no servidor (nada é decidido no navegador).
+  </p>
+  <ul>
+    <li><b>Tronco</b> — a coluna central desce do nó-raiz até o jutsu rank S no pé. É a espinha do elemento.</li>
+    <li><b>Ramificações</b> — brotam <b>do tronco em profundidades diferentes</b> (não todas no topo): cada offshoot é uma especialização curta (1–2 nós) que só aparece conforme você desce a árvore.</li>
+    <li><b>Nó de Jutsu</b> = caixa sólida com o rank. <b>Nó de Passiva</b> = caixa tracejada, prefixo ◆.</li>
+    <li>Um nó só abre se o <b>nó anterior</b> na mesma linha (tronco ou ramo) foi comprado e os requisitos de <b>nível + Ninjutsu</b> baterem.</li>
+  </ul>
+
+  <h3>Efeitos disponíveis hoje</h3>
+  <table class="legend">
+    <tr><th>Efeito</th><th>O que faz (número atual em <code>balance.ts</code>)</th></tr>
+    <tr><td><code>BURN</code> Queimadura</td><td>8 dano/turno; −5% dano de Taijutsu do alvo por stack; ao chegar a 5 stacks, explode por 40.</td></tr>
+    <tr><td><code>POISON</code> Veneno</td><td>2 + 1/stack por turno; duração máx 5.</td></tr>
+    <tr><td><code>BLEED</code> Sangramento</td><td>5 dano/turno; +6 se o alvo usar Tai/Buki; corta cura em 50%.</td></tr>
+    <tr><td><code>STUN</code> Atordoar</td><td>perde o turno (sem mover, sem agir). Padrão 1 rodada.</td></tr>
+    <tr><td><code>SLOW</code> Lentidão</td><td>movimento × 0.5.</td></tr>
+    <tr><td><code>ROOT</code> Enraizar</td><td>não pode se mover (pode agir). Padrão 1 rodada.</td></tr>
+    <tr><td><code>CONFUSION</code> Confusão</td><td>ataca alvo aleatório. Padrão 2.</td></tr>
+    <tr><td><code>DISARM</code> Desarme</td><td>derruba a arma no mapa.</td></tr>
+    <tr><td><code>NINJUTSU_BLOCK</code></td><td>não pode usar Ninjutsu. Padrão 2.</td></tr>
+    <tr><td><code>DEFENSE_DOWN</code></td><td>−15% de esquiva.</td></tr>
+  </table>
+
+  <h3>Efeitos exclusivos de kekkei genkai</h3>
+  <p class="muted">Nenhum elemento básico produz estes estados. São a assinatura mecânica da linhagem.</p>
+  <table class="legend">
+    <tr><th>Efeito</th><th>O que faz (número atual em <code>balance.ts</code>)</th><th class="c">Linhagem</th></tr>
+    <tr>
+      <td><code>CRYSTALLIZED</code> Cristalizado</td>
+      <td><b>Não causa dano por turno</b> — é o inverso da Queimadura. Cada acúmulo tira <b>8 pontos percentuais de esquiva</b>
+      e <b>1 casa de movimento</b> (pode chegar a zero). Ao acumular <b>4</b>, o casulo <b>fecha</b>: o alvo é <b>selado</b>
+      (Atordoamento 1 + Imobilização 2) e os acúmulos zeram. Duração 3.
+      <br><span class="muted">Queimadura acumula até <i>explodir em dano</i>; Cristal acumula até <i>selar em controle</i>. Mesma forma, payoff oposto.</span></td>
+      <td class="c">💎 Cristal</td>
+    </tr>
+    <tr>
+      <td><code>PRISM</code> Prisma</td>
+      <td>Casulo de luz refratada sobre o próprio usuário. Por 2 rodadas: o dano de <b>Ninjutsu</b> recebido cai <b>60%</b>
+      e <b>30% do que foi barrado volta no atacante</b>. Em troca, o usuário fica <b>totalmente imóvel</b> e
+      <b>Taijutsu/Bukijutsu passam inteiros</b> — quem encosta ganha a troca.
+      <br><span class="muted">Única fonte de dano refletido do jogo.</span></td>
+      <td class="c">💎 Cristal</td>
+    </tr>
+  </table>
+
+  <h3>Mecânicas elementais</h3>
+  <p class="muted">Resumo das mecânicas usadas atualmente pela árvore e pela engine de combate.</p>
+  <table class="legend">
+    <tr><th>Mecânica</th><th>Efeito</th><th>Quem usa</th></tr>
+    <tr><td><code>WET</code> Encharcado</td><td>Marcador com duração-base de 2 rodadas. Habilita técnicas condicionais e passivas de dano contra alvos molhados; é o pivô do combo Água→Raio.</td><td>Água (aplica), Água e Raio (exploram)</td></tr>
+    <tr><td><code>FLEE_LOCK</code> Bloqueio de Fuga</td><td>Não pode tentar <code>/fugir</code> enquanto o efeito estiver ativo.</td><td>Fogo e Raio</td></tr>
+    <tr><td><code>HASTE</code> Aceleração</td><td>Por 3 rodadas: <b>+2 de movimento</b>, +10 pontos percentuais de esquiva, <b>+25 pontos percentuais na fuga</b> e 8 de dano de contato. A fuga continua limitada a 90% e respeita Bloqueio de Fuga.</td><td>Raio (Armadura)</td></tr>
+    <tr><td><code>SHIELD</code> Barreira</td><td>Camada de HP temporária que absorve dano antes da vida.</td><td>Terra (muros, golem)</td></tr>
+    <tr><td><code>SMOKE</code> Cortina</td><td>Célula com fumaça/cinzas: <b>bloqueia linha</b> e reduz a precisão de quem mira através dela.</td><td>Fogo (Cinzas Ardentes)</td></tr>
+    <tr><td><code>KNOCKBACK</code> Empurrão</td><td>Reposiciona o alvo N células para longe do atacante (pode jogar em terreno ruim).</td><td>Vento, Água</td></tr>
+    <tr><td><code>PULL</code> Puxão</td><td>Reposiciona o alvo N células em direção ao atacante.</td><td>Terra, Água</td></tr>
+    <tr><td><code>terrainMods</code> Terreno</td><td>A técnica <b>edita o mapa</b>: coloca água, ergue muros/obstáculos, cria pântano, cortina. Persiste após o jutsu.</td><td>Água, Terra, Fogo</td></tr>
+    <tr><td><code>summon</code> Invocação</td><td>Cria um participante aliado (clone/golem) com HP e ações próprias.</td><td>Terra, Raio</td></tr>
+    <tr><td><code>CHAKRA_DRAIN</code> Dreno</td><td>Rouba chakra do alvo por turno enquanto preso.</td><td>Terra (Cúpula)</td></tr>
+    <tr><td><code>pierceObstacles</code> Perfura terreno</td><td>Flag de técnica: a linha <b>atravessa muros/obstáculos</b> em vez de ser bloqueada. Counter direto às defesas de Terra.</td><td>Raio (Ataque de Raio)</td></tr>
+    <tr><td><code>BURN_SPREAD</code> Propagação</td><td>Ao cruzar chamas/<code>BURN</code>, a técnica <b>espalha 1 stack de BURN</b> aos adjacentes e ganha dano. É o combo Fogo→Vento tornado mecânico.</td><td>Vento (Vento em Brasa)</td></tr>
+  </table>
+
+  <h3>Identidade de cada elemento (resumo)</h3>
+  <table>
+    <tr><th>Elemento</th><th>Papel</th><th>Vence quando…</th></tr>
+    <tr><td style="color:var(--fogo);font-weight:700;">🔥 Fogo</td><td>Dano bruto + queimadura que cresce até explodir + negação de área</td><td>mantém pressão e empilha BURN até a explosão</td></tr>
+    <tr><td style="color:var(--terra);font-weight:700;">🪨 Terra</td><td>Fortaleza: defesa, muros, prisões, invocação, remodelar o campo</td><td>controla o espaço e sobrevive ao late game</td></tr>
+    <tr><td style="color:var(--agua);font-weight:700;">💧 Água</td><td>Controle e utilidade: reposiciona, prende, molha o campo (arma o combo)</td><td>prepara terreno e trava o inimigo</td></tr>
+    <tr><td style="color:var(--vento);font-weight:700;">🌪️ Vento</td><td>Lâmina de precisão: indefensável, perfura defesa, corta (bleed), empurra</td><td>ignora esquiva/bloqueio e sangra o alvo</td></tr>
+    <tr><td style="color:var(--raio);font-weight:700;">⚡ Raio</td><td>Assassino: velocidade, atordoar, perfurar, burst single-target, combo com água</td><td>pega alvo molhado/preso e executa</td></tr>
+    <tr><td style="color:var(--cristal);font-weight:700;">💎 Cristal <span class="pill">KG</span></td><td>Carcereiro: crava cristal até selar o alvo dentro do próprio corpo; maior dano do jogo e defesa que reflete</td><td>enche o alvo de acúmulos, sela e executa preso</td></tr>
+  </table>
+</div>
+
+<!-- ============================ FOGO ============================ -->
+<div class="page" style="--el:var(--fogo);">
+  <h2 class="elhead"><span class="tag">🔥 FOGO — Katon</span>Fogo</h2>
+  <div class="box">
+    <div class="role">Papel: Incinerador — o maior dano bruto do jogo e a única fonte de dano que <i>cresce sozinho</i>.</div>
+    <p>Fogo não controla nem se defende bem: ele <b>queima</b>. Cada acerto empilha <code>BURN</code>, e o
+    build inteiro gira em torno de chegar aos stacks de explosão (40 de dano numa tacada) antes de o inimigo
+    se curar ou se molhar. Também é o único elemento que <b>nega área</b> com anéis de fogo e cortinas de cinza,
+    e traz a assinatura anti-fuga do jogo. Fraqueza clara: <code>WET</code> e Água apagam suas stacks.</p>
+  </div>
+
+  <h4>Árvore de habilidades</h4>
+  <div class="st">
+    <div class="st-row"><div class="tnode troot">Chama Interior<small>+15% de dano Katon · raiz</small></div></div>
+    <div class="st-link"></div>
+    <div class="st-row"><div class="tnode"><span class="rk rC">C</span>Grande Bola de Fogo</div></div>
+    <div class="st-link"></div>
+    <div class="st-row">
+      <div class="st-side l"></div>
+      <div class="st-mid"><div class="tnode"><span class="rk rC">C</span>Flor de Fogo Fênix</div></div>
+      <div class="st-side r"><div class="st-harm"></div><div class="st-off"><div class="boff">Brasa · queimadura</div><div class="tnode tpass">◆ Brasas Persistentes</div><div class="tconn"></div><div class="tnode tpass">◆ Combustão</div></div></div>
+    </div>
+    <div class="st-link"></div>
+    <div class="st-row">
+      <div class="st-side l"><div class="st-off"><div class="boff">Cerco · terreno</div><div class="tnode tpass">◆ Pavio</div><div class="tconn"></div><div class="tnode"><span class="rk rA">A</span>Cinzas Ardentes</div></div><div class="st-harm"></div></div>
+      <div class="st-mid"><div class="tnode"><span class="rk rB">B</span>Fogo do Dragão</div></div>
+      <div class="st-side r"></div>
+    </div>
+    <div class="st-link"></div>
+    <div class="st-row">
+      <div class="st-side l"></div>
+      <div class="st-mid"><div class="tnode"><span class="rk rA">A</span>Grande Dragão de Fogo</div></div>
+      <div class="st-side r"><div class="st-harm"></div><div class="st-off"><div class="boff">Conflagração · bruto</div><div class="tnode tpass">◆ Fôlego do Dragão</div><div class="tconn"></div><div class="tnode"><span class="rk rA">A</span>Bomba do Dragão Flamejante</div></div></div>
+    </div>
+    <div class="st-link"></div>
+    <div class="st-row"><div class="tnode"><span class="rk rB">B</span>Corrida de Fogo</div></div>
+    <div class="st-link"></div>
+    <div class="st-row"><div class="tnode tpass">◆ Sopro Eficiente</div></div>
+    <div class="st-link"></div>
+    <div class="st-row"><div class="tnode tconv"><span class="rk rS">S</span>Grande Fogo Aniquilador</div></div>
+  </div>
+
+  <h4>Jutsus</h4>
+  <table>
+    <tr><th>Jutsu</th><th class="c">Rank</th><th class="c">Forma</th><th class="c">Alc.</th><th class="c">Dano</th><th class="c">Custo</th><th class="c">Ação</th><th>Efeitos / mecânica</th></tr>
+    <tr><td>Grande Bola de Fogo <small>(Goukakyuu)</small></td><td class="c"><span class="rank rC">C</span></td><td class="c">Cone</td><td class="c">3</td><td class="c">20</td><td class="c">20</td><td class="c">Comum</td><td>BURN 1 (60%). O feijão-com-arroz do fogo.</td></tr>
+    <tr><td>Flor de Fogo Fênix <small>(Housenka)</small></td><td class="c"><span class="rank rC">C</span></td><td class="c">Linha</td><td class="c">4</td><td class="c">14</td><td class="c">24</td><td class="c">Comum</td><td>BURN 2. Ramo pode esconder shuriken: +dano verdadeiro se o alvo tentar esquivar.</td></tr>
+    <tr><td>Fogo do Dragão <small>(Ryuuka)</small></td><td class="c"><span class="rank rB">B</span></td><td class="c">Linha</td><td class="c">6</td><td class="c">26</td><td class="c">30</td><td class="c">Comum</td><td>BURN 3. Se houver célula em chamas (Pavio) entre origem e alvo, o dano viaja: alcance ignora obstáculos naquela linha.</td></tr>
+    <tr><td>Corrida de Fogo <small>(cerco)</small></td><td class="c"><span class="rank rB">B</span></td><td class="c">Anel</td><td class="c">5</td><td class="c">12</td><td class="c">34</td><td class="c">Comum</td><td><b>FLEE_LOCK</b> + BURN 1. Ergue anel de fogo (obstáculos <code>terrainMods</code>) ao redor do alvo. Assinatura anti-fuga.</td></tr>
+    <tr><td>Grande Dragão de Fogo <small>(Karyuu Endan)</small></td><td class="c"><span class="rank rA">A</span></td><td class="c">Linha</td><td class="c">6</td><td class="c">44</td><td class="c">44</td><td class="c">Comum</td><td>BURN 2. Jato colossal; alto dano de ponta.</td></tr>
+    <tr><td>Bomba do Dragão Flamejante <small>(Karyuudan)</small></td><td class="c"><span class="rank rA">A</span></td><td class="c">Cone ×3</td><td class="c">4</td><td class="c">40</td><td class="c">46</td><td class="c">Comum</td><td>Dragão que se divide em <b>três direções</b> (frente + dois flancos): cerca o alvo, difícil de esquivar. BURN 2. Técnica de elite.</td></tr>
+    <tr><td>Cinzas Ardentes <small>(Haisekishou)</small></td><td class="c"><span class="rank rA">A</span></td><td class="c">Raio</td><td class="c">5</td><td class="c">36</td><td class="c">48</td><td class="c">Comum</td><td>Cria nuvem de cinzas (<code>SMOKE</code>: cortina que bloqueia linha e reduz precisão inimiga); ao inflamar, <b>detona</b> por BURN 3 + explosão em área. Controle + burst.</td></tr>
+    <tr><td>Grande Fogo Aniquilador <small>(Goka Mekkyaku)</small></td><td class="c"><span class="rank rS">S</span></td><td class="c">Cone</td><td class="c">7</td><td class="c">55</td><td class="c"><b>78</b></td><td class="c">Comum</td><td>BURN 3 garantido. Dilúvio de chamas; evapora células de água e vence jutsus de água de rank ≤ C. Custo enorme de chakra.</td></tr>
+  </table>
+
+  <h4>Passivas do ramo</h4>
+  <table>
+    <tr><th>Nó</th><th class="c">Ramo</th><th>Efeito</th></tr>
+    <tr><td>Chama Interior</td><td class="c">raiz</td><td>+15% de todo dano Katon.</td></tr>
+    <tr><td>Brasas Persistentes</td><td class="c">Brasa</td><td>Todo acerto de fogo aplica +1 stack de BURN.</td></tr>
+    <tr><td>Combustão</td><td class="c">Brasa</td><td>BURN explode em 4 stacks (não 5) e a explosão sobe para 60.</td></tr>
+    <tr><td>Sopro Eficiente</td><td class="c">Brasa</td><td>−20% de custo de chakra em cones de fogo.</td></tr>
+    <tr><td>Fôlego do Dragão</td><td class="c">Conflagração</td><td>+25% de dano Katon (acumula com a raiz).</td></tr>
+    <tr><td>Pavio</td><td class="c">Cerco</td><td>Jutsus de fogo deixam a célula do impacto em chamas por 2 rodadas (dano a quem pisar; condutor do Fogo do Dragão).</td></tr>
+  </table>
+
+  <p><b>Cenário & fuga.</b> Pavio, Corrida de Fogo e Cinzas Ardentes <b>editam o mapa</b> (chamas, anel de
+  obstáculos, cortina de fumaça). Corrida de Fogo é a peça anti-fuga central. Contra Fogo, o counter é
+  molhar-se (Água) ou apagar stacks.</p>
+</div>
+
+<!-- ============================ TERRA ============================ -->
+<div class="page" style="--el:var(--terra);">
+  <h2 class="elhead"><span class="tag">🪨 TERRA — Doton</span>Terra</h2>
+  <div class="box">
+    <div class="role">Papel: Fortaleza — remodela o campo, prende, aguenta pancada e traz reforços.</div>
+    <p>Terra tem o menor burst dos cinco, e compensa com <b>presença</b>: ergue muros que bloqueiam linha e
+    movimento, cria <code>SHIELD</code>, prende com <code>ROOT</code>/<code>PULL</code>, e é o único elemento
+    com <b>invocações</b> (clone e golem) e um golpe físico que escala <b>Taijutsu</b>. É o build que decide
+    <i>onde</i> a luta acontece.</p>
+  </div>
+
+  <h4>Árvore de habilidades</h4>
+  <div class="st">
+    <div class="st-row"><div class="tnode troot">Pele de Pedra<small>+1 Barreira ao defender · raiz</small></div></div>
+    <div class="st-link"></div>
+    <div class="st-row">
+      <div class="st-side l"><div class="st-off"><div class="boff">Muralha · defesa</div><div class="tnode tpass">◆ Terreno Firme</div><div class="tconn"></div><div class="tnode"><span class="rk rA">A</span>Prisão Cúpula de Terra</div></div><div class="st-harm"></div></div>
+      <div class="st-mid"><div class="tnode"><span class="rk rC">C</span>Parede de Terra</div></div>
+      <div class="st-side r"></div>
+    </div>
+    <div class="st-link"></div>
+    <div class="st-row">
+      <div class="st-side l"></div>
+      <div class="st-mid"><div class="tnode"><span class="rk rC">C</span>Punho Rochoso</div></div>
+      <div class="st-side r"><div class="st-harm"></div><div class="st-off"><div class="boff">Colosso · invocação</div><div class="tnode"><span class="rk rB">B</span>Clone de Terra</div><div class="tconn"></div><div class="tnode tpass">◆ Vínculo de Barro</div></div></div>
+    </div>
+    <div class="st-link"></div>
+    <div class="st-row">
+      <div class="st-side l"><div class="st-off"><div class="boff">Aprisionamento · controle</div><div class="tnode tpass">◆ Peso da Montanha</div><div class="tconn"></div><div class="tnode"><span class="rk rA">A</span>Pântano do Submundo</div></div><div class="st-harm"></div></div>
+      <div class="st-mid"><div class="tnode"><span class="rk rB">B</span>Decapitação Subterrânea</div></div>
+      <div class="st-side r"></div>
+    </div>
+    <div class="st-link"></div>
+    <div class="st-row">
+      <div class="st-side l"></div>
+      <div class="st-mid"><div class="tnode"><span class="rk rB">B</span>Projétil do Dragão de Terra</div></div>
+      <div class="st-side r"><div class="st-harm"></div><div class="st-off"><div class="boff">Terraplanagem · arremesso</div><div class="tnode"><span class="rk rB">B</span>Biscoito de Terra Sepulcral</div></div></div>
+    </div>
+    <div class="st-link"></div>
+    <div class="st-row"><div class="tnode tconv"><span class="rk rS">S</span>Golem Defensor</div></div>
+  </div>
+
+  <h4>Jutsus</h4>
+  <table>
+    <tr><th>Jutsu</th><th class="c">Rank</th><th class="c">Forma</th><th class="c">Alc.</th><th class="c">Dano</th><th class="c">Custo</th><th class="c">Ação</th><th>Efeitos / mecânica</th></tr>
+    <tr><td>Parede de Terra <small>(Doryuuheki)</small></td><td class="c"><span class="rank rC">C</span></td><td class="c">Self→mapa</td><td class="c">0</td><td class="c">—</td><td class="c">18</td><td class="c">Reação</td><td><b>SHIELD</b> + ergue muro (<code>terrainMods</code> obstáculo) que bloqueia linha e passagem.</td></tr>
+    <tr><td>Punho Rochoso</td><td class="c"><span class="rank rC">C</span></td><td class="c">Corpo</td><td class="c">1</td><td class="c">22</td><td class="c">16</td><td class="c">Comum</td><td>Cobre o punho de pedra. Escala <b>Taijutsu</b> (híbrido). +Barreira no turno. Ponte para builds tanque-lutador.</td></tr>
+    <tr><td>Clone de Terra</td><td class="c"><span class="rank rB">B</span></td><td class="c">Invocação</td><td class="c">2</td><td class="c">—</td><td class="c">24</td><td class="c">Bônus</td><td><b>summon</b>: clone de terra com HP que ataca corpo-a-corpo e explode em pedras ao morrer.</td></tr>
+    <tr><td>Decapitação Subterrânea <small>(Shinjuu Zanshu)</small></td><td class="c"><span class="rank rB">B</span></td><td class="c">Corpo</td><td class="c">1</td><td class="c">10</td><td class="c">22</td><td class="c">Comum</td><td>Move-se sob o solo. <b>PULL</b> pro chão + ROOT + STUN. Prende o alvo (bloqueia fuga).</td></tr>
+    <tr><td>Prisão Cúpula de Terra</td><td class="c"><span class="rank rA">A</span></td><td class="c">Raio</td><td class="c">4</td><td class="c">8</td><td class="c">36</td><td class="c">Comum</td><td>ROOT + <b>CHAKRA_DRAIN</b> (rouba chakra/turno) + cúpula obstáculo. Anti-fuga.</td></tr>
+    <tr><td>Projétil do Dragão de Terra <small>(Doryuu Katsu)</small></td><td class="c"><span class="rank rB">B</span></td><td class="c">Linha</td><td class="c">5</td><td class="c">26</td><td class="c">28</td><td class="c">Comum</td><td>Invoca um dragão de terra que dispara projéteis de lama; SLOW (50%).</td></tr>
+    <tr><td>Pântano do Submundo <small>(Yomi Numa)</small></td><td class="c"><span class="rank rA">A</span></td><td class="c">Raio grande</td><td class="c">5</td><td class="c">10</td><td class="c">30</td><td class="c">Comum</td><td>Converte a área em pântano: zona persistente de ROOT + SLOW (<code>terrainMods</code>).</td></tr>
+    <tr><td>Biscoito de Terra Sepulcral <small>(Jiroubou)</small></td><td class="c"><span class="rank rB">B</span></td><td class="c">Área</td><td class="c">4</td><td class="c">34</td><td class="c">34</td><td class="c">Comum</td><td>Ergue o próprio chão e arremessa massa gigante: dano em área + <b>KNOCKBACK</b> 1. Deixa <b>obstáculo</b> no impacto (<code>terrainMods</code>). O maior soco de Terra.</td></tr>
+    <tr><td>Golem Defensor</td><td class="c"><span class="rank rS">S</span></td><td class="c">Invocação</td><td class="c">2</td><td class="c">30</td><td class="c"><b>70</b></td><td class="c">Comum</td><td>Invoca golem tanque (HP alto, dá SHIELD a aliados adjacentes; ataca em área). Custo enorme de chakra.</td></tr>
+  </table>
+
+  <h4>Passivas do ramo</h4>
+  <table>
+    <tr><th>Nó</th><th class="c">Ramo</th><th>Efeito</th></tr>
+    <tr><td>Pele de Pedra</td><td class="c">raiz</td><td><b>+30% de dano</b> e ganha +1 de <code>SHIELD</code> sempre que defende.</td></tr>
+    <tr><td>Terreno Firme</td><td class="c">Muralha</td><td>Muros, cúpulas e pântanos duram <b>+1 rodada</b>. <small>(o "+50% de HP" caiu: terreno não tem HP no modelo implementado, só duração)</small></td></tr>
+    <tr><td>Peso da Montanha</td><td class="c">Aprisionamento</td><td><b>+55% de dano</b> (fecha os 2× com a raiz) e <code>ROOT</code> dura +1 rodada.</td></tr>
+    <tr><td>Vínculo de Barro</td><td class="c">Colosso</td><td>Invocações nascem com <b>+25% de HP</b>. <small>(o "imita a última técnica" não foi implementado)</small></td></tr>
+  </table>
+
+  <p><b>Cenário & fuga.</b> Terra é o elemento que <b>mais</b> mexe no mapa: muros e cúpulas viram
+  <code>obstacles</code>; o pântano vira zona de controle. Todo o ramo Aprisionamento é anti-fuga por
+  aplicar ROOT (que trava <code>/fugir</code>).</p>
+</div>
+
+<!-- ============================ ÁGUA ============================ -->
+<div class="page" style="--el:var(--agua);">
+  <h2 class="elhead"><span class="tag">💧 ÁGUA — Suiton</span>Água</h2>
+  <div class="box">
+    <div class="role">Papel: Controlador — reposiciona, prende, e <b>molha o campo</b> para armar o combo com Raio.</div>
+    <p>Água é o elemento de <i>setup</i>. Dano honesto, mas o valor está em <code>KNOCKBACK</code>/<code>PULL</code>
+    para tirar o inimigo de posição, <code>ROOT</code> para prender, e sobretudo em espalhar <code>WET</code> e
+    células de água pelo mapa. Com Nuvens de Tempestade, Raio causa <b>+75% de dano</b> a alvos Encharcados;
+    Assassinato Eletromagnético também usa o estado para formar sua corrente. É o parceiro de combo número um do jogo.</p>
+  </div>
+
+  <h4>Árvore de habilidades</h4>
+  <div class="st">
+    <div class="st-row"><div class="tnode troot">Fluxo Constante<small>−15% custo · +15% dano · raiz</small></div></div>
+    <div class="st-link"></div>
+    <div class="st-row"><div class="tnode"><span class="rk rD">D</span>Choro Celestial</div></div>
+    <div class="st-link"></div>
+    <div class="st-row">
+      <div class="st-side l"><div class="st-off"><div class="boff">Névoa · invocação</div><div class="tnode"><span class="rk rB">B</span>Clone de Água</div></div><div class="st-harm"></div></div>
+      <div class="st-mid"><div class="tnode"><span class="rk rC">C</span>Ondas Furiosas</div></div>
+      <div class="st-side r"><div class="st-harm"></div><div class="st-off"><div class="boff">Maré · controle</div><div class="tnode tpass">◆ Correnteza</div><div class="tconn"></div><div class="tnode"><span class="rk rB">B</span>Prisão de Água</div></div></div>
+    </div>
+    <div class="st-link"></div>
+    <div class="st-row">
+      <div class="st-side l"><div class="st-off"><div class="boff">Corrente · combo</div><div class="tnode tpass">◆ Maré Condutora</div><div class="tconn"></div><div class="tnode"><span class="rk rA">A</span>Grande Cachoeira Explosiva</div></div><div class="st-harm"></div></div>
+      <div class="st-mid"><div class="tnode"><span class="rk rC">C</span>Trombeta de Água</div></div>
+      <div class="st-side r"></div>
+    </div>
+    <div class="st-link"></div>
+    <div class="st-row">
+      <div class="st-side l"></div>
+      <div class="st-mid"><div class="tnode"><span class="rk rC">C</span>Amarra de Água</div></div>
+      <div class="st-side r"><div class="st-harm"></div><div class="st-off"><div class="boff">Lâmina d'Água · dano</div><div class="tnode"><span class="rk rC">C</span>Louva-a-deus de Água</div><div class="tconn"></div><div class="tnode tpass">◆ Fio d'Água</div></div></div>
+    </div>
+    <div class="st-link"></div>
+    <div class="st-row"><div class="tnode"><span class="rk rB">B</span>Dragão de Água</div></div>
+    <div class="st-link"></div>
+    <div class="st-row"><div class="tnode tconv"><span class="rk rS">S</span>Grande Onda Explosiva</div></div>
+  </div>
+
+  <h4>Jutsus</h4>
+  <table>
+    <tr><th>Jutsu</th><th class="c">Rank</th><th class="c">Forma</th><th class="c">Alc.</th><th class="c">Dano</th><th class="c">Custo</th><th class="c">Ação</th><th>Efeitos / mecânica</th></tr>
+    <tr><td>Choro Celestial <small>(senbon d'água)</small></td><td class="c"><span class="rank rD">D</span></td><td class="c">Linha</td><td class="c">5</td><td class="c">12</td><td class="c">12</td><td class="c">Bônus</td><td>Agulhas-surpresa: dano baixo, <b>undodgeable</b> (ataque furtivo). Aplica WET leve.</td></tr>
+    <tr><td>Ondas Furiosas</td><td class="c"><span class="rank rC">C</span></td><td class="c">Cone</td><td class="c">3</td><td class="c">18</td><td class="c">20</td><td class="c">Comum</td><td><b>KNOCKBACK</b> 2. Deixa células de água no rastro.</td></tr>
+    <tr><td>Trombeta de Água</td><td class="c"><span class="rank rC">C</span></td><td class="c">Linha</td><td class="c">5</td><td class="c">22</td><td class="c">22</td><td class="c">Comum</td><td>Jato pressurizado; aplica <b>WET</b> no alvo.</td></tr>
+    <tr><td>Louva-a-deus de Água</td><td class="c"><span class="rank rC">C</span></td><td class="c">Corpo</td><td class="c">2</td><td class="c">20</td><td class="c">18</td><td class="c">Comum</td><td>Garras estendem alcance corpo-a-corpo; BLEED (50%).</td></tr>
+    <tr><td>Amarra de Água</td><td class="c"><span class="rank rC">C</span></td><td class="c">Linha</td><td class="c">4</td><td class="c">14</td><td class="c">20</td><td class="c">Comum</td><td><b>PULL</b> + SLOW. Tentáculos que trazem o alvo para perto.</td></tr>
+    <tr><td>Dragão de Água <small>(Suiryuudan)</small></td><td class="c"><span class="rank rB">B</span></td><td class="c">Linha</td><td class="c">6</td><td class="c">28</td><td class="c">30</td><td class="c">Comum</td><td><b>KNOCKBACK</b> 2 + <b>WET</b>. Carro-chefe de dano.</td></tr>
+    <tr><td>Prisão de Água <small>(Suirou)</small></td><td class="c"><span class="rank rB">B</span></td><td class="c">Single</td><td class="c">3</td><td class="c">6</td><td class="c">26</td><td class="c">Comum</td><td><b>ROOT</b> forte + WET; enquanto durar, o usuário fica adjacente (canaliza). Anti-fuga.</td></tr>
+    <tr><td>Clone de Água <small>(Mizu Bunshin)</small></td><td class="c"><span class="rank rB">B</span></td><td class="c">Invocação</td><td class="c">2</td><td class="c">18</td><td class="c">26</td><td class="c">Bônus</td><td><b>summon</b>: clone que ataca e, ao morrer, <b>estoura em água</b> (WET em área). Descarta corpo → arma o combo de Raio de graça.</td></tr>
+    <tr><td>Grande Cachoeira Explosiva <small>(Bakusui Shouha)</small></td><td class="c"><span class="rank rA">A</span></td><td class="c">Cone</td><td class="c">6</td><td class="c">40</td><td class="c">42</td><td class="c">Comum</td><td><b>KNOCKBACK</b> 3 + inunda a área (células de água). WET em todos os atingidos.</td></tr>
+    <tr><td>Grande Onda Explosiva</td><td class="c"><span class="rank rS">S</span></td><td class="c">Global</td><td class="c">—</td><td class="c">45</td><td class="c"><b>75</b></td><td class="c">Comum</td><td>Inunda o <b>mapa inteiro</b> (tudo vira água + WET), KNOCKBACK geral. Muda o terreno da luta e arma o combo de Raio total. Custo enorme de chakra.</td></tr>
+  </table>
+
+  <h4>Passivas do ramo</h4>
+  <table>
+    <tr><th>Nó</th><th class="c">Ramo</th><th>Efeito</th></tr>
+    <tr><td>Fluxo Constante</td><td class="c">raiz</td><td>−15% de custo e <b>+15% de dano</b> em todo Suiton.</td></tr>
+    <tr><td>Correnteza</td><td class="c">Maré</td><td>KNOCKBACK e PULL de água ganham +1 célula de deslocamento.</td></tr>
+    <tr><td>Maré Condutora</td><td class="c">Corrente</td><td>O <code>WET</code> aplicado por você dura +1 rodada. <small>(o bônus cruzado de Raio depende de passiva cross-elemento — ainda não implementado)</small></td></tr>
+    <tr><td>Fio d'Água</td><td class="c">Lâmina</td><td>Ataques de água contra alvo <code>WET</code> causam <b>+75%</b> de dano. É a fonte de dano da Água: contra alvo seco ela bate 1.15×, contra Encharcado chega a <b>2.01×</b> (mesma faixa do Fogo, mas exige setup).</td></tr>
+  </table>
+
+  <p><b>Cenário & combo.</b> Água é o motor do combo entre elementos: <code>terrainMods</code> de água + o
+  estado <code>WET</code> fazem o Raio explodir de dano e ajudam Terra a enraizar. Ver a matriz de combos.</p>
+</div>
+
+<!-- ============================ VENTO ============================ -->
+<div class="page" style="--el:var(--vento);">
+  <h2 class="elhead"><span class="tag">🌪️ VENTO — Fuuton</span>Vento</h2>
+  <div class="box">
+    <div class="role">Papel: Lâmina de precisão — indefensável, perfura defesa, corta (BLEED) e empurra.</div>
+    <p>Vento é a resposta contra quem esquiva e bloqueia: suas técnicas de assinatura são <b>undodgeable</b> e
+    <b>ignoram bloqueio</b>. Corta em vez de espancar (aplica <code>BLEED</code>, que pune o alvo por usar
+    Taijutsu), tem o <b>maior alcance</b> do jogo e usa <code>KNOCKBACK</code> para ditar posição. Glass cannon
+    de precisão: acerta sempre, mas não se defende.</p>
+  </div>
+
+  <h4>Árvore de habilidades</h4>
+  <div class="st">
+    <div class="st-row"><div class="tnode troot">Fio de Navalha<small>+30% dano · perfura 20% do bloqueio · raiz</small></div></div>
+    <div class="st-link"></div>
+    <div class="st-row">
+      <div class="st-side l"></div>
+      <div class="st-mid"><div class="tnode"><span class="rk rC">C</span>Palma do Vendaval Violento</div></div>
+      <div class="st-side r"><div class="st-harm"></div><div class="st-off"><div class="boff">Corte · bleed</div><div class="tnode"><span class="rk rB">B</span>Palma da Onda Bestial</div><div class="tconn"></div><div class="tnode tpass">◆ Corte Profundo</div></div></div>
+    </div>
+    <div class="st-link"></div>
+    <div class="st-row">
+      <div class="st-side l"><div class="st-off"><div class="boff">Vendaval · empurrão / combo</div><div class="tnode tpass">◆ Vácuo Cortante</div><div class="tconn"></div><div class="tnode tpass">◆ Vento em Brasa</div></div><div class="st-harm"></div></div>
+      <div class="st-mid"><div class="tnode"><span class="rk rC">C</span>Grande Destruição</div></div>
+      <div class="st-side r"><div class="st-harm"></div><div class="st-off"><div class="boff">Dispersão · área</div><div class="tnode"><span class="rk rB">B</span>Dança da Dispersão de Flor</div></div></div>
+    </div>
+    <div class="st-link"></div>
+    <div class="st-row">
+      <div class="st-side l"><div class="st-off"><div class="boff">Lâmina Fantasma · execução</div><div class="tnode"><span class="rk rB">B</span>Vento Cortante</div></div><div class="st-harm"></div></div>
+      <div class="st-mid"><div class="tnode"><span class="rk rB">B</span>Lâmina de Vento</div></div>
+      <div class="st-side r"><div class="st-harm"></div><div class="st-off"><div class="boff">Precisão · indefensável</div><div class="tnode tpass">◆ Alcance Estendido</div><div class="tconn"></div><div class="tnode"><span class="rk rA">A</span>Pressão Danosa</div></div></div>
+    </div>
+    <div class="st-link"></div>
+    <div class="st-row"><div class="tnode tconv"><span class="rk rS">S</span>Ondas Consecutivas do Vácuo</div></div>
+  </div>
+
+  <h4>Jutsus</h4>
+  <table>
+    <tr><th>Jutsu</th><th class="c">Rank</th><th class="c">Forma</th><th class="c">Alc.</th><th class="c">Dano</th><th class="c">Custo</th><th class="c">Ação</th><th>Efeitos / mecânica</th></tr>
+    <tr><td>Palma do Vendaval Violento</td><td class="c"><span class="rank rC">C</span></td><td class="c">Cone</td><td class="c">3</td><td class="c">16</td><td class="c">18</td><td class="c">Comum</td><td><b>KNOCKBACK</b> 2 + <b>BLEED</b> 1. Rajada comprimida que corta na passagem.</td></tr>
+    <tr><td>Grande Destruição <small>(Daitoppa)</small></td><td class="c"><span class="rank rC">C</span></td><td class="c">Cone</td><td class="c">4</td><td class="c">20</td><td class="c">24</td><td class="c">Comum</td><td><b>KNOCKBACK</b> 3 (escala com maestria). Empurra para longe / para terreno ruim.</td></tr>
+    <tr><td>Lâmina de Vento</td><td class="c"><span class="rank rB">B</span></td><td class="c">Linha</td><td class="c">5</td><td class="c">26</td><td class="c">28</td><td class="c">Comum</td><td><b>undodgeable</b> (lâmina invisível) + BLEED. A assinatura de precisão.</td></tr>
+    <tr><td>Palma da Onda Bestial <small>(Kajuu Ha)</small></td><td class="c"><span class="rank rB">B</span></td><td class="c">Linha</td><td class="c">5</td><td class="c">30</td><td class="c">30</td><td class="c">Comum</td><td>Onda cortante; <b>ignora bloqueio</b> (unblockable) + BLEED.</td></tr>
+    <tr><td>Dança da Dispersão de Flor <small>(Hana wo Chirasu)</small></td><td class="c"><span class="rank rB">B</span></td><td class="c">Vórtice</td><td class="c">4</td><td class="c">24</td><td class="c">28</td><td class="c">Comum</td><td>Pétalas + ar em turbilhão: dano em área + <b>KNOCKBACK</b> 2 e <b>DEFENSE_DOWN</b> (pétalas cegam). Controle de posição do Vento.</td></tr>
+    <tr><td>Vento Cortante <small>(Kamaitachi)</small></td><td class="c"><span class="rank rB">B</span></td><td class="c">Linha</td><td class="c">5</td><td class="c">32</td><td class="c">30</td><td class="c">Comum</td><td><b>undodgeable</b>, alto dano single-target (parte o alvo). BLEED 2. A lâmina de execução do Vento.</td></tr>
+    <tr><td>Pressão Danosa <small>(Atsugai)</small></td><td class="c"><span class="rank rA">A</span></td><td class="c">Raio</td><td class="c">6</td><td class="c">42</td><td class="c">42</td><td class="c">Comum</td><td>Furacão que explode a área; DEFENSE_DOWN em todos os atingidos.</td></tr>
+    <tr><td>Ondas Consecutivas do Vácuo <small>(Shinkuu Renpa)</small></td><td class="c"><span class="rank rS">S</span></td><td class="c">Multi-linha</td><td class="c">7</td><td class="c">44</td><td class="c"><b>72</b></td><td class="c">Comum</td><td>Dispara em vários ângulos: acerta <b>vários alvos</b> em linhas separadas. <b>undodgeable</b> + BLEED. Custo enorme de chakra.</td></tr>
+  </table>
+
+  <h4>Passivas do ramo</h4>
+  <table>
+    <tr><th>Nó</th><th class="c">Ramo</th><th>Efeito</th></tr>
+    <tr><td>Fio de Navalha</td><td class="c">raiz</td><td><b>+30% de dano</b> e corta <b>20% da redução</b> de quem bloqueia/apara (<code>armorPierce</code>). Não aplica status por si só.</td></tr>
+    <tr><td>Corte Profundo</td><td class="c">Corte</td><td><b>+55% de dano</b> (fecha os 2× junto com a raiz) e o <code>BLEED</code> dura <b>+1 rodada</b>. <small>(o "8/turno em vez de 5" não foi implementado: o dano do tick é global, não por atacante — exigiria guardar a origem no EffectInstance)</small></td></tr>
+    <tr><td>Alcance Estendido</td><td class="c">Precisão</td><td>+2 de alcance em técnicas de vento em linha.</td></tr>
+    <tr><td>Vácuo Cortante</td><td class="c">Vendaval</td><td>Alvos empurrados contra um obstáculo/muro tomam +15 de dano de impacto.</td></tr>
+    <tr><td>Vento em Brasa</td><td class="c">Vendaval</td><td><b>Combo Fogo→Vento:</b> Fuuton que cruza célula em chamas ou alvo com <code>BURN</code> propaga o fogo — +dano e espalha 1 stack de BURN aos adjacentes (<code>BURN_SPREAD</code>).</td></tr>
+  </table>
+
+  <p><b>Cenário & fuga.</b> O <code>KNOCKBACK</code> do Vendaval é dupla função na fuga: joga um inimigo
+  <i>para longe</i> (isolando-o) ou <i>para dentro</i> de um pântano/anel de fogo aliado. Vento também
+  amplia Fogo em combo de aliados (ver matriz).</p>
+</div>
+
+<!-- ============================ RAIO ============================ -->
+<div class="page" style="--el:var(--raio);">
+  <h2 class="elhead"><span class="tag">⚡ RAIO — Raiton</span>Raio</h2>
+  <div class="box">
+    <div class="role">Papel: Assassino — velocidade, atordoar, perfurar e o maior burst single-target, com payoff no combo com Água.</div>
+    <p>Raio é o finalizador. Stun-lock com <code>STUN</code>, perfuração que ignora defesa, e um teto de dano
+    altíssimo em alvo único. Seu segredo é a <b>condução</b>: a passiva Nuvens de Tempestade dá +75% de dano
+    contra alvos <code>WET</code>, enquanto Assassinato Eletromagnético usa esse estado para encadear e
+    Atordoar. A Armadura melhora mobilidade, esquiva e fuga sem torná-la garantida; Kirin é o ápice em área.</p>
+  </div>
+
+  <h4>Árvore de habilidades</h4>
+  <div class="st">
+    <div class="st-row"><div class="tnode troot">Sinapse Acelerada<small>+esquiva vs Ninjutsu · raiz</small></div></div>
+    <div class="st-link"></div>
+    <div class="st-row">
+      <div class="st-side l"><div class="st-off"><div class="boff">Corrente · alcance</div><div class="tnode"><span class="rk rC">C</span>Ataque de Raio</div></div><div class="st-harm"></div></div>
+      <div class="st-mid"><div class="tnode"><span class="rk rC">C</span>Esfera de Relâmpago</div></div>
+      <div class="st-side r"><div class="st-harm"></div><div class="st-off"><div class="boff">Descarga · stun</div><div class="tnode tpass">◆ Sobrecarga</div><div class="tconn"></div><div class="tnode"><span class="rk rA">A</span>Prisão dos Quatro Pilares</div></div></div>
+    </div>
+    <div class="st-link"></div>
+    <div class="st-row">
+      <div class="st-side l"><div class="st-off"><div class="boff">Tempestade · combo</div><div class="tnode"><span class="rk rB">B</span>Armadura do Ataque Relâmpago</div><div class="tconn"></div><div class="tnode tpass">◆ Nuvens de Tempestade</div></div><div class="st-harm"></div></div>
+      <div class="st-mid"><div class="tnode"><span class="rk rB">B</span>Clone de Raio</div></div>
+      <div class="st-side r"></div>
+    </div>
+    <div class="st-link"></div>
+    <div class="st-row">
+      <div class="st-side l"></div>
+      <div class="st-mid"><div class="tnode"><span class="rk rB">B</span>Assassinato Eletromagnético</div></div>
+      <div class="st-side r"><div class="st-harm"></div><div class="st-off"><div class="boff">Perfuração · burst</div><div class="tnode tpass">◆ Ponta Perfurante</div><div class="tconn"></div><div class="tnode"><span class="rk rA">A</span>Para-Raios</div></div></div>
+    </div>
+    <div class="st-link"></div>
+    <div class="st-row"><div class="tnode tconv"><span class="rk rS">S</span>Kirin</div></div>
+  </div>
+
+  <h4>Jutsus</h4>
+  <table>
+    <tr><th>Jutsu</th><th class="c">Rank</th><th class="c">Forma</th><th class="c">Alc.</th><th class="c">Dano</th><th class="c">Custo</th><th class="c">Ação</th><th>Efeitos / mecânica</th></tr>
+    <tr><td>Esfera de Relâmpago <small>(Raikyuu)</small></td><td class="c"><span class="rank rC">C</span></td><td class="c">Raio peq.</td><td class="c">3</td><td class="c">14</td><td class="c">16</td><td class="c">Comum</td><td>Atordoamento (25%) em cada alvo da área.</td></tr>
+    <tr><td>Ataque de Raio <small>(Gian)</small></td><td class="c"><span class="rank rC">C</span></td><td class="c">Linha</td><td class="c">7</td><td class="c">18</td><td class="c">20</td><td class="c">Comum</td><td>Fluxo de longo alcance que <b>atravessa obstáculos e fumaça</b>. Atordoamento (15%).</td></tr>
+    <tr><td>Assassinato Eletromagnético</td><td class="c"><span class="rank rB">B</span></td><td class="c">Alvo/cond.</td><td class="c">5</td><td class="c">24</td><td class="c">30</td><td class="c">Comum</td><td>Exige alvo <b>Encharcado</b>; encadeia por todos os outros Encharcados do campo e aplica Atordoamento garantido.</td></tr>
+    <tr><td>Prisão dos Quatro Pilares</td><td class="c"><span class="rank rA">A</span></td><td class="c">Alvo</td><td class="c">4</td><td class="c">12</td><td class="c">38</td><td class="c">Comum</td><td>Atordoamento 2, Imobilização 2 e Bloqueio de Fuga 2. Ergue obstáculo por 3 rodadas.</td></tr>
+    <tr><td>Clone de Raio</td><td class="c"><span class="rank rB">B</span></td><td class="c">Invocação</td><td class="c">0</td><td class="c">—</td><td class="c">26</td><td class="c">Bônus</td><td>Invoca um clone; quando é atingido, descarrega Atordoamento 1 no atacante.</td></tr>
+    <tr><td>Armadura do Ataque Relâmpago</td><td class="c"><span class="rank rB">B</span></td><td class="c">Próprio</td><td class="c">0</td><td class="c">—</td><td class="c">28</td><td class="c">Bônus</td><td><b>Aceleração 3</b>: +2 movimento, +10 p.p. de esquiva, +25 p.p. na fuga e 8 de dano de contato. Remove Imobilização e Bloqueio de Fuga; <b>não garante fuga</b>.</td></tr>
+    <tr><td>Para-Raios</td><td class="c"><span class="rank rA">A</span></td><td class="c">Corpo a corpo</td><td class="c">1</td><td class="c">38</td><td class="c">40</td><td class="c">Comum</td><td>Golpe de contato indefensável, de alto dano em alvo único, que aplica Atordoamento 1.</td></tr>
+    <tr><td>Kirin</td><td class="c"><span class="rank rS">S</span></td><td class="c">Raio grande</td><td class="c">7</td><td class="c">48</td><td class="c"><b>70</b></td><td class="c">Comum</td><td>Indefensável. Exige chamas ativas no campo ou Nuvens de Tempestade; grande dano em área, Atordoamento 1 e limite de <b>1× por combate</b>.</td></tr>
+  </table>
+
+  <h4>Passivas do ramo</h4>
+  <table>
+    <tr><th>Nó</th><th class="c">Ramo</th><th>Efeito</th></tr>
+    <tr><td>Sinapse Acelerada</td><td class="c">raiz</td><td>+15% de dano Raiton, +8 pontos percentuais de esquiva contra Ninjutsu e +1 na prioridade de iniciativa.</td></tr>
+    <tr><td>Sobrecarga</td><td class="c">Descarga</td><td>Chance de STUN dos jutsus de raio +20%.</td></tr>
+    <tr><td>Ponta Perfurante</td><td class="c">Perfuração</td><td>Raio ignora <code>SHIELD</code>/bloqueio e causa +25% em alvo abaixo de 30% de HP (execução).</td></tr>
+    <tr><td>Nuvens de Tempestade</td><td class="c">Tempestade</td><td>Habilita Kirin sem depender de chamas e dá +75% de dano contra alvo Encharcado (2,01× junto da raiz).</td></tr>
+  </table>
+
+  <p><b>Cenário & fuga.</b> Raio é o principal <i>consumidor</i> de alvos Encharcados. Armadura de Raio melhora
+  a chance de fuga em 25 pontos percentuais; Prisão dos Quatro Pilares impede a fuga. Kirin fecha a ponte com Fogo.</p>
+</div>
+
+<!-- ============================ CRISTAL (KEKKEI GENKAI) ============================ -->
+<div class="page" style="--el:var(--cristal);">
+  <h2 class="elhead"><span class="tag">💎 CRISTAL — Shōton</span>Cristal <span class="pill" style="background:#e0f5f4;border-color:#7fc9c4;color:#146b66;">KEKKEI GENKAI</span></h2>
+  <div class="box">
+    <div class="role">Papel: Carcereiro — enche o alvo de cristal até selá-lo, e bate mais forte que qualquer elemento básico.</div>
+    <p>Cristal não é um dos cinco: é <b>linhagem sanguínea</b>, só entra por <code>/admin</code>. Todo o kit gira em torno de
+    <code>CRYSTALLIZED</code>: cada acerto crava acúmulos que roubam esquiva e movimento do alvo, e ao chegar a 4 o
+    casulo <b>fecha</b> — Atordoamento e Imobilização de graça. Não é uma corrida de dano como o Fogo; é uma corrida de
+    <i>acúmulos</i>. As passivas fecham em <b>2,30×</b> (contra 2,015× dos básicos), e o ramo do Prisma entrega a única
+    defesa <b>reflexiva</b> do jogo. Fraqueza clara: o Prisma prende você no lugar e não segura Taijutsu — quem chega
+    perto quebra o plano.</p>
+  </div>
+
+  <h4>Árvore de habilidades</h4>
+  <div class="st">
+    <div class="st-row"><div class="tnode troot">Estrutura Cristalina<small>+35% de dano Shōton · raiz</small></div></div>
+    <div class="st-link"></div>
+    <div class="st-row">
+      <div class="st-side l"><div class="st-off"><div class="boff">Agulha · acúmulos</div><div class="tnode"><span class="rk rB">B</span>Espinhos Crescentes</div><div class="tconn"></div><div class="tnode tpass">◆ Faceta Cortante</div></div><div class="st-harm"></div></div>
+      <div class="st-mid"><div class="tnode"><span class="rk rC">C</span>Shuriken de Cristal</div></div>
+      <div class="st-side r"></div>
+    </div>
+    <div class="st-link"></div>
+    <div class="st-row">
+      <div class="st-side l"></div>
+      <div class="st-mid"><div class="tnode"><span class="rk rB">B</span>Prisão Cristal de Jade</div></div>
+      <div class="st-side r"><div class="st-harm"></div><div class="st-off"><div class="boff">Espelho · invocação</div><div class="tnode"><span class="rk rB">B</span>Clone Cristal de Jade</div><div class="tconn"></div><div class="tnode tpass">◆ Rede Cristalina</div></div></div>
+    </div>
+    <div class="st-link"></div>
+    <div class="st-row">
+      <div class="st-side l"><div class="st-off"><div class="boff">Faceta · indefensável</div><div class="tnode"><span class="rk rA">A</span>Dança Selvagem Hexagonal</div><div class="tconn"></div><div class="tnode"><span class="rk rA">A</span>Shuriken Gigante Hexagonal</div></div><div class="st-harm"></div></div>
+      <div class="st-mid"><div class="tnode"><span class="rk rB">B</span>Barragem de Cristais</div></div>
+      <div class="st-side r"><div class="st-harm"></div><div class="st-off"><div class="boff">Prisma · luz</div><div class="tnode tpass">◆ Refração</div><div class="tconn"></div><div class="tnode"><span class="rk rA">A</span>Fio de Luz</div></div></div>
+    </div>
+    <div class="st-link"></div>
+    <div class="st-row"><div class="tnode"><span class="rk rA">A</span>Dragão Cadente do Cristal Destruidor</div></div>
+    <div class="st-link"></div>
+    <div class="st-row"><div class="tnode tpass">◆ Faceta Perfeita</div></div>
+    <div class="st-link"></div>
+    <div class="st-row"><div class="tnode tconv"><span class="rk rS">S</span>Oito Paredes de Cristal de Jade</div></div>
+  </div>
+
+  <h4>Jutsus</h4>
+  <table>
+    <tr><th>Jutsu</th><th class="c">Rank</th><th class="c">Forma</th><th class="c">Alc.</th><th class="c">Dano</th><th class="c">Custo</th><th class="c">Ação</th><th>Efeitos / mecânica</th></tr>
+    <tr><td>Shuriken de Cristal</td><td class="c"><span class="rank rC">C</span></td><td class="c">Linha</td><td class="c">4</td><td class="c">20</td><td class="c">20</td><td class="c">Comum</td><td><b>Cristalizado 1</b> + Imobilização (50%). Agulhas afiadas que se fixam no corpo. A porta de entrada do plano de acúmulos.</td></tr>
+    <tr><td>Espinhos Crescentes de Cristal</td><td class="c"><span class="rank rB">B</span></td><td class="c">Linha</td><td class="c">5</td><td class="c">24</td><td class="c">28</td><td class="c">Comum</td><td><b>Cristalizado 1</b> + deixa <code>OBSTACLE</code> no caminho (2 rodadas). Os espinhos crescem e ficam no mapa.</td></tr>
+    <tr><td>Prisão Cristal de Jade</td><td class="c"><span class="rank rB">B</span></td><td class="c">Single</td><td class="c">4</td><td class="c">10</td><td class="c">28</td><td class="c">Comum</td><td><b>Cristalizado 2</b> + ROOT 2 + <b>FLEE_LOCK</b> 2. Dano quase nulo, controle máximo. Canônico: <b>só uma vítima</b> (por isso <code>SINGLE_TARGET</code>).</td></tr>
+    <tr><td>Clone Cristal de Jade</td><td class="c"><span class="rank rB">B</span></td><td class="c">Invocação</td><td class="c">—</td><td class="c">—</td><td class="c">26</td><td class="c">Bônus</td><td><b>summon</b> (55 HP): espelho hexagonal que gera um clone. Ao morrer, <b>estilhaça em Cristalizado</b> na área — monta o casulo de graça.</td></tr>
+    <tr><td>Barragem de Cristais de Jade</td><td class="c"><span class="rank rB">B</span></td><td class="c">Linha</td><td class="c">6</td><td class="c">30</td><td class="c">30</td><td class="c">Comum</td><td>BLEED. Enxurrada de estilhaços em linha reta. O dano honesto do meio da árvore.</td></tr>
+    <tr><td>Dança Selvagem da Shuriken Hexagonal</td><td class="c"><span class="rank rA">A</span></td><td class="c">Cone</td><td class="c">4</td><td class="c">34</td><td class="c">40</td><td class="c">Comum</td><td><b>undodgeable</b> + Cristalizado 1 em todos. São tantas shurikens que não há como desviar.</td></tr>
+    <tr><td>Shuriken Gigante Hexagonal</td><td class="c"><span class="rank rA">A</span></td><td class="c">Linha</td><td class="c">6</td><td class="c">40</td><td class="c">42</td><td class="c">Comum</td><td><b>unblockable</b> + BLEED 2. Floco de neve gigante que corta tudo na linha e passa por qualquer guarda.</td></tr>
+    <tr><td>Dragão Cadente do Cristal Destruidor</td><td class="c"><span class="rank rA">A</span></td><td class="c">Raio</td><td class="c">6</td><td class="c">36</td><td class="c">46</td><td class="c">Comum</td><td>Cristalizado 2 + <b>NINJUTSU_BLOCK 2</b> + <code>OBSTACLE</code> 3 rodadas. O "defende ninjutsu do oponente" virou: <b>cristaliza o chakra do alvo</b> e ele não lança Ninjutsu por 2 rodadas.</td></tr>
+    <tr><td>Fio de Luz</td><td class="c"><span class="rank rA">A</span></td><td class="c">Próprio</td><td class="c">—</td><td class="c">—</td><td class="c">34</td><td class="c">Bônus</td><td><b>Prisma 2</b>: −60% de Ninjutsu recebido, 30% do barrado reflete no atacante, e você fica <b>imóvel</b>. Taijutsu passa inteiro.</td></tr>
+    <tr><td>Oito Paredes de Cristal de Jade</td><td class="c"><span class="rank rS">S</span></td><td class="c">Raio grande</td><td class="c">7</td><td class="c">46</td><td class="c"><b>72</b></td><td class="c">Comum</td><td><b>Cristalizado 3</b> em área imensa + <code>OBSTACLE</code> 3 rodadas. Sela sozinho qualquer alvo que já tenha 1 acúmulo. Custo enorme de chakra.</td></tr>
+  </table>
+
+  <h4>Passivas do ramo</h4>
+  <table>
+    <tr><th>Nó</th><th class="c">Ramo</th><th>Efeito</th></tr>
+    <tr><td>Estrutura Cristalina</td><td class="c">raiz</td><td><b>+35% de todo dano Shōton.</b></td></tr>
+    <tr><td>Faceta Cortante</td><td class="c">Agulha</td><td>Todo acerto de cristal crava <b>+1 acúmulo</b> de Cristalizado. Na prática o casulo fecha em <b>2 golpes em vez de 4</b>.</td></tr>
+    <tr><td>Rede Cristalina</td><td class="c">Espelho</td><td>Paredes e prisões de cristal duram <b>+1 rodada</b>, e o seu Cristalizado também.</td></tr>
+    <tr><td>Refração</td><td class="c">Prisma</td><td>+8 pontos percentuais de esquiva <b>contra Ninjutsu</b> — a luz presa nas facetas atrapalha a mira.</td></tr>
+    <tr><td>Faceta Perfeita</td><td class="c">Ápice</td><td><b>+70% de dano</b> (fecha <b>2,30×</b> com a raiz). A maior curva de dano do jogo.</td></tr>
+  </table>
+
+  <div class="box" style="--el:#1c1c1e;border-left-color:#1c1c1e;">
+    <b>Por que 2,30× e não mais.</b> Kekkei genkai precisa <i>sentir</i> mais forte, mas o Cristal já leva o melhor kit de
+    controle do jogo. Somar dano muito acima transformaria a linhagem em escolha obrigatória e as cinco árvores básicas
+    em segunda opção. +14% sobre os básicos é o suficiente para a diferença aparecer sem quebrar o resto.
+  </div>
+
+  <p><b>Cenário & fuga.</b> Espinhos, Dragão e Oito Paredes erguem <code>OBSTACLE</code> — Cristal remodela o mapa quase
+  tanto quanto Terra. Prisão Cristal de Jade aplica <code>FLEE_LOCK</code>, e o selamento (Atordoamento + Imobilização)
+  trava a fuga por consequência. Do outro lado, o <b>Prisma zera o seu próprio movimento</b>: enquanto ele estiver ativo
+  você não anda e não foge.</p>
+</div>
+
+<!-- ============================ COMBOS + FUGA ============================ -->
+<div class="page">
+  <h2>Combos entre elementos & o sistema de fuga</h2>
+
+  <h3>Matriz de combos</h3>
+  <p class="muted">O combo acontece quando o segundo elemento age sobre o estado/terreno deixado pelo primeiro. Não precisa ser o mesmo jogador — vale entre aliados.</p>
+  <table>
+    <tr><th>Setup</th><th>Payoff</th><th>Resultado</th></tr>
+    <tr><td>💧 Água aplica <code>WET</code> / cria água</td><td>⚡ Raio acerta o alvo molhado</td><td>Com Nuvens de Tempestade, <b>+75% de dano</b> contra Encharcado. Assassinato Eletromagnético encadeia entre todos os molhados e os Atordoa.</td></tr>
+    <tr><td>🔥 Fogo em cena / Nuvens de Tempestade</td><td>⚡ Kirin</td><td>O Fogo forma as nuvens que o Kirin exige. Sem elas, Kirin não sai (ou custa muito mais).</td></tr>
+    <tr><td>🪨 Terra ergue muro / 🔥 anel de fogo / 🪨 pântano</td><td>🌪️ Vento empurra (KNOCKBACK)</td><td>Vento arremessa o inimigo <i>para dentro</i> do terreno perigoso do aliado (dano de impacto + zona de controle).</td></tr>
+    <tr><td>🔥 Fogo deixa chamas / <code>BURN</code> no alvo (Pavio, anel, Grande Bola)</td><td>🌪️ Vento cruza a chama (passiva <b>Vento em Brasa</b>)</td><td><b>Combo carro-chefe do Fogo:</b> o Fuuton <b>propaga o incêndio</b> — ganha dano e <b>espalha 1 stack de BURN</b> a todos os adjacentes (<code>BURN_SPREAD</code>). É o clássico Katon+Fuuton do anime, agora mecânico; funciona no mesmo jogador ou entre aliados.</td></tr>
+    <tr><td>💧 Clone de Água estoura ao morrer</td><td>⚡ Raio na poça</td><td>O clone que cai vira <code>WET</code> em área <b>de graça</b> (sem gastar turno mirando): monta o combo de Raio sem setup dedicado.</td></tr>
+    <tr><td>🪨 Biscoito / muro cria obstáculo</td><td>🌪️ Vento empurra contra ele (Vácuo Cortante)</td><td>KNOCKBACK joga o alvo <b>contra a pedra recém-criada</b>: +15 de dano de impacto. Terra arma, Vento converte.</td></tr>
+    <tr><td>🌪️ Dança da Dispersão (<code>DEFENSE_DOWN</code>) / Vento Cortante</td><td>⚡🔥 Burst no alvo exposto</td><td>Vento derruba a esquiva/defesa e cega: o alvo fica de bandeja para o próximo golpe pesado.</td></tr>
+    <tr><td>🪨 Terra ergue muro e o inimigo se esconde</td><td>⚡ Ataque de Raio</td><td><b>Counter:</b> o Ataque de Raio <b>atravessa o obstáculo</b> (<code>pierceObstacles</code>) e acerta quem tentou se cobrir. Raio fura a fortaleza de Terra.</td></tr>
+    <tr><td>🔥 Cinzas Ardentes (cortina) / 🪨 muro</td><td>Reposicionar e sumir</td><td><code>SMOKE</code> e muros bloqueiam linha: quebram o alcance de jutsus em linha do inimigo e cobrem retirada.</td></tr>
+    <tr><td>🪨 Terra prende (ROOT) / 💧 Prisão de Água</td><td>Qualquer burst (⚡🔥🌪️)</td><td>Alvo preso não esquiva bem nem foge: janela livre para o Kirin / Grande Dragão / Ondas do Vácuo.</td></tr>
+    <tr><td>💎 Cristal crava acúmulos (Shuriken, Espinhos, Clone ao morrer)</td><td>💎 Oito Paredes de Cristal</td><td><b>Combo interno do Cristal:</b> as Paredes cravam 3 de uma vez, então qualquer alvo que já tenha <b>1 acúmulo</b> é <b>selado na hora</b> (Atordoamento + Imobilização). Com Faceta Cortante, dois golpes quaisquer já fecham o casulo.</td></tr>
+    <tr><td>💎 Cristal sela o alvo (Cristalizado cheio)</td><td>Qualquer burst (⚡🔥🌪️💎)</td><td>Selado = Atordoado <i>e</i> Imobilizado <i>e</i> sem esquiva (cada acúmulo tirou 8 p.p.). É a janela de execução mais limpa do jogo — vale para aliados de qualquer elemento.</td></tr>
+    <tr><td>🪨 Terra / 🌪️ Vento empurram para perto</td><td>💎 Fio de Luz</td><td><b>Counter ao Prisma:</b> o Prisma só barra Ninjutsu e prende o usuário no lugar. Puxar ou fechar distância e bater de Taijutsu passa por ele inteiro — e ele não pode andar para escapar.</td></tr>
+  </table>
+
+  <h3>Integração com o <code>/fugir</code></h3>
+  <div class="box" style="--el:#1c1c1e;border-left-color:#1c1c1e;">
+    <b>Regra atual:</b> tentar fugir consome a <b>ação comum</b> e 15 de Energia, mesmo em caso de falha.
+    A chance parte de 50%, ganha 1 ponto percentual por ponto de Taijutsu, perde 15 por inimigo adjacente
+    e fica sempre entre 10% e 90%.
+  </div>
+  <table>
+    <tr><th>Tipo</th><th>Técnica</th><th>Efeito na fuga</th></tr>
+    <tr><td><b>Anti-fuga</b> (nega o inimigo)</td><td>🔥 Corrida de Fogo</td><td>Aplica <code>FLEE_LOCK</code>: o alvo <b>não pode nem tentar</b> fugir enquanto cercado. É a assinatura direta do sistema.</td></tr>
+    <tr><td><b>Pró-fuga</b> (ajuda você)</td><td>⚡ Armadura de Raio</td><td>Concede <code>HASTE</code>: <b>+25 pontos percentuais</b> na chance, ainda sujeita ao teto de 90% e a Bloqueio de Fuga.</td></tr>
+    <tr><td>Anti-fuga (controle)</td><td>Técnicas com <code>FLEE_LOCK</code></td><td>Bloqueiam a tentativa durante o efeito. Imobilização sozinha impede movimento, mas não substitui Bloqueio de Fuga.</td></tr>
+    <tr><td><b>Anti-fuga</b> (nega o inimigo)</td><td>💎 Prisão Cristal de Jade</td><td>Aplica <code>FLEE_LOCK</code> + Imobilização. E o <b>selamento</b> do Cristalizado cheio trava a fuga por consequência (Atordoado não age).</td></tr>
+    <tr><td><b>Contra-fuga</b> (trava você)</td><td>💎 Fio de Luz</td><td>O <code>PRISM</code> <b>zera o seu próprio movimento</b>: enquanto o casulo estiver ativo você não anda nem foge. É defesa que custa a saída.</td></tr>
+    <tr><td>Anti-fuga (posicional)</td><td>🌪️ KNOCKBACK / 💧 PULL</td><td>Não travam a fuga, mas reposicionam: empurrar o alvo para dentro de uma zona ou puxá-lo para perto muda a distância que ele precisaria cobrir para escapar.</td></tr>
+  </table>
+  <p><b>Corrida de Fogo</b> e <b>Prisão dos Quatro Pilares</b> travam a fuga; <b>Armadura de Raio</b> remove
+  o bloqueio ao ser ativada e melhora a rolagem, mas nunca transforma a fuga em certeza.</p>
+</div>
+
+<!-- ============================ APÊNDICE TÉCNICO ============================ -->
+<div class="page">
+  <h2>Apêndice técnico — referência de implementação</h2>
+  <p class="muted">Resumo dos contratos e números que sustentam a árvore atual.</p>
+
+  <h3>1. Ranks nas habilidades</h3>
+  <ul>
+    <li><code>RANKS</code> em <code>enums.ts</code>: <code>["D","C","B","A","S"]</code>.</li>
+    <li>Rank representa o poder canônico; <code>tier</code> representa profundidade na árvore. São conceitos diferentes.</li>
+  </ul>
+
+  <h3>2. Efeitos elementais (em <code>EFFECT_IDS</code> + <code>balance.effects</code>)</h3>
+  <pre>WET:          { defaultDuration: 2 }     // marcador explorado pelas passivas
+FLEE_LOCK:    { defaultDuration: 2 }     // bloqueia /fugir
+HASTE:        { defaultDuration: 3, moveBonus: 2, dodgeBonus: 0.10,
+                fleeChanceBonus: 0.25, contactDamage: 8 }
+SHIELD:       { defaultDuration: 3, perDefend: 1 }   // stacks SAO os pontos absorvidos
+CHAKRA_DRAIN: { defaultDuration: 2, chakraPerTurn: 10 }
+
+// ---- exclusivos de kekkei genkai ----
+CRYSTALLIZED: { defaultDuration: 3, dodgePenaltyPerStack: 0.08,
+                movePenaltyPerStack: 1, sealAtStacks: 4,
+                sealStunDuration: 1, sealRootDuration: 2 }
+PRISM:        { defaultDuration: 2, ninjutsuDamageReduction: 0.6,
+                reflectFraction: 0.3 }
+
+// SMOKE nao e' efeito: e' TerrainKind. Ver item 3.</pre>
+
+  <h3>3. Flags elementais no contrato <code>Ability</code></h3>
+  <p class="muted">Contrato real de <code>src/data/types.ts</code>. Todas as flags abaixo são consumidas pela engine hoje.</p>
+  <pre>unblockable?: boolean            // ignora BLOCK, PARRY *e* DODGE
+undodgeable?: boolean            // ignora so' DODGE
+pierceObstacles?: boolean        // Ataque de Raio: a linha atravessa muro/arvore/fumaca
+chainWetTargets?: boolean        // Assassinato Eletromagnetico: exige alvo WET e salta nos demais
+requiresStorm?: boolean          // Kirin: exige terreno FIRE ativo ou o no raio_nuvens
+oncePerCombat?: boolean          // Kirin: 1 uso por combate (flags.usedOnceAbility)
+push?: number                    // >0 empurra, <0 puxa. Teto: BALANCE.push.maxCells = 4
+terrain?: { kind: TerrainKind; duration?: number }   // deixa terreno nas celulas atingidas
+clearsTerrain?: TerrainKind      // Fogo Aniquilador evapora WATER
+cleanses?: EffectId[]            // remove efeitos do alvo (Armadura de Raio)
+reactionKind?: "BLOCK" | "DODGE" | "PARRY" | "JUTSU"
+summon?: {
+  templateId: string             // NpcTemplate usado como corpo
+  onHit?:   { effectId, duration? }            // Clone de Raio: pune quem o fere
+  onDeath?: { effectId, radius, duration? }    // Clone de Agua/Cristal: estoura ao morrer
+}
+
+// TERRAIN_KINDS = FIRE | WATER | OBSTACLE | SMOKE | SWAMP
+// Um jutsu deixa UM tipo de terreno (`terrain.kind`), nao um mapa de raios por tipo.</pre>
+  <div class="box" style="--el:#c9761d;border-left-color:#c9761d;">
+    <b>Correção de contrato.</b> Versões anteriores deste apêndice descreviam campos que <b>nunca existiram na
+    <code>Ability</code></b>: <code>knockback</code>/<code>pull</code> (são um único <code>push</code> com sinal),
+    <code>terrainMods{water,obstacles,swamp,smoke}</code> (é <code>terrain:{kind,duration}</code> de um tipo só),
+    <code>requiresWet</code> (é <code>chainWetTargets</code>), <code>requiresCloud</code> (é <code>requiresStorm</code>),
+    <code>summonId</code> (é <code>summon:{…}</code>), e <code>multiDir</code>/<code>twoStage</code>/<code>spreadBurn</code>
+    (não existem — <code>spreadsBurn</code> é campo de <b>passiva</b>, não de jutsu). Também não há campo
+    <code>rank</code> na <code>Ability</code>: <code>RANKS</code> em <code>enums.ts</code> é
+    <code>["D","C","B","A"]</code> — <b>sem S</b>. O rank S existe apenas como <code>NodeRank</code> na árvore.
+    <b>Fonte de verdade do contrato é <code>src/data/types.ts</code>; este documento é design e intenção.</b>
+  </div>
+
+  <h3>3b. Kekkei genkai — como a engine trata</h3>
+  <p>Não há caminho de código separado: um KG é um <code>Element</code> normal em <code>ELEMENTS</code>,
+  com árvore em <code>ELEMENT_TREES</code> e passivas em <code>PASSIVES</code>. O que o distingue:</p>
+  <pre>KEKKEI_GENKAI = ["CRISTAL"]      // subconjunto de ELEMENTS
+isKekkeiGenkai(element)          // usado na UI e na faixa de balanceamento
+
+// Afinidade nao e' sorteada em lugar nenhum do codigo: CharacterElement so' e'
+// preenchido via /admin. Por isso adicionar um KG a ELEMENTS nao faz ele cair
+// no rolo de ninguem.
+
+// Faixa do teste de dano (tests/passives.test.ts):
+//   elemento basico -> 1.8 a 2.2x
+//   kekkei genkai   -> 2.2 a 2.5x</pre>
+  <p class="muted">Campo novo em <code>PassiveDef</code> para o Cristal: <code>extraCrystalStacks</code>
+  (espelho de <code>extraBurnStacks</code>), agregado em <code>PassiveMods</code> e consumido em
+  <code>resolveHit</code> na hora de aplicar <code>CRYSTALLIZED</code>.</p>
+
+  <div class="box">
+    <b>Dano não escala mais com atributo.</b> <code>ninjutsuScaling</code>, <code>taijutsuScaling</code>,
+    <code>bukijutsuScaling</code> e <code>iryoNinjutsuScaling</code> estão em <b>0</b>. O dano de um jutsu é
+    <code>baseDamage × (passivas de dano do elemento)</code>. O crescimento vem da <b>árvore</b>, não de
+    acumular atributo — dois ninjas do mesmo nível batem diferente conforme a build.
+    O produto das passivas de dano de cada elemento deve ficar perto de <b>2.0×</b> (há teste que trava isso).
+    Ninjutsu segue valendo muito: é o <b>orçamento</b> da árvore. Taijutsu dá HP, movimento, esquiva e fuga.
+  </div>
+
+  <h3>4. <code>SHIELD</code> / barreira</h3>
+  <p>Campo <code>shield: number</code> no <code>CombatParticipant</code>. Em <code>resolveHit()</code>, o dano
+  desconta do shield antes do HP. Terra é quem gera. Raio (Ponta Perfurante) ignora.</p>
+
+  <h3>5. Invocações (sistema maior)</h3>
+  <p>Clones e golem entram como <code>CombatParticipant</code> aliados, com HP, célula e IA simples
+  (reusa <code>npc-combat.ts</code>). Dá para adiar: nada mais no design depende disso. Marcar os quatro
+  nós de invocação como <i>fase 2</i>.</p>
+
+  <h3>6. Árvore & Pontos de Ninjutsu <span class="pill" style="background:#e6f4e6;border-color:#8fc98f;color:#2c6b2c;">JÁ IMPLEMENTADO</span></h3>
+  <p>Moeda = <b>valor do atributo Ninjutsu</b> (não um saldo separado). Investir em Ninjutsu no
+  <code>/atributos</code> aumenta o orçamento; comprar um nó não desconta o atributo, só o orçamento:
+  <code>disponível = ninjutsu − Σ custos dos nós comprados</code>. Ganho de 4 pontos de atributo por nível
+  (<code>balance.attributePointsPerLevel = 4</code>). Nós comprados persistem em <code>CharacterSkillNode</code>;
+  a compra é validada no servidor em <code>services/characters/skill-tree.ts</code> (o site nunca decide nada).</p>
+  <pre>// Modelo real em src/data/element-trees/index.ts
+interface SkillTreeNode {
+  id: string
+  element: Element
+  branch: string              // "tronco" | "brasa" | "cerco" | ...
+  kind: "JUTSU" | "PASSIVE"
+  cost: number                // PN
+  requiresLevel: number
+  requiresNinjutsu: number
+  requiresNodes?: string[]    // no anterior (tronco ou offshoot) -> desenha a espinha
+  grantsAbilityId?: string    // se JUTSU
+  passive?: { ... }           // se PASSIVE (ex.: { katonDmgMult: 1.15 })
+}</pre>
+  <p>A topologia tronco+ramificações é só o grafo de <code>requiresNodes</code>: o tronco é uma cadeia
+  linear (raiz → … → S) e cada offshoot aponta para o nó do tronco de onde brota. Persistir os nós
+  comprados por personagem (tabela <code>CharacterElementNode</code>). O painel pode reusar a UI de
+  <code>/atributos</code> (StringSelect de ramos + botões por nó).</p>
+
+  <h3>7. Números — dano e freio do rank S</h3>
+  <p>O dano não recebe escala direta de Ninjutsu. Ele parte do <code>baseDamage</code> e é multiplicado pelas
+  passivas da árvore. As rotas de dano completo dos <b>cinco básicos</b> ficam próximas de 2,0×; Raio chega a 2,01×
+  contra alvo Encharcado ao combinar Sinapse Acelerada (1,15×) com Nuvens de Tempestade (1,75×).
+  <b>Kekkei genkai fecha mais alto:</b> Cristal chega a <b>2,295×</b> (Estrutura Cristalina 1,35× × Faceta Perfeita 1,70×),
+  <b>+14%</b> sobre os básicos — e sem depender de condicional, ao contrário de Água e Raio.</p>
+  <p>O primeiro freio de um rank S é econômico: cada disparo custa <b>70–80% do chakra</b>
+  (<code>resourceMax</code> = 100). Técnicas específicas podem ter uma trava adicional. Kirin custa 70,
+  exige chamas ativas ou Nuvens de Tempestade e só pode ser usado uma vez por combate. Os valores de
+  balanceamento ficam em <code>balance.ts</code> e nas definições das habilidades.</p>
+
+  <div class="box" style="--el:#1c1c1e;border-left-color:#1c1c1e;margin-top:18px;">
+    <b>Fontes de verdade:</b> efeitos e números globais em <code>src/config</code>; habilidades em
+    <code>src/data/jutsus</code>; topologia e passivas em <code>src/data/element-trees</code>; resolução das
+    interações em <code>src/services/combat</code>.
+  </div>
+</div>

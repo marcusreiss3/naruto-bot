@@ -14,7 +14,8 @@ model UserCharacter {
   id              String   @id @default(cuid())
   discordId       String
   guildId         String
-  name            String
+  name            String   // username do Discord (fallback de exibicao)
+  displayName     String?  // nome RP do personagem; tem prioridade sobre name
   level           Int      @default(1)
   xp              Int      @default(0)
   ryo             Int      @default(0)
@@ -34,20 +35,39 @@ model UserCharacter {
   jutsus     CharacterJutsu[]
   missions   MissionInstance[]
   inventory  InventoryItem[]
+  skillNodes CharacterSkillNode[]
 
   @@unique([discordId, guildId])
   @@index([guildId])
 }
 
-model CharacterAttributes {
+// Nós da árvore de habilidades de elemento comprados pelo personagem.
+// A definição dos nós (custo, requisitos, o que concede) é estática em
+// src/data/element-trees. Aqui guardamos só o que cada char possui.
+model CharacterSkillNode {
   id        String        @id @default(cuid())
   character UserCharacter @relation(fields: [charId], references: [id], onDelete: Cascade)
-  charId    String        @unique
-  ninjutsu  Int           @default(1)
-  iryo      Int           @default(1)
-  taijutsu  Int           @default(1)
-  genjutsu  Int           @default(1)
-  kenjutsu  Int           @default(1)
+  charId    String
+  nodeId    String
+  createdAt DateTime      @default(now())
+
+  @@unique([charId, nodeId])
+  @@index([charId])
+}
+
+model CharacterAttributes {
+  id           String        @id @default(cuid())
+  character    UserCharacter @relation(fields: [charId], references: [id], onDelete: Cascade)
+  charId       String        @unique
+  ninjutsu     Int           @default(1)
+  taijutsu     Int           @default(1)
+  genjutsu     Int           @default(1)
+  bukijutsu    Int           @default(1)
+  iryoNinjutsu Int           @default(1)
+  fuinjutsu    Int           @default(1)
+  kugutsu      Int           @default(1)
+  senjutsu     Int           @default(1)
+  dojutsu      Int           @default(1)
 }
 
 model CharacterResourceState {
@@ -70,7 +90,7 @@ model CharacterElement {
   id        String        @id @default(cuid())
   character UserCharacter @relation(fields: [charId], references: [id], onDelete: Cascade)
   charId    String
-  element   String // FOGO | AGUA | VENTO | TERRA | RAIO
+  element   String // FOGO | AGUA | VENTO | TERRA | RAIO | CRISTAL (kekkei genkai, so via /admin)
 
   @@unique([charId, element])
 }
@@ -111,6 +131,8 @@ model CombatSession {
   round         Int      @default(1)
   activeIndex   Int      @default(0)
   turnOrderJson String   @default("[]") // array de participantId
+  // manchas de terreno temporario: [{cell,kind,untilRound}] (ver combat/terrain.ts)
+  terrainJson   String   @default("[]")
   missionInstanceId String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

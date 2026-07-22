@@ -5,6 +5,31 @@ description: Use ao criar, editar ou balancear jutsus/habilidades (Ability) — 
 
 # Criar jutsu
 
+## ⚠️ Leia antes: os jutsus de jogador são descartáveis
+
+As 39 habilidades **de jogador** hoje no projeto (15 elementais, 18 de support, 6 de clã) são **placeholder** e serão **apagadas** — não substituídas, apagadas. Existem só para exercitar o sistema de efeitos e de área. Vale até para `chidori`, `fuuton_rasenshuriken` e `uchiha_sharingan1`.
+
+**Habilidades de NPC ficam** — são conteúdo real: `pombo_bicada`, `vespa_ferroada`.
+
+Como distinguir (verificado, só essas 2 das 41):
+
+| | Requisitos | Custo |
+|---|---|---|
+| **Jogador** (descartável) | tem `level`/`element`/`clanId`/`attributes` | > 0 |
+| **NPC** (fica) | sem `requirements` de desbloqueio | 0 |
+
+Estar em `NpcTemplate.abilityIds` **não** faz a habilidade ser de NPC — 13 ids aparecem lá, mas NPCs reusam jutsu de jogador (`katon_goukakyuu`, `tai_soco_forte`...). O teste é o requisito, não quem usa.
+
+O que fica é o sistema: o contrato `Ability`, a engine, os efeitos, os números de `balance.ts`.
+
+Consequências práticas:
+- **Não invista em balanceamento fino** de jutsu de jogador sem pedido explícito. A tabela de tier abaixo serve pra manter os placeholders coerentes, não é balanceamento final.
+- **Não trate os ids como contrato estável.** Código que dependa de `katon_goukakyuu` existir é frágil.
+- Jutsu de jogador novo também é descartável — diga isso ao propor um.
+- Habilidade de NPC é conteúdo de verdade: trate normal, balanceie normal.
+- Ao mexer nos placeholders, priorize o que valida o sistema (o efeito novo funciona? a forma de área está certa?), não o feel do jogo.
+- **Ao apagar em massa:** 13 ids são referenciados por `NpcTemplate.abilityIds` (`src/data/npcs.ts`) e as 6 de clã por `ClanDef.passiveIds`/`activeIds`. NPC que fica sem habilidade de dano vira inanimado — a IA o deixa parado.
+
 ## Onde
 
 | Categoria | Arquivo |

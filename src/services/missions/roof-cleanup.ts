@@ -8,7 +8,7 @@ import { prisma } from "../../db/client.js";
 import { ACADEMIA_GENIN_CHANNEL_ID, getScenarioByChannel } from "../../data/index.js";
 import { getMission } from "../../data/missions/index.js";
 import { parseCell, inBounds } from "../../utils/grid.js";
-import { getOrCreateCharacter } from "../characters/character-service.js";
+import { getOrCreateCharacter, attrsFromRow } from "../characters/character-service.js";
 import { moveRange } from "../characters/formulas.js";
 import { getAppearance } from "../appearance/appearance-service.js";
 import { cellDistance } from "../combat/combat-math.js";
@@ -222,13 +222,7 @@ async function startPigeonCombat(
     chakra: char.resources?.chakra ?? 100,
     energia: char.resources?.energia ?? 100,
     jutsuIds: char.jutsus.map((j: { jutsuId: string }) => j.jutsuId),
-    attrs: {
-      ninjutsu: char.attributes?.ninjutsu ?? 1,
-      iryo: char.attributes?.iryo ?? 1,
-      taijutsu: char.attributes?.taijutsu ?? 1,
-      genjutsu: char.attributes?.genjutsu ?? 1,
-      kenjutsu: char.attributes?.kenjutsu ?? 1,
-    },
+    attrs: attrsFromRow(char.attributes ?? {}),
   });
 
   const npcs = Array.from({ length: pigeonCount(ctx.def) }, () => ({ templateId: pigeonTemplate(ctx.def) }));

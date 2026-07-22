@@ -5,7 +5,7 @@ import type {
 } from "discord.js";
 import { prisma } from "../../db/client.js";
 import { getMission } from "../../data/missions/index.js";
-import { getOrCreateCharacter } from "../characters/character-service.js";
+import { getOrCreateCharacter, attrsFromRow } from "../characters/character-service.js";
 import { getActiveSession, startCombat } from "../combat/combat-engine.js";
 import { sendAsPersona } from "../discord/persona-webhook.js";
 import { getPersona } from "../npc-ai/personas.js";
@@ -178,13 +178,7 @@ function starterFrom(char: Awaited<ReturnType<typeof getOrCreateCharacter>>): St
     chakra: char.resources!.chakra,
     energia: char.resources!.energia,
     jutsuIds: char.jutsus.map((j) => j.jutsuId),
-    attrs: {
-      ninjutsu: char.attributes!.ninjutsu,
-      iryo: char.attributes!.iryo,
-      taijutsu: char.attributes!.taijutsu,
-      genjutsu: char.attributes!.genjutsu,
-      kenjutsu: char.attributes!.kenjutsu,
-    },
+    attrs: attrsFromRow(char.attributes!),
   };
 }
 

@@ -4,21 +4,39 @@ import type { MasteryLevel } from "./enums.js";
 export const BALANCE = {
   // ---- Vida / atributos ----
   hpBase: 100,
-  hpPerLevel: 5,
-  hpPerTaijutsu: 3,
+  // HP cresce devagar de proposito: como o dano vem da arvore (funcao degrau,
+  // limitada pelo total de nos) e nao do atributo, HP linear rapido faria a luta
+  // esticar sem fim no fim de jogo. Ver a nota de escalas abaixo.
+  hpPerLevel: 2,
+  hpPerTaijutsu: 2,
 
   // nivel maximo
-  maxLevel: 30,
+  maxLevel: 50,
   // ponto de atributo por nivel
-  attributePointsPerLevel: 2,
+  attributePointsPerLevel: 4,
+  // teto por atributo (0 = sem teto)
+  attributeCap: 0,
   // a cada N niveis, 1 ponto de maestria
   masteryEveryLevels: 15,
 
   // ---- Escalas de dano/cura ----
-  ninjutsuScaling: 2.0,
-  iryoScaling: 2.5,
-  taijutsuScaling: 1.8,
-  kenjutsuScaling: 1.8,
+  // Escala 0 = o atributo NAO soma dano/cura. Isso e' intencional nos quatro
+  // primeiros: dano vem de BUILD (jutsu comprado + passivas da arvore), nao de
+  // acumular atributo. O atributo continua valendo muito por outros caminhos:
+  //   ninjutsu  -> e' o orcamento da arvore de habilidades
+  //   taijutsu  -> HP, alcance de movimento, esquiva fisica e chance de fuga
+  //   bukijutsu -> dano da arma somado a parte (so KENJUTSU)
+  //   iryo      -> ainda sem arvore propria; cura hoje sai so do baseHeal
+  // Se voltar a escalar, revise hpPerLevel junto: os dois se equilibram.
+  ninjutsuScaling: 0,
+  iryoNinjutsuScaling: 0,
+  taijutsuScaling: 0,
+  bukijutsuScaling: 0,
+  genjutsuScaling: 1.0,
+  fuinjutsuScaling: 0,
+  kugutsuScaling: 0,
+  senjutsuScaling: 0,
+  dojutsuScaling: 0,
 
   // ---- Genjutsu duracao ----
   genjutsuBaseDurationBonusEvery: 10, // +1 rodada a cada 10 de genjutsu
@@ -53,6 +71,11 @@ export const BALANCE = {
     MESTRE: 0.55,
   } as Record<MasteryLevel, number>,
 
+  // ---- Formato de area ----
+  // meio-angulo do cone, em graus. 45 = cone de 90deg (padrao).
+  // menor = cone mais estreito/agulha; maior = leque mais aberto.
+  coneHalfAngleDeg: 45,
+
   // ---- Cenario: bonus de altura (arvore) ----
   heightAttackRangeBonus: 1,
   heightTargetDodgePenalty: 0.1, // alvos abaixo perdem 10% esquiva
@@ -68,6 +91,65 @@ export const BALANCE = {
     ROOT: { defaultDuration: 1 },
     NINJUTSU_BLOCK: { defaultDuration: 2 },
     DEFENSE_DOWN: { dodgeReduction: 0.15 },
+    FLEE_LOCK: { defaultDuration: 2 },
+    // Encharcado nao causa dano sozinho: e' um marcador que Agua e Raio leem.
+    WET: { defaultDuration: 2 },
+    // Barreira: os stacks SAO os pontos de dano absorvidos (nao multiplicador).
+    SHIELD: { defaultDuration: 3, perDefend: 1 },
+    CHAKRA_DRAIN: { defaultDuration: 2, chakraPerTurn: 10 },
+    HASTE: {
+      defaultDuration: 3,
+      moveBonus: 2,
+      dodgeBonus: 0.1,
+      fleeChanceBonus: 0.25,
+      contactDamage: 8,
+    },
+
+    // ---- exclusivos de kekkei genkai ----
+    // Cristalizado: o oposto da Queimadura. NAO causa dano por turno — cobre o
+    // alvo de cristal, tirando esquiva e movimento a cada acumulo. O payoff e'
+    // CONTROLE: ao encher, o alvo e' selado dentro do proprio cristal.
+    CRYSTALLIZED: {
+      defaultDuration: 3,
+      dodgePenaltyPerStack: 0.08, // -8 pontos percentuais de esquiva por acumulo
+      movePenaltyPerStack: 1, // -1 casa de movimento por acumulo
+      sealAtStacks: 4, // ao chegar aqui, o casulo fecha e os acumulos zeram
+      sealStunDuration: 1,
+      sealRootDuration: 2,
+    },
+    // Prisma (Fio de Luz): casulo de luz refratada. Corta o ninjutsu recebido e
+    // devolve parte no atacante, mas o usuario fica IMOVEL e o corpo a corpo
+    // passa inteiro — quem chega perto ganha a troca.
+    PRISM: {
+      defaultDuration: 2,
+      ninjutsuDamageReduction: 0.6, // corta 60% do dano de NINJUTSU recebido
+      reflectFraction: 0.3, // 30% do que foi barrado volta no atacante
+    },
+  },
+
+  // ---- Deslocamento (empurrao / puxao) ----
+  push: {
+    // teto de casas que um unico jutsu pode arrastar o alvo
+    maxCells: 4,
+    // dano por bater em obstaculo/parede ao ser empurrado (passiva Vacuo Cortante)
+    impactDamage: 15,
+  },
+
+  // ---- Terreno dinamico (manchas temporarias no mapa) ----
+  terrain: {
+    fireDmgPerTurn: 8, // dano por terminar o turno numa celula em chamas
+    swampMoveFactor: 0.5, // pantano corta o movimento pela metade
+    defaultDuration: 2, // rodadas padrao de uma mancha
+  },
+
+  // ---- Fuga do combate ----
+  flee: {
+    baseChance: 0.5,
+    perAdjacentEnemy: -0.15, // cada inimigo colado dificulta
+    perTaijutsuPoint: 0.01, // agilidade ajuda
+    maxChance: 0.9,
+    minChance: 0.1,
+    energiaCost: 15,
   },
 
   // ---- Combate ----

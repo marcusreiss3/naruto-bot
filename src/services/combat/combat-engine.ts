@@ -1,9 +1,9 @@
 import { prisma } from "../../db/client.js";
 import { BALANCE } from "../../config/balance.js";
-import type { Attribute } from "../../config/enums.js";
+import { effectLabel, type Attribute, type EffectId } from "../../config/enums.js";
 import { getAbility, getScenarioById, getNpc } from "../../data/index.js";
 import type { Ability, ScenarioDef } from "../../data/types.js";
-import { allCells, parseCell, toCell } from "../../utils/grid.js";
+import { allCells, neighbors, parseCell, radiusCells, toCell } from "../../utils/grid.js";
 import { pick, randInt, chance } from "../../utils/random.js";
 import { costAfterMastery, moveRange } from "../characters/formulas.js";
 import {
@@ -15,17 +15,53 @@ import {
 } from "./combat-math.js";
 import {
   applyBurnStacks,
+  applyCrystalStacks,
+  applyCrystalToMove,
+  applyHasteToMove,
   applySlowToMove,
+  crystalDodgePenalty,
+  isPrismed,
+  refractDamage,
   bleedExtraOnPhysical,
   burnTaijutsuMultiplier,
+  clampDuration,
+  defaultDurationFor,
   healMultiplier,
+  hasteContactDamage,
+  hasteDodgeBonus,
+  hasteFleeChanceBonus,
   isConfused,
   isRooted,
   isStunned,
+  isFleeLocked,
+  isWet,
+  shieldPoints,
+  absorbWithShield,
+  chakraDrainPerTurn,
   ninjutsuBlocked,
   tickEffect,
   type EffectState,
 } from "./effects.js";
+import {
+  effectiveLineBlockers,
+  effectiveObstacles,
+  effectiveWater,
+  hasActiveKind,
+  hasKindAt,
+  lineIsClear,
+  makePatches,
+  mergePatches,
+  clearKindAt,
+  parseTerrain,
+  serializeTerrain,
+  terrainMoveFactor,
+  terrainTickDamage,
+  type TerrainPatch,
+} from "./terrain.js";
+import { fleeCheck } from "./flee.js";
+import { characterPassiveMods, passiveMods } from "./passives.js";
+import { resolvePush, impactDamage } from "./push.js";
+import { clampInfiniteHp } from "./training-dummy.js";
 
 type ParticipantRow = Awaited<ReturnType<typeof prisma.combatParticipant.findFirstOrThrow>>;
 
@@ -38,6 +74,7 @@ export interface SessionFull {
   round: number;
   activeIndex: number;
   turnOrder: string[];
+  terrain: TerrainPatch[]; // manchas temporarias (chamas, agua, muro, fumaca, pantano)
   missionInstanceId: string | null;
   participants: (ParticipantRow & { effects: EffectState[]; flags: Record<string, unknown> })[];
   drops: { id: string; cell: string; name: string; itemId: string }[];
@@ -79,6 +116,7 @@ function mapSession(s: any): SessionFull {
     round: s.round,
     activeIndex: s.activeIndex,
     turnOrder: JSON.parse(s.turnOrderJson) as string[],
+    terrain: parseTerrain(s.terrainJson ?? "[]"),
     missionInstanceId: s.missionInstanceId ?? null,
     participants: s.participants.map((p: any) => ({
       ...p,
@@ -101,6 +139,8 @@ export interface StartPlayer {
   chakra: number;
   energia: number;
   jutsuIds: string[];
+  attrs?: Record<string, number>;
+  nodes?: string[];
 }
 
 export interface StartNpc {
@@ -134,6 +174,7 @@ export async function startCombat(opts: {
   });
 
   const participantIds: string[] = [];
+  const initiative = new Map<string, number>();
   let li = 0;
   for (const p of opts.players) {
     const cell = leftCells[li++] ?? free[0]!;
@@ -149,9 +190,11 @@ export async function startCombat(opts: {
         chakra: p.chakra,
         energia: p.energia,
         jutsuIdsJson: JSON.stringify(p.jutsuIds),
+        flagsJson: JSON.stringify({ attrs: p.attrs, nodes: p.nodes ?? [] }),
       },
     });
     participantIds.push(cp.id);
+    initiative.set(cp.id, characterPassiveMods(p.nodes ?? []).initiativePriority);
   }
   let ri = 0;
   for (const n of opts.npcs ?? []) {
@@ -174,7 +217,12 @@ export async function startCombat(opts: {
       },
     });
     participantIds.push(cp.id);
+    initiative.set(cp.id, 0);
   }
+
+  // Ordenacao estavel: Sinapse Acelerada antecipa o participante, mantendo a
+  // ordem relativa entre personagens com a mesma prioridade.
+  participantIds.sort((a, b) => (initiative.get(b) ?? 0) - (initiative.get(a) ?? 0));
 
   await prisma.combatSession.update({
     where: { id: session.id },
@@ -192,8 +240,182 @@ function freeStartCells(scenario: ScenarioDef): string[] {
   return allCells(scenario.rows, scenario.cols).filter((c) => !blocked.has(c));
 }
 
+// ---------------- Fuga ----------------
+
+export interface FleeResult {
+  ok: boolean;
+  escaped: boolean;
+  chance: number;
+  logs: string[];
+  error?: string;
+}
+
+// Tenta sair do combate. Gasta a acao comum do turno mesmo falhando: fugir e'
+// uma aposta, nao uma acao gratis.
+export async function attemptFlee(sessionId: string, participantId: string): Promise<FleeResult> {
+  const s = await getSessionById(sessionId);
+  if (!s) return { ok: false, escaped: false, chance: 0, logs: [], error: "Combate não encontrado." };
+  const p = s.participants.find((x) => x.id === participantId);
+  if (!p) return { ok: false, escaped: false, chance: 0, logs: [], error: "Você não está neste combate." };
+  if (p.hpCurrent <= 0) return { ok: false, escaped: false, chance: 0, logs: [], error: "Você está derrotado." };
+  if (p.actedCommon) {
+    return { ok: false, escaped: false, chance: 0, logs: [], error: "Ação comum já usada nesta rodada." };
+  }
+  if (isStunned(p.effects)) {
+    return { ok: false, escaped: false, chance: 0, logs: [], error: "Você está atordoado." };
+  }
+
+  const enemies = s.participants.filter((x) => x.hpCurrent > 0 && x.teamId !== p.teamId);
+  const check = fleeCheck({
+    fleeingCell: p.cell,
+    enemyCells: enemies.map((e) => e.cell),
+    taijutsu: getAttr(p, "taijutsu"),
+    fleeLocked: isFleeLocked(p.effects),
+    guaranteed: p.flags.guaranteedFlee === true,
+    chanceBonus: hasteFleeChanceBonus(p.effects),
+    energia: p.energia,
+  });
+  if (!check.allowed) {
+    return { ok: false, escaped: false, chance: 0, logs: [], error: check.reason };
+  }
+
+  await markAction(p.id, "COMUM");
+  await deductResource(p.id, "energia", BALANCE.flee.energiaCost);
+
+  const logs: string[] = [];
+  const escaped = chance(check.chance);
+  if (escaped) {
+    logs.push(`🏃 **${p.name}** conseguiu fugir do combate!`);
+    await prisma.combatParticipant.delete({ where: { id: p.id } });
+    await prisma.combatSession.update({
+      where: { id: s.id },
+      data: { turnOrderJson: JSON.stringify(s.turnOrder.filter((id) => id !== p.id)) },
+    });
+  } else {
+    logs.push(
+      `🏃 **${p.name}** tentou fugir e não conseguiu (${Math.round(check.chance * 100)}% de chance).`,
+    );
+  }
+  return { ok: true, escaped, chance: check.chance, logs };
+}
+
 export async function endCombat(sessionId: string): Promise<void> {
   await prisma.combatSession.update({ where: { id: sessionId }, data: { status: "ENDED" } });
+}
+
+// ---------------- Invocacoes ----------------
+
+// Cria a invocacao numa casa livre ao lado de quem invocou e a insere na ordem
+// de turno logo depois dele (age ainda nesta rodada).
+//
+// A invocacao e' um CombatParticipant isNpc (reusa a IA) no TIME de quem
+// invocou, marcado com flags.isSummon. A marca importa: checkVictory ignora
+// invocacoes, senao um clone vivo impediria o combate de acabar.
+async function createSummon(
+  s: SessionFull,
+  summoner: SessionFull["participants"][number],
+  summon: NonNullable<Ability["summon"]>,
+  logs: string[],
+  hpBonus = 0, // Vinculo de Barro (Terra) engorda as invocacoes
+): Promise<void> {
+  const tpl = getNpc(summon.templateId);
+  if (!tpl) return;
+  const hp = Math.round(tpl.hpMax * (1 + hpBonus));
+  const scenario = getScenarioById(s.scenarioId)!;
+
+  const blocked = effectiveObstacles(scenario, s.terrain, s.round);
+  const taken = new Set(s.participants.filter((p) => p.hpCurrent > 0).map((p) => p.cell));
+  const origin = parseCell(summoner.cell);
+  if (!origin) return;
+
+  const spot = neighbors(origin)
+    .filter((c) => c.row >= 0 && c.row < scenario.rows && c.col >= 1 && c.col <= scenario.cols)
+    .map(toCell)
+    .find((c) => !blocked.has(c) && !taken.has(c));
+  if (!spot) {
+    logs.push("⚠️ Não há espaço livre ao seu lado para a invocação.");
+    return;
+  }
+
+  const cp = await prisma.combatParticipant.create({
+    data: {
+      sessionId: s.id,
+      isNpc: true,
+      npcTemplate: tpl.id,
+      name: tpl.name,
+      teamId: summoner.teamId, // luta do SEU lado
+      cell: spot,
+      hpCurrent: hp,
+      hpMax: hp,
+      chakra: 100,
+      energia: 100,
+      jutsuIdsJson: JSON.stringify(tpl.abilityIds),
+      flagsJson: JSON.stringify({
+        isSummon: true,
+        summonerId: summoner.id,
+        onHit: summon.onHit ?? null,
+        onDeath: summon.onDeath ?? null,
+      }),
+    },
+  });
+
+  // entra logo depois de quem invocou, para agir ainda nesta rodada
+  const order = [...s.turnOrder];
+  const at = order.indexOf(summoner.id);
+  if (at >= 0) order.splice(at + 1, 0, cp.id);
+  else order.push(cp.id);
+  await prisma.combatSession.update({
+    where: { id: s.id },
+    data: { turnOrderJson: JSON.stringify(order) },
+  });
+
+  logs.push(`🌀 ${summoner.name} invocou **${tpl.name}** em ${spot}.`);
+}
+
+// Estouro da invocacao ao morrer (clone d'agua molha a area em volta).
+async function triggerSummonDeath(
+  s: SessionFull,
+  dead: SessionFull["participants"][number],
+  logs: string[],
+): Promise<void> {
+  const onDeath = dead.flags.onDeath as
+    | { effectId: EffectId; radius: number; duration?: number }
+    | null
+    | undefined;
+  if (!onDeath) return;
+  const scenario = getScenarioById(s.scenarioId)!;
+  const center = parseCell(dead.cell);
+  if (!center) return;
+
+  const area = new Set(
+    radiusCells(center, Math.max(1, onDeath.radius), scenario.rows, scenario.cols).map(toCell),
+  );
+  const atingidos = s.participants.filter(
+    (p) => p.hpCurrent > 0 && p.id !== dead.id && area.has(p.cell),
+  );
+  for (const alvo of atingidos) {
+    await applyEffect(
+      alvo.id,
+      onDeath.effectId,
+      1,
+      onDeath.duration ?? defaultDurationFor(onDeath.effectId),
+    );
+  }
+  if (atingidos.length) {
+    const icon = onDeath.effectId === "STUN" ? "⚡" : "💦";
+    logs.push(
+      `${icon} **${dead.name}** se desfez e atingiu ${atingidos.map((a) => a.name).join(", ")}.`,
+    );
+  }
+}
+
+// Persiste as manchas de terreno e atualiza a sessao em memoria.
+async function saveTerrain(s: SessionFull, patches: TerrainPatch[]): Promise<void> {
+  s.terrain = patches;
+  await prisma.combatSession.update({
+    where: { id: s.id },
+    data: { terrainJson: serializeTerrain(patches) },
+  });
 }
 
 export function activeParticipant(s: SessionFull) {
@@ -219,6 +441,7 @@ export function validateMove(s: SessionFull, participantId: string, dest: string
   if (!coord || coord.row >= scenario.rows || coord.col > scenario.cols || coord.col < 1) {
     return { ok: false, error: "Célula inválida." };
   }
+  if (isStunned(p.effects)) return { ok: false, error: "Você está atordoado e não pode se mover." };
   if (isRooted(p.effects)) return { ok: false, error: "Você está enraizado e não pode se mover." };
   if (!cellHasRoom(s, dest, p.isNpc, p.id)) {
     return {
@@ -226,16 +449,27 @@ export function validateMove(s: SessionFull, participantId: string, dest: string
       error: p.isNpc ? "Célula cheia (máx. 3 inimigos)." : "Já há outro jogador nessa célula.",
     };
   }
-  if ((scenario.cells.obstacles ?? []).includes(dest)) {
+  // obstaculos do cenario + muros/blocos erguidos por jutsu (terreno temporario)
+  if (effectiveObstacles(scenario, s.terrain, s.round).has(dest)) {
     return { ok: false, error: "Célula bloqueada por obstáculo." };
   }
 
   let move = moveRange(getAttr(p, "taijutsu"));
   move = applySlowToMove(move, p.effects);
+  move = applyHasteToMove(move, p.effects);
+  // pantano na celula de origem prende: sair dele custa o dobro
+  move = Math.max(1, Math.floor(move * terrainMoveFactor(s.terrain, p.cell, s.round)));
+  // cristal pesa e PODE zerar o movimento (por isso vem depois do piso de 1):
+  // coberto de cristal o suficiente, o alvo simplesmente nao anda.
+  move = applyCrystalToMove(move, p.effects);
+  // Prisma: o usuario esta suspenso num casulo de luz. Nao se move, e ponto.
+  if (isPrismed(p.effects)) {
+    return { ok: false, error: "Você está imóvel dentro do Prisma." };
+  }
 
   let dist = cellDistance(p.cell, dest);
   // agua reduz deslocamento pela metade, salvo waterWalk ativo
-  const onWater = (scenario.cells.water ?? []).includes(dest);
+  const onWater = effectiveWater(scenario, s.terrain, s.round).has(dest);
   if (onWater && !p.flags.waterWalk) dist = dist * 2;
   if (dist > move) {
     return { ok: false, error: `Fora do alcance de movimento (max ${move}).` };
@@ -319,6 +553,14 @@ function getAttr(p: SessionFull["participants"][number], attr: Attribute): numbe
   return cached ?? 1;
 }
 
+// Nos da arvore que o participante possui (snapshot tirado no inicio do combate).
+// NPC nao tem arvore: nunca ganha passiva de no.
+function ownedNodes(p: SessionFull["participants"][number]): string[] {
+  if (p.isNpc) return [];
+  const nodes = p.flags.nodes;
+  return Array.isArray(nodes) ? (nodes as string[]) : [];
+}
+
 // ---------------- Uso de habilidade ----------------
 
 export interface AbilityHit {
@@ -332,6 +574,51 @@ export interface UseAbilityResult {
   error?: string;
   logs: string[];
   hits: AbilityHit[]; // dano pendente de reacao
+}
+
+// ---------------- Preview de area (read-only) ----------------
+
+export interface AbilityPreview {
+  cells: string[];
+  // quem esta na area, separado por lado em relacao ao atacante
+  enemies: SessionFull["participants"];
+  allies: SessionFull["participants"];
+  // atacante confuso: o alvo pode ser redirecionado no uso real
+  confused: boolean;
+}
+
+export function isAreaShape(ability: Ability): boolean {
+  return ability.shape === "LINE" || ability.shape === "CONE" || ability.shape === "RADIUS";
+}
+
+// Calcula a area que um jutsu atingiria, SEM aplicar nada. Usado para mostrar o
+// preview antes de confirmar. `useAbility` continua sendo a validacao final —
+// isto aqui so desenha a intencao.
+export function previewAbilityArea(
+  s: SessionFull,
+  actorId: string,
+  ability: Ability,
+  targetCell: string | null,
+): AbilityPreview | null {
+  const actor = s.participants.find((p) => p.id === actorId);
+  if (!actor || !targetCell) return null;
+  const scenario = getScenarioById(s.scenarioId);
+  if (!scenario) return null;
+
+  const cells = resolveAreaCells(ability, actor.cell, targetCell, scenario);
+  if (cells.length === 0) return null;
+
+  const hit = ability.chainWetTargets
+    ? s.participants.filter((p) => p.hpCurrent > 0 && p.id !== actor.id && isWet(p.effects))
+    : s.participants.filter(
+        (p) => p.hpCurrent > 0 && p.id !== actor.id && cells.includes(p.cell),
+      );
+  return {
+    cells,
+    enemies: hit.filter((p) => p.teamId !== actor.teamId),
+    allies: hit.filter((p) => p.teamId === actor.teamId),
+    confused: isConfused(actor.effects),
+  };
 }
 
 export async function useAbility(
@@ -368,9 +655,12 @@ export async function useAbility(
   }
   if (isStunned(actor.effects)) return fail("Você está atordoado e não pode agir.");
 
-  // custo apos maestria
+  // passivas dos nos comprados (snapshot em flags.nodes)
+  const mods = passiveMods(ownedNodes(actor), ability);
+
+  // custo apos maestria e apos passivas de reducao de custo
   const mastery = await masteryFor(actor, ability.resource);
-  const cost = costAfterMastery(ability.cost, mastery);
+  const cost = Math.max(1, Math.round(costAfterMastery(ability.cost, mastery) * mods.costMult));
   const pool = ability.resource === "chakra" ? actor.chakra : actor.energia;
   if (pool < cost) return fail(`${ability.resource} insuficiente (precisa ${cost}%).`);
 
@@ -392,19 +682,50 @@ export async function useAbility(
     }
   }
 
+  // alvo obrigatorio: sem isso o jutsu nao atinge nada. Falha ANTES de gastar
+  // recurso/acao — antes esta checagem so rodava quando ja havia alvo, entao
+  // usar sem alvo queimava chakra e o turno a toa.
+  if (needsTarget(ability) && !effectiveTarget) {
+    return fail("Escolha um alvo (nome pelo autocomplete) ou uma célula, ex: `alvo:C4`.");
+  }
+
+  const scenario = getScenarioById(s.scenarioId)!;
+
+  if (ability.chainWetTargets && (!targetP || !isWet(targetP.effects))) {
+    return fail("O alvo inicial precisa estar Encharcado para conduzir a corrente.");
+  }
+  if (ability.oncePerCombat && actor.flags.usedOnceAbility === ability.id) {
+    return fail(`${ability.name} so pode ser usado uma vez por combate.`);
+  }
+  if (
+    ability.requiresStorm &&
+    !ownedNodes(actor).includes("raio_nuvens") &&
+    !hasActiveKind(s.terrain, "FIRE", s.round)
+  ) {
+    return fail("Kirin exige chamas ativas no campo ou a passiva Nuvens de Tempestade.");
+  }
+
   // alcance
   if (needsTarget(ability) && effectiveTarget) {
     const d = cellDistance(actor.cell, effectiveTarget);
-    const maxRange = ability.shape === "MELEE" ? Math.max(1, ability.range) : ability.range;
+    // passiva pode esticar o alcance (Alcance Estendido, do Vento)
+    const baseRange = ability.range + mods.rangeBonus;
+    const maxRange = ability.shape === "MELEE" ? Math.max(1, baseRange) : baseRange;
     if (d > maxRange) return fail("Alvo fora do alcance.");
+    // linha de visao: muro, arvore e fumaca cortam a mira (corpo a corpo ignora)
+    if (ability.shape !== "MELEE" && !ability.pierceObstacles) {
+      const blockers = effectiveLineBlockers(scenario, s.terrain, s.round);
+      if (!lineIsClear(actor.cell, effectiveTarget, blockers, scenario)) {
+        return fail("Sem linha de visão: algo bloqueia o caminho até o alvo.");
+      }
+    }
   }
 
   // deduz recurso e marca acao
   await deductResource(actor.id, ability.resource, cost);
   await markAction(actor.id, ability.actionType);
+  if (ability.oncePerCombat) await setFlag(actor.id, "usedOnceAbility", ability.id);
   logs.push(`✨ ${actor.name} usou **${ability.name}** (-${cost}% ${ability.resource}).`);
-
-  const scenario = getScenarioById(s.scenarioId)!;
 
   // cura / cleanse / buff
   if (ability.baseHeal || ability.cleanses) {
@@ -418,7 +739,7 @@ export async function useAbility(
       logs.push(`🧼 Efeitos removidos de ${healTarget.name}: ${ability.cleanses.join(", ")}.`);
     }
     if (ability.baseHeal) {
-      const heal = computeHeal(ability, getAttr(actor, "iryo"), healMultiplier(healTarget.effects));
+      const heal = computeHeal(ability, getAttr(actor, "iryoNinjutsu"), healMultiplier(healTarget.effects));
       const newHp = Math.min(healTarget.hpMax, healTarget.hpCurrent + heal);
       await prisma.combatParticipant.update({
         where: { id: healTarget.id },
@@ -440,12 +761,62 @@ export async function useAbility(
     }
   }
 
+  // Efeitos de habilidades SELF sao buffs do proprio usuario. Efeitos de
+  // ataque continuam sendo aplicados apenas quando o golpe causa dano.
+  if (ability.shape === "SELF" && ability.effects) {
+    for (const ae of ability.effects) {
+      if (ae.chance !== undefined && !chance(ae.chance)) continue;
+      await applyEffect(
+        actor.id,
+        ae.effectId,
+        ae.stacks ?? 1,
+        ae.duration ?? defaultDurationFor(ae.effectId),
+      );
+      logs.push(`⚡ ${actor.name} recebeu efeito **${effectLabel(ae.effectId)}**.`);
+    }
+  }
+
+  // invocacao: entra no grid ao lado de quem chamou
+  if (ability.summon) await createSummon(s, actor, ability.summon, logs, mods.summonHpBonus);
+
+  // terreno: o jutsu marca as celulas atingidas (chamas, poca, muro, fumaca,
+  // pantano) — do proprio jutsu ou de passiva (ex: Pavio deixa tudo em chamas)
+  if ((ability.terrain || ability.clearsTerrain || mods.terrainOnHit.length) && effectiveTarget) {
+    const shaped = resolveAreaCells(ability, actor.cell, effectiveTarget, scenario);
+    const cells = shaped.length ? shaped : [effectiveTarget];
+    let next = s.terrain;
+    if (ability.clearsTerrain) next = clearKindAt(next, cells, ability.clearsTerrain);
+    const layers = [
+      ...(ability.terrain ? [ability.terrain] : []),
+      ...mods.terrainOnHit, // passivas (Pavio)
+    ];
+    for (const layer of layers) {
+      next = mergePatches(
+        next,
+        makePatches(
+          cells,
+          layer.kind,
+          s.round,
+          // Terreno Firme (Terra) faz muro e pantano durarem mais
+          (layer.duration ?? BALANCE.terrain.defaultDuration) + mods.terrainDurationBonus,
+        ),
+      );
+    }
+    await saveTerrain(s, next);
+  }
+
   // dano: monta hits
   const hits: AbilityHit[] = [];
   if (ability.baseDamage && effectiveTarget) {
     const singleShape = ability.shape === "MELEE" || ability.shape === "SINGLE_TARGET";
     let targets: SessionFull["participants"];
-    if (singleShape && targetP) {
+    if (ability.chainWetTargets) {
+      // A eletricidade usa cada participante Encharcado como condutor. Mantem
+      // fogo amigo, assim como as demais areas do jogo.
+      targets = s.participants.filter(
+        (p) => p.hpCurrent > 0 && p.id !== actor.id && isWet(p.effects),
+      );
+    } else if (singleShape && targetP) {
       // alvo único e específico: acerta só aquele participante (não toda a célula)
       targets = targetP.id !== actor.id && targetP.hpCurrent > 0 ? [targetP] : [];
     } else {
@@ -459,15 +830,23 @@ export async function useAbility(
         targets.push(targetP);
       }
     }
-    const elemMod = ability.element
+    // cenario e passivas de +dano do elemento multiplicam juntos
+    const scenarioMod = ability.element
       ? scenario.elementModifiers?.[ability.element]?.dmgMult
       : undefined;
     const burnMult = burnTaijutsuMultiplier(stacksOf(actor, "BURN"));
     const heightBonus = onHeight(actor);
     for (const t of targets) {
-      let raw = computeDamage(ability, {
+      // dano condicional (ex: Fio d'Agua so vale contra alvo Encharcado) precisa
+      // do estado DESTE alvo, entao recalcula por alvo em vez de uma vez so.
+      const perTarget = passiveMods(ownedNodes(actor), ability, t.effects);
+      const executeMult =
+        perTarget.executeBonus && t.hpCurrent / t.hpMax <= perTarget.executeBonus.hpThreshold
+          ? perTarget.executeBonus.mult
+          : 1;
+      const raw = computeDamage(ability, {
         attrValue: getAttr(actor, ability.scalingAttribute ?? "ninjutsu"),
-        scenarioDmgMult: elemMod,
+        scenarioDmgMult: (scenarioMod ?? 1) * perTarget.damageMult * executeMult,
         burnTaiMult: burnMult,
         heightBonus,
       });
@@ -477,7 +856,7 @@ export async function useAbility(
   }
 
   // sangramento: esforco fisico reabre a ferida do proprio atacante
-  if (ability.category === "TAIJUTSU" || ability.category === "KENJUTSU") {
+  if (ability.category === "TAIJUTSU" || ability.category === "BUKIJUTSU") {
     const extra = bleedExtraOnPhysical(actor.effects);
     if (extra > 0) {
       const hp = Math.max(0, actor.hpCurrent - extra);
@@ -529,6 +908,10 @@ export async function resolveHit(
   const ability = hit.ability;
   let damage = hit.rawDamage;
 
+  // passivas do atacante: precisam existir antes da reacao (perfuracao de
+  // bloqueio) e depois dela (queimadura, deslocamento).
+  const atkMods = attacker ? passiveMods(ownedNodes(attacker), ability, target.effects) : null;
+
   const undodgeable =
     ability.undodgeable || Boolean(attacker?.flags.nextUndodgeable);
 
@@ -536,13 +919,20 @@ export async function resolveHit(
   const reaction = opts.reaction ?? "NONE";
   if (reaction === "DODGE" && !undodgeable && !ability.unblockable) {
     const reactAb = opts.reactionAbilityId ? getAbility(opts.reactionAbilityId) : undefined;
+    const physical = ability.category === "TAIJUTSU" || ability.category === "BUKIJUTSU";
+    const defenseMods = characterPassiveMods(ownedNodes(target));
     const dc = dodgeChance({
       ability,
       defenderTaijutsu: getAttr(target, "taijutsu"),
       defenderNinjutsu: getAttr(target, "ninjutsu"),
       defenseDown: target.effects.some((e) => e.effectId === "DEFENSE_DOWN"),
       attackerHeight: attacker ? onHeight(attacker) : false,
-      reactionBonus: target.flags.reactionBuff ? 0.1 : 0,
+      reactionBonus:
+        (target.flags.reactionBuff ? 0.1 : 0) +
+        hasteDodgeBonus(target.effects) +
+        (physical ? 0 : defenseMods.ninjutsuDodgeBonus) -
+        // cada acumulo de cristal trava mais um pouco o corpo do alvo
+        crystalDodgePenalty(target.effects),
     });
     if (reactAb) await payReaction(target, reactAb);
     if (chance(dc)) {
@@ -554,31 +944,110 @@ export async function resolveHit(
   } else if ((reaction === "BLOCK" || reaction === "PARRY") && !ability.unblockable) {
     const reactAb = opts.reactionAbilityId ? getAbility(opts.reactionAbilityId) : undefined;
     if (reactAb) await payReaction(target, reactAb);
-    const factor =
-      reaction === "PARRY" ? BALANCE.parryReductionBase : BALANCE.blockReductionBase;
+    const base = reaction === "PARRY" ? BALANCE.parryReductionBase : BALANCE.blockReductionBase;
+    // Fio de Navalha (Vento) corta parte da reducao: o corte passa pela guarda
+    const factor = base * (1 - (atkMods?.armorPierce ?? 0));
     const reduced = Math.round(damage * (1 - factor));
     logs.push(
       `🛡️ ${target.name} ${reaction === "PARRY" ? "aparou" : "bloqueou"} e reduziu o dano de ${damage} para ${reduced}.`,
     );
     damage = reduced;
+
+    // Pele de Pedra (Terra): defender rende Barreira para o proximo golpe
+    if (ownedNodes(target).includes("terra_raiz")) {
+      await applyEffect(
+        target.id,
+        "SHIELD",
+        BALANCE.effects.SHIELD.perDefend,
+        defaultDurationFor("SHIELD"),
+      );
+      logs.push(`🪨 ${target.name} ganhou Barreira ao se defender.`);
+    }
   }
 
   // limpa flag de undodgeable do atacante (consumido)
   if (attacker?.flags.nextUndodgeable) await setFlag(attacker.id, "nextUndodgeable", false);
 
+  // Prisma (Cristal): o casulo de luz refrata o ninjutsu recebido e devolve
+  // parte no atacante. Vem ANTES da Barreira: a luz desvia o golpe antes de ele
+  // chegar a qualquer camada de defesa. Nao vale para TAI/BUKI de proposito.
+  if (damage > 0 && isPrismed(target.effects)) {
+    const fisico = ability.category === "TAIJUTSU" || ability.category === "BUKIJUTSU";
+    const { damageTaken, reflected } = refractDamage(damage, !fisico, target.effects);
+    if (damageTaken !== damage) {
+      logs.push(`💎 O Prisma de ${target.name} refratou o golpe: ${damage} → ${damageTaken}.`);
+      damage = damageTaken;
+    }
+    if (reflected > 0 && attacker && attacker.hpCurrent > 0) {
+      const hpAtk = Math.max(0, attacker.hpCurrent - reflected);
+      await prisma.combatParticipant.update({
+        where: { id: attacker.id },
+        data: { hpCurrent: hpAtk },
+      });
+      logs.push(
+        `✨ A luz voltou em ${attacker.name} e causou ${reflected} de dano (HP ${hpAtk}/${attacker.hpMax}).`,
+      );
+      if (hpAtk <= 0) logs.push(`☠️ ${attacker.name} foi derrotado pelo próprio golpe!`);
+    }
+  }
+
+  // Barreira absorve antes do HP. Raio (Ponta Perfurante) ignora barreira.
+  if (damage > 0 && !atkMods?.ignoresShield) {
+    const pool = shieldPoints(target.effects);
+    if (pool > 0) {
+      const { damageToHp, absorbed } = absorbWithShield(damage, pool);
+      if (absorbed > 0) {
+        await consumeShield(target.id, absorbed);
+        logs.push(`🛡️ A Barreira de ${target.name} absorveu ${absorbed} de dano.`);
+        damage = damageToHp;
+      }
+    }
+  }
+
   const newHp = Math.max(0, target.hpCurrent - damage);
   await prisma.combatParticipant.update({ where: { id: target.id }, data: { hpCurrent: newHp } });
   if (damage > 0) logs.push(`💥 ${target.name} recebeu ${damage} de dano (HP ${newHp}/${target.hpMax}).`);
 
-  // efeitos on-hit
+  // efeitos on-hit — as passivas de fogo do ATACANTE mudam a queimadura
+  let hpAfterEffects = newHp;
+  const burnOpts = atkMods
+    ? {
+        extraStacks: atkMods.extraBurnStacks,
+        explodeAtStacks: atkMods.burnExplodeAtStacks,
+        explodeDamage: atkMods.burnExplodeDamage,
+      }
+    : undefined;
   if (damage > 0 && ability.effects) {
     for (const ae of ability.effects) {
-      if (ae.chance !== undefined && !chance(ae.chance)) continue;
-      const r = await applyEffect(target.id, ae.effectId, ae.stacks ?? 1, ae.duration ?? 1);
-      logs.push(`☠️ ${target.name} recebeu efeito ${ae.effectId}${r.explosion ? ` (EXPLOSÃO ${r.explosion} dano!)` : ""}.`);
+      const effectChance = Math.min(
+        1,
+        (ae.chance ?? 1) + (atkMods?.effectChanceBonus[ae.effectId] ?? 0),
+      );
+      if (!chance(effectChance)) continue;
+      // passiva pode esticar a duracao (ex: Mare Condutora estende Encharcado)
+      const bonus = atkMods?.effectDurationBonus[ae.effectId] ?? 0;
+      // Faceta Cortante (Cristal) crava um acumulo a mais por acerto
+      const extraStacks =
+        ae.effectId === "CRYSTALLIZED" ? (atkMods?.extraCrystalStacks ?? 0) : 0;
+      const r = await applyEffect(
+        target.id,
+        ae.effectId,
+        (ae.stacks ?? 1) + extraStacks,
+        (ae.duration ?? defaultDurationFor(ae.effectId)) + bonus,
+        ae.effectId === "BURN" ? burnOpts : undefined,
+      );
+      logs.push(`☠️ ${target.name} recebeu efeito **${effectLabel(ae.effectId)}**${r.explosion ? ` (EXPLOSÃO ${r.explosion} dano!)` : ""}.`);
+      if (r.sealed) {
+        logs.push(
+          `💎🔒 O cristal fechou sobre ${target.name}: **selado** (Atordoamento + Imobilização).`,
+        );
+      }
       if (r.explosion) {
-        const hp2 = Math.max(0, newHp - r.explosion);
-        await prisma.combatParticipant.update({ where: { id: target.id }, data: { hpCurrent: hp2 } });
+        hpAfterEffects = Math.max(0, hpAfterEffects - r.explosion);
+        await prisma.combatParticipant.update({
+          where: { id: target.id },
+          data: { hpCurrent: hpAfterEffects },
+        });
       }
     }
   }
@@ -599,16 +1068,152 @@ export async function resolveHit(
     logs.push(`🔴 ${target.name} foi desarmado! A arma caiu em ${target.cell}.`);
   }
 
-  const finalHp = (await prisma.combatParticipant.findUnique({ where: { id: target.id } }))?.hpCurrent ?? newHp;
-  if (finalHp <= 0) logs.push(`☠️ ${target.name} foi derrotado!`);
+  // Vento em Brasa: se o golpe passou por uma casa em chamas, o vento leva o
+  // fogo junto e queima o alvo. E' o combo Fogo -> Vento em forma mecanica.
+  if (damage > 0 && atkMods?.spreadsBurn && attacker) {
+    const scenario = getScenarioById(s.scenarioId)!;
+    const caminho = resolveAreaCells(ability, attacker.cell, target.cell, scenario);
+    const passouPorFogo = [...caminho, attacker.cell].some((c) =>
+      hasKindAt(s.terrain, c, "FIRE", s.round),
+    );
+    if (passouPorFogo) {
+      const r = await applyEffect(target.id, "BURN", 1, defaultDurationFor("BURN"), burnOpts);
+      logs.push(
+        `🔥💨 O vento cruzou as chamas e incendiou ${target.name}${r.explosion ? ` (EXPLOSÃO ${r.explosion} dano!)` : ""}.`,
+      );
+      if (r.explosion) {
+        hpAfterEffects = Math.max(0, hpAfterEffects - r.explosion);
+        await prisma.combatParticipant.update({
+          where: { id: target.id },
+          data: { hpCurrent: hpAfterEffects },
+        });
+      }
+    }
+  }
+
+  // Clone de Raio: o primeiro golpe que causa dano o desfaz e descarrega a
+  // eletricidade diretamente em quem o acertou.
+  const summonOnHit = target.flags.onHit as
+    | { effectId: EffectId; duration?: number }
+    | null
+    | undefined;
+  if (damage > 0 && target.flags.isSummon && summonOnHit && attacker) {
+    await applyEffect(
+      attacker.id,
+      summonOnHit.effectId,
+      1,
+      summonOnHit.duration ?? defaultDurationFor(summonOnHit.effectId),
+    );
+    hpAfterEffects = 0;
+    await prisma.combatParticipant.update({
+      where: { id: target.id },
+      data: { hpCurrent: 0 },
+    });
+    logs.push(`⚡ ${target.name} se desfez e aplicou **${effectLabel(summonOnHit.effectId)}** em ${attacker.name}.`);
+  }
+
+  // deslocamento: empurra ou puxa o alvo (so se o golpe conectou e ele vive)
+  if (damage > 0 && ability.push && attacker && hpAfterEffects > 0) {
+    const scenario = getScenarioById(s.scenarioId)!;
+    const bonus = atkMods?.pushBonus ?? 0;
+    // o bonus soma no modulo, sem inverter o sentido do puxao
+    const cells = ability.push > 0 ? ability.push + bonus : ability.push - bonus;
+    const res = resolvePush({
+      originCell: attacker.cell,
+      targetCell: target.cell,
+      cells,
+      rows: scenario.rows,
+      cols: scenario.cols,
+      blocked: effectiveObstacles(scenario, s.terrain, s.round),
+      occupied: new Set(
+        s.participants.filter((p) => p.hpCurrent > 0 && p.id !== target.id).map((p) => p.cell),
+      ),
+    });
+    if (res.moved > 0) {
+      await prisma.combatParticipant.update({
+        where: { id: target.id },
+        data: { cell: res.destination },
+      });
+      const verbo = cells > 0 ? "empurrado" : "puxado";
+      logs.push(`💨 ${target.name} foi ${verbo} ${res.moved} casa(s) até ${res.destination}.`);
+    }
+    // impacto contra parede/obstaculo (passiva Vacuo Cortante, do Vento)
+    const impact = impactDamage(res, hasImpactPassive(attacker, ability));
+    if (impact > 0) {
+      const hp = Math.max(0, hpAfterEffects - impact);
+      await prisma.combatParticipant.update({ where: { id: target.id }, data: { hpCurrent: hp } });
+      hpAfterEffects = hp;
+      logs.push(`🧱 ${target.name} bateu com força e sofreu ${impact} de dano de impacto.`);
+    }
+  }
+
+  // A Armadura do Ataque Relampago pune contato fisico enquanto estiver ativa.
+  if (damage > 0 && ability.shape === "MELEE" && attacker) {
+    const shock = hasteContactDamage(target.effects);
+    if (shock > 0) {
+      const attackerHp = Math.max(0, attacker.hpCurrent - shock);
+      await prisma.combatParticipant.update({
+        where: { id: attacker.id },
+        data: { hpCurrent: attackerHp },
+      });
+      logs.push(`⚡ A armadura de ${target.name} eletrocutou ${attacker.name} por ${shock} de dano.`);
+      if (attackerHp <= 0) {
+        logs.push(`☠️ ${attacker.name} foi derrotado!`);
+        if (attacker.flags.isSummon) await triggerSummonDeath(s, attacker, logs);
+      }
+    }
+  }
+
+  // Bonecos de treino registram e exibem o dano, mas recuperam o HP antes que
+  // a engine possa declará-los derrotados.
+  const clampedHp = clampInfiniteHp(hpAfterEffects, target.hpMax, target.flags);
+  if (clampedHp !== hpAfterEffects) {
+    hpAfterEffects = clampedHp;
+    await prisma.combatParticipant.update({
+      where: { id: target.id },
+      data: { hpCurrent: hpAfterEffects },
+    });
+    logs.push(`🥋 ${target.name} recuperou todo o HP.`);
+  }
+
+  if (hpAfterEffects <= 0) {
+    logs.push(`☠️ ${target.name} foi derrotado!`);
+    // invocacao que morre pode estourar (clone d'agua molha a area)
+    if (target.flags.isSummon) await triggerSummonDeath(s, target, logs);
+  }
 
   return logs;
+}
+
+// Vacuo Cortante (Vento): alvo empurrado contra obstaculo toma dano extra.
+function hasImpactPassive(
+  attacker: SessionFull["participants"][number],
+  ability: Ability,
+): boolean {
+  return ability.element === "VENTO" && ownedNodes(attacker).includes("vento_vacuo");
 }
 
 async function payReaction(target: SessionFull["participants"][number], reactAb: Ability): Promise<void> {
   const mastery = await masteryFor(target, reactAb.resource);
   const cost = costAfterMastery(reactAb.cost, mastery);
   await deductResource(target.id, reactAb.resource, cost);
+}
+
+// Gasta pontos de Barreira, comecando pelas instancias que expiram antes.
+async function consumeShield(participantId: string, amount: number): Promise<void> {
+  const shields = await prisma.effectInstance.findMany({
+    where: { participantId, effectId: "SHIELD" },
+    orderBy: { duration: "asc" },
+  });
+  let restante = amount;
+  for (const s of shields) {
+    if (restante <= 0) break;
+    const gasto = Math.min(s.stacks, restante);
+    restante -= gasto;
+    const sobra = s.stacks - gasto;
+    if (sobra <= 0) await prisma.effectInstance.delete({ where: { id: s.id } });
+    else await prisma.effectInstance.update({ where: { id: s.id }, data: { stacks: sobra } });
+  }
 }
 
 // ---------------- Efeitos ----------------
@@ -618,22 +1223,52 @@ export async function applyEffect(
   effectId: string,
   stacks: number,
   duration: number,
-): Promise<{ explosion?: number }> {
+  // passivas do ATACANTE que mudam a queimadura (Brasas Persistentes, Combustao)
+  burnOpts?: { extraStacks?: number; explodeAtStacks?: number; explodeDamage?: number },
+): Promise<{ explosion?: number; sealed?: boolean }> {
+  const dur = clampDuration(effectId as EffectId, duration);
+
+  // cristal: acumula ate SELAR. Mesma forma da queimadura, payoff invertido —
+  // em vez de explodir em dano, o casulo fecha e trava o alvo (Atordoar+Imobilizar).
+  if (effectId === "CRYSTALLIZED") {
+    const existing = await prisma.effectInstance.findFirst({
+      where: { participantId, effectId: "CRYSTALLIZED" },
+    });
+    const { stacks: newStacks, sealed } = applyCrystalStacks(existing?.stacks ?? 0, stacks);
+    if (existing) {
+      await prisma.effectInstance.update({
+        where: { id: existing.id },
+        data: { stacks: newStacks, duration: Math.max(existing.duration, dur) },
+      });
+    } else {
+      await prisma.effectInstance.create({
+        data: { participantId, effectId, name: "Cristalizado", stacks: newStacks, duration: dur },
+      });
+    }
+    if (sealed) {
+      const C = BALANCE.effects.CRYSTALLIZED;
+      await applyEffect(participantId, "STUN", 1, C.sealStunDuration);
+      await applyEffect(participantId, "ROOT", 1, C.sealRootDuration);
+    }
+    return { sealed: sealed || undefined };
+  }
+
   // queimadura: stacks acumulam e podem explodir
   if (effectId === "BURN") {
     const existing = await prisma.effectInstance.findFirst({
       where: { participantId, effectId: "BURN" },
     });
     const cur = existing?.stacks ?? 0;
-    const { stacks: newStacks, explosionDamage } = applyBurnStacks(cur, stacks);
+    const add = stacks + (burnOpts?.extraStacks ?? 0);
+    const { stacks: newStacks, explosionDamage } = applyBurnStacks(cur, add, burnOpts);
     if (existing) {
       await prisma.effectInstance.update({
         where: { id: existing.id },
-        data: { stacks: newStacks, duration: Math.max(existing.duration, duration) },
+        data: { stacks: newStacks, duration: Math.max(existing.duration, dur) },
       });
     } else {
       await prisma.effectInstance.create({
-        data: { participantId, effectId, name: "Queimadura", stacks: newStacks, duration },
+        data: { participantId, effectId, name: "Queimadura", stacks: newStacks, duration: dur },
       });
     }
     return { explosion: explosionDamage || undefined };
@@ -645,7 +1280,7 @@ export async function applyEffect(
     if (existing) {
       await prisma.effectInstance.update({
         where: { id: existing.id },
-        data: { duration: Math.max(existing.duration, duration) },
+        data: { duration: Math.max(existing.duration, dur) },
       });
       return {};
     }
@@ -656,11 +1291,14 @@ export async function applyEffect(
   if (existing) {
     await prisma.effectInstance.update({
       where: { id: existing.id },
-      data: { stacks: existing.stacks + stacks, duration: Math.max(existing.duration, duration) },
+      data: {
+        stacks: existing.stacks + stacks,
+        duration: clampDuration(effectId as EffectId, Math.max(existing.duration, dur)),
+      },
     });
   } else {
     await prisma.effectInstance.create({
-      data: { participantId, effectId, name: effectId, stacks, duration },
+        data: { participantId, effectId, name: effectLabel(effectId), stacks, duration: dur },
     });
   }
   return {};
@@ -679,28 +1317,33 @@ export async function endTurn(sessionId: string): Promise<EndTurnResult> {
   if (!s) return { logs: [], nextActiveId: null, newRound: false };
   const logs: string[] = [];
 
-  let idx = s.activeIndex + 1;
+  let idx = s.activeIndex;
   let newRound = false;
   let round = s.round;
-  if (idx >= s.turnOrder.length) {
-    idx = 0;
-    round++;
-    newRound = true;
-    logs.push(`🔁 Rodada ${round}.`);
-  }
+  // mortos conhecidos; o snapshot `s` nao enxerga quem morrer dentro deste loop
+  const dead = new Set(s.participants.filter((p) => p.hpCurrent <= 0).map((p) => p.id));
 
-  // pula derrotados
-  let guard = 0;
-  while (guard++ < s.turnOrder.length) {
-    const pid = s.turnOrder[idx]!;
-    const p = s.participants.find((x) => x.id === pid);
-    if (p && p.hpCurrent > 0) break;
+  // Escolhe o proximo vivo e roda o inicio de turno dele. Se ele morrer no
+  // proprio tick (veneno/queimadura/sangramento), segue para o seguinte —
+  // senao o turno ficaria parado num personagem derrotado.
+  let nextId: string | null = null;
+  for (let attempts = 0; attempts <= s.turnOrder.length; attempts++) {
     idx++;
     if (idx >= s.turnOrder.length) {
       idx = 0;
       round++;
       newRound = true;
+      logs.push(`🔁 Rodada ${round}.`);
     }
+    const pid = s.turnOrder[idx];
+    if (!pid || dead.has(pid)) continue;
+
+    const died = await processTurnStart(sessionId, pid, logs);
+    if (!died) {
+      nextId = pid;
+      break;
+    }
+    dead.add(pid);
   }
 
   await prisma.combatSession.update({
@@ -708,40 +1351,64 @@ export async function endTurn(sessionId: string): Promise<EndTurnResult> {
     data: { activeIndex: idx, round },
   });
 
-  // processa inicio de turno do novo ativo: efeitos + reset de acoes + upkeeps
-  const nextId = s.turnOrder[idx] ?? null;
-  if (nextId) {
-    await processTurnStart(sessionId, nextId, logs);
-  }
-
   return { logs, nextActiveId: nextId, newRound };
 }
 
-async function processTurnStart(sessionId: string, participantId: string, logs: string[]): Promise<void> {
+// Roda o inicio de turno do participante. Retorna true se ele morreu no tick.
+async function processTurnStart(sessionId: string, participantId: string, logs: string[]): Promise<boolean> {
   const p = await prisma.combatParticipant.findUnique({
     where: { id: participantId },
     include: { effects: true },
   });
-  if (!p) return;
+  if (!p) return false;
+  const flags = parseFlags(p.flagsJson);
 
   // tick de efeitos (dano por turno + decremento de duracao)
   let hp = p.hpCurrent;
+  const remaining: EffectState[] = [];
   for (const e of p.effects) {
     const res = tickEffect({ effectId: e.effectId as any, stacks: e.stacks, duration: e.duration });
     if (res.damage > 0) {
       hp = Math.max(0, hp - res.damage);
-      logs.push(`☠️ ${p.name} sofreu ${res.damage} de ${e.effectId}.`);
+      logs.push(`☠️ ${p.name} sofreu ${res.damage} de **${effectLabel(e.effectId)}**.`);
     }
     if (res.expired) {
       await prisma.effectInstance.delete({ where: { id: e.id } });
     } else {
       await prisma.effectInstance.update({ where: { id: e.id }, data: { duration: e.duration - 1 } });
+      remaining.push({ effectId: e.effectId as any, stacks: e.stacks, duration: e.duration - 1 });
+    }
+  }
+
+  // terreno: comecar o turno em chamas queima; comecar dentro d'agua encharca
+  const session = await prisma.combatSession.findUnique({ where: { id: sessionId } });
+  if (session) {
+    const patches = parseTerrain(session.terrainJson);
+    const burn = terrainTickDamage(patches, p.cell, session.round);
+    if (burn > 0) {
+      hp = Math.max(0, hp - burn);
+      logs.push(`🔥 ${p.name} está em chamas e sofreu ${burn} de dano.`);
+    }
+    // e' isso que faz o rastro d'agua valer a pena: quem pisa nele fica exposto
+    // a Raio. Sem dano, so o marcador.
+    const scenario = getScenarioById(session.scenarioId);
+    if (scenario && effectiveWater(scenario, patches, session.round).has(p.cell)) {
+      if (!remaining.some((e) => e.effectId === "WET")) {
+        await applyEffect(p.id, "WET", 1, defaultDurationFor("WET"));
+        logs.push(`💧 ${p.name} está na água e ficou Encharcado.`);
+      }
     }
   }
 
   // upkeep waterWalk
-  const flags = parseFlags(p.flagsJson);
   let chakra = p.chakra;
+
+  // dreno de chakra (preso na cupula de terra)
+  const dreno = chakraDrainPerTurn(remaining);
+  if (dreno > 0) {
+    chakra = Math.max(0, chakra - dreno);
+    logs.push(`🌀 ${p.name} perdeu ${dreno}% de chakra (dreno).`);
+  }
   if (flags.waterWalk) {
     if (chakra >= BALANCE.waterWalkUpkeepPerTurn) {
       chakra -= BALANCE.waterWalkUpkeepPerTurn;
@@ -761,6 +1428,7 @@ async function processTurnStart(sessionId: string, participantId: string, logs: 
     }
   }
 
+  hp = clampInfiniteHp(hp, p.hpMax, flags);
   await prisma.combatParticipant.update({
     where: { id: participantId },
     data: {
@@ -773,9 +1441,16 @@ async function processTurnStart(sessionId: string, participantId: string, logs: 
     },
   });
 
-  if (isStunned(p.effects.map((e) => ({ effectId: e.effectId as any, stacks: e.stacks, duration: e.duration })))) {
+  if (hp <= 0) {
+    logs.push(`☠️ ${p.name} foi derrotado!`);
+    return true;
+  }
+
+  // usa os efeitos JA decrementados: um STUN que expirou neste tick nao vale mais.
+  if (isStunned(remaining)) {
     logs.push(`💫 ${p.name} está atordoado e perde o turno.`);
   }
+  return false;
 }
 
 async function releaseControl(sessionId: string, controllerId: string): Promise<void> {

@@ -1,5 +1,16 @@
 import type { Ability, ClanDef } from "../types.js";
 
+// ============================================================================
+// PLACEHOLDER - ESTAS HABILIDADES SERAO APAGADAS
+// ============================================================================
+// Sharingan, Shintenshin e Juuken existem so para exercitar o sistema.
+// Nao entram no projeto final e nao serao substituidas em lugar: somem.
+// Mesma regra dos jutsus em ../jutsus/. Ver CLAUDE.md.
+//
+// => Nao invista em balanceamento fino daqui sem pedido.
+// => Nao trate estes ids como contrato estavel.
+// ============================================================================
+
 // Abilities de cla (categoria CLA). Hooks identificados por string p/ a engine.
 export const CLAN_ABILITIES: Ability[] = [
   // ---- Uchiha ----

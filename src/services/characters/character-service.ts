@@ -1,11 +1,19 @@
 import { prisma } from "../../db/client.js";
 import { BALANCE } from "../../config/balance.js";
-import type { Attribute, Element } from "../../config/enums.js";
+import { ATTRIBUTES, type Attribute, type Element } from "../../config/enums.js";
 import { ALL_ABILITIES } from "../../data/index.js";
 import { maxHp, expectedMasteryPoints } from "./formulas.js";
 import { meetsRequirements } from "./requirements.js";
 
 export { meetsRequirements };
+
+// Extrai os 9 atributos de uma linha de CharacterAttributes. Iterar ATTRIBUTES
+// evita ter que tocar aqui toda vez que um atributo novo entra no enum.
+export function attrsFromRow(row: Record<string, unknown>): Record<Attribute, number> {
+  const out = {} as Record<Attribute, number>;
+  for (const a of ATTRIBUTES) out[a] = (row[a] as number | undefined) ?? 1;
+  return out;
+}
 
 export type FullCharacter = NonNullable<Awaited<ReturnType<typeof getFullCharacter>>>;
 
@@ -20,6 +28,7 @@ export async function getFullCharacter(discordId: string, guildId: string) {
       elements: true,
       jutsus: true,
       inventory: true,
+      skillNodes: true, // nos da arvore comprados (passivas entram no combate por aqui)
     },
   });
 }
@@ -42,6 +51,19 @@ export async function getOrCreateCharacter(discordId: string, guildId: string, n
   });
   await refreshDerived(created.id);
   return (await getFullCharacter(discordId, guildId))!;
+}
+
+// Define o nome RP do personagem (displayName). Vazio/null limpa e volta ao username.
+export async function setCharacterName(
+  discordId: string,
+  guildId: string,
+  displayName: string | null,
+): Promise<void> {
+  const clean = displayName?.trim() || null;
+  await prisma.userCharacter.update({
+    where: { discordId_guildId: { discordId, guildId } },
+    data: { displayName: clean },
+  });
 }
 
 // Recalcula hpMax e clampa hpCurrent. Roda apos mudancas de level/atributo.
@@ -191,13 +213,7 @@ export async function autoUnlockJutsus(charId: string): Promise<string[]> {
   if (!char || !char.attributes) return [];
   const ctx = {
     level: char.level,
-    attrs: {
-      ninjutsu: char.attributes.ninjutsu,
-      iryo: char.attributes.iryo,
-      taijutsu: char.attributes.taijutsu,
-      genjutsu: char.attributes.genjutsu,
-      kenjutsu: char.attributes.kenjutsu,
-    },
+    attrs: attrsFromRow(char.attributes),
     elements: char.elements.map((e) => e.element as Element),
     clanId: char.clan?.clanId ?? null,
   };

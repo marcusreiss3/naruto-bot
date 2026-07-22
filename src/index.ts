@@ -3,6 +3,7 @@ import { ENV } from "./config/env.js";
 import { commandMap } from "./commands/index.js";
 import { log } from "./utils/logger.js";
 import { disconnect } from "./db/client.js";
+import { startWebServer } from "./server/index.js";
 import { runBanditMessage } from "./services/missions/mission-runtime.js";
 import { handleKidMessage } from "./services/missions/kid-dialogue.js";
 import { continueInvestigationMessage } from "./services/missions/investigation.js";
@@ -44,6 +45,7 @@ import { continueYukiHeirMessage } from "./services/missions/yuki-heir.js";
 import { continueCorpsePulseMessage } from "./services/missions/corpse-pulse.js";
 import { continueEliteMaskMessage } from "./services/missions/elite-mask.js";
 import { continueForbiddenBellMessage } from "./services/missions/forbidden-bell.js";
+import { restoreTrainingExpirations } from "./services/combat/training-dummy.js";
 
 const client = new Client({
   intents: [
@@ -53,9 +55,18 @@ const client = new Client({
   ],
 });
 
-client.once(Events.ClientReady, (c) => {
+client.once(Events.ClientReady, async (c) => {
   log.info(`Bot online como ${c.user.tag}`);
+  await restoreTrainingExpirations(async (channelId) => {
+    const channel = await c.channels.fetch(channelId).catch(() => null);
+    if (channel?.isTextBased() && "send" in channel) {
+      await channel.send("⏱️ O Boneco de Treino desapareceu após 30 minutos.");
+    }
+  }).catch((err) => log.error("Falha ao restaurar temporizadores de treino:", err));
 });
+
+// Sobe o site da árvore de habilidades no mesmo processo (no-op se nao configurado).
+void startWebServer().catch((err) => log.error("Falha ao subir o site:", err));
 
 // Mensagens normais no canal continuam diálogos (criança da missão do gato / líder dos bandidos).
 client.on(Events.MessageCreate, async (message) => {

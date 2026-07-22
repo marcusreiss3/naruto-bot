@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pergaminho das Técnicas — Árvore de Habilidades</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <!-- Fundo -->
+  <div class="bg"></div>
+
+  <!-- Tela de login -->
+  <section id="login" class="screen hidden">
+    <div class="login-shell">
+      <header class="login-masthead">
+        <div>
+          <span class="login-overline">Arquivo shinobi</span>
+          <span class="login-edition">Portal de progressão shinobi</span>
+        </div>
+        <span class="login-code">巻物 · 05-N</span>
+      </header>
+
+      <div class="login-grid">
+        <article class="login-copy">
+          <div class="login-title-row">
+            <div class="login-crest">
+              <img src="/assets/icons/header/ninjutsu.png" alt="Símbolo de Ninjutsu">
+            </div>
+            <div>
+              <p class="login-kicker">Registro pessoal de técnicas</p>
+              <h1>Pergaminho<br><span>das Técnicas</span></h1>
+            </div>
+          </div>
+
+          <p class="login-lead">
+            Entre para acessar o registro do seu personagem e continuar sua jornada.
+          </p>
+
+          <div class="login-actions">
+            <a class="btn-discord" href="/auth/login">
+              <img src="/assets/icons/brand/discord-symbol-white.svg" alt="">
+              <span>Continuar com Discord</span>
+            </a>
+            <p class="login-oauth">Seu acesso é vinculado ao Discord para localizar o personagem correto no servidor.</p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Sem personagem -->
+  <section id="nochar" class="screen hidden">
+    <div class="empty-card">
+      <div class="empty-icon"><img src="/assets/icons/header/ninjutsu.png" alt=""></div>
+      <span class="login-overline">Registro não localizado</span>
+      <h1>Nenhum ninja encontrado</h1>
+      <p>Você ainda não tem um personagem neste servidor. Crie um no Discord primeiro.</p>
+      <button class="btn-ghost" onclick="location.reload()">Recarregar</button>
+    </div>
+  </section>
+
+  <!-- App -->
+  <section id="app" class="screen hidden">
+    <header class="topbar">
+      <div class="who">
+        <span class="who-name" id="charName">—</span>
+        <span class="who-lvl" id="charLevel">Nv. —</span>
+      </div>
+      <div class="points" title="Pontos de Ninjutsu disponíveis (valor do atributo − já gastos)">
+        <span class="pt-ico"><img class="pt-img" src="/assets/icons/header/ninjutsu.png" alt="Ninjutsu"></span>
+        <span id="charPoints">0</span><span class="pt-total" id="charPointsTotal"></span>
+        <span class="pt-lbl">Ninjutsu</span>
+      </div>
+      <button class="logout" id="logoutBtn" title="Sair"><span class="x-ico"></span></button>
+    </header>
+
+    <main class="stage">
+      <div class="tree-title" id="treeTitle">Fogo</div>
+      <div class="canvas-wrap" id="canvasWrap">
+        <svg id="edges" class="edges"></svg>
+        <div id="nodes" class="nodes"></div>
+      </div>
+    </main>
+
+    <!-- Seletor de elementos (embaixo) -->
+    <nav class="elembar" id="elembar"></nav>
+  </section>
+
+  <!-- Modal de compra -->
+  <div id="modal" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-icon" id="mIcon"></div>
+      <div class="modal-rank" id="mRank"></div>
+      <h2 id="mName">—</h2>
+      <p id="mDesc" class="modal-desc">—</p>
+      <div class="modal-meta" id="mMeta"></div>
+      <div id="mReason" class="modal-reason hidden"></div>
+      <div class="modal-actions">
+        <button class="btn-ghost" id="mCancel">Fechar</button>
+        <button class="btn-buy" id="mBuy">Comprar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

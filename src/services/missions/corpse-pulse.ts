@@ -16,7 +16,7 @@ import {
   HOSPITAL_KONOHA_CHANNEL_ID,
 } from "../../data/scenarios/index.js";
 import { getMission } from "../../data/missions/index.js";
-import { getOrCreateCharacter } from "../characters/character-service.js";
+import { getOrCreateCharacter, attrsFromRow } from "../characters/character-service.js";
 import { getActiveSession, startCombat } from "../combat/combat-engine.js";
 import { formatPersonaLines, sendAsPersona } from "../discord/persona-webhook.js";
 import type { RenderEntity } from "../maps/renderer.js";
@@ -112,34 +112,34 @@ const CLUES: Record<ClueId, ClueDef> = {
     id: "hospital",
     channelId: HOSPITAL_KONOHA_CHANNEL_ID,
     objectiveId: "investigar_corpo_suspenso",
-    title: "Pulso no cadáver",
+    title: "Pulso no cadï¿½ver",
     marker: { cell: "D4", label: "MED", color: "#74b9ff", kind: "MARKER", name: "Maca selada" },
     witness: medicNpc,
     intro:
-      "O corpo foi declarado morto, mas o monitor ainda registra um pulso fraco e regular demais. Descubram se estão diante de um cadáver reanimado, de um clone instável ou de uma vítima mantida artificialmente entre a vida e a morte.",
+      "O corpo foi declarado morto, mas o monitor ainda registra um pulso fraco e regular demais. Descubram se estï¿½o diante de um cadï¿½ver reanimado, de um clone instï¿½vel ou de uma vï¿½tima mantida artificialmente entre a vida e a morte.",
     requiredEvidence: 3,
     actions: [
-      { id: "pulse", label: "Medir o pulso", detail: "O pulso existe, mas bate em intervalos iguais demais. Parece regulado por selo, não por reflexo natural do corpo." },
-      { id: "seal", label: "Procurar selos", detail: "Há micro-selos próximos às veias do pescoço. Eles seguram o corpo em coma profundo, simulando morte aparente." },
-      { id: "toxin", label: "Testar o sangue", detail: "O sangue contém um anestésico raro que reduz respiração e tremores, enganando exames médicos rápidos." },
-      { id: "chakra", label: "Ler o chakra", detail: "O chakra não nasce do corpo: ele entra por pontos finos, como se alguém alimentasse a vítima de fora." },
+      { id: "pulse", label: "Medir o pulso", detail: "O pulso existe, mas bate em intervalos iguais demais. Parece regulado por selo, nï¿½o por reflexo natural do corpo." },
+      { id: "seal", label: "Procurar selos", detail: "Hï¿½ micro-selos prï¿½ximos ï¿½s veias do pescoï¿½o. Eles seguram o corpo em coma profundo, simulando morte aparente." },
+      { id: "toxin", label: "Testar o sangue", detail: "O sangue contï¿½m um anestï¿½sico raro que reduz respiraï¿½ï¿½o e tremores, enganando exames mï¿½dicos rï¿½pidos." },
+      { id: "chakra", label: "Ler o chakra", detail: "O chakra nï¿½o nasce do corpo: ele entra por pontos finos, como se alguï¿½m alimentasse a vï¿½tima de fora." },
     ],
-    question: "Qual é o estado real do corpo?",
+    question: "Qual ï¿½ o estado real do corpo?",
     deductions: [
-      { id: "dead_puppet", label: "Cadáver reanimado por jutsu" },
-      { id: "suspended_victim", label: "Vítima viva em suspensão" },
-      { id: "shadow_clone", label: "Clone instável prestes a sumir" },
+      { id: "dead_puppet", label: "Cadï¿½ver reanimado por jutsu" },
+      { id: "suspended_victim", label: "Vï¿½tima viva em suspensï¿½o" },
+      { id: "shadow_clone", label: "Clone instï¿½vel prestes a sumir" },
       { id: "poison_sleep", label: "Sono causado por veneno comum" },
     ],
     correct: "suspended_victim",
-    success: "O time conclui que a vítima ainda está viva. O caso não é necromancia: alguém está usando medicina e selos para fingir morte.",
+    success: "O time conclui que a vï¿½tima ainda estï¿½ viva. O caso nï¿½o ï¿½ necromancia: alguï¿½m estï¿½ usando medicina e selos para fingir morte.",
   },
   market: {
     id: "market",
     channelId: CENTRO_COMERCIAL_CHANNEL_ID,
     objectiveId: "investigar_compra_suspeita",
     title: "A compra do morto",
-    marker: { cell: "E5", label: "ERV", color: "#2ecc71", kind: "MARKER", name: "Balcão de ervas" },
+    marker: { cell: "E5", label: "ERV", color: "#2ecc71", kind: "MARKER", name: "Balcï¿½o de ervas" },
     witness: {
       key: "corpse_market_herbalist",
       name: "Mina, herborista",
@@ -148,23 +148,23 @@ const CLUES: Record<ClueId, ClueDef> = {
       cell: "E4",
     },
     intro:
-      "A vítima apareceu no mercado depois de ter sido declarada morta. A compra parece banal, mas os detalhes podem revelar se alguém estava usando o rosto dela como disfarce vivo.",
+      "A vï¿½tima apareceu no mercado depois de ter sido declarada morta. A compra parece banal, mas os detalhes podem revelar se alguï¿½m estava usando o rosto dela como disfarce vivo.",
     requiredEvidence: 3,
     actions: [
-      { id: "herb", label: "Examinar as ervas", detail: "As ervas compradas reduzem batimento e tremor. Elas servem para manter alguém parecendo morto por mais tempo." },
-      { id: "receipt", label: "Checar o recibo", detail: "A assinatura copia o nome da vítima, mas a pressão da caneta é fraca e guiada, como mão sem força própria." },
+      { id: "herb", label: "Examinar as ervas", detail: "As ervas compradas reduzem batimento e tremor. Elas servem para manter alguï¿½m parecendo morto por mais tempo." },
+      { id: "receipt", label: "Checar o recibo", detail: "A assinatura copia o nome da vï¿½tima, mas a pressï¿½o da caneta ï¿½ fraca e guiada, como mï¿½o sem forï¿½a prï¿½pria." },
       { id: "coin", label: "Examinar a moeda", detail: "A moeda cheira a conservante hospitalar. Ela veio do mesmo ambiente onde o corpo estava guardado." },
-      { id: "witness", label: "Ouvir Mina", detail: "Mina diz que o comprador não piscava e movia a cabeça com atraso, como se obedecesse a um comando distante." },
+      { id: "witness", label: "Ouvir Mina", detail: "Mina diz que o comprador nï¿½o piscava e movia a cabeï¿½a com atraso, como se obedecesse a um comando distante." },
     ],
     question: "O que a compra prova?",
     deductions: [
-      { id: "victim_shopped", label: "A vítima acordou sozinha" },
-      { id: "identity_control", label: "Alguém usou a vítima como disfarce vivo" },
-      { id: "merchant_lied", label: "Mina inventou a história" },
+      { id: "victim_shopped", label: "A vï¿½tima acordou sozinha" },
+      { id: "identity_control", label: "Alguï¿½m usou a vï¿½tima como disfarce vivo" },
+      { id: "merchant_lied", label: "Mina inventou a histï¿½ria" },
       { id: "simple_poison", label: "Era apenas compra de veneno" },
     ],
     correct: "identity_control",
-    success: "A compra prova que o rosto da vítima foi usado como disfarce vivo. O responsável queria criar aparições impossíveis para confundir as testemunhas.",
+    success: "A compra prova que o rosto da vï¿½tima foi usado como disfarce vivo. O responsï¿½vel queria criar apariï¿½ï¿½es impossï¿½veis para confundir as testemunhas.",
   },
   alley: {
     id: "alley",
@@ -180,23 +180,23 @@ const CLUES: Record<ClueId, ClueDef> = {
       cell: "C4",
     },
     intro:
-      "No beco, a vítima foi vista andando sem apoiar o peso no chão. O caminho não parece uma fuga: parece o trajeto de um corpo controlado à distância.",
+      "No beco, a vï¿½tima foi vista andando sem apoiar o peso no chï¿½o. O caminho nï¿½o parece uma fuga: parece o trajeto de um corpo controlado ï¿½ distï¿½ncia.",
     requiredEvidence: 3,
     actions: [
-      { id: "footprints", label: "Examinar o chão", detail: "Quase não há pegadas completas. O corpo foi parcialmente suspenso e puxado por cima, sem caminhar de verdade." },
-      { id: "roof", label: "Olhar os telhados", detail: "Há cortes finos nos beirais. Fios de chakra passaram por ali e queimaram a madeira." },
-      { id: "needle", label: "Procurar agulhas", detail: "Uma agulha quebrada tem selo médico de condução. Ela serve para prender fios de chakra em pontos nervosos." },
-      { id: "witness", label: "Ouvir Riku", detail: "Riku viu a cabeça virar antes do resto do corpo, como uma marionete recebendo comando atrasado." },
+      { id: "footprints", label: "Examinar o chï¿½o", detail: "Quase nï¿½o hï¿½ pegadas completas. O corpo foi parcialmente suspenso e puxado por cima, sem caminhar de verdade." },
+      { id: "roof", label: "Olhar os telhados", detail: "Hï¿½ cortes finos nos beirais. Fios de chakra passaram por ali e queimaram a madeira." },
+      { id: "needle", label: "Procurar agulhas", detail: "Uma agulha quebrada tem selo mï¿½dico de conduï¿½ï¿½o. Ela serve para prender fios de chakra em pontos nervosos." },
+      { id: "witness", label: "Ouvir Riku", detail: "Riku viu a cabeï¿½a virar antes do resto do corpo, como uma marionete recebendo comando atrasado." },
     ],
-    question: "Como a vítima se movia?",
+    question: "Como a vï¿½tima se movia?",
     deductions: [
-      { id: "free_escape", label: "Ela fugia por conta própria" },
+      { id: "free_escape", label: "Ela fugia por conta prï¿½pria" },
       { id: "remote_control", label: "Era controlada por fios e selos" },
       { id: "wall_walk", label: "Usava andar em parede" },
       { id: "genjutsu_only", label: "Foi apenas genjutsu nas testemunhas" },
     ],
     correct: "remote_control",
-    success: "Os rastros mostram controle remoto por fios de chakra e selos médicos. O responsável deve estar perto o bastante para comandar os corpos.",
+    success: "Os rastros mostram controle remoto por fios de chakra e selos mï¿½dicos. O responsï¿½vel deve estar perto o bastante para comandar os corpos.",
   },
 };
 function ensureState(raw: string): CorpsePulseState {
@@ -265,7 +265,7 @@ export function availableCorpsePulseNpcs(
   const current = ensureState(JSON.stringify(state));
   if (channelId === HOSPITAL_KONOHA_CHANNEL_ID) {
     if (current.stage === "BRIEFING") return [{ key: medicNpc.key, name: medicNpc.name }];
-    if (current.stage === "RETURN") return [{ key: medicNpc.key, name: `${medicNpc.name} (relatório)` }];
+    if (current.stage === "RETURN") return [{ key: medicNpc.key, name: `${medicNpc.name} (relatï¿½rio)` }];
   }
   if (current.stage === "INVESTIGATE") {
     const clue = clueByChannel(channelId);
@@ -286,8 +286,8 @@ export async function corpsePulseMapHandle(
   if (interaction.channelId === HOSPITAL_KONOHA_CHANNEL_ID && (state.stage === "BRIEFING" || state.stage === "RETURN")) {
     entities.push(npcEntity(medicNpc));
     return state.stage === "BRIEFING"
-      ? `\nMissão ativa: **${ctx.def.name}** - fale com a Dra. Shiori usando \`/interagir npc\`.`
-      : `\nMissão ativa: **${ctx.def.name}** - entregue o relatório final para a Dra. Shiori.`;
+      ? `\nMissï¿½o ativa: **${ctx.def.name}** - fale com a Dra. Shiori usando \`/interagir npc\`.`
+      : `\nMissï¿½o ativa: **${ctx.def.name}** - entregue o relatï¿½rio final para a Dra. Shiori.`;
   }
 
   if (state.stage === "INVESTIGATE") {
@@ -295,13 +295,13 @@ export async function corpsePulseMapHandle(
     if (!clue) return nextNote(state, ctx.def.name);
     if (state.clues?.[clue.id]) {
       entities.push({ ...clue.marker, name: `${clue.marker.name} (analisado)`, color: "#2ecc71" });
-      return `\nMissão ativa: **${ctx.def.name}** - pista já analisada: **${clue.title}**.`;
+      return `\nMissï¿½o ativa: **${ctx.def.name}** - pista jï¿½ analisada: **${clue.title}**.`;
     }
     entities.push(clue.marker, npcEntity(clue.witness));
     state.runningClue = clue.id;
     await setState(ctx.inst.id, state);
     void startCluePanel(interaction.channel, interaction.guildId ?? "global", ctx.inst.id, clue).catch(() => undefined);
-    return `\nMissão ativa: **${ctx.def.name}** - um quadro de investigação foi enviado neste canal.`;
+    return `\nMissï¿½o ativa: **${ctx.def.name}** - um quadro de investigaï¿½ï¿½o foi enviado neste canal.`;
   }
 
   if (interaction.channelId === BECO_KONOHA_CHANNEL_ID && state.stage === "CONFRONT") {
@@ -317,12 +317,12 @@ export async function corpsePulseMapHandle(
       await setState(ctx.inst.id, state);
       await speak(interaction.channel, bossNpc, "(o time chega ao beco com as provas)", "Apresente Metsu entre fios de chakra e corpos quase vivos.", 0);
     }
-    return `\nMissão ativa: **${ctx.def.name}** - confronte Metsu usando \`/interagir npc\`.`;
+    return `\nMissï¿½o ativa: **${ctx.def.name}** - confronte Metsu usando \`/interagir npc\`.`;
   }
 
   if (interaction.channelId === BECO_KONOHA_CHANNEL_ID && state.stage === "FIGHT") {
     if (!(await getActiveSession(interaction.channelId))) await startCorpseCombat(interaction, ctx);
-    return `\nMissão ativa: **${ctx.def.name}** - derrote Metsu e os corpos controlados.`;
+    return `\nMissï¿½o ativa: **${ctx.def.name}** - derrote Metsu e os corpos controlados.`;
   }
 
   return nextNote(state, ctx.def.name);
@@ -330,13 +330,13 @@ export async function corpsePulseMapHandle(
 
 function nextNote(state: CorpsePulseState, missionName: string): string | null {
   if (state.stage === "INVESTIGATE") {
-    return `\nMissão ativa: **${missionName}** - investigue <#${HOSPITAL_KONOHA_CHANNEL_ID}>, <#${CENTRO_COMERCIAL_CHANNEL_ID}> e <#${BECO_KONOHA_CHANNEL_ID}>.`;
+    return `\nMissï¿½o ativa: **${missionName}** - investigue <#${HOSPITAL_KONOHA_CHANNEL_ID}>, <#${CENTRO_COMERCIAL_CHANNEL_ID}> e <#${BECO_KONOHA_CHANNEL_ID}>.`;
   }
   if (state.stage === "CONFRONT" || state.stage === "FIGHT") {
-    return `\nMissão ativa: **${missionName}** - siga para o Beco de Konoha: <#${BECO_KONOHA_CHANNEL_ID}>.`;
+    return `\nMissï¿½o ativa: **${missionName}** - siga para o Beco de Konoha: <#${BECO_KONOHA_CHANNEL_ID}>.`;
   }
   if (state.stage === "RETURN") {
-    return `\nMissão ativa: **${missionName}** - volte ao Hospital de Konoha: <#${HOSPITAL_KONOHA_CHANNEL_ID}>.`;
+    return `\nMissï¿½o ativa: **${missionName}** - volte ao Hospital de Konoha: <#${HOSPITAL_KONOHA_CHANNEL_ID}>.`;
   }
   return null;
 }
@@ -368,20 +368,20 @@ export async function interactCorpsePulse(interaction: ChatInputCommandInteracti
   const guildId = interaction.guildId ?? "global";
   const ctx = await resolveCorpsePulse(interaction.user.id, guildId, interaction.channelId);
   if (!ctx) {
-    await interaction.reply({ content: "Você (ou sua party) não tem essa missão ativa.", ephemeral: true });
+    await interaction.reply({ content: "Vocï¿½ (ou sua party) nï¿½o tem essa missï¿½o ativa.", ephemeral: true });
     return;
   }
   const state = ensureState(ctx.inst.stateJson);
   const choice = availableCorpsePulseNpcs(state, interaction.channelId).find((npc) => npc.key === npcKey);
   if (!choice) {
-    await interaction.reply({ content: "Esse NPC não está disponível nesta etapa.", ephemeral: true });
+    await interaction.reply({ content: "Esse NPC nï¿½o estï¿½ disponï¿½vel nesta etapa.", ephemeral: true });
     return;
   }
   const clue = Object.values(CLUES).find((candidate) => candidate.witness.key === npcKey);
   if (clue && state.stage === "INVESTIGATE") {
     await interaction.deferReply({ ephemeral: true });
-    await speak(interaction.channel, clue.witness, "(o time pede depoimento)", "Entregue uma pista fixa sem resolver a dedução pelo time.", 0);
-    await interaction.editReply(`Você ouviu **${choice.name}**. Use o quadro enviado pelo /mapa para fechar a tese.`);
+    await speak(interaction.channel, clue.witness, "(o time pede depoimento)", "Entregue uma pista fixa sem resolver a deduï¿½ï¿½o pelo time.", 0);
+    await interaction.editReply(`Vocï¿½ ouviu **${choice.name}**. Use o quadro enviado pelo /mapa para fechar a tese.`);
     return;
   }
   if (state.activeNpc && state.activeNpc !== npcKey) {
@@ -392,7 +392,7 @@ export async function interactCorpsePulse(interaction: ChatInputCommandInteracti
   state.activeNpc = npcKey;
   await setState(ctx.inst.id, state);
   await runDialogue(interaction.channel, interaction.channelId, guildId, ctx, npcKey, "(o time inicia a conversa)", interaction.user);
-  await interaction.editReply(`Você se aproxima de **${choice.name}**. Continue por mensagens normais no canal.`);
+  await interaction.editReply(`Vocï¿½ se aproxima de **${choice.name}**. Continue por mensagens normais no canal.`);
 }
 
 export async function continueCorpsePulseMessage(message: Message): Promise<boolean> {
@@ -430,8 +430,8 @@ async function runDialogue(
       medicNpc,
       playerMessage,
       done
-        ? "Última fala: mande investigar Hospital, Centro Comercial e Beco antes que o corpo pare de respirar de vez."
-        : "Explique o corpo com pulso impossível e as aparições depois da morte.",
+        ? "ï¿½ltima fala: mande investigar Hospital, Centro Comercial e Beco antes que o corpo pare de respirar de vez."
+        : "Explique o corpo com pulso impossï¿½vel e as apariï¿½ï¿½es depois da morte.",
       done ? 2 : 0,
     );
     if (done) {
@@ -441,7 +441,7 @@ async function runDialogue(
       await markObjective(inst.id, "receber_caso_cadaver");
       await setState(inst.id, state);
       if (channel && "send" in channel) {
-        await channel.send(`Investiguem as três frentes: <#${HOSPITAL_KONOHA_CHANNEL_ID}>, <#${CENTRO_COMERCIAL_CHANNEL_ID}> e <#${BECO_KONOHA_CHANNEL_ID}>.`);
+        await channel.send(`Investiguem as trï¿½s frentes: <#${HOSPITAL_KONOHA_CHANNEL_ID}>, <#${CENTRO_COMERCIAL_CHANNEL_ID}> e <#${BECO_KONOHA_CHANNEL_ID}>.`);
       }
       return;
     }
@@ -456,8 +456,8 @@ async function runDialogue(
       bossNpc,
       playerMessage,
       fight
-        ? "Última fala: Metsu rejeita a prisão, puxa os fios dos corpos controlados e inicia combate."
-        : "Reaja às provas do time com frieza clínica, justificando a técnica como aproveitamento de feridos abandonados.",
+        ? "ï¿½ltima fala: Metsu rejeita a prisï¿½o, puxa os fios dos corpos controlados e inicia combate."
+        : "Reaja ï¿½s provas do time com frieza clï¿½nica, justificando a tï¿½cnica como aproveitamento de feridos abandonados.",
       fight ? 2 : 0,
     );
     if (fight) {
@@ -481,8 +481,8 @@ async function runDialogue(
       medicNpc,
       playerMessage,
       done
-        ? "Última fala: confirme que a vítima foi estabilizada, os selos foram removidos e a missão está encerrada."
-        : "Receba o relatório sobre o corpo em suspensão, a compra falsa e os fios no beco.",
+        ? "ï¿½ltima fala: confirme que a vï¿½tima foi estabilizada, os selos foram removidos e a missï¿½o estï¿½ encerrada."
+        : "Receba o relatï¿½rio sobre o corpo em suspensï¿½o, a compra falsa e os fios no beco.",
       3 + Math.min(turn - 1, 1),
     );
     if (done) {
@@ -565,22 +565,22 @@ function panelEmbed(state: CorpsePulseState, clue: ClueDef, allowed: Set<string>
 
   return new EmbedBuilder()
     .setColor(ready ? 0x9b59b6 : 0x74b9ff)
-    .setTitle(`Investigação - ${clue.title}`)
+    .setTitle(`Investigaï¿½ï¿½o - ${clue.title}`)
     .setDescription([
       clue.intro,
       "",
-      "Coletem evidências, votem numa tese e usem **Enviar tese** quando houver consenso.",
-      `Pistas concluídas: **${Object.values(state.clues ?? {}).filter(Boolean).length}/3** | Erros: **${state.mistakes ?? 0}/${MAX_MISTAKES}**`,
+      "Coletem evidï¿½ncias, votem numa tese e usem **Enviar tese** quando houver consenso.",
+      `Pistas concluï¿½das: **${Object.values(state.clues ?? {}).filter(Boolean).length}/3** | Erros: **${state.mistakes ?? 0}/${MAX_MISTAKES}**`,
       result ?? "",
     ].filter(Boolean).join("\n"))
     .addFields(
       {
-        name: "Evidências coletadas",
-        value: evidenceLines.length > 0 ? evidenceLines.join("\n\n").slice(0, 1024) : "Nenhuma evidência firme ainda.",
+        name: "Evidï¿½ncias coletadas",
+        value: evidenceLines.length > 0 ? evidenceLines.join("\n\n").slice(0, 1024) : "Nenhuma evidï¿½ncia firme ainda.",
       },
       {
         name: "Equipe",
-        value: `${contributorCount(progress)}/${quorum} participante(s) contribuindo | ${progress.evidence.length}/${clue.requiredEvidence} evidências mínimas`,
+        value: `${contributorCount(progress)}/${quorum} participante(s) contribuindo | ${progress.evidence.length}/${clue.requiredEvidence} evidï¿½ncias mï¿½nimas`,
         inline: true,
       },
       {
@@ -590,7 +590,7 @@ function panelEmbed(state: CorpsePulseState, clue: ClueDef, allowed: Set<string>
       },
       {
         name: "Tese",
-        value: ready ? `${clue.question}\n${voteLines.join("\n")}`.slice(0, 1024) : "Bloqueada até a equipe reunir evidências suficientes.",
+        value: ready ? `${clue.question}\n${voteLines.join("\n")}`.slice(0, 1024) : "Bloqueada atï¿½ a equipe reunir evidï¿½ncias suficientes.",
       },
     );
 }
@@ -669,7 +669,7 @@ async function startCluePanel(channel: TextBasedChannel | null, guildId: string,
       })) as ButtonInteraction;
       const [, , , actionKind, pick] = btn.customId.split(":");
       if (!actionKind || !pick) {
-          await btn.reply({ content: "Ação de investigação inválida.", ephemeral: true });
+          await btn.reply({ content: "Aï¿½ï¿½o de investigaï¿½ï¿½o invï¿½lida.", ephemeral: true });
         continue;
       }
       state = ensureState((await getInstance(instanceId))?.stateJson ?? "{}");
@@ -679,22 +679,22 @@ async function startCluePanel(channel: TextBasedChannel | null, guildId: string,
       if (actionKind === "evidence") {
         const action = clue.actions.find((candidate) => candidate.id === pick);
         if (!action) {
-          await btn.reply({ content: "Essa evidência não existe nesta cena.", ephemeral: true });
+          await btn.reply({ content: "Essa evidï¿½ncia nï¿½o existe nesta cena.", ephemeral: true });
           continue;
         }
         if (progress.evidence.includes(pick)) {
           if (progress.evidenceUsers[pick] === btn.user.id || progress.investigators[btn.user.id]) {
-            await btn.reply({ content: "Essa evidência já foi registrada. Deixe outro membro validar outra parte.", ephemeral: true });
+            await btn.reply({ content: "Essa evidï¿½ncia jï¿½ foi registrada. Deixe outro membro validar outra parte.", ephemeral: true });
             continue;
           }
           progress.investigators[btn.user.id] = btn.user.username;
-          result = `**${btn.user.username}** validou uma evidência já encontrada.`;
+          result = `**${btn.user.username}** validou uma evidï¿½ncia jï¿½ encontrada.`;
           await setState(instanceId, state);
           await btn.update({ embeds: [panelEmbed(state, clue, allowed, result)], components: panelRows(instanceId, clue, state, allowed) });
           continue;
         }
         if (allowed.size > 1 && contributorCount(progress) < quorumSize(allowed) && progress.investigators[btn.user.id]) {
-          await btn.reply({ content: "Você já contribuiu nesta investigação. Deixe outro membro da party assumir uma evidência.", ephemeral: true });
+          await btn.reply({ content: "Vocï¿½ jï¿½ contribuiu nesta investigaï¿½ï¿½o. Deixe outro membro da party assumir uma evidï¿½ncia.", ephemeral: true });
           continue;
         }
         progress.evidence.push(pick);
@@ -703,7 +703,7 @@ async function startCluePanel(channel: TextBasedChannel | null, guildId: string,
         progress.investigators[btn.user.id] = btn.user.username;
         progress.votes = {};
         progress.voters = {};
-        result = `**${btn.user.username}** adicionou uma evidência ao quadro.`;
+        result = `**${btn.user.username}** adicionou uma evidï¿½ncia ao quadro.`;
         await setState(instanceId, state);
         await btn.update({ embeds: [panelEmbed(state, clue, allowed, result)], components: panelRows(instanceId, clue, state, allowed) });
         continue;
@@ -712,7 +712,7 @@ async function startCluePanel(channel: TextBasedChannel | null, guildId: string,
       if (actionKind === "clear") {
         delete progress.votes[btn.user.id];
         delete progress.voters[btn.user.id];
-        result = `**${btn.user.username}** limpou o próprio voto.`;
+        result = `**${btn.user.username}** limpou o prï¿½prio voto.`;
         await setState(instanceId, state);
         await btn.update({ embeds: [panelEmbed(state, clue, allowed, result)], components: panelRows(instanceId, clue, state, allowed) });
         continue;
@@ -721,7 +721,7 @@ async function startCluePanel(channel: TextBasedChannel | null, guildId: string,
       if (actionKind === "submit") {
         const consensus = consensusPick(progress, quorumSize(allowed));
         if (!consensus) {
-          await btn.reply({ content: "Ainda não há consenso.", ephemeral: true });
+          await btn.reply({ content: "Ainda nï¿½o hï¿½ consenso.", ephemeral: true });
           continue;
         }
         if (consensus === clue.correct) {
@@ -732,7 +732,7 @@ async function startCluePanel(channel: TextBasedChannel | null, guildId: string,
           if (allCluesDone(state)) {
             state.stage = "CONFRONT";
             await markObjective(instanceId, "ligar_pistas_cadaver");
-            result += `\n\nAs três frentes apontam para Metsu, um médico renegado operando no Beco de Konoha: <#${BECO_KONOHA_CHANNEL_ID}>.`;
+            result += `\n\nAs trï¿½s frentes apontam para Metsu, um mï¿½dico renegado operando no Beco de Konoha: <#${BECO_KONOHA_CHANNEL_ID}>.`;
           }
           await setState(instanceId, state);
           await btn.update({ embeds: [panelEmbed(state, clue, allowed, result)], components: [] });
@@ -741,7 +741,7 @@ async function startCluePanel(channel: TextBasedChannel | null, guildId: string,
         state.mistakes = (state.mistakes ?? 0) + 1;
         progress.votes = {};
         progress.voters = {};
-        result = "**Tese enviada, mas rejeitada pelos fatos.** Revisem as evidências antes de enviar de novo.";
+        result = "**Tese enviada, mas rejeitada pelos fatos.** Revisem as evidï¿½ncias antes de enviar de novo.";
         if ((state.mistakes ?? 0) >= MAX_MISTAKES) {
           state.runningClue = null;
           await prisma.missionInstance.update({ where: { id: instanceId }, data: { status: "FAILED", stateJson: JSON.stringify(state) } });
@@ -757,18 +757,18 @@ async function startCluePanel(channel: TextBasedChannel | null, guildId: string,
       }
 
       if (actionKind !== "deduce") {
-        await btn.reply({ content: "Ação de investigação inválida.", ephemeral: true });
+        await btn.reply({ content: "Aï¿½ï¿½o de investigaï¿½ï¿½o invï¿½lida.", ephemeral: true });
         continue;
       }
       if (!evidenceReady(clue, progress, quorumSize(allowed))) {
-        await btn.reply({ content: "Ainda faltam evidências ou participação da equipe para fechar uma tese.", ephemeral: true });
+        await btn.reply({ content: "Ainda faltam evidï¿½ncias ou participaï¿½ï¿½o da equipe para fechar uma tese.", ephemeral: true });
         continue;
       }
       progress.votes[btn.user.id] = pick;
       progress.voters[btn.user.id] = btn.user.username;
       const consensus = consensusPick(progress, quorumSize(allowed));
       result = consensus
-        ? `**${btn.user.username}** votou. Há consenso; use **Enviar tese**.`
+        ? `**${btn.user.username}** votou. Hï¿½ consenso; use **Enviar tese**.`
         : `**${btn.user.username}** votou. A equipe ainda precisa concordar.`;
       await setState(instanceId, state);
       await btn.update({ embeds: [panelEmbed(state, clue, allowed, result)], components: panelRows(instanceId, clue, state, allowed) });
@@ -777,7 +777,7 @@ async function startCluePanel(channel: TextBasedChannel | null, guildId: string,
     state.runningClue = null;
     await setState(instanceId, state);
     await msg.edit({ embeds: [panelEmbed(state, clue, allowed, "A cena esfriou, mas o quadro foi preservado.")], components: panelRows(instanceId, clue, state, allowed, true) }).catch(() => undefined);
-    await channel.send("A pista esfriou. Use `/mapa` neste canal para retomar a análise.");
+    await channel.send("A pista esfriou. Use `/mapa` neste canal para retomar a anï¿½lise.");
   }
 }
 
@@ -790,13 +790,7 @@ function starterFrom(char: Awaited<ReturnType<typeof getOrCreateCharacter>>): St
     chakra: char.resources?.chakra ?? 100,
     energia: char.resources?.energia ?? 100,
     jutsuIds: char.jutsus.map((j: { jutsuId: string }) => j.jutsuId),
-    attrs: {
-      ninjutsu: char.attributes?.ninjutsu ?? 1,
-      iryo: char.attributes?.iryo ?? 1,
-      taijutsu: char.attributes?.taijutsu ?? 1,
-      genjutsu: char.attributes?.genjutsu ?? 1,
-      kenjutsu: char.attributes?.kenjutsu ?? 1,
-    },
+    attrs: attrsFromRow(char.attributes ?? {}),
   };
 }
 
@@ -851,6 +845,6 @@ export async function onCorpsePulseCombatWon(interaction: ChatInputCommandIntera
   await markObjective(inst.id, "derrotar_medico_renegado");
   await markObjective(inst.id, "estabilizar_vitima_cadaver");
   await setState(inst.id, state);
-  await interaction.followUp(`Metsu foi contido e a vítima ainda respira. Volte ao Hospital de Konoha: <#${HOSPITAL_KONOHA_CHANNEL_ID}>.`);
+  await interaction.followUp(`Metsu foi contido e a vï¿½tima ainda respira. Volte ao Hospital de Konoha: <#${HOSPITAL_KONOHA_CHANNEL_ID}>.`);
 }
 

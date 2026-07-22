@@ -14,6 +14,16 @@ npm run prisma:push  # aplica schema.prisma no SQLite
 npm run seed         # grava MissionDef no banco (após editar src/data/missions)
 ```
 
+## ⚠️ Os jutsus de jogador são descartáveis
+
+As 39 habilidades **de jogador** em `src/data/jutsus/` e `src/data/clans/index.ts` são **placeholder de teste** e serão **apagadas** — não substituídas, apagadas. Existem só para exercitar o sistema de efeitos. Vale inclusive para nomes canon (`chidori`, `fuuton_rasenshuriken`, `uchiha_sharingan1`).
+
+**Habilidades de NPC ficam** — são conteúdo real: `pombo_bicada` e `vespa_ferroada`. Como distinguir: NPC não tem requisito de desbloqueio e custa 0; jogador tem `level`/`element`/`clanId`/`attributes`. (NPCs também *reusam* jutsus de jogador — estar em `NpcTemplate.abilityIds` não faz a habilidade ser de NPC.)
+
+O que fica é o sistema: o contrato `Ability`, a engine de combate, os efeitos e os números de `balance.ts`.
+
+Na prática: **não invista em balanceamento fino** (dano, custo, tier, requisitos) dos jutsus de jogador sem pedido explícito. Não trate os ids como contrato estável. Jutsu de jogador novo também é descartável.
+
 ## Regras do código
 
 - **ESM**: todo import relativo termina em `.js`, mesmo apontando pra `.ts`. `import { x } from "./y.js"`.

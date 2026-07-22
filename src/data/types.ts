@@ -1,4 +1,13 @@
-import type { ActionType, Attribute, Category, Element, Rank, Shape, EffectId } from "../config/enums.js";
+import type {
+  ActionType,
+  Attribute,
+  Category,
+  Element,
+  Rank,
+  Shape,
+  EffectId,
+  TerrainKind,
+} from "../config/enums.js";
 
 export interface AppliedEffect {
   effectId: EffectId;
@@ -41,7 +50,32 @@ export interface Ability {
   // flags especiais
   unblockable?: boolean;
   undodgeable?: boolean;
+  // ignora obstaculos, arvores e fumaca na validacao da linha de visao
+  pierceObstacles?: boolean;
+  // exige um alvo inicial Encharcado e salta para todos os outros Encharcados
+  chainWetTargets?: boolean;
+  // exige chamas ativas no campo ou a passiva que forma nuvens de tempestade
+  requiresStorm?: boolean;
+  // pode ser usada uma unica vez por combate
+  oncePerCombat?: boolean;
   reactionKind?: "BLOCK" | "DODGE" | "PARRY" | "JUTSU";
+  // terreno que o jutsu deixa nas celulas atingidas (chamas, agua, muro, fumaca, pantano)
+  terrain?: {
+    kind: TerrainKind;
+    duration?: number; // rodadas; padrao BALANCE.terrain.defaultDuration
+  };
+  // remove um tipo de terreno das celulas atingidas (ex: fogo evapora agua)
+  clearsTerrain?: TerrainKind;
+  // desloca o alvo: >0 empurra p/ longe, <0 puxa p/ perto (em casas)
+  push?: number;
+  // invoca um aliado no grid (clone, golem). Ele age no turno com a IA de NPC.
+  summon?: {
+    templateId: string; // NpcTemplate usado como corpo da invocacao
+    // clone reativo: ao sofrer dano, desfaz-se e pune quem o acertou
+    onHit?: { effectId: EffectId; duration?: number };
+    // o que acontece quando a invocacao morre (clone d'agua estoura molhando)
+    onDeath?: { effectId: EffectId; radius: number; duration?: number };
+  };
 }
 
 export interface ClanAbilityHook {

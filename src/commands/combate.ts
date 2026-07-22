@@ -9,6 +9,7 @@ import {
   type AutocompleteInteraction,
   type ButtonInteraction,
   type ChatInputCommandInteraction,
+  type Message,
 } from "discord.js";
 import type { Command } from "./types.js";
 import { prisma } from "../db/client.js";
@@ -24,7 +25,7 @@ import {
 import { catMissionStep, renderCatMission, spawnCat, type CatState, type CatMissionData } from "../services/missions/cat.js";
 import { cellDistance } from "../services/combat/combat-math.js";
 import { BALANCE } from "../config/balance.js";
-import { getOrCreateCharacter } from "../services/characters/character-service.js";
+import { getOrCreateCharacter, attrsFromRow } from "../services/characters/character-service.js";
 import {
   startCombat,
   getActiveSession,
@@ -35,13 +36,17 @@ import {
   numberSameNames,
   displayName,
   useAbility,
+  previewAbilityArea,
+  isAreaShape,
   resolveHit,
   endTurn,
   activeParticipant,
   pickUpWeapon,
+  attemptFlee,
   getSessionById,
   type AbilityHit,
   type SessionFull,
+  type StartPlayer,
 } from "../services/combat/combat-engine.js";
 import { runNpcTurn } from "../services/combat/npc-combat.js";
 import { getAbility } from "../data/index.js";
@@ -52,6 +57,9 @@ import { buildSessionEntities, condenseLogs } from "../services/combat/combat-re
 import { startKidDialogue } from "../services/missions/kid-dialogue.js";
 import { moverCleanVillage } from "../services/missions/clean-village.js";
 import { moverRoofCleanup } from "../services/missions/roof-cleanup.js";
+
+// Tempo para confirmar um jutsu de area antes de cancelar sozinho.
+const PREVIEW_TIMEOUT_MS = 30_000;
 
 // Renderiza o mapa do combate + log enxuto num embed e envia.
 async function sendCombatView(
@@ -99,6 +107,9 @@ export const combate: Command = {
       s
         .setName("agua")
         .setDescription("Ativa/desativa andar sobre a água (ação bônus)"),
+    )
+    .addSubcommand((s) =>
+      s.setName("fugir").setDescription("Tenta fugir do combate (ação comum, gasta energia)"),
     ),
   async execute(interaction: ChatInputCommandInteraction) {
     const sub = interaction.options.getSubcommand();
@@ -111,9 +122,40 @@ export const combate: Command = {
         return pegarArma(interaction);
       case "agua":
         return agua(interaction);
+      case "fugir":
+        return fugir(interaction);
     }
   },
 };
+
+// Tenta sair do combate. Quanto mais inimigo colado, menor a chance.
+async function fugir(interaction: ChatInputCommandInteraction): Promise<void> {
+  const session = await getActiveSession(interaction.channelId);
+  if (!session) {
+    await interaction.reply({ content: "Não há combate ativo neste canal.", ephemeral: true });
+    return;
+  }
+  const guildId = interaction.guildId ?? "global";
+  const char = await getOrCreateCharacter(interaction.user.id, guildId, interaction.user.username);
+  const me = session.participants.find((p) => p.charId === char.id);
+  if (!me) {
+    await interaction.reply({ content: "Você não está neste combate.", ephemeral: true });
+    return;
+  }
+  const active = activeParticipant(session);
+  if (active?.id !== me.id) {
+    await interaction.reply({ content: "Não é o seu turno.", ephemeral: true });
+    return;
+  }
+
+  await interaction.deferReply();
+  const res = await attemptFlee(session.id, me.id);
+  if (!res.ok) {
+    await interaction.editReply(`❌ ${res.error}`);
+    return;
+  }
+  await sendCombatView(interaction, session.id, res.logs);
+}
 
 // aceita id exato ou nome (caso o usuario digite sem escolher do autocomplete)
 function resolveAbilityId(input: string): string | null {
@@ -169,7 +211,7 @@ async function iniciar(interaction: ChatInputCommandInteraction): Promise<void> 
     return;
   }
 
-  const players = [];
+  const players: StartPlayer[] = [];
   for (const u of users.values()) {
     const char = await getOrCreateCharacter(u.id, guildId, u.username);
     players.push({
@@ -180,13 +222,8 @@ async function iniciar(interaction: ChatInputCommandInteraction): Promise<void> 
       chakra: char.resources!.chakra,
       energia: char.resources!.energia,
       jutsuIds: char.jutsus.map((j) => j.jutsuId),
-      attrs: {
-        ninjutsu: char.attributes!.ninjutsu,
-        iryo: char.attributes!.iryo,
-        taijutsu: char.attributes!.taijutsu,
-        genjutsu: char.attributes!.genjutsu,
-        kenjutsu: char.attributes!.kenjutsu,
-      },
+      attrs: attrsFromRow(char.attributes!),
+      nodes: char.skillNodes.map((n) => n.nodeId),
     });
   }
 
@@ -197,12 +234,14 @@ async function iniciar(interaction: ChatInputCommandInteraction): Promise<void> 
     players,
   });
 
-  // cacheia atributos nos flags p/ a engine
+  // cacheia atributos e nos da arvore nos flags p/ a engine. Snapshot: no
+  // comprado no meio da luta so vale no proximo combate.
   for (let i = 0; i < players.length; i++) {
-    const p = session.participants[i]!;
+    const p = session.participants.find((part) => part.charId === players[i]!.charId);
+    if (!p) continue;
     await prisma.combatParticipant.update({
       where: { id: p.id },
-      data: { flagsJson: JSON.stringify({ attrs: players[i]!.attrs }) },
+      data: { flagsJson: JSON.stringify({ attrs: players[i]!.attrs, nodes: players[i]!.nodes }) },
     });
   }
 
@@ -439,9 +478,13 @@ export async function usar(interaction: ChatInputCommandInteraction): Promise<vo
     }
   }
 
+  // jutsu de area: mostra o que vai ser atingido e pede confirmacao
+  const confirmed = await confirmAreaAbility(interaction, session, me, abilityId, targetCell);
+  if (!confirmed) return;
+
   const res = await useAbility(session, me.id, abilityId, targetCell, targetId);
   if (!res.ok) {
-    await interaction.editReply(`❌ ${res.error}`);
+    await interaction.editReply({ content: `❌ ${res.error}`, embeds: [], files: [], components: [] });
     return;
   }
 
@@ -453,6 +496,111 @@ export async function usar(interaction: ChatInputCommandInteraction): Promise<vo
 
   await sendCombatView(interaction, session.id, logs);
   await checkVictory(interaction, session.id);
+}
+
+// Mostra a area de um jutsu no mapa e pede confirmacao antes de gastar recurso.
+// Retorna true se pode seguir (confirmado, ou nao e jutsu de area).
+async function confirmAreaAbility(
+  interaction: ChatInputCommandInteraction,
+  session: SessionFull,
+  me: SessionFull["participants"][number],
+  abilityId: string,
+  targetCell: string | null,
+): Promise<boolean> {
+  const ability = getAbility(abilityId);
+  if (!ability || !isAreaShape(ability)) return true;
+
+  // jutsu de area sem alvo nao tem direcao: nao da para desenhar nem acertar.
+  // Avisa aqui em vez de deixar o useAbility recusar sem explicar o porque.
+  if (!targetCell) {
+    await interaction.editReply(
+      `❌ **${ability.name}** precisa de um alvo para saber a direção.\n` +
+        "Escolha alguém no autocomplete de `alvo`, ou passe uma célula (ex: `alvo:C4`).",
+    );
+    return false;
+  }
+
+  const preview = previewAbilityArea(session, me.id, ability, targetCell);
+  if (!preview) return true;
+
+  const scenario = getScenarioById(session.scenarioId)!;
+  const guildId = interaction.guildId ?? "global";
+  const entities = await buildSessionEntities(session, guildId);
+  const nums = numberSameNames(session.participants);
+  const nameOf = (p: SessionFull["participants"][number]) => displayName(p.name, nums.get(p.id));
+
+  // vermelho quando so pega inimigo; laranja quando tem aliado na area
+  const color = preview.allies.length ? "#e67e22" : "#e74c3c";
+  const png = await MapRenderer.renderScenario({
+    scenario,
+    round: session.round,
+    entities,
+    highlight: { cells: preview.cells, color },
+    highlightOrigin: me.cell,
+  });
+  const file = new AttachmentBuilder(png, { name: "preview.png" });
+
+  const shapeLabel =
+    ability.shape === "CONE" ? "cone" : ability.shape === "LINE" ? "linha" : "área";
+  const lines: string[] = [
+    `**${ability.name}** — ${shapeLabel}, alcance ${ability.range}, custo ${ability.cost}% ${ability.resource}.`,
+    `Atinge **${preview.cells.length}** célula(s).`,
+  ];
+  if (preview.enemies.length) {
+    lines.push(`🔴 Inimigos na área: ${preview.enemies.map(nameOf).join(", ")}`);
+  }
+  if (preview.allies.length) {
+    lines.push(`⚠️ **Também acerta seus aliados: ${preview.allies.map(nameOf).join(", ")}**`);
+  }
+  if (!preview.enemies.length && !preview.allies.length) {
+    lines.push("⚪ Nenhum alvo na área.");
+  }
+  if (preview.confused) {
+    lines.push("😵 Você está confuso — o alvo real pode ser outro.");
+  }
+
+  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setCustomId("jutsu_confirm")
+      .setLabel("Confirmar")
+      .setStyle(preview.allies.length ? ButtonStyle.Danger : ButtonStyle.Success),
+    new ButtonBuilder().setCustomId("jutsu_cancel").setLabel("Cancelar").setStyle(ButtonStyle.Secondary),
+  );
+
+  const embed = new EmbedBuilder()
+    .setColor(preview.allies.length ? 0xe67e22 : 0xe74c3c)
+    .setTitle("Confirmar jutsu")
+    .setDescription(lines.join("\n"))
+    .setImage("attachment://preview.png");
+
+  const prompt = await interaction.editReply({ embeds: [embed], files: [file], components: [row] });
+
+  try {
+    const click = await (prompt as Message).awaitMessageComponent({
+      componentType: ComponentType.Button,
+      time: PREVIEW_TIMEOUT_MS,
+      filter: (i) => i.user.id === interaction.user.id,
+    });
+    await click.deferUpdate();
+    if (click.customId === "jutsu_cancel") {
+      await interaction.editReply({
+        content: "❌ Jutsu cancelado. Nenhum recurso gasto.",
+        embeds: [],
+        files: [],
+        components: [],
+      });
+      return false;
+    }
+    return true;
+  } catch {
+    await interaction.editReply({
+      content: "⌛ Tempo esgotado. Jutsu cancelado, nenhum recurso gasto.",
+      embeds: [],
+      files: [],
+      components: [],
+    });
+    return false;
+  }
 }
 
 // Oferece janela de reacao ao alvo humano; NPC toma full.
@@ -502,10 +650,13 @@ async function resolveWithReaction(
 async function checkVictory(interaction: ChatInputCommandInteraction, sessionId: string): Promise<void> {
   const session = await getSessionById(sessionId);
   if (!session || session.status !== "ACTIVE") return;
-  const alive = session.participants.filter((p) => p.hpCurrent > 0);
+  // Invocacoes (clone/golem) sao isNpc mas NAO decidem o combate: sem excluir,
+  // um clone do jogador ainda vivo contaria como inimigo e a luta nunca acabaria.
+  const real = session.participants.filter((p) => p.flags.isSummon !== true);
+  const alive = real.filter((p) => p.hpCurrent > 0);
   const playersAlive = alive.filter((p) => !p.isNpc).length;
   const npcsAlive = alive.filter((p) => p.isNpc).length;
-  const hasNpcs = session.participants.some((p) => p.isNpc);
+  const hasNpcs = real.some((p) => p.isNpc);
 
   // combate acaba quando um lado é eliminado (PvE) ou sobra <=1 jogador (PvP)
   const over = hasNpcs ? playersAlive === 0 || npcsAlive === 0 : playersAlive <= 1;
@@ -564,7 +715,7 @@ async function fimTurno(interaction: ChatInputCommandInteraction): Promise<void>
     if (!s || s.status !== "ACTIVE") break;
     const active = activeParticipant(s);
     if (!active || !active.isNpc || active.hpCurrent <= 0) break;
-    logs.push(`— Turno de **${active.name}** (NPC) —`);
+    logs.push(`— Turno de **${active.name}** (${active.flags.isSummon ? "invocação" : "NPC"}) —`);
     logs.push(...(await runNpcTurn(s.id, active.id)));
     result = await endTurn(s.id);
     logs.push(...result.logs);

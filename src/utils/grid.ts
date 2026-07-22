@@ -1,4 +1,6 @@
 // Helpers de grid. Linhas A.. (row index 0-based), colunas 1..cols.
+import { BALANCE } from "../config/balance.js";
+
 export interface Coord {
   row: number; // 0-based (A=0)
   col: number; // 1-based
@@ -46,16 +48,19 @@ export function neighbors(c: Coord): Coord[] {
   return out;
 }
 
-// Celulas em linha reta de origem -> alvo (8 direcoes), ate range.
-export function lineCells(origin: Coord, target: Coord, range: number): Coord[] {
+// Celulas em linha reta de origem -> alvo, ate `range`.
+// A mira e encaixada numa das 8 direcoes (o sinal do delta), entao mirar num
+// alvo fora de linha pura dispara na direcao mais proxima.
+// Para quando sai do grid.
+export function lineCells(origin: Coord, target: Coord, range: number, rows: number, cols: number): Coord[] {
   const dr = Math.sign(target.row - origin.row);
   const dc = Math.sign(target.col - origin.col);
-  // so aceita linha em direcao cardinal/diagonal pura
   const out: Coord[] = [];
   if (dr === 0 && dc === 0) return out;
   let cur = { row: origin.row, col: origin.col };
   for (let i = 0; i < range; i++) {
     cur = { row: cur.row + dr, col: cur.col + dc };
+    if (!inBounds(cur, rows, cols)) break;
     out.push({ ...cur });
   }
   return out;
@@ -73,11 +78,23 @@ export function radiusCells(center: Coord, radius: number, rows: number, cols: n
   return out;
 }
 
-// Cone simples: celulas na direcao origem->alvo dentro de range e meio-angulo.
+// Cone: celulas cujo angulo em relacao a direcao origem->alvo cabe dentro do
+// meio-angulo configurado (BALANCE.coneHalfAngleDeg), ate `range`.
+//
+// O teste e o cosseno do angulo entre o vetor origem->celula e a direcao mirada.
+// Direcao cardinal vira um triangulo; direcao diagonal vira o mesmo leque girado
+// 45deg (a borda parece reta porque o alcance usa distancia de Chebyshev, igual
+// ao resto da engine).
 export function coneCells(origin: Coord, target: Coord, range: number, rows: number, cols: number): Coord[] {
-  const dr = Math.sign(target.row - origin.row);
-  const dc = Math.sign(target.col - origin.col);
+  const dr = target.row - origin.row;
+  const dc = target.col - origin.col;
   if (dr === 0 && dc === 0) return [];
+  const len = Math.hypot(dr, dc);
+  const ur = dr / len;
+  const uc = dc / len;
+  // epsilon para a celula exatamente na borda do angulo nao cair fora por float
+  const minCos = Math.cos((BALANCE.coneHalfAngleDeg * Math.PI) / 180) - 1e-9;
+
   const out: Coord[] = [];
   for (let r = origin.row - range; r <= origin.row + range; r++) {
     for (let c = origin.col - range; c <= origin.col + range; c++) {
@@ -85,12 +102,10 @@ export function coneCells(origin: Coord, target: Coord, range: number, rows: num
       if (!inBounds(cc, rows, cols)) continue;
       const d = distance(origin, cc);
       if (d === 0 || d > range) continue;
-      const vr = Math.sign(cc.row - origin.row);
-      const vc = Math.sign(cc.col - origin.col);
-      // dentro do cone se compartilha a direcao principal
-      if ((dr === 0 || vr === dr || vr === 0) && (dc === 0 || vc === dc || vc === 0)) {
-        out.push(cc);
-      }
+      const vr = cc.row - origin.row;
+      const vc = cc.col - origin.col;
+      const cos = (vr * ur + vc * uc) / Math.hypot(vr, vc);
+      if (cos >= minCos) out.push(cc);
     }
   }
   return out;

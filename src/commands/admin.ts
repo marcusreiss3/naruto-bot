@@ -2,8 +2,9 @@ import { SlashCommandBuilder, type ChatInputCommandInteraction, type Autocomplet
 import type { Command } from "./types.js";
 import { prisma } from "../db/client.js";
 import { isAdmin } from "../utils/permissions.js";
-import { ATTRIBUTES, ELEMENTS, MASTERY_LEVELS, RESOURCES, EFFECT_IDS } from "../config/enums.js";
+import { ATTRIBUTES, ATTRIBUTE_LABELS, ELEMENTS, MASTERY_LEVELS, RESOURCES, EFFECT_IDS, effectLabel } from "../config/enums.js";
 import type { Attribute, Element } from "../config/enums.js";
+import { respec } from "../services/characters/attribute-allocator.js";
 import {
   getOrCreateCharacter,
   setAttribute,
@@ -23,12 +24,12 @@ import { onCombatEnded } from "../services/missions/mission-runtime.js";
 import { getAppearance, releaseAppearance } from "../services/appearance/appearance-service.js";
 import { villageFromMember, VILLAGE_NAMES } from "../services/village-service.js";
 
-const attrChoices = ATTRIBUTES.map((a) => ({ name: a, value: a }));
+const attrChoices = ATTRIBUTES.map((a) => ({ name: ATTRIBUTE_LABELS[a], value: a }));
 const resourceChoices = RESOURCES.map((r) => ({ name: r, value: r }));
 const masteryChoices = MASTERY_LEVELS.map((m) => ({ name: m, value: m }));
 const elementChoices = ELEMENTS.map((e) => ({ name: e, value: e }));
 const clanChoices = CLANS.map((c) => ({ name: c.name, value: c.id }));
-const effectChoices = EFFECT_IDS.map((e) => ({ name: e, value: e }));
+const effectChoices = EFFECT_IDS.map((e) => ({ name: effectLabel(e), value: e }));
 
 export const admin: Command = {
   data: new SlashCommandBuilder()
@@ -133,6 +134,19 @@ export const admin: Command = {
         .setDescription("Adiciona pontos de atributo")
         .addUserOption((o) => o.setName("usuario").setDescription("Usuário").setRequired(true))
         .addIntegerOption((o) => o.setName("valor").setDescription("Quantidade").setRequired(true)),
+    )
+    .addSubcommand((s) =>
+      s
+        .setName("pontos-set")
+        .setDescription("Define os pontos de atributo (valor exato)")
+        .addUserOption((o) => o.setName("usuario").setDescription("Usuário").setRequired(true))
+        .addIntegerOption((o) => o.setName("valor").setDescription("Quantidade").setRequired(true)),
+    )
+    .addSubcommand((s) =>
+      s
+        .setName("respec")
+        .setDescription("Zera os atributos e devolve os pontos investidos")
+        .addUserOption((o) => o.setName("usuario").setDescription("Usuário").setRequired(true)),
     )
     .addSubcommand((s) =>
       s
@@ -252,12 +266,12 @@ export const admin: Command = {
         const stacks = interaction.options.getInteger("stacks") ?? 1;
         const duracao = interaction.options.getInteger("duracao") ?? 2;
         await prisma.effectInstance.create({
-          data: { participantId: part.id, effectId, name: effectId, stacks, duration: duracao },
+          data: { participantId: part.id, effectId, name: effectLabel(effectId), stacks, duration: duracao },
         });
-        await interaction.editReply(`✅ Efeito ${effectId} (x${stacks}, ${duracao} turnos) em **${char.name}**.`);
+        await interaction.editReply(`✅ Efeito **${effectLabel(effectId)}** (x${stacks}, ${duracao} turnos) em **${char.name}**.`);
       } else {
         await prisma.effectInstance.deleteMany({ where: { participantId: part.id, effectId } });
-        await interaction.editReply(`✅ Efeito ${effectId} removido de **${char.name}**.`);
+        await interaction.editReply(`✅ Efeito **${effectLabel(effectId)}** removido de **${char.name}**.`);
       }
       return;
     }
@@ -358,6 +372,21 @@ export const admin: Command = {
         const valor = interaction.options.getInteger("valor", true);
         await prisma.userCharacter.update({ where: { id: char.id }, data: { attributePoints: { increment: valor } } });
         await interaction.editReply(`✅ +${valor} pontos de atributo para **${char.name}**.`);
+        return;
+      }
+      case "pontos-set": {
+        const char = await getChar();
+        const valor = Math.max(0, interaction.options.getInteger("valor", true));
+        await prisma.userCharacter.update({ where: { id: char.id }, data: { attributePoints: valor } });
+        await interaction.editReply(`✅ Pontos de atributo de **${char.name}** = ${valor}.`);
+        return;
+      }
+      case "respec": {
+        const char = await getChar();
+        const devolvidos = await respec(char.id);
+        await interaction.editReply(
+          `✅ Atributos de **${char.name}** zerados. ${devolvidos} ponto(s) devolvido(s) ao saldo — ele pode redistribuir com \`/atributos\`.`,
+        );
         return;
       }
       case "nivel-set": {

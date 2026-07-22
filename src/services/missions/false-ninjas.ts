@@ -15,7 +15,7 @@ import {
   ROTA_COMERCIAL_KONOHA_CHANNEL_ID,
 } from "../../data/scenarios/index.js";
 import { getMission } from "../../data/missions/index.js";
-import { getOrCreateCharacter } from "../characters/character-service.js";
+import { getOrCreateCharacter, attrsFromRow } from "../characters/character-service.js";
 import { getActiveSession, startCombat } from "../combat/combat-engine.js";
 import { formatPersonaLines, sendAsPersona } from "../discord/persona-webhook.js";
 import type { RenderEntity } from "../maps/renderer.js";
@@ -848,13 +848,7 @@ function starterFrom(char: Awaited<ReturnType<typeof getOrCreateCharacter>>): St
     chakra: char.resources?.chakra ?? 100,
     energia: char.resources?.energia ?? 100,
     jutsuIds: char.jutsus.map((j: { jutsuId: string }) => j.jutsuId),
-    attrs: {
-      ninjutsu: char.attributes?.ninjutsu ?? 1,
-      iryo: char.attributes?.iryo ?? 1,
-      taijutsu: char.attributes?.taijutsu ?? 1,
-      genjutsu: char.attributes?.genjutsu ?? 1,
-      kenjutsu: char.attributes?.kenjutsu ?? 1,
-    },
+    attrs: attrsFromRow(char.attributes ?? {}),
   };
 }
 

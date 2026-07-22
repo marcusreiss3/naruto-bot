@@ -1,5 +1,6 @@
 import type { Command } from "./types.js";
 import { perfil } from "./perfil.js";
+import { atributos } from "./atributos.js";
 import { mapa } from "./mapa.js";
 import { combate } from "./combate.js";
 import { mover } from "./mover.js";
@@ -10,7 +11,8 @@ import { interagir } from "./interagir.js";
 import { admin } from "./admin.js";
 import { aparencia } from "./aparencia.js";
 import { clear } from "./clear.js";
+import { bonecoTreino } from "./boneco-treino.js";
 
-export const commands: Command[] = [perfil, mapa, combate, mover, jutsu, party, missoes, interagir, admin, aparencia, clear];
+export const commands: Command[] = [perfil, atributos, mapa, combate, mover, jutsu, party, missoes, interagir, admin, aparencia, clear, bonecoTreino];
 
 export const commandMap = new Map<string, Command>(commands.map((c) => [c.data.name, c]));

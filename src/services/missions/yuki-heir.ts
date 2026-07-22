@@ -17,7 +17,7 @@ import {
   PRACA_SUNA_CHANNEL_ID,
 } from "../../data/scenarios/index.js";
 import { getMission } from "../../data/missions/index.js";
-import { getOrCreateCharacter } from "../characters/character-service.js";
+import { getOrCreateCharacter, attrsFromRow } from "../characters/character-service.js";
 import { getActiveSession, startCombat } from "../combat/combat-engine.js";
 import { formatPersonaLines, sendAsPersona } from "../discord/persona-webhook.js";
 import type { RenderEntity } from "../maps/renderer.js";
@@ -142,23 +142,23 @@ const CLUES: Record<ClueId, ClueDef> = {
     },
     investigation: {
       intro:
-        "A barraca está coberta por gelo, mas a areia sob a camada congelada virou vidro. Frio comum não vitrifica areia: descubram se o calor veio antes do Hyoton ou se a cena foi montada para incriminar Hakuo.",
+        "A barraca estï¿½ coberta por gelo, mas a areia sob a camada congelada virou vidro. Frio comum nï¿½o vitrifica areia: descubram se o calor veio antes do Hyoton ou se a cena foi montada para incriminar Hakuo.",
       requiredEvidence: 3,
       actions: [
-        { id: "thermal_edge", label: "Medir o calor residual", detail: "O centro da barraca ainda guarda calor sob o gelo. Se tudo tivesse sido congelado de uma vez, essa camada quente não existiria." },
-        { id: "glass_cut", label: "Analisar o vidro", detail: "Bolhas de ar ficaram presas sob a geada. A ordem é clara: a areia foi aquecida primeiro e congelada depois." },
-        { id: "ash_layer", label: "Peneirar as cinzas", detail: "A cinza não parece de incêndio comum. Há traços de combustível de forja portátil, usado para preparar a cena em segredo." },
-        { id: "seller_memory", label: "Ouvir Rasae", detail: "Rasae viu um carregador sem bandana deixando uma caixa antes do gelo aparecer. A descrição não combina com Hakuo." },
+        { id: "thermal_edge", label: "Medir o calor residual", detail: "O centro da barraca ainda guarda calor sob o gelo. Se tudo tivesse sido congelado de uma vez, essa camada quente nï¿½o existiria." },
+        { id: "glass_cut", label: "Analisar o vidro", detail: "Bolhas de ar ficaram presas sob a geada. A ordem ï¿½ clara: a areia foi aquecida primeiro e congelada depois." },
+        { id: "ash_layer", label: "Peneirar as cinzas", detail: "A cinza nï¿½o parece de incï¿½ndio comum. Hï¿½ traï¿½os de combustï¿½vel de forja portï¿½til, usado para preparar a cena em segredo." },
+        { id: "seller_memory", label: "Ouvir Rasae", detail: "Rasae viu um carregador sem bandana deixando uma caixa antes do gelo aparecer. A descriï¿½ï¿½o nï¿½o combina com Hakuo." },
       ],
       conclusionQuestion: "Qual tese explica melhor a cena?",
       deductions: [
         { id: "ice_first", label: "O Hyoton vitrificou a areia sozinho" },
         { id: "heat_before_ice", label: "A areia foi aquecida antes do gelo" },
         { id: "forge_accident", label: "A forja causou um acidente comum" },
-        { id: "sand_trap", label: "Suna forjou a própria cena" },
+        { id: "sand_trap", label: "Suna forjou a prï¿½pria cena" },
       ],
       correct: "heat_before_ice",
-      success: "A equipe conclui que o calor veio antes do Hyoton. Hakuo pode ter passado pelo local, mas alguém preparou a cena para associar o ataque a ele.",
+      success: "A equipe conclui que o calor veio antes do Hyoton. Hakuo pode ter passado pelo local, mas alguï¿½m preparou a cena para associar o ataque a ele.",
     },
   },
   kiri_market: {
@@ -176,23 +176,23 @@ const CLUES: Record<ClueId, ClueDef> = {
     },
     investigation: {
       intro:
-        "A vitrine congelada parece riscada ao acaso, mas o reflexo reorganiza as letras em uma frase. Descubram se a mensagem é ameaça, confissão, pedido de testemunho ou parte de uma armadilha maior.",
+        "A vitrine congelada parece riscada ao acaso, mas o reflexo reorganiza as letras em uma frase. Descubram se a mensagem ï¿½ ameaï¿½a, confissï¿½o, pedido de testemunho ou parte de uma armadilha maior.",
       requiredEvidence: 3,
       actions: [
-        { id: "left_angle", label: "Ler pelo ângulo esquerdo", detail: "O reflexo forma as palavras 'não enterrem'. A frase está presa dentro do gelo, feita para surgir apenas sob análise cuidadosa." },
-        { id: "right_angle", label: "Ler pelo ângulo direito", detail: "O segundo trecho diz 'outro clã'. Os riscos tremem, mais próximos de desespero do que de declaração de guerra." },
-        { id: "breath_test", label: "Revelar com vapor", detail: "O vapor quente revela 'em silêncio'. A mensagem completa fica: 'não enterrem outro clã em silêncio'." },
-        { id: "shop_log", label: "Conferir o livro da loja", detail: "Genzo vendeu placas de espelho a um intermediário sem bandana. O comprador pediu cortes parecidos com espelhos de gelo e pagou com moedas de várias vilas." },
+        { id: "left_angle", label: "Ler pelo ï¿½ngulo esquerdo", detail: "O reflexo forma as palavras 'nï¿½o enterrem'. A frase estï¿½ presa dentro do gelo, feita para surgir apenas sob anï¿½lise cuidadosa." },
+        { id: "right_angle", label: "Ler pelo ï¿½ngulo direito", detail: "O segundo trecho diz 'outro clï¿½'. Os riscos tremem, mais prï¿½ximos de desespero do que de declaraï¿½ï¿½o de guerra." },
+        { id: "breath_test", label: "Revelar com vapor", detail: "O vapor quente revela 'em silï¿½ncio'. A mensagem completa fica: 'nï¿½o enterrem outro clï¿½ em silï¿½ncio'." },
+        { id: "shop_log", label: "Conferir o livro da loja", detail: "Genzo vendeu placas de espelho a um intermediï¿½rio sem bandana. O comprador pediu cortes parecidos com espelhos de gelo e pagou com moedas de vï¿½rias vilas." },
       ],
       conclusionQuestion: "O que essa mensagem quer provocar?",
       deductions: [
         { id: "revenge_order", label: "Ordenar um ataque contra Kiri" },
-        { id: "public_witness", label: "Forçar as vilas a testemunhar" },
-        { id: "kiri_confession", label: "Arrancar confissão imediata de Kiri" },
-        { id: "merchant_threat", label: "Ameaçar vendedores de espelho" },
+        { id: "public_witness", label: "Forï¿½ar as vilas a testemunhar" },
+        { id: "kiri_confession", label: "Arrancar confissï¿½o imediata de Kiri" },
+        { id: "merchant_threat", label: "Ameaï¿½ar vendedores de espelho" },
       ],
       correct: "public_witness",
-      success: "A equipe entende que a mensagem não ordena mortes. Ela tenta obrigar as vilas a encarar o apagamento do Clã Yuki diante de testemunhas.",
+      success: "A equipe entende que a mensagem nï¿½o ordena mortes. Ela tenta obrigar as vilas a encarar o apagamento do Clï¿½ Yuki diante de testemunhas.",
     },
   },
   suna_plaza: {
@@ -203,30 +203,30 @@ const CLUES: Record<ClueId, ClueDef> = {
     marker: { cell: "C5", label: "REF", color: "#00cec9", kind: "MARKER", name: "Fonte congelada" },
     witness: {
       key: "yuki_suna_plaza_guard",
-      name: "Settei, guarda da praça",
+      name: "Settei, guarda da praï¿½a",
       persona: "yuki_suna_plaza_guard",
       imageFile: "npcs/mission-clerk.png",
       cell: "D5",
     },
     investigation: {
       intro:
-        "A fonte congelou em lâminas de gelo que funcionam como pequenos espelhos. Cada ângulo aponta para uma vila diferente, como se alguém quisesse fabricar suspeitas cruzadas.",
+        "A fonte congelou em lï¿½minas de gelo que funcionam como pequenos espelhos. Cada ï¿½ngulo aponta para uma vila diferente, como se alguï¿½m quisesse fabricar suspeitas cruzadas.",
       requiredEvidence: 3,
       actions: [
-        { id: "north_marker", label: "Examinar o norte", detail: "Desse ponto aparece um selo de Kiri invertido. Ele parece colocado para ser encontrado, não para indicar uma rota real." },
-        { id: "west_marker", label: "Examinar o oeste", detail: "O reflexo mostra um carimbo de Konoha, mas não é oficial. É uma imitação boa o bastante para gerar suspeita." },
-        { id: "shadow_clock", label: "Marcar a sombra", detail: "Ao meio-dia, a sombra aponta para a própria Suna. O desenho inclui Suna entre os suspeitos, como se ninguém fosse inocente." },
-        { id: "guard_route", label: "Checar a ronda", detail: "A guarda foi desviada por um bilhete anônimo minutos antes do congelamento. Alguém preparou a praça sem ser visto." },
+        { id: "north_marker", label: "Examinar o norte", detail: "Desse ponto aparece um selo de Kiri invertido. Ele parece colocado para ser encontrado, nï¿½o para indicar uma rota real." },
+        { id: "west_marker", label: "Examinar o oeste", detail: "O reflexo mostra um carimbo de Konoha, mas nï¿½o ï¿½ oficial. ï¿½ uma imitaï¿½ï¿½o boa o bastante para gerar suspeita." },
+        { id: "shadow_clock", label: "Marcar a sombra", detail: "Ao meio-dia, a sombra aponta para a prï¿½pria Suna. O desenho inclui Suna entre os suspeitos, como se ninguï¿½m fosse inocente." },
+        { id: "guard_route", label: "Checar a ronda", detail: "A guarda foi desviada por um bilhete anï¿½nimo minutos antes do congelamento. Alguï¿½m preparou a praï¿½a sem ser visto." },
       ],
-      conclusionQuestion: "Qual é o objetivo desse desenho de reflexos?",
+      conclusionQuestion: "Qual ï¿½ o objetivo desse desenho de reflexos?",
       deductions: [
         { id: "escape_route", label: "Mostrar uma rota de fuga" },
         { id: "weather_fault", label: "Registrar efeito natural do vento" },
-        { id: "political_frame", label: "Fazer vilas acusarem umas às outras" },
-        { id: "yuki_signature", label: "Assinar um crime do Clã Yuki" },
+        { id: "political_frame", label: "Fazer vilas acusarem umas ï¿½s outras" },
+        { id: "yuki_signature", label: "Assinar um crime do Clï¿½ Yuki" },
       ],
       correct: "political_frame",
-      success: "A equipe percebe o padrão: os reflexos foram desenhados para criar acusações cruzadas entre vilas.",
+      success: "A equipe percebe o padrï¿½o: os reflexos foram desenhados para criar acusaï¿½ï¿½es cruzadas entre vilas.",
     },
   },
   konoha_market: {
@@ -244,15 +244,15 @@ const CLUES: Record<ClueId, ClueDef> = {
     },
     investigation: {
       intro:
-        "A caixa de espelhos em Konoha veio com documentos perfeitos demais. Se a rota foi fabricada, ela pode revelar quem está usando Hakuo como rosto público da crise.",
+        "A caixa de espelhos em Konoha veio com documentos perfeitos demais. Se a rota foi fabricada, ela pode revelar quem estï¿½ usando Hakuo como rosto pï¿½blico da crise.",
       requiredEvidence: 3,
       actions: [
-        { id: "seal_check", label: "Comparar lacres", detail: "Os lacres imitam três vilas, mas nenhum possui código interno verdadeiro. São cópias feitas para passar numa inspeção rápida." },
-        { id: "weight_check", label: "Pesar a caixa", detail: "A caixa pesa mais que espelhos comuns. Havia placas finas de gelo selado dentro dela, próprias para deixar marcas de Hyoton depois." },
-        { id: "route_check", label: "Traçar a rota", detail: "A rota sai de Kiri, passa por Suna e termina em Konoha sem justificativa comercial. O caminho parece construído para espalhar culpa." },
-        { id: "ink_check", label: "Testar a tinta", detail: "Os recibos parecem antigos, mas a tinta é recente. Alguém envelheceu os papéis para fingir que a carga era legítima." },
+        { id: "seal_check", label: "Comparar lacres", detail: "Os lacres imitam trï¿½s vilas, mas nenhum possui cï¿½digo interno verdadeiro. Sï¿½o cï¿½pias feitas para passar numa inspeï¿½ï¿½o rï¿½pida." },
+        { id: "weight_check", label: "Pesar a caixa", detail: "A caixa pesa mais que espelhos comuns. Havia placas finas de gelo selado dentro dela, prï¿½prias para deixar marcas de Hyoton depois." },
+        { id: "route_check", label: "Traï¿½ar a rota", detail: "A rota sai de Kiri, passa por Suna e termina em Konoha sem justificativa comercial. O caminho parece construï¿½do para espalhar culpa." },
+        { id: "ink_check", label: "Testar a tinta", detail: "Os recibos parecem antigos, mas a tinta ï¿½ recente. Alguï¿½m envelheceu os papï¿½is para fingir que a carga era legï¿½tima." },
       ],
-      conclusionQuestion: "Para qual conclusão a rota falsa aponta?",
+      conclusionQuestion: "Para qual conclusï¿½o a rota falsa aponta?",
       deductions: [
         { id: "konoha_order", label: "Konoha comprou a carga" },
         { id: "suna_smuggling", label: "Suna contrabandeou gelo" },
@@ -260,7 +260,7 @@ const CLUES: Record<ClueId, ClueDef> = {
         { id: "kiri_tax", label: "Kiri falsificou imposto" },
       ],
       correct: "third_party_frame",
-      success: "A equipe conclui que a carga foi plantada por alguém sem vila aparente. Hakuo está sendo usado como rosto público da crise.",
+      success: "A equipe conclui que a carga foi plantada por alguï¿½m sem vila aparente. Hakuo estï¿½ sendo usado como rosto pï¿½blico da crise.",
     },
   },
 };
@@ -347,7 +347,7 @@ export function availableYukiHeirNpcs(
   };
   if (channelId === originChannel(current)) {
     if (current.stage === "BRIEFING") return [{ key: clerkNpc.key, name: clerkNpc.name }];
-    if (current.stage === "RETURN") return [{ key: clerkNpc.key, name: `${clerkNpc.name} (relatório)` }];
+    if (current.stage === "RETURN") return [{ key: clerkNpc.key, name: `${clerkNpc.name} (relatï¿½rio)` }];
   }
   if (current.stage === "INVESTIGATE") {
     const clue = clueByChannel(channelId);
@@ -370,8 +370,8 @@ export async function yukiHeirMapHandle(
     if (state.stage === "BRIEFING" || state.stage === "RETURN") {
       entities.push(npcEntity(clerkNpc));
       return state.stage === "BRIEFING"
-        ? `\nMissão ativa: **${ctx.def.name}** - fale com o oficial usando \`/interagir npc\`. Origem: **${VILLAGE_NAMES[ctx.villageId]}**.`
-        : `\nMissão ativa: **${ctx.def.name}** - entregue o relatório final usando \`/interagir npc\`.`;
+        ? `\nMissï¿½o ativa: **${ctx.def.name}** - fale com o oficial usando \`/interagir npc\`. Origem: **${VILLAGE_NAMES[ctx.villageId]}**.`
+        : `\nMissï¿½o ativa: **${ctx.def.name}** - entregue o relatï¿½rio final usando \`/interagir npc\`.`;
     }
     return nextNote(state, ctx.def.name);
   }
@@ -381,13 +381,13 @@ export async function yukiHeirMapHandle(
     if (!clue) return null;
     if (state.clues?.[clue.id]) {
       entities.push({ ...clue.marker, name: `${clue.marker.name} (analisado)`, color: "#2ecc71" });
-      return `\nMissão ativa: **${ctx.def.name}** - pista já analisada: **${clue.title}**.`;
+      return `\nMissï¿½o ativa: **${ctx.def.name}** - pista jï¿½ analisada: **${clue.title}**.`;
     }
     entities.push(clue.marker, npcEntity(clue.witness));
     state.runningClue = clue.id;
     await setState(ctx.inst.id, state);
     void startCluePuzzle(interaction.channel, interaction.guildId ?? "global", ctx.inst.id, clue).catch(() => undefined);
-    return `\nMissão ativa: **${ctx.def.name}** - um painel atualizado de investigação foi enviado no canal.`;
+    return `\nMissï¿½o ativa: **${ctx.def.name}** - um painel atualizado de investigaï¿½ï¿½o foi enviado no canal.`;
   }
 
   if (interaction.channelId !== CENTRO_COMERCIAL_KIRI_CHANNEL_ID) return nextNote(state, ctx.def.name);
@@ -406,26 +406,26 @@ export async function yukiHeirMapHandle(
     if (!state.hakuoSeen) {
       state.hakuoSeen = true;
       await setState(ctx.inst.id, state);
-      await speak(interaction.channel, hakuoNpc, "(o time encontra os espelhos de gelo)", "Apresente Hakuo cercado por espelhos e reféns vivos, acusando as vilas de apagarem o Clã Yuki.", 0);
+      await speak(interaction.channel, hakuoNpc, "(o time encontra os espelhos de gelo)", "Apresente Hakuo cercado por espelhos e refï¿½ns vivos, acusando as vilas de apagarem o Clï¿½ Yuki.", 0);
     }
-    return `\nMissão ativa: **${ctx.def.name}** - confronte Hakuo Yuki usando \`/interagir npc\`.`;
+    return `\nMissï¿½o ativa: **${ctx.def.name}** - confronte Hakuo Yuki usando \`/interagir npc\`.`;
   }
   if (state.stage === "FIGHT") {
     if (!(await getActiveSession(interaction.channelId))) await startYukiCombat(interaction, ctx);
-    return `\nMissão ativa: **${ctx.def.name}** - derrote Hakuo e os clones para libertar os reféns.`;
+    return `\nMissï¿½o ativa: **${ctx.def.name}** - derrote Hakuo e os clones para libertar os refï¿½ns.`;
   }
   return nextNote(state, ctx.def.name);
 }
 
 function nextNote(state: YukiHeirState, missionName: string): string | null {
   if (state.stage === "INVESTIGATE") {
-    return `\nMissão ativa: **${missionName}** - investigue as pistas em <#${CENTRO_COMERCIAL_SUNA_CHANNEL_ID}>, <#${CENTRO_COMERCIAL_KIRI_CHANNEL_ID}>, <#${PRACA_SUNA_CHANNEL_ID}> e <#${CENTRO_COMERCIAL_CHANNEL_ID}>.`;
+    return `\nMissï¿½o ativa: **${missionName}** - investigue as pistas em <#${CENTRO_COMERCIAL_SUNA_CHANNEL_ID}>, <#${CENTRO_COMERCIAL_KIRI_CHANNEL_ID}>, <#${PRACA_SUNA_CHANNEL_ID}> e <#${CENTRO_COMERCIAL_CHANNEL_ID}>.`;
   }
   if (state.stage === "FINAL_TALK" || state.stage === "FIGHT") {
-    return `\nMissão ativa: **${missionName}** - siga para o Centro Comercial de Kirigakure: <#${CENTRO_COMERCIAL_KIRI_CHANNEL_ID}>.`;
+    return `\nMissï¿½o ativa: **${missionName}** - siga para o Centro Comercial de Kirigakure: <#${CENTRO_COMERCIAL_KIRI_CHANNEL_ID}>.`;
   }
   if (state.stage === "RETURN") {
-    return `\nMissão ativa: **${missionName}** - volte para a mansão da sua vila: <#${originChannel(state)}>.`;
+    return `\nMissï¿½o ativa: **${missionName}** - volte para a mansï¿½o da sua vila: <#${originChannel(state)}>.`;
   }
   return null;
 }
@@ -457,21 +457,21 @@ export async function interactYukiHeir(interaction: ChatInputCommandInteraction,
   const guildId = interaction.guildId ?? "global";
   const ctx = await resolveYukiHeir(interaction.user.id, guildId, interaction.channelId);
   if (!ctx) {
-    await interaction.reply({ content: "Você (ou sua party) não tem essa missão ativa.", ephemeral: true });
+    await interaction.reply({ content: "Vocï¿½ (ou sua party) nï¿½o tem essa missï¿½o ativa.", ephemeral: true });
     return;
   }
   const state = ensureState(ctx.inst.stateJson);
   const choice = availableYukiHeirNpcs(state, interaction.channelId).find((npc) => npc.key === npcKey);
   if (!choice) {
-    await interaction.reply({ content: "Esse NPC não está disponível nesta etapa.", ephemeral: true });
+    await interaction.reply({ content: "Esse NPC nï¿½o estï¿½ disponï¿½vel nesta etapa.", ephemeral: true });
     return;
   }
 
   const clue = Object.values(CLUES).find((candidate) => candidate.witness.key === npcKey);
   if (clue) {
     await interaction.deferReply({ ephemeral: true });
-    await speak(interaction.channel, clue.witness, "(o time pede depoimento sobre o gelo)", "Entregue a pista fixa desta testemunha sem resolver a investigação pelos jogadores.", 0);
-    await interaction.editReply(`Você ouviu **${choice.name}**. Use o painel de pista no canal ou \`/mapa\` para reabrir a cena.`);
+    await speak(interaction.channel, clue.witness, "(o time pede depoimento sobre o gelo)", "Entregue a pista fixa desta testemunha sem resolver a investigaï¿½ï¿½o pelos jogadores.", 0);
+    await interaction.editReply(`Vocï¿½ ouviu **${choice.name}**. Use o painel de pista no canal ou \`/mapa\` para reabrir a cena.`);
     return;
   }
 
@@ -483,7 +483,7 @@ export async function interactYukiHeir(interaction: ChatInputCommandInteraction,
   state.activeNpc = npcKey;
   await setState(ctx.inst.id, state);
   await runDialogue(interaction.channel, interaction.channelId, guildId, ctx, npcKey, "(o time inicia a conversa)", interaction.user);
-  await interaction.editReply(`Você se aproxima de **${choice.name}**. Continue por mensagens normais no canal.`);
+  await interaction.editReply(`Vocï¿½ se aproxima de **${choice.name}**. Continue por mensagens normais no canal.`);
 }
 
 export async function continueYukiHeirMessage(message: Message): Promise<boolean> {
@@ -521,8 +521,8 @@ async function runDialogue(
       clerkNpc,
       playerMessage,
       done
-        ? "Última fala: mande investigar os quatro locais congelados e avise que acusar Hakuo sem provas pode causar uma crise entre vilas."
-        : `Explique que a missão foi retirada por ${VILLAGE_NAMES[ctx.villageId]} e que Hakuo Yuki pode ser agressor, vítima ou isca.`,
+        ? "ï¿½ltima fala: mande investigar os quatro locais congelados e avise que acusar Hakuo sem provas pode causar uma crise entre vilas."
+        : `Explique que a missï¿½o foi retirada por ${VILLAGE_NAMES[ctx.villageId]} e que Hakuo Yuki pode ser agressor, vï¿½tima ou isca.`,
       done ? 2 : Math.min(turn - 1, 1),
     );
     if (done) {
@@ -547,8 +547,8 @@ async function runDialogue(
       hakuoNpc,
       playerMessage,
       fight
-        ? "Última fala: Hakuo percebe que foi usado, mas decide proteger os espelhos como prova. Forme clones de gelo e inicie combate."
-        : "Reaja às pistas do time com raiva e dúvida. Mostre que Hakuo não queria matar reféns; ele queria forçar um testemunho público.",
+        ? "ï¿½ltima fala: Hakuo percebe que foi usado, mas decide proteger os espelhos como prova. Forme clones de gelo e inicie combate."
+        : "Reaja ï¿½s pistas do time com raiva e dï¿½vida. Mostre que Hakuo nï¿½o queria matar refï¿½ns; ele queria forï¿½ar um testemunho pï¿½blico.",
       fight ? 2 : Math.min(turn - 1, 1),
     );
     if (fight) {
@@ -572,8 +572,8 @@ async function runDialogue(
       clerkNpc,
       playerMessage,
       done
-        ? "Última fala: registre que Hakuo foi contido, os reféns foram libertados e a manipulação política foi descoberta. Encerre a missão."
-        : "Receba o relatório sobre as quatro pistas, Hakuo, os clones e os reféns presos nos espelhos.",
+        ? "ï¿½ltima fala: registre que Hakuo foi contido, os refï¿½ns foram libertados e a manipulaï¿½ï¿½o polï¿½tica foi descoberta. Encerre a missï¿½o."
+        : "Receba o relatï¿½rio sobre as quatro pistas, Hakuo, os clones e os refï¿½ns presos nos espelhos.",
       3 + Math.min(turn - 1, 1),
     );
     if (done) {
@@ -656,25 +656,25 @@ function clueEmbed(state: YukiHeirState, clue: ClueDef, allowed: Set<string>, re
 
   return new EmbedBuilder()
     .setColor(ready ? 0x0984e3 : 0x74b9ff)
-    .setTitle(`Investigação - ${clue.title}`)
+    .setTitle(`Investigaï¿½ï¿½o - ${clue.title}`)
     .setDescription([
       clue.investigation.intro,
       "",
-      "A equipe precisa coletar evidências e fechar uma tese por consenso.",
+      "A equipe precisa coletar evidï¿½ncias e fechar uma tese por consenso.",
       ready ? "Escolham uma tese e apertem **Enviar tese** quando houver consenso." : undefined,
-      `Pistas concluídas: **${Object.values(state.clues ?? {}).filter(Boolean).length}/4** | Erros: **${state.mistakes ?? 0}/${YUKI_MAX_MISTAKES}**`,
+      `Pistas concluï¿½das: **${Object.values(state.clues ?? {}).filter(Boolean).length}/4** | Erros: **${state.mistakes ?? 0}/${YUKI_MAX_MISTAKES}**`,
       result ?? "",
     ].filter(Boolean).join("\n"))
     .addFields(
       {
-        name: "Evidências coletadas",
+        name: "Evidï¿½ncias coletadas",
         value: evidenceLines.length > 0
           ? evidenceLines.join("\n\n").slice(0, 1024)
-          : "Nenhuma evidência firme ainda. Dividam as análises pelos botões abaixo.",
+          : "Nenhuma evidï¿½ncia firme ainda. Dividam as anï¿½lises pelos botï¿½es abaixo.",
       },
       {
         name: "Equipe",
-        value: `${contributorCount(progress)}/${quorum} participante(s) contribuindo | ${progress.evidence.length}/${clue.investigation.requiredEvidence} evidências mínimas`,
+        value: `${contributorCount(progress)}/${quorum} participante(s) contribuindo | ${progress.evidence.length}/${clue.investigation.requiredEvidence} evidï¿½ncias mï¿½nimas`,
         inline: true,
       },
       {
@@ -686,7 +686,7 @@ function clueEmbed(state: YukiHeirState, clue: ClueDef, allowed: Set<string>, re
         name: "Tese",
         value: ready
           ? `${clue.investigation.conclusionQuestion}\n${voteLines.join("\n")}`.slice(0, 1024)
-          : "Bloqueada até a equipe reunir evidências suficientes e participação mínima.",
+          : "Bloqueada atï¿½ a equipe reunir evidï¿½ncias suficientes e participaï¿½ï¿½o mï¿½nima.",
       },
     );
 }
@@ -764,7 +764,7 @@ async function startCluePuzzle(channel: TextBasedChannel | null, guildId: string
       })) as ButtonInteraction;
       const [, , , actionKind, pick] = btn.customId.split(":");
       if (!actionKind || !pick) {
-          await btn.reply({ content: "Ação de investigação inválida.", ephemeral: true });
+          await btn.reply({ content: "Aï¿½ï¿½o de investigaï¿½ï¿½o invï¿½lida.", ephemeral: true });
         continue;
       }
       state = ensureState((await getInstance(instanceId))?.stateJson ?? "{}");
@@ -774,28 +774,28 @@ async function startCluePuzzle(channel: TextBasedChannel | null, guildId: string
       if (actionKind === "evidence") {
         const action = clue.investigation.actions.find((candidate) => candidate.id === pick);
         if (!action) {
-          await btn.reply({ content: "Essa evidência não existe nesta cena.", ephemeral: true });
+          await btn.reply({ content: "Essa evidï¿½ncia nï¿½o existe nesta cena.", ephemeral: true });
           continue;
         }
         if (progress.evidence.includes(pick)) {
           const sameKnownUser = progress.evidenceUsers[pick] === btn.user.id;
           const sameLegacyUser = !progress.evidenceUsers[pick] && progress.contributors[pick] === btn.user.username;
           if (sameKnownUser || sameLegacyUser || progress.investigators[btn.user.id]) {
-            await btn.reply({ content: "Essa evidência já foi registrada. Deixe outro membro validar outra parte do quadro.", ephemeral: true });
+            await btn.reply({ content: "Essa evidï¿½ncia jï¿½ foi registrada. Deixe outro membro validar outra parte do quadro.", ephemeral: true });
             continue;
           }
           progress.investigators[btn.user.id] = btn.user.username;
-          result = `**${btn.user.username}** validou uma evidência já encontrada. A participação da equipe foi atualizada.`;
+          result = `**${btn.user.username}** validou uma evidï¿½ncia jï¿½ encontrada. A participaï¿½ï¿½o da equipe foi atualizada.`;
           await setState(instanceId, state);
           await btn.update({ embeds: [clueEmbed(state, clue, allowed, result)], components: clueRows(instanceId, clue, state, allowed) });
           continue;
         }
         if (allowed.size > 1 && contributorCount(progress) < quorumSize(allowed) && progress.investigators[btn.user.id]) {
-          await btn.reply({ content: "Você já contribuiu nesta investigação. Deixe outro membro da party assumir uma evidência para liberar a tese.", ephemeral: true });
+          await btn.reply({ content: "Vocï¿½ jï¿½ contribuiu nesta investigaï¿½ï¿½o. Deixe outro membro da party assumir uma evidï¿½ncia para liberar a tese.", ephemeral: true });
           continue;
         }
         if (progress.evidence.includes(pick)) {
-          await btn.reply({ content: "Essa evidência já foi registrada no quadro.", ephemeral: true });
+          await btn.reply({ content: "Essa evidï¿½ncia jï¿½ foi registrada no quadro.", ephemeral: true });
           continue;
         }
         progress.evidence.push(pick);
@@ -804,7 +804,7 @@ async function startCluePuzzle(channel: TextBasedChannel | null, guildId: string
         progress.investigators[btn.user.id] = btn.user.username;
         progress.votes = {};
         progress.voters = {};
-        result = `**${btn.user.username}** adicionou uma evidência ao quadro. A votação de tese foi reiniciada para considerar o novo dado.`;
+        result = `**${btn.user.username}** adicionou uma evidï¿½ncia ao quadro. A votaï¿½ï¿½o de tese foi reiniciada para considerar o novo dado.`;
         await setState(instanceId, state);
         await btn.update({ embeds: [clueEmbed(state, clue, allowed, result)], components: clueRows(instanceId, clue, state, allowed) });
         continue;
@@ -813,7 +813,7 @@ async function startCluePuzzle(channel: TextBasedChannel | null, guildId: string
       if (actionKind === "clear") {
         delete progress.votes[btn.user.id];
         delete progress.voters[btn.user.id];
-        result = `**${btn.user.username}** limpou o próprio voto.`;
+        result = `**${btn.user.username}** limpou o prï¿½prio voto.`;
         await setState(instanceId, state);
         await btn.update({ embeds: [clueEmbed(state, clue, allowed, result)], components: clueRows(instanceId, clue, state, allowed) });
         continue;
@@ -822,7 +822,7 @@ async function startCluePuzzle(channel: TextBasedChannel | null, guildId: string
       if (actionKind === "submit") {
         const consensus = consensusPick(progress, quorumSize(allowed));
         if (!consensus) {
-          await btn.reply({ content: "Ainda não há consenso. Em party com 2+ pessoas, pelo menos dois membros precisam votar na mesma tese.", ephemeral: true });
+          await btn.reply({ content: "Ainda nï¿½o hï¿½ consenso. Em party com 2+ pessoas, pelo menos dois membros precisam votar na mesma tese.", ephemeral: true });
           continue;
         }
         if (consensus === clue.investigation.correct) {
@@ -833,7 +833,7 @@ async function startCluePuzzle(channel: TextBasedChannel | null, guildId: string
           if (allCluesDone(state)) {
             state.stage = "FINAL_TALK";
             await markObjective(instanceId, "decifrar_padrao_yuki");
-            result += `\n\nAs quatro pistas apontam para uma armadilha política. Confronte Hakuo no Centro Comercial de Kirigakure: <#${CENTRO_COMERCIAL_KIRI_CHANNEL_ID}>.`;
+            result += `\n\nAs quatro pistas apontam para uma armadilha polï¿½tica. Confronte Hakuo no Centro Comercial de Kirigakure: <#${CENTRO_COMERCIAL_KIRI_CHANNEL_ID}>.`;
           }
           await setState(instanceId, state);
           await btn.update({ embeds: [clueEmbed(state, clue, allowed, result)], components: [] });
@@ -843,12 +843,12 @@ async function startCluePuzzle(channel: TextBasedChannel | null, guildId: string
         state.mistakes = (state.mistakes ?? 0) + 1;
         progress.votes = {};
         progress.voters = {};
-        result = "**Tese enviada, mas rejeitada pelos fatos.** A conclusão não fecha com o quadro; revisem os votos antes de enviar de novo.";
+        result = "**Tese enviada, mas rejeitada pelos fatos.** A conclusï¿½o nï¿½o fecha com o quadro; revisem os votos antes de enviar de novo.";
         if ((state.mistakes ?? 0) >= YUKI_MAX_MISTAKES) {
           state.runningClue = null;
           await prisma.missionInstance.update({ where: { id: instanceId }, data: { status: "FAILED", stateJson: JSON.stringify(state) } });
           await btn.update({
-            embeds: [new EmbedBuilder().setColor(0xc0392b).setTitle("Caso perdido").setDescription("Erros demais destruíram as pistas e a facção por trás de Hakuo sumiu.")],
+            embeds: [new EmbedBuilder().setColor(0xc0392b).setTitle("Caso perdido").setDescription("Erros demais destruï¿½ram as pistas e a facï¿½ï¿½o por trï¿½s de Hakuo sumiu.")],
             components: [],
           });
           return;
@@ -859,19 +859,19 @@ async function startCluePuzzle(channel: TextBasedChannel | null, guildId: string
       }
 
       if (actionKind !== "deduce") {
-        await btn.reply({ content: "Ação de investigação inválida.", ephemeral: true });
+        await btn.reply({ content: "Aï¿½ï¿½o de investigaï¿½ï¿½o invï¿½lida.", ephemeral: true });
         continue;
       }
       const progressReady = evidenceReady(clue, progress, quorumSize(allowed));
       if (!progressReady) {
-        await btn.reply({ content: "Ainda faltam evidências ou participação da equipe para fechar uma tese.", ephemeral: true });
+        await btn.reply({ content: "Ainda faltam evidï¿½ncias ou participaï¿½ï¿½o da equipe para fechar uma tese.", ephemeral: true });
         continue;
       }
       progress.votes[btn.user.id] = pick;
       progress.voters[btn.user.id] = btn.user.username;
       const consensus = consensusPick(progress, quorumSize(allowed));
       result = consensus
-        ? `**${btn.user.username}** votou. Há consenso; use **Enviar tese** para registrar a resposta final.`
+        ? `**${btn.user.username}** votou. Hï¿½ consenso; use **Enviar tese** para registrar a resposta final.`
         : `**${btn.user.username}** votou. A equipe ainda precisa chegar ao mesmo entendimento.`;
       await setState(instanceId, state);
       await btn.update({ embeds: [clueEmbed(state, clue, allowed, result)], components: clueRows(instanceId, clue, state, allowed) });
@@ -880,7 +880,7 @@ async function startCluePuzzle(channel: TextBasedChannel | null, guildId: string
     state.runningClue = null;
     await setState(instanceId, state);
     await msg.edit({ embeds: [clueEmbed(state, clue, allowed, "A cena esfriou, mas o quadro foi preservado.")], components: clueRows(instanceId, clue, state, allowed, true) }).catch(() => undefined);
-    await channel.send("A pista esfriou. Use `/mapa` neste canal para retomar a análise.");
+    await channel.send("A pista esfriou. Use `/mapa` neste canal para retomar a anï¿½lise.");
   }
 }
 
@@ -893,13 +893,7 @@ function starterFrom(char: Awaited<ReturnType<typeof getOrCreateCharacter>>): St
     chakra: char.resources?.chakra ?? 100,
     energia: char.resources?.energia ?? 100,
     jutsuIds: char.jutsus.map((j: { jutsuId: string }) => j.jutsuId),
-    attrs: {
-      ninjutsu: char.attributes?.ninjutsu ?? 1,
-      iryo: char.attributes?.iryo ?? 1,
-      taijutsu: char.attributes?.taijutsu ?? 1,
-      genjutsu: char.attributes?.genjutsu ?? 1,
-      kenjutsu: char.attributes?.kenjutsu ?? 1,
-    },
+    attrs: attrsFromRow(char.attributes ?? {}),
   };
 }
 
@@ -927,7 +921,7 @@ async function startYukiCombatFromActor(
   });
   await cacheAttrs(session, attrsById);
   if (channel && "send" in channel) {
-    await channel.send(`Hakuo ergue espelhos de gelo e dois clones surgem na névoa. ${players.length} ninja(s) entram no combate. Use \`/mapa\`.`);
+    await channel.send(`Hakuo ergue espelhos de gelo e dois clones surgem na nï¿½voa. ${players.length} ninja(s) entram no combate. Use \`/mapa\`.`);
   }
 }
 
@@ -954,6 +948,6 @@ export async function onYukiHeirCombatWon(interaction: ChatInputCommandInteracti
   await markObjective(inst.id, "derrotar_herdeiro_yuki");
   await markObjective(inst.id, "libertar_refens_espelhos");
   await setState(inst.id, state);
-  await interaction.followUp(`Hakuo foi contido e os reféns foram libertados dos espelhos. Volte para a mansão da sua vila: <#${originChannel(state)}>.`);
+  await interaction.followUp(`Hakuo foi contido e os refï¿½ns foram libertados dos espelhos. Volte para a mansï¿½o da sua vila: <#${originChannel(state)}>.`);
 }
 

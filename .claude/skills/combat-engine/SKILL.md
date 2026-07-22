@@ -65,7 +65,7 @@ custo  = cost * (BASICO 1.0 | CONTROLADO 0.7 | MESTRE 0.55)
 | BURN | 8 dmg/turno; -5% dano TAI/KEN por stack; **5 stacks = explode 40 e zera** | sim |
 | POISON | `2 + (stacks-1) * 1` por turno | sim |
 | BLEED | 5 dmg/turno; corta cura pela metade; portador perde 6 HP ao usar TAI/KEN | sim |
-| STUN | não pode agir | **não** (só estende duração) |
+| STUN | não pode agir nem mover | **não** (só estende duração) |
 | SLOW | movimento * 0.5 | sim (sem efeito extra) |
 | ROOT | não pode mover | sim |
 | CONFUSION | redireciona alvo | sim |
@@ -74,6 +74,8 @@ custo  = cost * (BASICO 1.0 | CONTROLADO 0.7 | MESTRE 0.55)
 | DISARM | dropa arma na célula (`DroppedItem`) | — |
 
 Ao adicionar efeito: `EFFECT_IDS` em `enums.ts` → número em `BALANCE.effects` → comportamento puro em `effects.ts` → consumo na engine (`useAbility` p/ modificador de dano, `resolveHit` p/ on-hit, `endTurn` p/ tick). Pular qualquer passo = efeito inerte.
+
+Helpers de `effects.ts` que valem conhecer: `isActive` (interno) faz todo check ser `duration > 0` — use-o, não invente guarda nova; `defaultDurationFor(id)` dá a duração quando o jutsu omite; `clampDuration(id, n)` aplica teto por efeito (hoje só POISON).
 
 ## Terreno
 
@@ -89,10 +91,10 @@ Não são teoria — são gaps reais. Se o pedido tocar num deles, avise ou cons
 
 1. **`genjutsuDuration()` nunca chamada pela engine.** Genjutsu escala 1.0 e não estende duração. O atributo genjutsu praticamente não faz nada em combate hoje (só resistência Yamanaka). **Maior gap aberto.**
 2. **`heightAttackRangeBonus: 1` nunca lido.** Altura não dá alcance.
-3. **`tickEffect` retorna `exploded: false` sempre** — a explosão de BURN só acontece em `applyBurnStacks`, no on-hit. Queimadura nunca explode por tick.
-4. **`elementModifiers.costMult`** definido no tipo, nunca aplicado.
+3. **`elementModifiers.costMult`** definido no tipo, nunca aplicado.
+4. **BURN nunca explode por tick** — só no on-hit, via `applyBurnStacks`. Se é intencional, ok; se não, o tick precisa checar o cap.
 
-Já corrigidos: DISARM disparava com dano 0 (desarmava quem esquivou); `bleedExtraOnPhysical` estava importada mas nunca chamada — agora o atacante que sangra perde `BLEED.extraOnTaiKen` HP ao usar TAI/KEN.
+Já corrigidos: DISARM disparava com dano 0; `bleedExtraOnPhysical` estava morto; STUN não bloqueava movimento; STUN lia efeito pré-tick e logava "perde o turno" já expirado; morte por tick travava o turno num derrotado; explosões múltiplas no mesmo hit se sobrescreviam; `POISON.maxDuration` e os `defaultDuration` não eram lidos.
 
 ## Testar
 

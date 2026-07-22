@@ -13,11 +13,24 @@ import {
 
 const SCALE: Record<Attribute, number> = {
   ninjutsu: BALANCE.ninjutsuScaling,
-  iryo: BALANCE.iryoScaling,
   taijutsu: BALANCE.taijutsuScaling,
-  kenjutsu: BALANCE.kenjutsuScaling,
-  genjutsu: 1.0,
+  genjutsu: BALANCE.genjutsuScaling,
+  bukijutsu: BALANCE.bukijutsuScaling,
+  iryoNinjutsu: BALANCE.iryoNinjutsuScaling,
+  fuinjutsu: BALANCE.fuinjutsuScaling,
+  kugutsu: BALANCE.kugutsuScaling,
+  senjutsu: BALANCE.senjutsuScaling,
+  dojutsu: BALANCE.dojutsuScaling,
 };
+
+// Atributos que ainda nao afetam nada em combate. A UI de distribuicao usa isto
+// para avisar o jogador antes de ele gastar ponto.
+export const ATTRIBUTES_SEM_EFEITO: readonly Attribute[] = [
+  "fuinjutsu",
+  "kugutsu",
+  "senjutsu",
+  "dojutsu",
+];
 
 export interface DamageContext {
   attrValue: number;
@@ -34,10 +47,10 @@ export function computeDamage(ability: Ability, ctx: DamageContext): number {
   if (!ability.baseDamage) return 0;
   const scale = ability.scalingAttribute ? SCALE[ability.scalingAttribute] : 0;
   let dmg = ability.baseDamage + ctx.attrValue * scale;
-  if (ability.category === "TAIJUTSU" || ability.category === "KENJUTSU") {
+  if (ability.category === "TAIJUTSU" || ability.category === "BUKIJUTSU") {
     if (ctx.burnTaiMult !== undefined) dmg *= ctx.burnTaiMult;
   }
-  if (ability.category === "KENJUTSU") dmg += ctx.weaponDamage ?? 0;
+  if (ability.category === "BUKIJUTSU") dmg += ctx.weaponDamage ?? 0;
   if (ctx.scenarioDmgMult) dmg *= ctx.scenarioDmgMult;
   if (ctx.heightBonus) dmg *= 1.1;
   return Math.max(0, Math.round(dmg));
@@ -45,7 +58,7 @@ export function computeDamage(ability: Ability, ctx: DamageContext): number {
 
 export function computeHeal(ability: Ability, iryo: number, healMult = 1): number {
   if (!ability.baseHeal) return 0;
-  const dmg = ability.baseHeal + iryo * SCALE.iryo;
+  const dmg = ability.baseHeal + iryo * SCALE.iryoNinjutsu;
   return Math.max(0, Math.round(dmg * healMult));
 }
 
@@ -61,7 +74,7 @@ export interface DodgeContext {
 export function dodgeChance(ctx: DodgeContext): number {
   const { ability } = ctx;
   if (ability.undodgeable) return 0;
-  const physical = ability.category === "TAIJUTSU" || ability.category === "KENJUTSU";
+  const physical = ability.category === "TAIJUTSU" || ability.category === "BUKIJUTSU";
   let chance: number;
   let cap: number;
   if (physical) {
@@ -99,7 +112,7 @@ export function resolveAreaCells(
       coords = target ? [target] : [];
       break;
     case "LINE":
-      if (target) coords = lineCells(origin, target, ability.range);
+      if (target) coords = lineCells(origin, target, ability.range, rows, cols);
       break;
     case "CONE":
       if (target) coords = coneCells(origin, target, ability.range, rows, cols);

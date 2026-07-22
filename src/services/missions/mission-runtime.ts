@@ -1,7 +1,7 @@
 import type { ChatInputCommandInteraction, Message, TextBasedChannel } from "discord.js";
 import { prisma } from "../../db/client.js";
 import { getMission } from "../../data/missions/index.js";
-import { getOrCreateCharacter } from "../characters/character-service.js";
+import { getOrCreateCharacter, attrsFromRow } from "../characters/character-service.js";
 import type { SessionFull } from "../combat/combat-engine.js";
 import { startCombat, getActiveSession } from "../combat/combat-engine.js";
 import { NpcAiService } from "../npc-ai/npc-ai-service.js";
@@ -109,7 +109,8 @@ export async function triggerBanditForest(
     hpCurrent: number;
     hpMax: number;
     resources?: { chakra: number; energia: number } | null;
-    attributes?: { ninjutsu: number; iryo: number; taijutsu: number; genjutsu: number; kenjutsu: number } | null;
+    // aceita a linha de CharacterAttributes crua; os atributos saem via attrsFromRow
+    attributes?: Record<string, unknown> | null;
     jutsus: { jutsuId: string }[];
   },
   instanceId: string,
@@ -132,13 +133,7 @@ export async function triggerBanditForest(
     chakra: char.resources?.chakra ?? 100,
     energia: char.resources?.energia ?? 100,
     jutsuIds: char.jutsus.map((j) => j.jutsuId),
-    attrs: {
-      ninjutsu: char.attributes?.ninjutsu ?? 1,
-      iryo: char.attributes?.iryo ?? 1,
-      taijutsu: char.attributes?.taijutsu ?? 1,
-      genjutsu: char.attributes?.genjutsu ?? 1,
-      kenjutsu: char.attributes?.kenjutsu ?? 1,
-    },
+    attrs: attrsFromRow(char.attributes ?? {}),
     instanceId,
     playerMessage: "(o ninja chega na floresta, pronto para o confronto)",
     reply: (c) =>
@@ -175,13 +170,7 @@ export async function runBanditMessage(message: Message): Promise<void> {
     chakra: char.resources!.chakra,
     energia: char.resources!.energia,
     jutsuIds: char.jutsus.map((j) => j.jutsuId),
-    attrs: {
-      ninjutsu: char.attributes!.ninjutsu,
-      iryo: char.attributes!.iryo,
-      taijutsu: char.attributes!.taijutsu,
-      genjutsu: char.attributes!.genjutsu,
-      kenjutsu: char.attributes!.kenjutsu,
-    },
+    attrs: attrsFromRow(char.attributes!),
     instanceId: ctx.inst.id,
     playerMessage: message.content,
     reply: (c) =>

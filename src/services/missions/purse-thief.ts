@@ -5,7 +5,7 @@ import {
   PRACA_VILA_DA_FOLHA_CHANNEL_ID,
 } from "../../data/scenarios/index.js";
 import { getMission } from "../../data/missions/index.js";
-import { getOrCreateCharacter } from "../characters/character-service.js";
+import { getOrCreateCharacter, attrsFromRow } from "../characters/character-service.js";
 import { getActiveSession, startCombat } from "../combat/combat-engine.js";
 import { NpcAiService } from "../npc-ai/npc-ai-service.js";
 import { getPersona } from "../npc-ai/personas.js";
@@ -361,13 +361,7 @@ async function startThiefCombat(
     chakra: o.char.resources?.chakra ?? 100,
     energia: o.char.resources?.energia ?? 100,
     jutsuIds: o.char.jutsus.map((j: { jutsuId: string }) => j.jutsuId),
-    attrs: {
-      ninjutsu: o.char.attributes?.ninjutsu ?? 1,
-      iryo: o.char.attributes?.iryo ?? 1,
-      taijutsu: o.char.attributes?.taijutsu ?? 1,
-      genjutsu: o.char.attributes?.genjutsu ?? 1,
-      kenjutsu: o.char.attributes?.kenjutsu ?? 1,
-    },
+    attrs: attrsFromRow(o.char.attributes ?? {}),
   });
 
   const session = await startCombat({

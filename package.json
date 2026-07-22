@@ -8,19 +8,26 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "start": "node dist/index.js",
+    "start:prod": "prisma db push --skip-generate && prisma generate && tsx src/index.ts",
+    "postinstall": "prisma generate",
     "dev": "tsx watch src/index.ts",
     "register": "tsx src/register-commands.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:push": "prisma db push",
     "seed": "tsx prisma/seed.ts",
+    "icons": "tsx scripts/resize-icons.mjs",
+    "bg": "tsx scripts/optimize-bg.mjs",
     "test": "vitest run",
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@fastify/cookie": "^11.1.2",
+    "@fastify/static": "^10.1.0",
     "@prisma/client": "^5.22.0",
     "discord.js": "^14.16.3",
     "dotenv": "^16.4.5",
+    "fastify": "^5.10.0",
     "sharp": "^0.33.5"
   },
   "devDependencies": {

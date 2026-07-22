@@ -2,7 +2,7 @@ import type { ChatInputCommandInteraction, TextBasedChannel } from "discord.js";
 import { prisma } from "../../db/client.js";
 import { CAMPO_ABERTO_CHANNEL_ID } from "../../data/scenarios/index.js";
 import { getMission } from "../../data/missions/index.js";
-import { getOrCreateCharacter } from "../characters/character-service.js";
+import { getOrCreateCharacter, attrsFromRow } from "../characters/character-service.js";
 import { getActiveSession, startCombat } from "../combat/combat-engine.js";
 import { partyMemberIds } from "../party/party-service.js";
 import { cacheAttrs, gatherPartyPlayers } from "./combat-party.js";
@@ -122,13 +122,7 @@ async function startOutpostCombat(
     chakra: char.resources?.chakra ?? 100,
     energia: char.resources?.energia ?? 100,
     jutsuIds: char.jutsus.map((j: { jutsuId: string }) => j.jutsuId),
-    attrs: {
-      ninjutsu: char.attributes?.ninjutsu ?? 1,
-      iryo: char.attributes?.iryo ?? 1,
-      taijutsu: char.attributes?.taijutsu ?? 1,
-      genjutsu: char.attributes?.genjutsu ?? 1,
-      kenjutsu: char.attributes?.kenjutsu ?? 1,
-    },
+    attrs: attrsFromRow(char.attributes ?? {}),
   });
 
   const session = await startCombat({
