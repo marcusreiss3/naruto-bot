@@ -14,6 +14,17 @@ export interface AppliedEffect {
   stacks?: number;
   duration?: number;
   chance?: number; // 0..1, default 1
+  // Efeitos empilháveis (ex: SHIELD) normalmente SOMAM stacks vindos de
+  // qualquer fonte. Um `replaceGroup` marca "isto é uma FORMA/estado, não um
+  // reforço" — ao reaplicar, substitui só a própria contribuição anterior do
+  // mesmo grupo (ex: Super Tamanho Múltiplo troca a Barreira do Tamanho
+  // Múltiplo em vez de somar), mas Barreira de outras fontes/grupos continua
+  // somando normalmente. Ver applyEffect() em combat-engine.ts.
+  replaceGroup?: string;
+  // Quando ESTE efeito expirar (duração chega a 0), aplica outro efeito no
+  // mesmo alvo — ex: a Sobrecarga (EMPOWERED) da Pílula Secreta vira Defesa
+  // Reduzida quando passa: o corpo cobra o preço depois do surto de força.
+  onExpire?: { effectId: EffectId; stacks?: number; duration?: number };
 }
 
 export interface AbilityRequirements {

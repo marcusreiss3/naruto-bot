@@ -110,6 +110,7 @@ export const EFFECT_IDS = [
   "SHIELD", // barreira: stacks = pontos de dano absorvidos antes do HP
   "CHAKRA_DRAIN", // perde chakra por turno
   "HASTE", // acelerado: mais movimento, esquiva e chance de fuga
+  "EMPOWERED", // sobrecarga: dano de saida multiplicado por tempo limitado (ex: Pilula Secreta do Akimichi)
   // ---- exclusivo do cla Nara ----
   "SHADOW_BOUND", // vinculo de sombra: sem dano, mas trava movimento E reacao (Esquivar/Bloquear/Aparar)
   // ---- exclusivos de kekkei genkai ----
@@ -148,6 +149,7 @@ export const EFFECT_LABELS: Record<EffectId, string> = {
   SHIELD: "Barreira",
   CHAKRA_DRAIN: "Dreno de Chakra",
   HASTE: "Aceleração",
+  EMPOWERED: "Sobrecarga",
   SHADOW_BOUND: "Vínculo de Sombra",
   CRYSTALLIZED: "Cristalizado",
   PRISM: "Prisma",

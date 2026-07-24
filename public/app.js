@@ -18,7 +18,22 @@ const ELEMENTS = [
   { id: "EXPLOSAO", name: "Explosão", icon: "", img: "/assets/icons/footer/explosao.png", color: "#c9a227" },
   // Árvores de clã (gate por clanId em vez de elemento — ver clanGate abaixo).
   { id: "NARA", name: "Nara", icon: "🌑", color: "#5c5c7a", clanGate: "nara" },
+  { id: "HYUUGA", name: "Hyuuga", icon: "👁️", color: "#c9d6e3", clanGate: "hyuuga" },
+  { id: "AKIMICHI", name: "Akimichi", icon: "🍖", color: "#d98e3a", clanGate: "akimichi" },
 ];
+// Rótulo de atributo pro chip de requisito extra (reqAttribute) no modal —
+// mesmos rótulos de ATTRIBUTE_LABELS em src/config/enums.ts.
+const ATTR_LABEL = {
+  ninjutsu: "Ninjutsu",
+  taijutsu: "Taijutsu",
+  genjutsu: "Genjutsu",
+  bukijutsu: "Bukijutsu",
+  iryoNinjutsu: "Iryō Ninjutsu",
+  fuinjutsu: "Fūinjutsu",
+  kugutsu: "Kugutsu",
+  senjutsu: "Senjutsu",
+  dojutsu: "Dōjutsu",
+};
 // TEMPORARIO: mostra TODOS os elementos no footer (preview de icones), ignorando
 // o desbloqueio. Voltar pra false quando terminar de conferir.
 const PREVIEW_ALL_ELEMENTS = false;
@@ -37,15 +52,17 @@ const ELEMENT_BG = {
 const GLOSSARY = [
   { re: "Queimadura(?:s)?", tip: "Queimadura: o alvo perde 8 de vida por turno e causa menos dano físico a cada acúmulo. Ao juntar 5 acúmulos, explode por 40 de dano e zera." },
   { re: "Sangramento", tip: "Sangramento: o alvo perde 5 de vida por turno, recebe metade da cura e ainda perde 6 de vida sempre que usa um golpe físico." },
+  { re: "Veneno", tip: "Veneno: o alvo perde vida por turno, e a perda cresce a cada acúmulo (até um teto de rodadas)." },
   // ATENCAO: alternativas da MAIS LONGA para a mais curta — a regex casa a primeira
   // que servir, entao "Atordoa" antes de "atordoado" cortaria a palavra no meio.
   { re: "Atordoamento|Atordoarem|Atordoar|atordoados|atordoado|Atordoam|Atordoa", tip: "Atordoamento: o alvo não pode agir nem se mover no turno. Perde a vez." },
   { re: "Encharcando|Encharcad[oa]s|Encharcad[oa]", tip: "Encharcado: o alvo está molhado. Toma dano extra de jutsus de Raio e serve de condutor para acertos em cadeia." },
   { re: "Barreira", tip: "Barreira: escudo que absorve parte do dano recebido antes de descontar da sua vida." },
   { re: "preso(?:s)? ao chão", tip: "Preso ao chão: o alvo não consegue sair do lugar. Ainda pode atacar." },
-  { re: "mais lento(?:s)?", tip: "Lentidão: o movimento do alvo cai pela metade." },
+  { re: "mais lento(?:s)?|Lentidão", tip: "Lentidão: o movimento do alvo cai pela metade." },
   { re: "reduzindo a defesa|reduz a defesa", tip: "Defesa reduzida: o alvo perde 15% de chance de esquivar dos ataques." },
   { re: "não pode(?:m)? ser esquivad[oa](?:s)?", tip: "Não pode ser esquivado: ignora a reação de esquiva do alvo. O ataque sempre acerta." },
+  { re: "bloque\\w* o Ninjutsu|Bloqueio de Ninjutsu", tip: "Bloqueio de Ninjutsu: o alvo não consegue usar jutsu de categoria Ninjutsu enquanto durar. Não drena chakra (isso seria Dreno de Chakra, outro efeito) — só tranca esse tipo de técnica." },
   { re: "não consegue fugir|sem poder fugir|não conseguem fugir", tip: "Fuga bloqueada: o alvo não pode usar a ação de fugir do combate enquanto o efeito durar." },
   // ---- exclusivo do clã Nara ----
   { re: "Vínculo de Sombra", tip: "Vínculo de Sombra: sem dano, mas o alvo não pode se mover nem reagir (Esquivar/Bloquear/Aparar) enquanto durar — o corpo dele copia o do usuário. Só uma Esquiva bem-sucedida ANTES do vínculo prender evita o efeito." },
@@ -78,6 +95,65 @@ function highlightEffects(text) {
     return `<span class="fx" tabindex="0" data-tip="${escHtml(entry.tip)}">${match}</span>`;
   });
 }
+
+// Tooltip do glossário (.fx): um único elemento fixed reaproveitado, medido e
+// reposicionado por JS a cada hover/foco — não dá pra centralizar isso só em
+// CSS (::after) sem estourar a borda da tela quando a palavra tá perto da
+// margem do modal. "Empurra" o balão pra dentro da viewport e vira a seta.
+let fxTip = null;
+function ensureFxTip() {
+  if (!fxTip) {
+    fxTip = document.createElement("div");
+    fxTip.className = "fx-tip";
+    fxTip.setAttribute("role", "tooltip");
+    document.body.appendChild(fxTip);
+  }
+  return fxTip;
+}
+function showFxTip(el) {
+  const tip = ensureFxTip();
+  tip.textContent = el.dataset.tip || "";
+  tip.classList.add("show");
+  const margin = 10;
+  const r = el.getBoundingClientRect();
+  const tr = tip.getBoundingClientRect(); // já com texto certo, mas ainda no lugar antigo — só o tamanho importa aqui
+
+  // horizontal: centraliza na palavra, depois empurra pra dentro da tela
+  let left = r.left + r.width / 2 - tr.width / 2;
+  left = Math.max(margin, Math.min(left, window.innerWidth - tr.width - margin));
+
+  // vertical: prefere acima da palavra; sem espaço, desce pra baixo dela
+  const above = r.top - tr.height - 9;
+  const below = r.bottom + 9;
+  const up = above >= margin;
+  const top = up ? above : below;
+
+  tip.style.left = left + "px";
+  tip.style.top = top + "px";
+  tip.classList.toggle("dir-up", up);
+  tip.classList.toggle("dir-down", !up);
+
+  // seta aponta pro centro da palavra, mas sem sair da caixa do balão
+  const arrowLeft = Math.max(10, Math.min(r.left + r.width / 2 - left, tr.width - 10));
+  tip.style.setProperty("--arrowLeft", arrowLeft + "px");
+}
+function hideFxTip() {
+  if (fxTip) fxTip.classList.remove("show");
+}
+document.addEventListener("mouseover", (e) => {
+  const fx = e.target.closest(".fx");
+  if (fx) showFxTip(fx);
+});
+document.addEventListener("mouseout", (e) => {
+  if (e.target.closest(".fx")) hideFxTip();
+});
+document.addEventListener("focusin", (e) => {
+  const fx = e.target.closest(".fx");
+  if (fx) showFxTip(fx);
+});
+document.addEventListener("focusout", (e) => {
+  if (e.target.closest(".fx")) hideFxTip();
+});
 
 const glow = (hex) => {
   const n = parseInt(hex.slice(1), 16);
@@ -352,6 +428,9 @@ function openModal(n) {
   meta += `<span class="meta-h">Para aprender</span>`;
   meta += chip("Pontos", n.cost);
   meta += chip("Nível", n.reqLevel);
+  if (n.reqAttribute) {
+    meta += chip(ATTR_LABEL[n.reqAttribute.attribute] || n.reqAttribute.attribute, n.reqAttribute.value);
+  }
   meta += chip("Ninjutsu", n.reqNinjutsu);
   $("mMeta").innerHTML = meta;
 

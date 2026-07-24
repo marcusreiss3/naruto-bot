@@ -9,7 +9,14 @@
 // REGRA DE OURO: nada vindo do cliente é confiável. buyNode revalida TUDO
 // contra o banco dentro de uma transação. O front só manda o nodeId.
 import { prisma } from "../../db/client.js";
-import { ELEMENTS, isKekkeiGenkai, type Element, type Shape } from "../../config/enums.js";
+import {
+  ATTRIBUTE_LABELS,
+  ELEMENTS,
+  isKekkeiGenkai,
+  type Attribute,
+  type Element,
+  type Shape,
+} from "../../config/enums.js";
 import { ELEMENT_TREES, getNode, type SkillNodeDef } from "../../data/element-trees/index.js";
 import { CLAN_TREES } from "../../data/clan-trees/index.js";
 import { getAbility, getClan } from "../../data/index.js";
@@ -88,6 +95,10 @@ export interface CharSnapshot {
   elements: Element[]; // elementos desbloqueados
   owned: Set<string>; // ids de nó comprados
   clanId: string | null; // cla do personagem (define o primeiro elemento)
+  // valor BRUTO de cada atributo — usado só pelo gate reqAttribute (Hyuuga:
+  // Byakugan pede Dojutsu, o resto pede Taijutsu). Não é orçamento: gastar
+  // pontos na árvore não consome daqui, é só um requisito de nível.
+  attributes: Partial<Record<Attribute, number>>;
 }
 
 // Soma o custo dos nós possuídos.
@@ -102,7 +113,7 @@ function snapFrom(char: {
   name: string;
   displayName: string | null;
   level: number;
-  attributes: { ninjutsu: number } | null;
+  attributes: Partial<Record<Attribute, number>> | null;
   elements: { element: string }[];
   skillNodes: { nodeId: string }[];
   clan: { clanId: string } | null;
@@ -120,6 +131,7 @@ function snapFrom(char: {
     elements: char.elements.map((e) => e.element as Element),
     owned,
     clanId: char.clan?.clanId ?? null,
+    attributes: char.attributes ?? {},
   };
 }
 
@@ -151,6 +163,12 @@ export function lockReason(snap: CharSnapshot, node: SkillNodeDef): string | nul
     }
   }
   if (snap.level < node.reqLevel) return `Requer nível ${node.reqLevel}.`;
+  if (node.reqAttribute) {
+    const have = snap.attributes[node.reqAttribute.attribute] ?? 0;
+    if (have < node.reqAttribute.value) {
+      return `Requer ${ATTRIBUTE_LABELS[node.reqAttribute.attribute]} ${node.reqAttribute.value}.`;
+    }
+  }
   if (snap.ninjutsu < node.reqNinjutsu) return `Requer Ninjutsu ${node.reqNinjutsu}.`;
   if (snap.points < node.cost) {
     return `Pontos de Ninjutsu insuficientes (precisa ${node.cost}, restam ${snap.points}).`;

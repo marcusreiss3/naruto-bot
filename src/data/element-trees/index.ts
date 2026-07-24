@@ -12,7 +12,7 @@
 // nó são estáveis (guardados no banco); os grantsAbilityId apontam para as
 // abilities que serão escritas quando o roster real existir.
 // ============================================================================
-import type { Element } from "../../config/enums.js";
+import type { Attribute, Element } from "../../config/enums.js";
 import { FUNDAMENTOS } from "./fundamentals.js";
 import { CLAN_TREES } from "../clan-trees/index.js";
 
@@ -39,7 +39,12 @@ export interface SkillNodeDef {
   row: number; // profundidade (linha)
   requires: string[]; // ids de nó pré-requisito (vazio = raiz; exige só o elemento)
   reqLevel: number;
-  reqNinjutsu: number;
+  reqNinjutsu: number; // orçamento da árvore (compartilhado entre TODAS as árvores)
+  // gate ADICIONAL por valor bruto de atributo (ex: Hyuuga: Byakugan pede
+  // Dojutsu, o resto pede Taijutsu) — "desbloqueia upando X". Independente
+  // do orçamento de pontos: o node ainda custa `cost` pontos de reqNinjutsu,
+  // isso só soma um requisito de nível de atributo específico.
+  reqAttribute?: { attribute: Attribute; value: number };
   grantsAbilityId?: string; // JUTSU: id da ability concedida
   desc: string;
 }

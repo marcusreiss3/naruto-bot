@@ -45,6 +45,8 @@ import {
   chakraDrainPerTurn,
   ninjutsuBlocked,
   tickEffect,
+  empoweredDamageMult,
+  parseEffectData,
   type EffectState,
 } from "./effects.js";
 import {
@@ -779,6 +781,7 @@ export async function useAbility(
         ae.effectId,
         ae.stacks ?? 1,
         ae.duration ?? defaultDurationFor(ae.effectId),
+        { replaceGroup: ae.replaceGroup, onExpire: ae.onExpire },
       );
       logs.push(`⚡ ${actor.name} recebeu efeito **${effectLabel(ae.effectId)}**.`);
     }
@@ -844,6 +847,10 @@ export async function useAbility(
       : undefined;
     const burnMult = burnTaijutsuMultiplier(stacksOf(actor, "BURN"));
     const weakenMult = dehydrationMultiplier(stacksOf(actor, "DEHYDRATION"));
+    // Sobrecarga (EMPOWERED): dano de saida multiplicado por tempo limitado —
+    // ex: Pilula Secreta do Akimichi. Nao e' condicional ao alvo, entao entra
+    // no mesmo produto de "cenario e passivas" calculado uma vez so.
+    const empoweredMult = empoweredDamageMult(actor.effects);
     const heightBonus = onHeight(actor);
     for (const t of targets) {
       // dano condicional (ex: Fio d'Agua so vale contra alvo Encharcado) precisa
@@ -855,7 +862,7 @@ export async function useAbility(
           : 1;
       const raw = computeDamage(ability, {
         attrValue: getAttr(actor, ability.scalingAttribute ?? "ninjutsu"),
-        scenarioDmgMult: (scenarioMod ?? 1) * perTarget.damageMult * executeMult,
+        scenarioDmgMult: (scenarioMod ?? 1) * perTarget.damageMult * executeMult * empoweredMult,
         burnTaiMult: burnMult,
         weakenMult,
         heightBonus,
@@ -970,6 +977,10 @@ export async function resolveHit(
           // Tecnica de Substituicao (Fundamentos): reacao de esquiva com bonus proprio
           (reactAb?.reactionDodgeBonus ?? 0) +
           hasteDodgeBonus(target.effects) +
+          // Byakugan (Hyuuga) ativo: visao de 360 graus ajuda contra QUALQUER
+          // ataque, fisico ou ninjutsu — nao entra no `physical ? 0 : ...` como
+          // o bonus de Raio (que so vale contra ninjutsu).
+          (target.flags.byakuganActive ? BALANCE.byakuganDodgeBonus : 0) +
           (physical ? 0 : defenseMods.ninjutsuDodgeBonus) -
           // cada acumulo de cristal trava mais um pouco o corpo do alvo
           crystalDodgePenalty(target.effects),
@@ -1102,7 +1113,11 @@ export async function resolveHit(
         ae.effectId,
         (ae.stacks ?? 1) + extraStacks,
         (ae.duration ?? defaultDurationFor(ae.effectId)) + bonus,
-        ae.effectId === "BURN" ? burnOpts : undefined,
+        {
+          burn: ae.effectId === "BURN" ? burnOpts : undefined,
+          replaceGroup: ae.replaceGroup,
+          onExpire: ae.onExpire,
+        },
       );
       logs.push(`☠️ ${target.name} recebeu efeito **${effectLabel(ae.effectId)}**${r.explosion ? ` (EXPLOSÃO ${r.explosion} dano!)` : ""}.`);
       if (r.sealed) {
@@ -1148,7 +1163,7 @@ export async function resolveHit(
       hasKindAt(s.terrain, c, "FIRE", s.round),
     );
     if (passouPorFogo) {
-      const r = await applyEffect(target.id, "BURN", 1, defaultDurationFor("BURN"), burnOpts);
+      const r = await applyEffect(target.id, "BURN", 1, defaultDurationFor("BURN"), { burn: burnOpts });
       logs.push(
         `🔥💨 O vento cruzou as chamas e incendiou ${target.name}${r.explosion ? ` (EXPLOSÃO ${r.explosion} dano!)` : ""}.`,
       );
@@ -1294,9 +1309,17 @@ export async function applyEffect(
   effectId: string,
   stacks: number,
   duration: number,
-  // passivas do ATACANTE que mudam a queimadura (Brasas Persistentes, Combustao)
-  burnOpts?: { extraStacks?: number; explodeAtStacks?: number; explodeDamage?: number },
+  opts?: {
+    // passivas do ATACANTE que mudam a queimadura (Brasas Persistentes, Combustao)
+    burn?: { extraStacks?: number; explodeAtStacks?: number; explodeDamage?: number };
+    // ver AppliedEffect.replaceGroup / .onExpire em data/types.ts
+    replaceGroup?: string;
+    onExpire?: { effectId: EffectId; stacks?: number; duration?: number };
+  },
 ): Promise<{ explosion?: number; sealed?: boolean; hardened?: boolean }> {
+  const burnOpts = opts?.burn;
+  const replaceGroup = opts?.replaceGroup;
+  const onExpire = opts?.onExpire;
   const dur = clampDuration(effectId as EffectId, duration);
 
   // cristal: acumula ate SELAR. Mesma forma da queimadura, payoff invertido —
@@ -1381,19 +1404,38 @@ export async function applyEffect(
     }
   }
 
-  // demais: stacka somando
+  // demais: stacka somando — a menos que replaceGroup esteja marcado (ex:
+  // Barreira do Tamanho Multiplo/Super Tamanho Multiplo do Akimichi): ai so
+  // a contribuicao ANTERIOR do MESMO grupo e substituida, o resto (qualquer
+  // outra fonte de Barreira) continua somando normal. onExpire (ex: Sobrecarga
+  // -> Defesa Reduzida da Pilula Secreta) fica gravado junto, consumido no
+  // tick de efeitos (processTurnStart). As duas tags moram no dataJson, que
+  // ja' existia pra isso — ver EffectData/parseEffectData em effects.ts.
   const existing = await prisma.effectInstance.findFirst({ where: { participantId, effectId } });
+  const data = parseEffectData(existing?.dataJson);
+  const prevFormAmount = replaceGroup && data.formGroup?.group === replaceGroup ? data.formGroup.amount : 0;
+  if (replaceGroup) data.formGroup = { group: replaceGroup, amount: stacks };
+  if (onExpire) data.onExpire = onExpire;
   if (existing) {
+    const newStacks = existing.stacks - prevFormAmount + stacks;
     await prisma.effectInstance.update({
       where: { id: existing.id },
       data: {
-        stacks: existing.stacks + stacks,
+        stacks: newStacks,
         duration: clampDuration(effectId as EffectId, Math.max(existing.duration, dur)),
+        dataJson: JSON.stringify(data),
       },
     });
   } else {
     await prisma.effectInstance.create({
-        data: { participantId, effectId, name: effectLabel(effectId), stacks, duration: dur },
+      data: {
+        participantId,
+        effectId,
+        name: effectLabel(effectId),
+        stacks,
+        duration: dur,
+        dataJson: JSON.stringify(data),
+      },
     });
   }
   return {};
@@ -1473,6 +1515,21 @@ async function processTurnStart(sessionId: string, participantId: string, logs: 
     }
     if (res.expired) {
       await prisma.effectInstance.delete({ where: { id: e.id } });
+      // onExpire: o efeito que acabou pode deixar outro no lugar — ex: a
+      // Sobrecarga (EMPOWERED) da Pilula Secreta vira Defesa Reduzida quando
+      // passa (o corpo cobra o preco do surto de forca).
+      const onExpire = parseEffectData(e.dataJson).onExpire;
+      if (onExpire) {
+        await applyEffect(
+          participantId,
+          onExpire.effectId,
+          onExpire.stacks ?? 1,
+          onExpire.duration ?? defaultDurationFor(onExpire.effectId),
+        );
+        logs.push(
+          `💤 ${p.name} sentiu o preço de **${effectLabel(e.effectId)}**: ficou com **${effectLabel(onExpire.effectId)}**.`,
+        );
+      }
     } else {
       await prisma.effectInstance.update({ where: { id: e.id }, data: { duration: e.duration - 1 } });
       remaining.push({ effectId: e.effectId as any, stacks: e.stacks, duration: e.duration - 1 });
@@ -1532,6 +1589,15 @@ async function processTurnStart(sessionId: string, participantId: string, logs: 
     } else {
       flags.waterWalk = false;
       logs.push(`🌊 ${p.name} ficou sem chakra e parou de andar sobre a água.`);
+    }
+  }
+  // upkeep Byakugan (Hyuuga) — mesmo padrao do waterWalk
+  if (flags.byakuganActive) {
+    if (chakra >= BALANCE.byakuganUpkeepPerTurn) {
+      chakra -= BALANCE.byakuganUpkeepPerTurn;
+    } else {
+      flags.byakuganActive = false;
+      logs.push(`👁️ ${p.name} ficou sem chakra e o Byakugan se desativou.`);
     }
   }
   // upkeep Yamanaka (controle)

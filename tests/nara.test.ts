@@ -107,8 +107,10 @@ describe("Nara: família de imitação — sem dano, usa SHADOW_BOUND", () => {
 describe("Nara: passivas — controle, não dano", () => {
   const possessao = getAbility("nara_possessao")!;
 
-  it("ClanPassiveDef não tem campo de multiplicador de dano (o clã ganha por controle, não rajada)", () => {
-    for (const p of CLAN_PASSIVES) expect("damageMult" in p).toBe(false);
+  it("passivas do Nara não multiplicam dano (o clã ganha por controle, não rajada — diferente do Akimichi)", () => {
+    for (const p of CLAN_PASSIVES.filter((p) => p.clanId === "nara")) {
+      expect("damageMult" in p).toBe(false);
+    }
   });
 
   it("Conluio das Sombras corta 15% do custo e soma 15 pontos de chance pros dois efeitos de prisão", () => {

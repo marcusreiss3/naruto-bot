@@ -109,6 +109,11 @@ export const combate: Command = {
         .setDescription("Ativa/desativa andar sobre a água (ação bônus)"),
     )
     .addSubcommand((s) =>
+      s
+        .setName("byakugan")
+        .setDescription("Ativa/desativa o Byakugan (ação bônus, clã Hyuuga)"),
+    )
+    .addSubcommand((s) =>
       s.setName("fugir").setDescription("Tenta fugir do combate (ação comum, gasta energia)"),
     ),
   async execute(interaction: ChatInputCommandInteraction) {
@@ -122,6 +127,8 @@ export const combate: Command = {
         return pegarArma(interaction);
       case "agua":
         return agua(interaction);
+      case "byakugan":
+        return byakugan(interaction);
       case "fugir":
         return fugir(interaction);
     }
@@ -836,5 +843,40 @@ async function agua(interaction: ChatInputCommandInteraction): Promise<void> {
     flags.waterWalk
       ? `🌊 **${me.name}** passou a andar sobre a água (gasta ${BALANCE.waterWalkUpkeepPerTurn}% chakra/turno).`
       : `💧 **${me.name}** parou de andar sobre a água.`,
+  );
+}
+
+// Byakugan (Hyuuga): mesmo padrao de toggle+upkeep da Caminhada Aquatica —
+// fica ligado ate' ser desativado ou faltar chakra, em vez de gastar toda
+// vez que usa. Serve de modelo pra outros doujutsu no futuro (Sharingan etc.).
+async function byakugan(interaction: ChatInputCommandInteraction): Promise<void> {
+  const { session, me } = await getMyParticipant(interaction);
+  if (!session || !me) {
+    await interaction.reply({ content: "❌ Você não está em combate aqui.", ephemeral: true });
+    return;
+  }
+  if (me.actedBonus) {
+    await interaction.reply({ content: "❌ Ação bônus já usada.", ephemeral: true });
+    return;
+  }
+  if (!me.isNpc && me.charId) {
+    const has = await prisma.characterJutsu.findFirst({
+      where: { charId: me.charId, jutsuId: "hyuuga_byakugan" },
+    });
+    if (!has) {
+      await interaction.reply({ content: "❌ Você não desbloqueou o Byakugan.", ephemeral: true });
+      return;
+    }
+  }
+  const flags = me.flags;
+  flags.byakuganActive = !flags.byakuganActive;
+  await prisma.combatParticipant.update({
+    where: { id: me.id },
+    data: { flagsJson: JSON.stringify(flags), actedBonus: true },
+  });
+  await interaction.reply(
+    flags.byakuganActive
+      ? `👁️ **${me.name}** ativou o Byakugan (+${Math.round(BALANCE.byakuganDodgeBonus * 100)}% de esquiva contra qualquer ataque; gasta ${BALANCE.byakuganUpkeepPerTurn}% chakra/turno).`
+      : `👁️ **${me.name}** desativou o Byakugan.`,
   );
 }

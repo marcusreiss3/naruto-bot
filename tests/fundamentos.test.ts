@@ -17,6 +17,7 @@ const snap = (over: Partial<CharSnapshot> = {}): CharSnapshot => ({
   elements: [],
   owned: new Set(),
   clanId: null,
+  attributes: {},
   ...over,
 });
 

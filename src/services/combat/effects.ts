@@ -31,6 +31,7 @@ const DEFAULT_DURATIONS: Partial<Record<EffectId, number>> = {
   SHIELD: E.SHIELD.defaultDuration,
   CHAKRA_DRAIN: E.CHAKRA_DRAIN.defaultDuration,
   HASTE: E.HASTE.defaultDuration,
+  EMPOWERED: E.EMPOWERED.defaultDuration,
   SHADOW_BOUND: E.SHADOW_BOUND.defaultDuration,
   CRYSTALLIZED: E.CRYSTALLIZED.defaultDuration,
   PRISM: E.PRISM.defaultDuration,
@@ -172,6 +173,34 @@ export function hasteFleeChanceBonus(activeEffects: EffectState[]): number {
 
 export function hasteContactDamage(activeEffects: EffectState[]): number {
   return activeEffects.some((e) => isActive(e, "HASTE")) ? E.HASTE.contactDamage : 0;
+}
+
+// Sobrecarga: multiplica o dano de SAIDA de quem tem o efeito ativo (nao do
+// alvo). Generico — qualquer jutsu pode conceder, primeiro uso e' a Pilula
+// Secreta do Akimichi.
+export function empoweredDamageMult(activeEffects: EffectState[]): number {
+  return activeEffects.some((e) => isActive(e, "EMPOWERED")) ? 1 + E.EMPOWERED.dmgMultBonus : 1;
+}
+
+// ---------------------------------------------------- dataJson de efeitos
+// EffectInstance guarda um dataJson livre (schema ja' tinha esse campo). Duas
+// tags usam ele: `formGroup` (Barreira de "forma" substitui a propria
+// contribuicao em vez de somar — ex: Super Tamanho Multiplo troca a do
+// Tamanho Multiplo) e `onExpire` (quando o efeito ACABA, aplica outro —
+// ex: Sobrecarga da Pilula Secreta vira Defesa Reduzida ao passar). Puro e
+// testavel; quem grava/consome no banco e' combat-engine.ts.
+export interface EffectData {
+  formGroup?: { group: string; amount: number };
+  onExpire?: { effectId: EffectId; stacks?: number; duration?: number };
+}
+export function parseEffectData(dataJson: string | null | undefined): EffectData {
+  if (!dataJson) return {};
+  try {
+    const parsed: unknown = JSON.parse(dataJson);
+    return parsed && typeof parsed === "object" ? (parsed as EffectData) : {};
+  } catch {
+    return {};
+  }
 }
 
 // ----------------------------------------------------------------- NARA (cla)

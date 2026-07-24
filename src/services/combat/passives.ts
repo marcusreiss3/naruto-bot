@@ -6,7 +6,7 @@
 import { BALANCE } from "../../config/balance.js";
 import type { EffectId, TerrainKind } from "../../config/enums.js";
 import { getPassive, type PassiveDef } from "../../data/element-trees/passives.js";
-import { getClanPassive } from "../../data/clan-trees/passives.js";
+import { getClanPassive, type ClanPassiveDef } from "../../data/clan-trees/passives.js";
 import type { Ability } from "../../data/types.js";
 import { hasEffect, type EffectState } from "./effects.js";
 
@@ -74,11 +74,15 @@ export function passiveMods(
   if (!ability.element && !clanAbility) return mods;
 
   for (const nodeId of ownedNodeIds) {
-    const p: Partial<PassiveDef> | undefined = clanAbility ? getClanPassive(nodeId) : getPassive(nodeId);
-    // passiva so vale para jutsus do proprio elemento (posse do nó já
-    // garante o clã certo pro caso CLA — ver lockReason)
+    const p: (Partial<PassiveDef> & Partial<ClanPassiveDef>) | undefined = clanAbility
+      ? getClanPassive(nodeId)
+      : getPassive(nodeId);
     if (!p) continue;
+    // passiva so vale pro proprio elemento OU pro proprio cla — um
+    // personagem so pode possuir nos de UM cla na pratica, mas o teste
+    // continua correto por conta propria (evita vazamento cruzado de clã).
     if (!clanAbility && p.element !== ability.element) continue;
+    if (clanAbility && p.clanId !== clanId) continue;
 
     if (p.damageMult) mods.damageMult *= p.damageMult;
     if (p.costMult) {

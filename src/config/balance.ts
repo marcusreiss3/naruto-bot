@@ -64,6 +64,11 @@ export const BALANCE = {
   // ---- Recursos ----
   resourceMax: 100,
   waterWalkUpkeepPerTurn: 5, // % chakra por turno andando na agua
+  // Byakugan (Hyuuga): liga/desliga por /combate byakugan, mesmo padrao do
+  // waterWalk — upkeep por turno, desliga sozinho se faltar chakra. +10% de
+  // esquiva vale contra QUALQUER ataque (fisico ou ninjutsu) enquanto ativo.
+  byakuganUpkeepPerTurn: 5, // % chakra por turno com o Byakugan ativo
+  byakuganDodgeBonus: 0.1, // +10 pontos percentuais de esquiva enquanto ativo
 
   // ---- Maestria: multiplicador de custo por recurso ----
   masteryCostMultiplier: {
@@ -105,6 +110,11 @@ export const BALANCE = {
       fleeChanceBonus: 0.25,
       contactDamage: 8,
     },
+    // Sobrecarga: dano de saida multiplicado por tempo limitado. Generico —
+    // primeiro uso e' a Pilula Secreta do Akimichi (skill com duracao, nao
+    // passiva permanente: o corpo cobra o preco quando passa, ver onExpire
+    // em AppliedEffect/data/types.ts).
+    EMPOWERED: { defaultDuration: 3, dmgMultBonus: 0.6 },
 
     // ---- exclusivo do cla Nara ----
     // Vinculo de Sombra: o oposto do dano-por-toque comum. NAO causa dano nem

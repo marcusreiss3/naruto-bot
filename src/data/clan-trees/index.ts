@@ -13,6 +13,7 @@
 // (ver CLAUDE.md) — a estrutura da árvore (nó, requisito, custo) é o que
 // deve sobreviver, não necessariamente estes ids/números exatos.
 // ============================================================================
+import type { Attribute } from "../../config/enums.js";
 import type { NodeRank, SkillNodeDef } from "../element-trees/index.js";
 
 const COST: Record<string, number> = { ROOT: 1, PASSIVE: 2, D: 1, C: 3, B: 4, A: 6, S: 10 };
@@ -32,6 +33,9 @@ function makeClan(clanId: string) {
     reqLevel: number,
     reqNinjutsu: number,
     desc: string,
+    // gate adicional por atributo bruto (ex: Hyuuga: Byakugan pede Dojutsu,
+    // o resto pede Taijutsu — "desbloqueia upando X"). Omitido = sem gate extra.
+    reqAttribute?: { attribute: Attribute; value: number },
   ): SkillNodeDef => ({
     id,
     clanId,
@@ -46,6 +50,7 @@ function makeClan(clanId: string) {
     requires,
     reqLevel,
     reqNinjutsu,
+    reqAttribute,
     grantsAbilityId: id,
     desc,
   });
@@ -195,6 +200,296 @@ const NARA: SkillNodeDef[] = [
   ),
 ];
 
+// ---------------------------------------------------------------- HYUUGA
+// Clã do Byakugan: percepção e Punho Suave (Jyuuken). Cadeia LINEAR (sem
+// ramos) seguindo exatamente o escalonamento pedido: Byakugan (pede Dojutsu)
+// -> Punho Suave -> Oito Trigramas: Palma de Vácuo -> 64 Palmas -> Palma
+// Rotativa -> 128 Palmas -> Punhos dos Leões Gêmeos. Todo o resto do kit
+// (a partir de Punho Suave) pede Taijutsu em vez de Dojutsu — reqAttribute
+// modela literalmente "desbloqueia upando X" do pedido original.
+// As duas passivas (raiz/ápice) empurram a identidade real do clã: não é
+// dano bruto, é ATRAVESSAR defesa (perfura Bloqueio/Barreira, ignora escudo)
+// e SELAR chakra (Bloqueio de Ninjutsu) — o mesmo golpe físico dobra como
+// controle, igual no material de origem.
+const H = makeClan("hyuuga");
+const HYUUGA: SkillNodeDef[] = [
+  H.pass(
+    "hyuuga_raiz",
+    "Olhos Brancos",
+    "🧬",
+    "Raiz",
+    0,
+    0,
+    [],
+    1,
+    1,
+    "Passiva sempre ativa: mesmo sem o Byakugan ativado, a visão periférica quase total do clã já ajuda a mirar nos tenketsu certos. Seus jutsus de clã custam 10% menos recurso e têm +10 pontos percentuais de chance de aplicar Bloqueio de Ninjutsu.",
+    true,
+  ),
+  H.jutsu(
+    "hyuuga_byakugan",
+    "Byakugan",
+    "👁️",
+    "D",
+    "Despertar",
+    0,
+    1,
+    ["hyuuga_raiz"],
+    1,
+    1,
+    "O dōjutsu do clã. Ative e desative a qualquer momento com /combate byakugan: enquanto ligado, dá +10% de chance de esquiva contra qualquer ataque e gasta 5% de chakra por rodada — desliga sozinho se o chakra acabar.",
+    { attribute: "dojutsu", value: 3 },
+  ),
+  H.jutsu(
+    "hyuuga_punho_suave",
+    "Punho Suave",
+    "🤚",
+    "C",
+    "Punho Suave",
+    0,
+    2,
+    ["hyuuga_byakugan"],
+    1,
+    4,
+    "Estilo de combate básico dos Hyūga: injeta chakra no golpe para ferir órgãos internos e a rede de chakra do adversário, em vez de só o corpo. 40% de chance de bloquear o Ninjutsu do alvo por 1 rodada.",
+    { attribute: "taijutsu", value: 3 },
+  ),
+  H.jutsu(
+    "hyuuga_palma_vacuo",
+    "Oito Trigramas: Palma de Vácuo",
+    "🌬️",
+    "B",
+    "Oito Trigramas",
+    0,
+    3,
+    ["hyuuga_punho_suave"],
+    9,
+    9,
+    "Usando o Byakugan como mira, identifica os pontos vitais do oponente e dispara uma 'bala de vácuo' comprimida à distância — não pode ser esquivada e empurra o alvo 3 casas para trás antes mesmo dele perceber o que aconteceu.",
+    { attribute: "taijutsu", value: 9 },
+  ),
+  H.jutsu(
+    "hyuuga_64_palmas",
+    "Oito Trigramas: 64 Palmas",
+    "🖐️",
+    "B",
+    "Oito Trigramas",
+    0,
+    4,
+    ["hyuuga_palma_vacuo"],
+    12,
+    10,
+    "Sequência de 64 golpes extremamente rápidos que bloqueiam dezenas de tenketsu de uma vez: 85% de chance de bloquear o Ninjutsu do alvo por 2 rodadas, e 30% de chance de Atordoar por 1 rodada.",
+    { attribute: "taijutsu", value: 12 },
+  ),
+  H.jutsu(
+    "hyuuga_palma_rotativa",
+    "Palma Rotativa",
+    "🌀",
+    "B",
+    "Defesa",
+    0,
+    5,
+    ["hyuuga_64_palmas"],
+    14,
+    12,
+    "Gira rapidamente enquanto libera chakra por todos os tenketsu, criando uma esfera defensiva quase impenetrável. Ganha 24 pontos de Barreira por 3 rodadas e livra você de ficar preso ao chão.",
+    { attribute: "taijutsu", value: 14 },
+  ),
+  H.jutsu(
+    "hyuuga_128_palmas",
+    "Oito Trigramas: 128 Palmas",
+    "💥",
+    "A",
+    "Oito Trigramas",
+    0,
+    6,
+    ["hyuuga_palma_rotativa"],
+    19,
+    16,
+    "Versão em dobro de velocidade das 64 Palmas: 80% de chance de bloquear o Ninjutsu do alvo por 2 rodadas e 50% de chance de deixá-lo mais lento por 2 rodadas.",
+    { attribute: "taijutsu", value: 19 },
+  ),
+  H.pass(
+    "hyuuga_apice",
+    "Rede de Tenketsu",
+    "🧿",
+    "Ápice",
+    0,
+    7,
+    ["hyuuga_128_palmas"],
+    24,
+    20,
+    "Passiva: seus golpes de Punho Suave miram direto nos órgãos internos, por cima de qualquer escudo — ignoram a Barreira do alvo e causam +25% de dano em quem estiver abaixo de 30% de vida. O Bloqueio de Ninjutsu que você aplica dura 1 rodada a mais.",
+  ),
+  H.jutsu(
+    "hyuuga_leoes_gemeos",
+    "Punhos dos Leões Gêmeos",
+    "🦁",
+    "S",
+    "Ápice",
+    0,
+    8,
+    ["hyuuga_apice"],
+    30,
+    24,
+    "Libera uma grande quantidade de chakra pelos punhos, moldado em duas cabeças de leão. Não pode ser esquivado. Ao acertar, destroça por completo os meridianos do alvo: bloqueia o Ninjutsu dele por 3 rodadas e reduz a defesa dele por 2 rodadas.",
+    { attribute: "taijutsu", value: 28 },
+  ),
+];
+
+// -------------------------------------------------------------- AKIMICHI
+// Cadeia LINEAR (sem ramos), na ordem exata do escalonamento pedido.
+// Os jutsus de "crescer" (Parcial, Tamanho Múltiplo, Super Tamanho Múltiplo)
+// pedem Ninjutsu — é a natureza real da técnica (manipulação de chakra pra
+// mudar o próprio corpo). Os jutsus de "usar o corpo grande pra bater"
+// (Tanque, Mergulho, Bofetada) pedem Taijutsu — é execução física. As duas
+// últimas (Modo Borboleta e Bombardeio) não pedem atributo nenhum: o gate
+// delas é o nó "Pílula Secreta" (ápice) — mapeia literalmente o "necessita
+// utilizar das pílulas secretas do clã" do pedido original, sem precisar de
+// um sistema de itens/consumíveis novo.
+const K = makeClan("akimichi");
+const AKIMICHI: SkillNodeDef[] = [
+  K.pass(
+    "akimichi_raiz",
+    "Fartura do Clã",
+    "🍖",
+    "Raiz",
+    0,
+    0,
+    [],
+    1,
+    1,
+    "Passiva sempre ativa: gerações de Akimichi acumulando calorias em força. Seus jutsus de clã causam +30% de dano e empurram o alvo 1 casa a mais.",
+    true,
+  ),
+  K.jutsu(
+    "akimichi_baika_parcial",
+    "Técnica do Tamanho Múltiplo Parcial",
+    "👊",
+    "C",
+    "Expansão",
+    0,
+    1,
+    ["akimichi_raiz"],
+    1,
+    4,
+    "Incha uma única parte do corpo — geralmente braço ou perna — e usa o peso extra pra golpear com muito mais força. Empurra o alvo 2 casas pra trás.",
+    { attribute: "ninjutsu", value: 3 },
+  ),
+  K.jutsu(
+    "akimichi_baika",
+    "Técnica do Tamanho Múltiplo",
+    "🎈",
+    "C",
+    "Expansão",
+    0,
+    2,
+    ["akimichi_baika_parcial"],
+    6,
+    7,
+    "Altera livremente o próprio tamanho e consegue manter a forma por um período extenso — consome muitas calorias, mas o corpo maior absorve muito mais impacto. Ganha 20 pontos de Barreira por 4 rodadas.",
+    { attribute: "ninjutsu", value: 7 },
+  ),
+  K.jutsu(
+    "akimichi_tanque",
+    "Tanque da Bala Humana",
+    "🔴",
+    "B",
+    "Corpo a Corpo",
+    0,
+    3,
+    ["akimichi_baika"],
+    10,
+    9,
+    "Depois da Técnica do Tamanho Múltiplo, dobra os membros e usa chakra pra se impulsionar num rolo poderoso — a força de rotação é capaz de pulverizar o que estiver no caminho. Difícil de manter por muito tempo.",
+    { attribute: "taijutsu", value: 9 },
+  ),
+  K.jutsu(
+    "akimichi_super_baika",
+    "Técnica do Super Tamanho Múltiplo",
+    "🌕",
+    "B",
+    "Expansão",
+    0,
+    4,
+    ["akimichi_tanque"],
+    14,
+    11,
+    "A versão mais poderosa da Técnica do Tamanho Múltiplo: multiplica o corpo pra um tamanho inacreditável. Ganha 32 pontos de Barreira por 4 rodadas.",
+    { attribute: "ninjutsu", value: 12 },
+  ),
+  K.jutsu(
+    "akimichi_mergulho",
+    "Mergulho Gordinho",
+    "💥",
+    "A",
+    "Corpo a Corpo",
+    0,
+    5,
+    ["akimichi_super_baika"],
+    18,
+    14,
+    "Depois da Técnica do Super Tamanho Múltiplo, pula de grande altura sobre uma área e a devasta com o próprio peso.",
+    { attribute: "taijutsu", value: 15 },
+  ),
+  K.jutsu(
+    "akimichi_bofetada",
+    "Super Bofetada",
+    "🖐️",
+    "A",
+    "Corpo a Corpo",
+    0,
+    6,
+    ["akimichi_mergulho"],
+    21,
+    16,
+    "Depois da Técnica do Super Tamanho Múltiplo, desfere um tapa mortal com as duas mãos: a concentração de chakra ativa os músculos e aumenta ainda mais a massa do golpe. Não pode ser esquivada.",
+    { attribute: "taijutsu", value: 18 },
+  ),
+  K.jutsu(
+    "akimichi_apice",
+    "Pílula Secreta",
+    "💊",
+    "A",
+    "Ápice",
+    0,
+    7,
+    ["akimichi_bofetada"],
+    25,
+    19,
+    "Engole uma das pílulas secretas do clã: por 3 rodadas, +60% de dano nos seus golpes. Quando o efeito passa, o corpo cobra o preço: reduz a defesa por 2 rodadas.",
+  ),
+  K.jutsu(
+    "akimichi_modo_borboleta",
+    "Modo Borboleta",
+    "🦋",
+    "A",
+    "Ápice",
+    0,
+    8,
+    ["akimichi_apice"],
+    28,
+    21,
+    "Converte calorias em chakra puro: fazem brotar borboletas de chakra nas costas, multiplicando a força bruta do usuário. Limpa Queimadura, Veneno, Sangramento e Lentidão, e ganha 20 pontos de Barreira por 2 rodadas.",
+  ),
+  K.jutsu(
+    "akimichi_bombardeio",
+    "Bombardeio da Borboleta",
+    "💢",
+    "S",
+    "Ápice",
+    0,
+    9,
+    ["akimichi_modo_borboleta"],
+    32,
+    25,
+    "Depois do Modo Borboleta, concentra todo o poder acumulado num único golpe de taijutsu devastador. Não pode ser esquivado.",
+  ),
+];
+
 export const CLAN_TREES: Record<string, SkillNodeDef[]> = {
   nara: NARA,
+  hyuuga: HYUUGA,
+  akimichi: AKIMICHI,
 };

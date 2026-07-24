@@ -351,18 +351,21 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
 .fx{color:var(--blue);font-weight:700;cursor:help;position:relative;outline:none;
   border-bottom:1px dotted rgba(58,160,255,.5);}
 .fx:hover,.fx:focus-visible{color:#7cc2ff;border-bottom-color:rgba(124,194,255,.8);}
-.fx::after{content:attr(data-tip);position:absolute;left:50%;bottom:calc(100% + 9px);
-  transform:translateX(-50%);width:max-content;max-width:250px;white-space:normal;
+/* Elemento único (não ::after): position:fixed + reposicionado por JS (ver
+   showFxTip em app.js) porque um tooltip centralizado no meio da PALAVRA não
+   tem como saber, só em CSS, se vai estourar a borda da tela — precisa medir
+   a posição real e "empurrar" pra dentro quando a palavra está perto da borda. */
+.fx-tip{position:fixed;width:max-content;max-width:250px;white-space:normal;
   background:#0a0e15;color:var(--ink);border:1px solid var(--line-soft);border-radius:10px;
   padding:9px 11px;font-size:12px;font-weight:400;line-height:1.5;text-align:left;letter-spacing:0;
-  box-shadow:0 12px 30px rgba(0,0,0,.72);z-index:40;pointer-events:none;
-  opacity:0;visibility:hidden;transition:opacity .13s ease, transform .13s ease;}
-.fx::before{content:"";position:absolute;left:50%;bottom:calc(100% + 4px);
-  transform:translateX(-50%);border:5px solid transparent;border-top-color:var(--line-soft);
-  z-index:41;pointer-events:none;opacity:0;visibility:hidden;transition:opacity .13s;}
-.fx:hover::after,.fx:focus-visible::after{opacity:1;visibility:visible;transform:translateX(-50%) translateY(-2px);}
-.fx:hover::before,.fx:focus-visible::before{opacity:1;visibility:visible;}
-@media (prefers-reduced-motion:reduce){.fx::after{transition:none;}}
+  box-shadow:0 12px 30px rgba(0,0,0,.72);z-index:60;pointer-events:none;
+  opacity:0;visibility:hidden;transform:translateY(-2px);transition:opacity .13s ease, transform .13s ease;}
+.fx-tip.show{opacity:1;visibility:visible;transform:translateY(0);}
+.fx-tip::after{content:"";position:absolute;left:var(--arrowLeft,50%);border:5px solid transparent;
+  transform:translateX(-50%);}
+.fx-tip.dir-up::after{top:100%;border-top-color:var(--line-soft);}
+.fx-tip.dir-down::after{bottom:100%;border-bottom-color:var(--line-soft);}
+@media (prefers-reduced-motion:reduce){.fx-tip{transition:none;}}
 .modal-meta{display:flex;justify-content:center;gap:8px 16px;flex-wrap:wrap;font-size:12px;color:var(--ink-soft);
   margin-bottom:14px;font-variant-numeric:tabular-nums;}
 .modal-meta b{color:var(--orange2);font-weight:700;}
