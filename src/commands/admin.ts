@@ -28,7 +28,6 @@ const attrChoices = ATTRIBUTES.map((a) => ({ name: ATTRIBUTE_LABELS[a], value: a
 const resourceChoices = RESOURCES.map((r) => ({ name: r, value: r }));
 const masteryChoices = MASTERY_LEVELS.map((m) => ({ name: m, value: m }));
 const elementChoices = ELEMENTS.map((e) => ({ name: e, value: e }));
-const clanChoices = CLANS.map((c) => ({ name: c.name, value: c.id }));
 const effectChoices = EFFECT_IDS.map((e) => ({ name: effectLabel(e), value: e }));
 
 export const admin: Command = {
@@ -183,7 +182,7 @@ export const admin: Command = {
         .setName("cla-set")
         .setDescription("Define o clã")
         .addUserOption((o) => o.setName("usuario").setDescription("Usuário").setRequired(true))
-        .addStringOption((o) => o.setName("cla").setDescription("Clã").addChoices(...clanChoices).setRequired(true)),
+        .addStringOption((o) => o.setName("cla").setDescription("Clã").setAutocomplete(true).setRequired(true)),
     )
     .addSubcommand((s) =>
       s
@@ -220,6 +219,10 @@ export const admin: Command = {
       choices = [...MISSIONS]
         .sort((a, b) => (rankOrder[a.rank] ?? 9) - (rankOrder[b.rank] ?? 9))
         .map((m) => ({ name: `${m.name} [${m.rank}] (${m.id})`.slice(0, 100), value: m.id }));
+    } else if (focused.name === "cla") {
+      choices = [...CLANS]
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .map((c) => ({ name: `${c.name} (${c.id})`.slice(0, 100), value: c.id }));
     }
     const filtered = choices
       .filter((c) => c.name.toLowerCase().includes(q) || c.value.toLowerCase().includes(q))

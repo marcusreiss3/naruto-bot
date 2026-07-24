@@ -42,13 +42,14 @@ export const BALANCE = {
   genjutsuBaseDurationBonusEvery: 10, // +1 rodada a cada 10 de genjutsu
   genjutsuDurationCap: 6,
 
-  // ---- Esquiva (caps) ----
-  dodgePhysBase: 0.05,
-  dodgePhysCap: 0.35,
-  dodgePhysPerTaijutsu: 0.01,
-  dodgeNinjutsuBase: 0.03,
-  dodgeNinjutsuCap: 0.3,
-  dodgeNinjutsuPerNinjutsu: 0.008,
+  // ---- Esquiva ----
+  // Chance base unica pra todos (nao escala com atributo). Reacoes somam bonus
+  // por cima (Substituicao, jutsu, Clonagem, Haste...) ate o cap unico.
+  dodgeBase: 0.15,
+  dodgeCap: 0.5,
+  // Esquiva normal (reacao sem jutsu) gasta recurso pra nao ser spam: energia
+  // contra ataque fisico (TAI/BUKI), chakra contra o resto (ninjutsu/etc).
+  esquivaNormalCost: 15,
 
   // bloqueio: fracao do dano reduzida (nao anula)
   blockReductionBase: 0.5,

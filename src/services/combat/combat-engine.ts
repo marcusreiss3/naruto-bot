@@ -926,27 +926,46 @@ export async function resolveHit(
     const reactAb = opts.reactionAbilityId ? getAbility(opts.reactionAbilityId) : undefined;
     const physical = ability.category === "TAIJUTSU" || ability.category === "BUKIJUTSU";
     const defenseMods = characterPassiveMods(ownedNodes(target));
-    const dc = dodgeChance({
-      ability,
-      defenderTaijutsu: getAttr(target, "taijutsu"),
-      defenderNinjutsu: getAttr(target, "ninjutsu"),
-      defenseDown: target.effects.some((e) => e.effectId === "DEFENSE_DOWN"),
-      attackerHeight: attacker ? onHeight(attacker) : false,
-      reactionBonus:
-        (target.flags.reactionBuff ? 0.1 : 0) +
-        // Tecnica de Substituicao (Fundamentos): reacao de esquiva com bonus proprio
-        (reactAb?.reactionDodgeBonus ?? 0) +
-        hasteDodgeBonus(target.effects) +
-        (physical ? 0 : defenseMods.ninjutsuDodgeBonus) -
-        // cada acumulo de cristal trava mais um pouco o corpo do alvo
-        crystalDodgePenalty(target.effects),
-    });
-    if (reactAb) await payReaction(target, reactAb);
-    if (chance(dc)) {
-      logs.push(`💨 ${target.name} esquivou (${Math.round(dc * 100)}%)!`);
-      damage = 0;
+
+    // Custo da reacao. Jutsu (Substituicao etc) paga o proprio custo/recurso.
+    // Esquiva normal gasta energia contra ataque fisico, chakra contra o resto.
+    let canDodge = true;
+    if (reactAb) {
+      await payReaction(target, reactAb);
     } else {
-      logs.push(`${target.name} tentou esquivar (${Math.round(dc * 100)}%) e falhou.`);
+      const resource: "chakra" | "energia" = physical ? "energia" : "chakra";
+      const cost = BALANCE.esquivaNormalCost;
+      const poolNow = resource === "chakra" ? target.chakra : target.energia;
+      if (poolNow < cost) {
+        canDodge = false;
+        logs.push(`❌ ${target.name} não tinha ${resource} para esquivar — o golpe acertou.`);
+      } else {
+        await deductResource(target.id, resource, cost);
+      }
+    }
+
+    if (canDodge) {
+      const dc = dodgeChance({
+        ability,
+        defenseDown: target.effects.some((e) => e.effectId === "DEFENSE_DOWN"),
+        attackerHeight: attacker ? onHeight(attacker) : false,
+        reactionBonus:
+          (target.flags.reactionBuff ? 0.1 : 0) +
+          // Tecnica de Substituicao (Fundamentos): reacao de esquiva com bonus proprio
+          (reactAb?.reactionDodgeBonus ?? 0) +
+          hasteDodgeBonus(target.effects) +
+          (physical ? 0 : defenseMods.ninjutsuDodgeBonus) -
+          // cada acumulo de cristal trava mais um pouco o corpo do alvo
+          crystalDodgePenalty(target.effects),
+      });
+      if (chance(dc)) {
+        // mensagem por tipo de reacao usada
+        const how = reactAb ? `usou ${reactAb.name} e escapou` : "esquivou no reflexo";
+        logs.push(`💨 ${target.name} ${how} (${Math.round(dc * 100)}%)!`);
+        damage = 0;
+      } else {
+        logs.push(`${target.name} tentou esquivar (${Math.round(dc * 100)}%) e o golpe acertou.`);
+      }
     }
   } else if ((reaction === "BLOCK" || reaction === "PARRY") && !ability.unblockable) {
     const reactAb = opts.reactionAbilityId ? getAbility(opts.reactionAbilityId) : undefined;

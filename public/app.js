@@ -4,22 +4,25 @@
 // FUNDAMENTOS não é um elemento de verdade (é a árvore de ninjutsu básico,
 // pré-requisito) — por isso sempre aparece desbloqueada, ver buildElemBar.
 const ELEMENTS = [
-  { id: "FUNDAMENTOS", name: "Fundamentos", icon: "📜", color: "#8a8a8a" },
+  { id: "FUNDAMENTOS", name: "Ninjutsu", icon: "", img: "/assets/icons/footer/ninjutsu.png", color: "#8a8a8a" },
   { id: "FOGO", name: "Fogo", icon: "", img: "/assets/icons/footer/katon.png", color: "#e2492d" },
   { id: "AGUA", name: "Água", icon: "", img: "/assets/icons/footer/suiton.png", color: "#2b7fd4" },
   { id: "VENTO", name: "Vento", icon: "", img: "/assets/icons/footer/futon.png", color: "#2fa36b" },
   { id: "TERRA", name: "Terra", icon: "", img: "/assets/icons/footer/doton.png", color: "#c08a3a" },
   { id: "RAIO", name: "Raio", icon: "", img: "/assets/icons/footer/raiton.png", color: "#f0c419" },
-  // Kekkei genkai. Sem PNG em /assets/icons/footer ainda -> cai no emoji (o
-  // buildElemBar usa e.icon quando e.img esta ausente). Idem no ELEMENT_BG.
-  { id: "CRISTAL", name: "Cristal", icon: "💎", color: "#1fa8a0" },
-  { id: "VAPOR", name: "Vapor", icon: "♨️", color: "#8fb9b3" },
-  { id: "CALOR", name: "Calor", icon: "🔥", color: "#d9662b" },
-  { id: "LAVA", name: "Lava", icon: "🌋", color: "#b23a1f" },
-  { id: "EXPLOSAO", name: "Explosão", icon: "💣", color: "#c9a227" },
+  // Kekkei genkai.
+  { id: "CRISTAL", name: "Cristal", icon: "", img: "/assets/icons/footer/cristal.png", color: "#e85fa6" },
+  { id: "VAPOR", name: "Vapor", icon: "", img: "/assets/icons/footer/vapor.png", color: "#f0857a" },
+  { id: "CALOR", name: "Calor", icon: "", img: "/assets/icons/footer/calor.png", color: "#d9662b" },
+  { id: "LAVA", name: "Lava", icon: "", img: "/assets/icons/footer/lava.png", color: "#b23a1f" },
+  { id: "EXPLOSAO", name: "Explosão", icon: "", img: "/assets/icons/footer/explosao.png", color: "#c9a227" },
 ];
+// TEMPORARIO: mostra TODOS os elementos no footer (preview de icones), ignorando
+// o desbloqueio. Voltar pra false quando terminar de conferir.
+const PREVIEW_ALL_ELEMENTS = false;
 // Imagem de fundo por elemento (public/assets/bg). Ausente = sem imagem, só o gradiente.
 const ELEMENT_BG = {
+  FUNDAMENTOS: "url('/assets/bg/ninjutsu.webp')",
   FOGO: "url('/assets/bg/fogo.webp')",
   AGUA: "url('/assets/bg/agua.webp')",
   VENTO: "url('/assets/bg/vento.webp')",
@@ -104,6 +107,57 @@ function updateTop() {
   if (t) t.textContent = " / " + state.char.ninjutsu;
 }
 
+// Painel de dossiê (lateral): dados reais do personagem + progresso da árvore ativa.
+function updateDossier(elId) {
+  if (!state || !state.char) return;
+  const c = state.char;
+  $("dsName").textContent = c.name;
+  $("dsClan").textContent = c.clanName || "Sem clã";
+  $("dsLevel").textContent = "Nv. " + c.level;
+
+  // técnicas = nós JUTSU possuídos em todas as árvores
+  let techs = 0;
+  for (const t of Object.values(state.trees)) {
+    for (const n of t) if (n.status === "OWNED" && n.kind === "JUTSU") techs++;
+  }
+  $("dsTechs").textContent = techs;
+
+  // naturezas de chakra (elementos possuídos)
+  const nat = $("dsNatures");
+  nat.innerHTML = "";
+  if (!c.elements.length) {
+    nat.innerHTML = '<span class="nature-empty">Nenhuma desperta</span>';
+  } else {
+    for (const id of c.elements) {
+      const m = ELEMENTS.find((e) => e.id === id);
+      if (!m) continue;
+      const chip = document.createElement("span");
+      chip.className = "nature-chip";
+      chip.style.setProperty("--ec", m.color);
+      const face = m.img ? `<img src="${m.img}" alt="">` : `<span class="nc-emoji">${m.icon}</span>`;
+      chip.innerHTML = `${face}<span>${m.name}</span>`;
+      nat.appendChild(chip);
+    }
+  }
+
+  // pontos de ninjutsu: barra = fração investida
+  const spentPct = c.ninjutsu ? Math.min(100, Math.round((c.spent / c.ninjutsu) * 100)) : 0;
+  $("dsPointsBar").style.width = spentPct + "%";
+  $("dsPointsCap").textContent = `${c.points} livres · ${c.ninjutsu} total`;
+
+  // progresso (domínio) da árvore ativa
+  const meta = ELEMENTS.find((e) => e.id === elId);
+  const nodes = state.trees[elId] || [];
+  const owned = nodes.filter((n) => n.status === "OWNED").length;
+  const total = nodes.length;
+  const pct = total ? Math.round((owned / total) * 100) : 0;
+  $("dsTreeName").textContent = (meta ? meta.name : elId) + " · domínio";
+  const tb = $("dsTreeBar");
+  tb.style.width = pct + "%";
+  tb.style.background = meta ? meta.color : "var(--orange)";
+  $("dsTreeCap").textContent = `${owned} / ${total} nós`;
+}
+
 // assinatura do estado p/ detectar mudança sem re-renderizar à toa
 let lastSig = "";
 const sigOf = (s) => JSON.stringify([s.char, s.trees]);
@@ -147,9 +201,12 @@ function buildElemBar() {
   const bar = $("elembar");
   bar.innerHTML = "";
   for (const e of ELEMENTS) {
+    // So aparece o que o personagem tem. FUNDAMENTOS (Ninjutsu) e' sempre
+    // desbloqueado; elemento/kekkei genkai que ele nao possui nem aparece.
     const unlocked = e.id === "FUNDAMENTOS" || state.char.elements.includes(e.id);
+    if (!unlocked && !PREVIEW_ALL_ELEMENTS) continue;
     const div = document.createElement("div");
-    div.className = "elem" + (unlocked ? "" : " locked");
+    div.className = "elem";
     div.style.setProperty("--ec", e.color);
     div.style.setProperty("--ecg", glow(e.color));
     const eface = e.img
@@ -157,7 +214,6 @@ function buildElemBar() {
       : e.icon;
     div.innerHTML = `<div class="e-ico">${eface}</div><div class="e-name">${e.name}</div>`;
     div.onclick = () => {
-      if (!unlocked) return toast(`${e.name} ainda não foi desbloqueado no bot.`, true);
       activeEl = e.id;
       renderTree(e.id);
     };
@@ -173,6 +229,7 @@ function renderTree(elId) {
 
   // marca ativo na barra
   document.querySelectorAll(".elem").forEach((d) => d.classList.toggle("active", d.dataset.el === elId));
+  updateDossier(elId);
 
   // título + variáveis de cor
   const title = $("treeTitle");
@@ -236,9 +293,32 @@ function renderTree(elId) {
   }
 }
 
+// 1 casa do grid ≈ 1,5 m (escala tática usada só p/ exibir alcance no site).
+const METERS_PER_CELL = 1.5;
+const CAT_LABEL = { NINJUTSU: "Ninjutsu", TAIJUTSU: "Taijutsu", BUKIJUTSU: "Kenjutsu",
+  IRYO: "Ninjutsu Médico", GENJUTSU: "Genjutsu", CLA: "Técnica de Clã" };
+const ACT_LABEL = { COMUM: "Ação comum", BONUS: "Ação bônus", REACAO: "Reação" };
+const RES_LABEL = { chakra: "Chakra", energia: "Energia" };
+
+// Descreve o formato de área + alcance de um jutsu, em metros.
+function areaText(c) {
+  const raw = c.range * METERS_PER_CELL;
+  const m = (Number.isInteger(raw) ? raw : raw.toFixed(1)).toString().replace(".", ",");
+  switch (c.shape) {
+    case "MELEE": return "Corpo a corpo (adjacente)";
+    case "SELF": return "Em si mesmo";
+    case "ALLY": return `Aliado · até ${m} m`;
+    case "SINGLE_TARGET": return `Alvo único · até ${m} m`;
+    case "LINE": return `Linha reta · ${m} m`;
+    case "CONE": return `Cone de 90° · ${m} m`;
+    case "RADIUS": return `Explosão em área · raio ${m} m`;
+    case "GLOBAL_OR_SCENARIO": return "Campo de batalha inteiro";
+    default: return `${m} m`;
+  }
+}
+
 function openModal(n) {
   modalNode = n;
-  const meta = ELEMENTS.find((e) => e.id === n.element);
   const mIcon = $("mIcon");
   mIcon.innerHTML = n.img
     ? `<img class="modal-img" src="${n.img}" alt="">`
@@ -246,13 +326,27 @@ function openModal(n) {
   $("mName").textContent = n.name;
   $("mDesc").innerHTML = highlightEffects(n.desc);
   const rank = $("mRank");
-  const kindLabel = n.kind === "PASSIVE" ? "Passiva" : n.kind === "ELEMENT" ? "Sorteio de Elemento" : "";
+  const kindLabel = n.kind === "ELEMENT" ? "Sorteio de Elemento" : "";
   if (n.rank) { rank.textContent = "Rank " + n.rank; rank.classList.remove("hidden"); }
   else { rank.textContent = kindLabel; rank.classList.toggle("hidden", !kindLabel); }
-  $("mMeta").innerHTML =
-    `<span>Custo: <b>${n.cost}</b></span>` +
-    `<span>Nível: <b>${n.reqLevel}</b></span>` +
-    `<span>Ninjutsu: <b>${n.reqNinjutsu}</b></span>`;
+
+  const chip = (label, val) => `<span>${label}: <b>${val}</b></span>`;
+  let meta = "";
+  const c = n.combat;
+  if (c) {
+    meta += `<span class="meta-h">Em combate</span>`;
+    meta += chip("Tipo", CAT_LABEL[c.category] || c.category);
+    meta += chip("Ação", ACT_LABEL[c.actionType] || c.actionType);
+    meta += chip("Alcance", areaText(c));
+    meta += chip(RES_LABEL[c.resource] || c.resource, c.cost + "%");
+    if (c.baseDamage) meta += chip("Dano base", c.baseDamage);
+    if (c.baseHeal) meta += chip("Cura base", c.baseHeal);
+  }
+  meta += `<span class="meta-h">Para aprender</span>`;
+  meta += chip("Pontos", n.cost);
+  meta += chip("Nível", n.reqLevel);
+  meta += chip("Ninjutsu", n.reqNinjutsu);
+  $("mMeta").innerHTML = meta;
 
   const reason = $("mReason");
   const buy = $("mBuy");

@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { ATTRIBUTES, type Attribute } from "../src/config/enums.js";
-import { resolveAreaCells } from "../src/services/combat/combat-math.js";
+import { resolveAreaCells, dodgeChance } from "../src/services/combat/combat-math.js";
+import { BALANCE } from "../src/config/balance.js";
+import type { Ability } from "../src/data/types.js";
 import { meetsRequirements } from "../src/services/characters/requirements.js";
 import { getAbility } from "../src/data/index.js";
 import { allNodes } from "../src/data/element-trees/index.js";
@@ -21,6 +23,36 @@ describe("seleção de alvos / área", () => {
     const ab = getAbility("tai_soco_forte")!;
     const cells = resolveAreaCells(ab, "A1", "A2", scenario);
     expect(cells).toEqual(["A2"]);
+  });
+});
+
+describe("dodgeChance: base única + cap único", () => {
+  // dodgeChance so le ability.undodgeable; monta o minimo.
+  const atk = (over: Partial<Ability> = {}): Ability => ({ undodgeable: false, ...over } as unknown as Ability);
+
+  it("base é dodgeBase (15%) sem reação", () => {
+    expect(dodgeChance({ ability: atk() })).toBeCloseTo(BALANCE.dodgeBase);
+  });
+
+  it("não escala com atributo — só o reactionBonus soma", () => {
+    expect(dodgeChance({ ability: atk(), reactionBonus: 0.2 })).toBeCloseTo(BALANCE.dodgeBase + 0.2);
+  });
+
+  it("cap único trava em dodgeCap (50%)", () => {
+    expect(dodgeChance({ ability: atk(), reactionBonus: 0.9 })).toBeCloseTo(BALANCE.dodgeCap);
+  });
+
+  it("undodgeable zera", () => {
+    expect(dodgeChance({ ability: atk({ undodgeable: true }), reactionBonus: 0.9 })).toBe(0);
+  });
+
+  it("DEFENSE_DOWN e altura do atacante reduzem", () => {
+    expect(dodgeChance({ ability: atk(), defenseDown: true })).toBeCloseTo(
+      BALANCE.dodgeBase - BALANCE.effects.DEFENSE_DOWN.dodgeReduction,
+    );
+    expect(dodgeChance({ ability: atk(), attackerHeight: true })).toBeCloseTo(
+      BALANCE.dodgeBase - BALANCE.heightTargetDodgePenalty,
+    );
   });
 });
 

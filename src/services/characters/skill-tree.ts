@@ -9,9 +9,25 @@
 // REGRA DE OURO: nada vindo do cliente é confiável. buyNode revalida TUDO
 // contra o banco dentro de uma transação. O front só manda o nodeId.
 import { prisma } from "../../db/client.js";
-import { ELEMENTS, isKekkeiGenkai, type Element } from "../../config/enums.js";
+import { ELEMENTS, isKekkeiGenkai, type Element, type Shape } from "../../config/enums.js";
 import { ELEMENT_TREES, getNode, type SkillNodeDef } from "../../data/element-trees/index.js";
+import { getAbility } from "../../data/index.js";
 import { FUNDAMENTOS } from "../../data/element-trees/fundamentals.js";
+import { clanStartingElement, CLAN_STARTING_ELEMENT } from "../../data/clans/starting-element.js";
+
+// Icone do elemento (footer). So basicos — kekkei genkai nunca e primeiro
+// elemento. Usado pra pintar o no "Primeiro Elemento" com o elemento do cla.
+const ELEMENT_ICON: Partial<Record<Element, string>> = {
+  FOGO: "/assets/icons/footer/katon.png",
+  AGUA: "/assets/icons/footer/suiton.png",
+  VENTO: "/assets/icons/footer/futon.png",
+  TERRA: "/assets/icons/footer/doton.png",
+  RAIO: "/assets/icons/footer/raiton.png",
+};
+
+// No da Arvore de Ninjutsu que concede o PRIMEIRO elemento — este vem do cla
+// (starting-element.ts). Os demais (funda_elemento_2..5) continuam aleatorios.
+const FIRST_ELEMENT_NODE_ID = "funda_elemento_1";
 
 // Elementos basicos = os que um personagem pode ganhar por sorteio na arvore
 // de Fundamentos. Kekkei genkai fica de fora (so entra via /admin).
@@ -25,9 +41,40 @@ export function remainingBasicElements(owned: Element[]): Element[] {
 
 export type NodeStatus = "OWNED" | "BUYABLE" | "LOCKED";
 
+// Perfil de combate da ability que o no concede (so JUTSU). O front usa pra
+// mostrar tipo/acao/alcance/area/custo de recurso no modal.
+export interface NodeCombat {
+  category: string;
+  actionType: string;
+  resource: "chakra" | "energia";
+  cost: number; // custo de recurso (%), NAO o custo em pontos da arvore
+  shape: Shape;
+  range: number; // em celulas
+  baseDamage?: number;
+  baseHeal?: number;
+}
+
 export interface NodeView extends SkillNodeDef {
   status: NodeStatus;
   reason?: string; // se LOCKED: por quê
+  combat?: NodeCombat; // presente só em nós JUTSU
+}
+
+// Extrai o perfil de combate da ability concedida por um no JUTSU.
+function combatOf(node: SkillNodeDef): NodeCombat | undefined {
+  if (node.kind !== "JUTSU" || !node.grantsAbilityId) return undefined;
+  const ab = getAbility(node.grantsAbilityId);
+  if (!ab) return undefined;
+  return {
+    category: ab.category,
+    actionType: ab.actionType,
+    resource: ab.resource,
+    cost: ab.cost,
+    shape: ab.shape,
+    range: ab.range,
+    baseDamage: ab.baseDamage,
+    baseHeal: ab.baseHeal,
+  };
 }
 
 export interface CharSnapshot {
@@ -39,6 +86,7 @@ export interface CharSnapshot {
   points: number; // disponível = ninjutsu - spent
   elements: Element[]; // elementos desbloqueados
   owned: Set<string>; // ids de nó comprados
+  clanId: string | null; // cla do personagem (define o primeiro elemento)
 }
 
 // Soma o custo dos nós possuídos.
@@ -56,6 +104,7 @@ function snapFrom(char: {
   attributes: { ninjutsu: number } | null;
   elements: { element: string }[];
   skillNodes: { nodeId: string }[];
+  clan: { clanId: string } | null;
 }): CharSnapshot {
   const owned = new Set(char.skillNodes.map((s) => s.nodeId));
   const ninjutsu = char.attributes?.ninjutsu ?? 1;
@@ -69,6 +118,7 @@ function snapFrom(char: {
     points: Math.max(0, ninjutsu - spent),
     elements: char.elements.map((e) => e.element as Element),
     owned,
+    clanId: char.clan?.clanId ?? null,
   };
 }
 
@@ -76,7 +126,7 @@ function snapFrom(char: {
 export async function loadSnapshot(discordId: string, guildId: string): Promise<CharSnapshot | null> {
   const char = await prisma.userCharacter.findUnique({
     where: { discordId_guildId: { discordId, guildId } },
-    include: { attributes: true, elements: true, skillNodes: true },
+    include: { attributes: true, elements: true, skillNodes: true, clan: true },
   });
   if (!char) return null;
   return snapFrom(char);
@@ -107,18 +157,25 @@ export function lockReason(snap: CharSnapshot, node: SkillNodeDef): string | nul
 // Estado completo de uma árvore para exibir (não decide nada de gravação).
 export function viewTree(snap: CharSnapshot, element: Element): NodeView[] {
   return ELEMENT_TREES[element].map((node) => {
-    if (snap.owned.has(node.id)) return { ...node, status: "OWNED" };
+    const combat = combatOf(node);
+    if (snap.owned.has(node.id)) return { ...node, combat, status: "OWNED" };
     const reason = lockReason(snap, node);
-    return reason ? { ...node, status: "LOCKED", reason } : { ...node, status: "BUYABLE" };
+    return reason ? { ...node, combat, status: "LOCKED", reason } : { ...node, combat, status: "BUYABLE" };
   });
 }
 
 // Mesma logica de viewTree, mas pra arvore de Fundamentos (sem `element`).
+// O no "Primeiro Elemento" mostra o icone do elemento que o CLA concede; cla
+// sem elemento definido (aleatorio/sem cla) mantem o icone generico elements.png.
 export function viewFundamentosTree(snap: CharSnapshot): NodeView[] {
+  const clanElement = snap.clanId ? CLAN_STARTING_ELEMENT[snap.clanId] : undefined;
   return FUNDAMENTOS.map((node) => {
-    if (snap.owned.has(node.id)) return { ...node, status: "OWNED" };
+    const img =
+      node.id === FIRST_ELEMENT_NODE_ID && clanElement ? ELEMENT_ICON[clanElement] ?? node.img : node.img;
+    const withIcon = { ...node, img, combat: combatOf(node) };
+    if (snap.owned.has(node.id)) return { ...withIcon, status: "OWNED" };
     const reason = lockReason(snap, node);
-    return reason ? { ...node, status: "LOCKED", reason } : { ...node, status: "BUYABLE" };
+    return reason ? { ...withIcon, status: "LOCKED", reason } : { ...withIcon, status: "BUYABLE" };
   });
 }
 
@@ -143,7 +200,7 @@ export async function buyNode(
   return prisma.$transaction(async (tx) => {
     const char = await tx.userCharacter.findUnique({
       where: { discordId_guildId: { discordId, guildId } },
-      include: { attributes: true, elements: true, skillNodes: true },
+      include: { attributes: true, elements: true, skillNodes: true, clan: true },
     });
     if (!char) return { ok: false, error: "Personagem não encontrado." };
 
@@ -169,14 +226,15 @@ export async function buyNode(
       grantedAbilityId = node.grantsAbilityId;
     }
 
-    // ELEMENT (arvore de Fundamentos): sorteia um elemento basico entre os
-    // que o personagem ainda nao tem. E' assim que o jogador ganha o 1o ao
-    // 5o elemento — kekkei genkai fica fora, so entra via /admin.
+    // ELEMENT (Arvore de Ninjutsu): o PRIMEIRO elemento (funda_elemento_1) vem
+    // do cla (starting-element.ts). Os demais (2..5) sao sorteados entre os
+    // basicos que o personagem ainda nao tem. Kekkei genkai fica fora (so /admin).
     let grantedElement: Element | undefined;
     if (node.kind === "ELEMENT") {
       const pool = remainingBasicElements(snap.elements);
       if (pool.length === 0) return { ok: false, error: "Todos os elementos básicos já foram concedidos." };
-      grantedElement = pool[Math.floor(Math.random() * pool.length)];
+      const doCla = node.id === FIRST_ELEMENT_NODE_ID ? clanStartingElement(snap.clanId, snap.elements) : null;
+      grantedElement = doCla ?? pool[Math.floor(Math.random() * pool.length)]!;
       await tx.characterElement.create({ data: { charId: char.id, element: grantedElement } });
     }
 

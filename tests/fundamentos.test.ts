@@ -3,6 +3,7 @@ import { getAbility } from "../src/data/index.js";
 import { allNodes, getNode } from "../src/data/element-trees/index.js";
 import { FUNDAMENTOS } from "../src/data/element-trees/fundamentals.js";
 import { lockReason, remainingBasicElements, type CharSnapshot } from "../src/services/characters/skill-tree.js";
+import { clanStartingElement } from "../src/data/clans/starting-element.js";
 
 const ACADEMY_IDS = ["tecnica_clonagem", "tecnica_substituicao", "tecnica_caminhada_aquatica"] as const;
 
@@ -15,6 +16,7 @@ const snap = (over: Partial<CharSnapshot> = {}): CharSnapshot => ({
   points: 100,
   elements: [],
   owned: new Set(),
+  clanId: null,
   ...over,
 });
 
@@ -47,9 +49,7 @@ describe("Fundamentos: integridade da arvore", () => {
       "funda_elemento_4",
       "funda_elemento_5",
     ]);
-    expect(rolls[0]!.requires).toEqual(
-      expect.arrayContaining(["funda_clonagem", "funda_substituicao", "funda_caminhada"]),
-    );
+    expect(rolls[0]!.requires).toEqual(["funda_substituicao"]);
     for (let i = 1; i < rolls.length; i++) {
       expect(rolls[i]!.requires).toEqual([rolls[i - 1]!.id]);
     }
@@ -72,13 +72,13 @@ describe("Fundamentos: lockReason não exige elemento", () => {
     expect(lockReason(snap(), node)).toBeNull();
   });
 
-  it("o roll de elemento exige as 3 técnicas de Academia primeiro", () => {
+  it("o roll de elemento exige a Substituição (espinha Clonagem → Substituição → Elemento)", () => {
     const node = getNode("funda_elemento_1")!;
     expect(lockReason(snap(), node)).toMatch(/Requer antes/);
-    const comAcademia = snap({
-      owned: new Set(["funda_clonagem", "funda_substituicao", "funda_caminhada"]),
+    const comEspinha = snap({
+      owned: new Set(["funda_clonagem", "funda_substituicao"]),
     });
-    expect(lockReason(comAcademia, node)).toBeNull();
+    expect(lockReason(comEspinha, node)).toBeNull();
   });
 
   it("uma árvore elemental normal (ex: Fogo) continua exigindo o elemento", () => {
@@ -103,12 +103,34 @@ describe("remainingBasicElements", () => {
   });
 });
 
+describe("clanStartingElement: primeiro elemento vem do cla", () => {
+  it("cla mapeado devolve seu elemento canonico", () => {
+    expect(clanStartingElement("uchiha", [])).toBe("FOGO");
+    expect(clanStartingElement("hatake", [])).toBe("RAIO");
+    expect(clanStartingElement("onoki", [])).toBe("TERRA");
+  });
+
+  it("cla sem natureza canonica sorteia (null = chamador sorteia)", () => {
+    for (const c of ["nara", "hyuuga", "lee", "kakuzu"]) {
+      expect(clanStartingElement(c, []), c).toBeNull();
+    }
+  });
+
+  it("sem cla sorteia", () => {
+    expect(clanStartingElement(null, [])).toBeNull();
+  });
+
+  it("se o personagem ja tem o elemento do cla, cai no sorteio", () => {
+    expect(clanStartingElement("uchiha", ["FOGO"])).toBeNull();
+  });
+});
+
 describe("Técnica de Substituição: reação DODGE com bônus próprio", () => {
   it("tem reactionKind DODGE e reactionDodgeBonus alto", () => {
     const ab = getAbility("tecnica_substituicao")!;
     expect(ab.actionType).toBe("REACAO");
     expect(ab.reactionKind).toBe("DODGE");
-    expect(ab.reactionDodgeBonus).toBeCloseTo(0.35);
+    expect(ab.reactionDodgeBonus).toBeCloseTo(0.2);
   });
 });
 

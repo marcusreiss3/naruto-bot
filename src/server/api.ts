@@ -5,6 +5,7 @@ import { ENV } from "../config/env.js";
 import type { Element } from "../config/enums.js";
 import { getSessionDiscordId } from "./auth.js";
 import { ELEMENT_TREES } from "../data/element-trees/index.js";
+import { CLANS } from "../data/index.js";
 import { loadSnapshot, viewTree, viewFundamentosTree, buyNode } from "../services/characters/skill-tree.js";
 
 export function registerApi(app: FastifyInstance): void {
@@ -30,6 +31,8 @@ export function registerApi(app: FastifyInstance): void {
         ninjutsu: snap.ninjutsu, // orçamento total
         spent: snap.spent,
         elements: [...snap.elements],
+        clanId: snap.clanId,
+        clanName: snap.clanId ? CLANS.find((c) => c.id === snap.clanId)?.name ?? snap.clanId : null,
       },
       trees,
     });

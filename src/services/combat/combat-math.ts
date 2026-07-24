@@ -67,30 +67,20 @@ export function computeHeal(ability: Ability, iryo: number, healMult = 1): numbe
 
 export interface DodgeContext {
   ability: Ability; // ataque recebido
-  defenderTaijutsu: number;
-  defenderNinjutsu: number;
   defenseDown?: boolean; // efeito DEFENSE_DOWN ativo
   attackerHeight?: boolean; // atacante em altura reduz esquiva do alvo abaixo
-  reactionBonus?: number; // skill de reacao que melhora esquiva
+  reactionBonus?: number; // reacao escolhida (Substituicao, jutsu...) + buffs
 }
 
+// Chance de esquiva. Base unica (BALANCE.dodgeBase) igual pra todos — NAO
+// escala com atributo. A reacao escolhida entra via reactionBonus e o cap
+// unico (BALANCE.dodgeCap) trava o total.
 export function dodgeChance(ctx: DodgeContext): number {
-  const { ability } = ctx;
-  if (ability.undodgeable) return 0;
-  const physical = ability.category === "TAIJUTSU" || ability.category === "BUKIJUTSU";
-  let chance: number;
-  let cap: number;
-  if (physical) {
-    chance = BALANCE.dodgePhysBase + ctx.defenderTaijutsu * BALANCE.dodgePhysPerTaijutsu;
-    cap = BALANCE.dodgePhysCap;
-  } else {
-    chance = BALANCE.dodgeNinjutsuBase + ctx.defenderNinjutsu * BALANCE.dodgeNinjutsuPerNinjutsu;
-    cap = BALANCE.dodgeNinjutsuCap;
-  }
-  chance += ctx.reactionBonus ?? 0;
+  if (ctx.ability.undodgeable) return 0;
+  let chance = BALANCE.dodgeBase + (ctx.reactionBonus ?? 0);
   if (ctx.defenseDown) chance -= BALANCE.effects.DEFENSE_DOWN.dodgeReduction;
   if (ctx.attackerHeight) chance -= BALANCE.heightTargetDodgePenalty;
-  return Math.max(0, Math.min(cap, chance));
+  return Math.max(0, Math.min(BALANCE.dodgeCap, chance));
 }
 
 // Resolve as celulas atingidas por uma ability dada origem/alvo.

@@ -25,7 +25,7 @@
         <article class="login-copy">
           <div class="login-title-row">
             <div class="login-crest">
-              <img src="/assets/icons/header/ninjutsu.png" alt="Símbolo de Ninjutsu">
+              <img src="/assets/icons/ui/yingyang.png" alt="Símbolo de Ninjutsu">
             </div>
             <div>
               <p class="login-kicker">Registro pessoal de técnicas</p>
@@ -75,13 +75,51 @@
       <button class="logout" id="logoutBtn" title="Sair"><span class="x-ico"></span></button>
     </header>
 
-    <main class="stage">
-      <div class="tree-title" id="treeTitle">Fogo</div>
-      <div class="canvas-wrap" id="canvasWrap">
-        <svg id="edges" class="edges"></svg>
-        <div id="nodes" class="nodes"></div>
-      </div>
-    </main>
+    <div class="workspace">
+      <!-- Dossiê shinobi: dados reais do personagem -->
+      <aside class="dossier" id="dossier">
+        <div class="dossier-head">
+          <span class="dossier-kanji">忍</span>
+          <div>
+            <span class="dossier-eyebrow">Dossiê shinobi</span>
+            <span class="dossier-name" id="dsName">—</span>
+          </div>
+        </div>
+
+        <dl class="dossier-facts">
+          <div><dt>Clã</dt><dd id="dsClan">—</dd></div>
+          <div><dt>Nível</dt><dd id="dsLevel">—</dd></div>
+          <div><dt>Técnicas</dt><dd id="dsTechs">—</dd></div>
+        </dl>
+
+        <section class="dossier-block">
+          <span class="dossier-label">Naturezas de chakra</span>
+          <div class="nature-chips" id="dsNatures"></div>
+        </section>
+
+        <section class="dossier-block">
+          <span class="dossier-label">Pontos de ninjutsu</span>
+          <div class="meter"><div class="meter-fill" id="dsPointsBar"></div></div>
+          <span class="meter-cap" id="dsPointsCap">—</span>
+        </section>
+
+        <section class="dossier-block">
+          <span class="dossier-label"><span id="dsTreeName">—</span></span>
+          <div class="meter meter-el"><div class="meter-fill" id="dsTreeBar"></div></div>
+          <span class="meter-cap" id="dsTreeCap">—</span>
+        </section>
+      </aside>
+
+      <main class="stage">
+        <span class="hud-corner tl"></span><span class="hud-corner tr"></span>
+        <span class="hud-corner bl"></span><span class="hud-corner br"></span>
+        <div class="tree-title" id="treeTitle">Fogo</div>
+        <div class="canvas-wrap" id="canvasWrap">
+          <svg id="edges" class="edges"></svg>
+          <div id="nodes" class="nodes"></div>
+        </div>
+      </main>
+    </div>
 
     <!-- Seletor de elementos (embaixo) -->
     <nav class="elembar" id="elembar"></nav>

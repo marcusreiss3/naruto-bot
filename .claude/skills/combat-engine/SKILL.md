@@ -1,6 +1,6 @@
 ---
 name: combat-engine
-description: Use ao mexer na engine de combate — dano, esquiva/bloqueio/aparar, efeitos de status (BURN/POISON/BLEED/STUN/SLOW/ROOT/CONFUSION/DISARM), economia de ação, turnos, IA de NPC, terreno (água/altura/árvore), ou balanceamento global. Cobre o pipeline useAbility→resolveHit, o que é puro vs DB, onde cada número mora, e os pontos já sabidos como não-ligados. Trigger: "combate", "dano", "esquiva", "efeito de status", "turno", "IA do NPC", "balanceamento", "engine".
+description: Use ao mexer na engine de combate — dano, esquiva/bloqueio/aparar, efeitos de status (BURN/POISON/BLEED/STUN/SLOW/ROOT/CONFUSION/DISARM/FLEE_LOCK/WET/SHIELD/CHAKRA_DRAIN/HASTE + kekkei genkai CRYSTALLIZED/PRISM/CORROSION/DEHYDRATION/MAGMA/MINADO), economia de ação, turnos, IA de NPC, terreno (água/altura/árvore), ou balanceamento global. Cobre o pipeline useAbility→resolveHit, o que é puro vs DB, onde cada número mora, e os pontos já sabidos como não-ligados. Trigger: "combate", "dano", "esquiva", "efeito de status", "turno", "IA do NPC", "balanceamento", "engine".
 ---
 
 # Engine de combate
@@ -33,9 +33,11 @@ useAbility(session, actorId, abilityId, targetCell, targetId?)
   deduz recurso + marca ação          <-- efeitos colaterais acontecem AQUI
   aplica cura/cleanse/buff-self na hora
   monta hits[] com rawDamage           <-- dano NÃO aplicado ainda
-      ↓ (Discord mostra botões de reação por 20s)
+      ↓ (Discord: passo 1 "Reagir/Levar dano", passo 2 escolhe a reação)
 resolveHit(sessionId, hit, attackerId, { reaction, reactionAbilityId })
   DODGE  -> dodgeChance(); acerto = dano 0
+           reactionAbilityId = jutsu de reação (paga custo próprio); sem ele =
+           esquiva normal (gasta esquivaNormalCost: energia vs físico, chakra vs resto)
   BLOCK  -> dano * (1 - 0.5)
   PARRY  -> dano * (1 - 0.6)
   aplica dano, efeitos on-hit (só se damage > 0), DISARM, morte
@@ -50,9 +52,10 @@ dano   = (baseDamage + attr * SCALE[attr]) * burnTaiMult? * scenarioDmgMult? * (
          + weaponDamage (só KENJUTSU)
 SCALE  = ninjutsu 2.0 | iryo 2.5 | taijutsu 1.8 | kenjutsu 1.8 | genjutsu 1.0
 cura   = (baseHeal + iryo * 2.5) * (sangrando ? 0.5 : 1)
-esquiva físico  = 0.05 + tai * 0.01   (cap 0.35)
-esquiva ninjutsu= 0.03 + nin * 0.008  (cap 0.30)
-  modificadores: +0.1 reactionBuff, -0.15 DEFENSE_DOWN, -0.1 atacante elevado
+esquiva = dodgeBase 0.15 + reactionBonus   (cap único dodgeCap 0.50; NÃO escala com atributo)
+  reactionBonus = Substituição/jutsu (reactionDodgeBonus) + 0.1 reactionBuff (Clonagem)
+                + haste + passiva nin (só vs não-físico) - cristal
+  modificadores: -0.15 DEFENSE_DOWN, -0.1 atacante elevado
 hp     = 100 + nivel * 5 + taijutsu * 3
 mover  = 2 + floor(tai / 15)   (SLOW: * 0.5)
 custo  = cost * (BASICO 1.0 | CONTROLADO 0.7 | MESTRE 0.55)
@@ -60,10 +63,12 @@ custo  = cost * (BASICO 1.0 | CONTROLADO 0.7 | MESTRE 0.55)
 
 ## Efeitos
 
+**Base** (aplicáveis por qualquer categoria):
+
 | Efeito | Comportamento | Stacka? |
 |---|---|---|
 | BURN | 8 dmg/turno; -5% dano TAI/KEN por stack; **5 stacks = explode 40 e zera** | sim |
-| POISON | `2 + (stacks-1) * 1` por turno | sim |
+| POISON | `2 + (stacks-1) * 1` por turno (teto de duração `POISON.maxDuration`) | sim |
 | BLEED | 5 dmg/turno; corta cura pela metade; portador perde 6 HP ao usar TAI/KEN | sim |
 | STUN | não pode agir nem mover | **não** (só estende duração) |
 | SLOW | movimento * 0.5 | sim (sem efeito extra) |
@@ -72,6 +77,24 @@ custo  = cost * (BASICO 1.0 | CONTROLADO 0.7 | MESTRE 0.55)
 | NINJUTSU_BLOCK | trava categoria NINJUTSU | sim |
 | DEFENSE_DOWN | -15% esquiva | sim |
 | DISARM | dropa arma na célula (`DroppedItem`) | — |
+| FLEE_LOCK | não pode fugir do combate | **não** (só estende, dur 2) |
+| WET | marcador sem dano — Água/Raio o leem (`chainWetTargets`, dano bônus); tick de Água reaplica WET | — (dur 2) |
+| SHIELD | stacks = pontos de dano absorvidos **antes do HP**; Bloquear soma +`perDefend`(1) | sim (soma pontos; dur 3) |
+| CHAKRA_DRAIN | -10 chakra/turno | não (valor fixo; dur 2) |
+| HASTE | +2 mov, +10% esquiva, +25% fuga, **8 de dano de contato** no atacante corpo a corpo | não (dur 3) |
+
+**Kekkei genkai** (um por elemento avançado; mesma pipeline, payoff temático):
+
+| Efeito | Elemento | Comportamento | Stacka? |
+|---|---|---|---|
+| CRYSTALLIZED | Cristal | espelho do BURN: **sem dano**; -8% esquiva e -1 mov por stack; **4 stacks = sela (STUN 1 + ROOT 2) e zera** | sim (dur 3) |
+| PRISM | Fio de Luz | corta 60% do dano de NINJUTSU recebido e reflete 30% do barrado no atacante; usuário fica IMÓVEL; TAI/BUKI passam inteiros | não (dur 2) |
+| CORROSION | Vapor | 5 dmg/turno (leve) + derrete **8 de SHIELD/turno por stack**, ignorando a barreira | sim (dur 3) |
+| DEHYDRATION | Calor | -15% de **TODO** dano que o alvo causar por stack (não só TAI/BUKI como BURN) | sim (dur 2) |
+| MAGMA | Lava | 4 dmg/turno + acumula: **4 stacks = endurece → ROOT 2 e zera** (sem STUN, ao contrário do Cristal) | sim (dur 3) |
+| MINADO | Explosão | pavio de tempo: **0 dano enquanto queima**; no último tick (duração→0) estoura **20/stack** de uma vez | sim (gatilho = tempo, não stack; dur 2) |
+
+Todos os 15 acima estão **ligados** na engine (verificado): helpers puros em `effects.ts`, consumo em `combat-engine.ts` (`applyEffect`/`refractDamage`/`shieldPoints`/`corrosionShieldDrain`/tick etc.).
 
 Ao adicionar efeito: `EFFECT_IDS` em `enums.ts` → número em `BALANCE.effects` → comportamento puro em `effects.ts` → consumo na engine (`useAbility` p/ modificador de dano, `resolveHit` p/ on-hit, `endTurn` p/ tick). Pular qualquer passo = efeito inerte.
 

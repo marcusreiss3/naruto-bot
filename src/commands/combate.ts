@@ -619,32 +619,86 @@ async function resolveWithReaction(
   const targetChar = await prisma.userCharacter.findUnique({ where: { id: target.charId } });
   if (!targetChar) return resolveHit(sessionId, hit, attackerId, { reaction: "NONE" });
 
-  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder().setCustomId("react_DODGE").setLabel("Esquivar").setStyle(ButtonStyle.Primary),
-    new ButtonBuilder().setCustomId("react_BLOCK").setLabel("Bloquear").setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId("react_PARRY").setLabel("Aparar").setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId("react_NONE").setLabel("Sem reação").setStyle(ButtonStyle.Danger),
+  // reacoes por JUTSU que o alvo possui (Substituicao etc). Lidas ao vivo do DB.
+  const ownedRows = await prisma.characterJutsu.findMany({
+    where: { charId: target.charId },
+    select: { jutsuId: true },
+  });
+  const reactionJutsus = ownedRows
+    .map((r) => getAbility(r.jutsuId))
+    .filter((a): a is NonNullable<typeof a> => !!a && a.actionType === "REACAO");
+
+  // ---- Passo 1: reagir ou levar o dano ----
+  const gateRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder().setCustomId("rx_react").setLabel("🛡️ Reagir").setStyle(ButtonStyle.Primary),
+    new ButtonBuilder().setCustomId("rx_none").setLabel("💥 Levar dano").setStyle(ButtonStyle.Danger),
   );
 
   const prompt = await interaction.followUp({
-    content: `🎯 <@${targetChar.discordId}> está sob ataque de **${hit.ability.name}** (~${hit.rawDamage} dano). Reaja em 20s:`,
-    components: [row],
+    content: `🎯 <@${targetChar.discordId}> está sob ataque de **${hit.ability.name}** (~${hit.rawDamage} dano). Reagir em 20s?`,
+    components: [gateRow],
   });
 
+  const mine = (i: ButtonInteraction) => i.user.id === targetChar.discordId;
+
+  let gate: ButtonInteraction;
+  try {
+    gate = (await prompt.awaitMessageComponent({
+      componentType: ComponentType.Button,
+      time: 20_000,
+      filter: mine,
+    })) as ButtonInteraction;
+  } catch {
+    await prompt.edit({ content: "⌛ Sem reação a tempo (dano total).", components: [] }).catch(() => undefined);
+    return resolveHit(sessionId, hit, attackerId, { reaction: "NONE" });
+  }
+
+  if (gate.customId === "rx_none") {
+    await gate.update({ content: "💥 Encarou o golpe (dano total).", components: [] });
+    return resolveHit(sessionId, hit, attackerId, { reaction: "NONE" });
+  }
+
+  // ---- Passo 2: qual reacao ----
+  // esquiva normal + um botao por jutsu de reacao + bloquear/aparar base.
+  const buttons: ButtonBuilder[] = [
+    new ButtonBuilder().setCustomId("rx_dodge").setLabel("💨 Esquiva normal").setStyle(ButtonStyle.Primary),
+  ];
+  for (const j of reactionJutsus.slice(0, 5)) {
+    buttons.push(new ButtonBuilder().setCustomId(`rx_j_${j.id}`).setLabel(j.name.slice(0, 40)).setStyle(ButtonStyle.Success));
+  }
+  buttons.push(new ButtonBuilder().setCustomId("rx_block").setLabel("🛡️ Bloquear").setStyle(ButtonStyle.Secondary));
+  buttons.push(new ButtonBuilder().setCustomId("rx_parry").setLabel("🗡️ Aparar").setStyle(ButtonStyle.Secondary));
+
+  // Discord: max 5 botoes por linha.
+  const rows: ActionRowBuilder<ButtonBuilder>[] = [];
+  for (let i = 0; i < buttons.length; i += 5) {
+    rows.push(new ActionRowBuilder<ButtonBuilder>().addComponents(buttons.slice(i, i + 5)));
+  }
+  await gate.update({ content: `🛡️ <@${targetChar.discordId}>, escolha a reação (15s):`, components: rows });
+
   let reaction: "DODGE" | "BLOCK" | "PARRY" | "NONE" = "NONE";
+  let reactionAbilityId: string | undefined;
   try {
     const btn = (await prompt.awaitMessageComponent({
       componentType: ComponentType.Button,
-      time: 20_000,
-      filter: (i: ButtonInteraction) => i.user.id === targetChar.discordId,
+      time: 15_000,
+      filter: mine,
     })) as ButtonInteraction;
-    reaction = btn.customId.replace("react_", "") as typeof reaction;
-    await btn.update({ content: `🛡️ Reação: **${reaction}**`, components: [] });
+    const id = btn.customId;
+    if (id === "rx_dodge") reaction = "DODGE";
+    else if (id === "rx_block") reaction = "BLOCK";
+    else if (id === "rx_parry") reaction = "PARRY";
+    else if (id.startsWith("rx_j_")) {
+      reactionAbilityId = id.slice("rx_j_".length);
+      const ab = getAbility(reactionAbilityId);
+      reaction = (ab?.reactionKind ?? "DODGE") as typeof reaction;
+    }
+    await btn.update({ content: `🛡️ Reação escolhida.`, components: [] });
   } catch {
-    await prompt.edit({ content: "⌛ Sem reação a tempo (dano total).", components: [] }).catch(() => undefined);
+    await prompt.edit({ content: "⌛ Demorou pra escolher (dano total).", components: [] }).catch(() => undefined);
   }
 
-  return resolveHit(sessionId, hit, attackerId, { reaction });
+  return resolveHit(sessionId, hit, attackerId, { reaction, reactionAbilityId });
 }
 
 async function checkVictory(interaction: ChatInputCommandInteraction, sessionId: string): Promise<void> {
