@@ -5,7 +5,8 @@
 // custo, dano, acumulos de Queimadura e terreno deixado no acerto.
 import { BALANCE } from "../../config/balance.js";
 import type { EffectId, TerrainKind } from "../../config/enums.js";
-import { getPassive } from "../../data/element-trees/passives.js";
+import { getPassive, type PassiveDef } from "../../data/element-trees/passives.js";
+import { getClanPassive } from "../../data/clan-trees/passives.js";
 import type { Ability } from "../../data/types.js";
 import { hasEffect, type EffectState } from "./effects.js";
 
@@ -62,12 +63,22 @@ export function passiveMods(
     effectDurationBonus: {},
     effectChanceBonus: {},
   };
-  if (!ability.element) return mods;
+  // habilidades de arvore de cla (ex: Nara) nao tem `element` — leem a
+  // passiva de clã em vez da passiva elemental. O gate e' `requirements.clanId`,
+  // NAO a categoria de combate: o Nara e' categoria NINJUTSU (chakra de
+  // verdade, joga com NINJUTSU_BLOCK etc.) mas a passiva ainda vem da arvore
+  // do clã, nao de uma natureza elemental. Qualquer outra ability sem
+  // elemento e sem clã nao tem passiva nenhuma pra ler.
+  const clanId = ability.requirements?.clanId;
+  const clanAbility = !ability.element && Boolean(clanId);
+  if (!ability.element && !clanAbility) return mods;
 
   for (const nodeId of ownedNodeIds) {
-    const p = getPassive(nodeId);
-    // passiva so vale para jutsus do proprio elemento
-    if (!p || p.element !== ability.element) continue;
+    const p: Partial<PassiveDef> | undefined = clanAbility ? getClanPassive(nodeId) : getPassive(nodeId);
+    // passiva so vale para jutsus do proprio elemento (posse do nó já
+    // garante o clã certo pro caso CLA — ver lockReason)
+    if (!p) continue;
+    if (!clanAbility && p.element !== ability.element) continue;
 
     if (p.damageMult) mods.damageMult *= p.damageMult;
     if (p.costMult) {

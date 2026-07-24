@@ -109,6 +109,131 @@ export const CLAN_ABILITIES: Ability[] = [
     description: "Golpe suave que fere os pontos de chakra; reduz uso de ninjutsu do alvo.",
     undodgeable: true,
   },
+
+  // ---- Nara ----
+  // Habilidades concedidas pela arvore de cla (src/data/clan-trees/index.ts),
+  // nao pelo scan de autoUnlockJutsus — por isso `manualOnly: true` (o campo
+  // `requirements` aqui e' so documentacao/gate informativo; quem realmente
+  // concede e a compra do no na arvore, ver services/characters/skill-tree.ts).
+  // As 4 técnicas de "imitação" (Possessão, Shuriken, Rede, Lírio) não têm
+  // baseDamage: no material de origem a sombra não fere ninguém, só prende.
+  // baseDamage: 0 (em vez de omitido) é o marcador que a engine lê pra saber
+  // que é PRA aplicar o efeito mesmo sem dano — ver SHADOW_BOUND em
+  // combat-engine.ts (resolveHit: zeroDamageByDesign). Enforcamento e Costura
+  // continuam causando dano de verdade (mãos apertando/agulhas perfurando) e
+  // usam ROOT normal, não SHADOW_BOUND.
+  {
+    id: "nara_possessao",
+    name: "Técnica de Possessão da Sombra",
+    category: "NINJUTSU",
+    tier: 1,
+    resource: "chakra",
+    cost: 20,
+    actionType: "COMUM",
+    baseDamage: 0,
+    range: 5,
+    shape: "LINE",
+    effects: [{ effectId: "SHADOW_BOUND", duration: 2, chance: 0.65 }],
+    requirements: { clanId: "nara", manualOnly: true },
+    tags: ["nara", "sombra", "controle"],
+    description:
+      "Estende a sombra pelo chão em linha reta; se ela tocar a sombra do alvo, ele fica em Vínculo de Sombra — sem dano, mas incapaz de se mover ou reagir enquanto durar.",
+  },
+  {
+    id: "nara_enforcamento",
+    name: "Técnica de Enforcamento pela Sombra",
+    category: "NINJUTSU",
+    tier: 2,
+    resource: "chakra",
+    cost: 27,
+    actionType: "COMUM",
+    baseDamage: 22,
+    scalingAttribute: "ninjutsu",
+    range: 5,
+    shape: "SINGLE_TARGET",
+    effects: [
+      { effectId: "STUN", duration: 1, chance: 0.75 },
+      { effectId: "ROOT", duration: 2 },
+    ],
+    requirements: { clanId: "nara", manualOnly: true },
+    tags: ["nara", "sombra", "controle", "finalizador"],
+    description:
+      "Depois de capturar um alvo com a Possessão da Sombra, ela assume a forma de mãos que apertam o pescoço e o corpo, restringindo os movimentos e causando dano.",
+  },
+  {
+    id: "nara_costura",
+    name: "Técnica da Costura das Sombras",
+    category: "NINJUTSU",
+    tier: 2,
+    resource: "chakra",
+    cost: 26,
+    actionType: "COMUM",
+    baseDamage: 16,
+    scalingAttribute: "ninjutsu",
+    range: 4,
+    shape: "CONE",
+    effects: [
+      { effectId: "BLEED", stacks: 1, duration: 2, chance: 0.6 },
+      { effectId: "ROOT", duration: 1, chance: 0.4 },
+    ],
+    requirements: { clanId: "nara", manualOnly: true },
+    tags: ["nara", "sombra", "area", "perfuracao"],
+    description:
+      "A sombra se divide em agulhas que avançam pelo solo em leque, perfurando quem estiver na área e podendo prender os pés de quem for atingido.",
+  },
+  {
+    id: "nara_shuriken",
+    name: "Técnica de Imitação de Shuriken pela Sombra",
+    category: "NINJUTSU",
+    tier: 3,
+    resource: "chakra",
+    cost: 36,
+    actionType: "COMUM",
+    baseDamage: 0,
+    range: 6,
+    shape: "SINGLE_TARGET",
+    effects: [{ effectId: "SHADOW_BOUND", duration: 3 }],
+    undodgeable: true,
+    requirements: { clanId: "nara", manualOnly: true },
+    tags: ["nara", "sombra", "precisao", "arma"],
+    description:
+      "Uma lâmina de chakra absorve a própria sombra do usuário; ao perfurar a sombra do alvo (não o corpo), ele entra em Vínculo de Sombra quase sem perceber o que aconteceu.",
+  },
+  {
+    id: "nara_rede",
+    name: "Rede de Imitação pela Sombra",
+    category: "NINJUTSU",
+    tier: 3,
+    resource: "chakra",
+    cost: 38,
+    actionType: "COMUM",
+    baseDamage: 0,
+    range: 6,
+    shape: "RADIUS",
+    effects: [{ effectId: "SHADOW_BOUND", duration: 3, chance: 0.85 }],
+    requirements: { clanId: "nara", manualOnly: true },
+    tags: ["nara", "sombra", "area", "controle"],
+    description:
+      "Divide a sombra em vários filamentos que se espalham pelo chão, prendendo todos os inimigos numa área em Vínculo de Sombra ao mesmo tempo.",
+  },
+  {
+    id: "nara_lirio",
+    name: "Lírio da Aranha Negra",
+    category: "NINJUTSU",
+    tier: 3,
+    resource: "chakra",
+    cost: 50,
+    actionType: "COMUM",
+    baseDamage: 0,
+    range: 6,
+    shape: "RADIUS",
+    effects: [{ effectId: "SHADOW_BOUND", duration: 2 }],
+    push: -3,
+    requirements: { clanId: "nara", manualOnly: true },
+    tags: ["nara", "sombra", "area", "puxao", "apice"],
+    description:
+      "Envia tentáculos de sombra que alcançam os inimigos e os prendem com a Rede de Imitação (Vínculo de Sombra), puxando todos os capturados até um ponto — útil para arrastar o inimigo para dentro do alcance de outra técnica.",
+  },
 ];
 
 export const CLANS: ClanDef[] = [
@@ -149,7 +274,16 @@ export const CLANS: ClanDef[] = [
     name: "Nara",
     description: "Clã das sombras de Konoha: estrategistas que manipulam a própria sombra para prender o inimigo.",
     passiveIds: [],
-    activeIds: [],
+    // concedidas pela arvore de cla (src/data/clan-trees/index.ts), nao por
+    // requisito automatico — ver comentario acima das abilities "---- Nara ----".
+    activeIds: [
+      "nara_possessao",
+      "nara_enforcamento",
+      "nara_costura",
+      "nara_shuriken",
+      "nara_rede",
+      "nara_lirio",
+    ],
     hooks: {},
   },
   {

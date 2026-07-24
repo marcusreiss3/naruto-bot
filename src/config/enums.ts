@@ -110,6 +110,8 @@ export const EFFECT_IDS = [
   "SHIELD", // barreira: stacks = pontos de dano absorvidos antes do HP
   "CHAKRA_DRAIN", // perde chakra por turno
   "HASTE", // acelerado: mais movimento, esquiva e chance de fuga
+  // ---- exclusivo do cla Nara ----
+  "SHADOW_BOUND", // vinculo de sombra: sem dano, mas trava movimento E reacao (Esquivar/Bloquear/Aparar)
   // ---- exclusivos de kekkei genkai ----
   "CRYSTALLIZED", // cristalizado: acumulos de cristal travam esquiva e movimento; ao encher, selam
   "PRISM", // prisma: casulo de luz que reduz ninjutsu recebido e reflete parte, mas prende no lugar
@@ -146,6 +148,7 @@ export const EFFECT_LABELS: Record<EffectId, string> = {
   SHIELD: "Barreira",
   CHAKRA_DRAIN: "Dreno de Chakra",
   HASTE: "Aceleração",
+  SHADOW_BOUND: "Vínculo de Sombra",
   CRYSTALLIZED: "Cristalizado",
   PRISM: "Prisma",
   CORROSION: "Corrosão",

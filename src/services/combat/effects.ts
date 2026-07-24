@@ -31,6 +31,7 @@ const DEFAULT_DURATIONS: Partial<Record<EffectId, number>> = {
   SHIELD: E.SHIELD.defaultDuration,
   CHAKRA_DRAIN: E.CHAKRA_DRAIN.defaultDuration,
   HASTE: E.HASTE.defaultDuration,
+  SHADOW_BOUND: E.SHADOW_BOUND.defaultDuration,
   CRYSTALLIZED: E.CRYSTALLIZED.defaultDuration,
   PRISM: E.PRISM.defaultDuration,
   CORROSION: E.CORROSION.defaultDuration,
@@ -171,6 +172,27 @@ export function hasteFleeChanceBonus(activeEffects: EffectState[]): number {
 
 export function hasteContactDamage(activeEffects: EffectState[]): number {
   return activeEffects.some((e) => isActive(e, "HASTE")) ? E.HASTE.contactDamage : 0;
+}
+
+// ----------------------------------------------------------------- NARA (cla)
+// Vinculo de Sombra: nao tica dano. Trava movimento (como isRooted) E trava a
+// REACAO do alvo — a engine consome isso em resolveHit forcando a reacao
+// pedida para "NONE" quando o alvo esta vinculado, antes de resolver
+// Esquiva/Bloqueio/Aparo.
+export function isShadowBound(activeEffects: EffectState[]): boolean {
+  return activeEffects.some((e) => isActive(e, "SHADOW_BOUND"));
+}
+
+// Um golpe "aconteceu" (libera efeitos on-hit e empurrao/puxao em resolveHit)
+// normalmente e' sinonimo de "causou dano" — mas um jutsu 0-dano DE PROPOSITO
+// (baseDamage === 0, ex: as tecnicas de imitacao do Nara) nunca teria
+// damage > 0 pra abrir essa porta, e o efeito nunca aplicaria.
+// `baseDamage === 0` distingue "nasceu sem dano" de "dano foi reduzido a 0
+// por Bloqueio/Barreira" (onde baseDamage > 0 na definicao, so o resultado
+// final que zerou) — so o primeiro caso libera o efeito mesmo com
+// damage === 0. Uma Esquiva bem-sucedida (dodged) continua barrando os dois.
+export function effectsLanded(damage: number, baseDamage: number | undefined, dodged: boolean): boolean {
+  return damage > 0 || (baseDamage === 0 && !dodged);
 }
 
 // ---------------------------------------------------------------- CRISTAL (KG)

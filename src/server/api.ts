@@ -5,8 +5,9 @@ import { ENV } from "../config/env.js";
 import type { Element } from "../config/enums.js";
 import { getSessionDiscordId } from "./auth.js";
 import { ELEMENT_TREES } from "../data/element-trees/index.js";
+import { CLAN_TREES } from "../data/clan-trees/index.js";
 import { CLANS } from "../data/index.js";
-import { loadSnapshot, viewTree, viewFundamentosTree, buyNode } from "../services/characters/skill-tree.js";
+import { loadSnapshot, viewTree, viewFundamentosTree, viewClanTree, buyNode } from "../services/characters/skill-tree.js";
 
 export function registerApi(app: FastifyInstance): void {
   // Estado completo: personagem + as 5 árvores com o status de cada nó.
@@ -20,6 +21,9 @@ export function registerApi(app: FastifyInstance): void {
     const trees: Record<string, unknown> = { FUNDAMENTOS: viewFundamentosTree(snap) };
     for (const el of Object.keys(ELEMENT_TREES) as Element[]) {
       trees[el] = viewTree(snap, el);
+    }
+    for (const clanId of Object.keys(CLAN_TREES)) {
+      trees[clanId.toUpperCase()] = viewClanTree(snap, clanId);
     }
     return reply.send({
       authenticated: true,

@@ -11,7 +11,8 @@
 import { prisma } from "../../db/client.js";
 import { ELEMENTS, isKekkeiGenkai, type Element, type Shape } from "../../config/enums.js";
 import { ELEMENT_TREES, getNode, type SkillNodeDef } from "../../data/element-trees/index.js";
-import { getAbility } from "../../data/index.js";
+import { CLAN_TREES } from "../../data/clan-trees/index.js";
+import { getAbility, getClan } from "../../data/index.js";
 import { FUNDAMENTOS } from "../../data/element-trees/fundamentals.js";
 import { clanStartingElement, CLAN_STARTING_ELEMENT } from "../../data/clans/starting-element.js";
 
@@ -140,6 +141,9 @@ export function lockReason(snap: CharSnapshot, node: SkillNodeDef): string | nul
   if (node.element && !snap.elements.includes(node.element)) {
     return `Requer o elemento ${node.element}.`;
   }
+  if (node.clanId && snap.clanId !== node.clanId) {
+    return `Requer o clã ${getClan(node.clanId)?.name ?? node.clanId}.`;
+  }
   for (const req of node.requires) {
     if (!snap.owned.has(req)) {
       const parent = getNode(req);
@@ -157,6 +161,16 @@ export function lockReason(snap: CharSnapshot, node: SkillNodeDef): string | nul
 // Estado completo de uma árvore para exibir (não decide nada de gravação).
 export function viewTree(snap: CharSnapshot, element: Element): NodeView[] {
   return ELEMENT_TREES[element].map((node) => {
+    const combat = combatOf(node);
+    if (snap.owned.has(node.id)) return { ...node, combat, status: "OWNED" };
+    const reason = lockReason(snap, node);
+    return reason ? { ...node, combat, status: "LOCKED", reason } : { ...node, combat, status: "BUYABLE" };
+  });
+}
+
+// Mesma logica de viewTree, mas pra arvore de um CLA (sem `element`, gate por clanId).
+export function viewClanTree(snap: CharSnapshot, clanId: string): NodeView[] {
+  return (CLAN_TREES[clanId] ?? []).map((node) => {
     const combat = combatOf(node);
     if (snap.owned.has(node.id)) return { ...node, combat, status: "OWNED" };
     const reason = lockReason(snap, node);

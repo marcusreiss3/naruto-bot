@@ -14,6 +14,7 @@
 // ============================================================================
 import type { Element } from "../../config/enums.js";
 import { FUNDAMENTOS } from "./fundamentals.js";
+import { CLAN_TREES } from "../clan-trees/index.js";
 
 export type NodeKind = "JUTSU" | "PASSIVE" | "ELEMENT";
 export type NodeRank = "D" | "C" | "B" | "A" | "S";
@@ -24,6 +25,9 @@ export interface SkillNodeDef {
   // Caminhada Aquatica/rolagem de elemento): eles nao pertencem a nenhuma
   // natureza de chakra, entao lockReason pula a exigencia de elemento.
   element?: Element;
+  // presente so em nos de arvore de CLA (ex: Nara): lockReason exige que o
+  // personagem pertenca a este cla em vez de checar elemento.
+  clanId?: string;
   name: string;
   kind: NodeKind;
   rank?: NodeRank; // só em JUTSU
@@ -286,10 +290,14 @@ export const ELEMENT_TREES: Record<Element, SkillNodeDef[]> = {
   EXPLOSAO,
 };
 
-// FUNDAMENTOS nao entra em ELEMENT_TREES (nao pertence a nenhum elemento),
-// mas entra no indice global — e' aqui que getNode/allNodes/buyNode o acham.
+// FUNDAMENTOS e as arvores de CLA (CLAN_TREES, ex: Nara) nao entram em
+// ELEMENT_TREES (nao pertencem a nenhum elemento), mas entram no indice
+// global — e' aqui que getNode/allNodes/buyNode as acham.
 const NODE_INDEX: Map<string, SkillNodeDef> = new Map(
-  [...Object.values(ELEMENT_TREES).flat(), ...FUNDAMENTOS].map((n) => [n.id, n]),
+  [...Object.values(ELEMENT_TREES).flat(), ...FUNDAMENTOS, ...Object.values(CLAN_TREES).flat()].map((n) => [
+    n.id,
+    n,
+  ]),
 );
 
 // Ícones PNG por nó (public/assets/icons/<subpasta>). Ausente = usa o emoji do nó.

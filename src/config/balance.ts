@@ -106,6 +106,15 @@ export const BALANCE = {
       contactDamage: 8,
     },
 
+    // ---- exclusivo do cla Nara ----
+    // Vinculo de Sombra: o oposto do dano-por-toque comum. NAO causa dano nem
+    // tem stacks — o payoff e' CONTROLE TOTAL: alem de travar o movimento
+    // (como o Enraizado), tambem trava a REACAO do alvo (nao pode Esquivar,
+    // Bloquear nem Aparar enquanto durar) porque o corpo dele "copia" o do
+    // usuario. So uma Esquiva bem-sucedida ANTES do vinculo prender evita o
+    // efeito — depois de preso, nao ha mais escolha.
+    SHADOW_BOUND: { defaultDuration: 2 },
+
     // ---- exclusivos de kekkei genkai ----
     // Cristalizado: o oposto da Queimadura. NAO causa dano por turno — cobre o
     // alvo de cristal, tirando esquiva e movimento a cada acumulo. O payoff e'

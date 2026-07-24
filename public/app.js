@@ -16,6 +16,8 @@ const ELEMENTS = [
   { id: "CALOR", name: "Calor", icon: "", img: "/assets/icons/footer/calor.png", color: "#d9662b" },
   { id: "LAVA", name: "Lava", icon: "", img: "/assets/icons/footer/lava.png", color: "#b23a1f" },
   { id: "EXPLOSAO", name: "Explosão", icon: "", img: "/assets/icons/footer/explosao.png", color: "#c9a227" },
+  // Árvores de clã (gate por clanId em vez de elemento — ver clanGate abaixo).
+  { id: "NARA", name: "Nara", icon: "🌑", color: "#5c5c7a", clanGate: "nara" },
 ];
 // TEMPORARIO: mostra TODOS os elementos no footer (preview de icones), ignorando
 // o desbloqueio. Voltar pra false quando terminar de conferir.
@@ -45,6 +47,8 @@ const GLOSSARY = [
   { re: "reduzindo a defesa|reduz a defesa", tip: "Defesa reduzida: o alvo perde 15% de chance de esquivar dos ataques." },
   { re: "não pode(?:m)? ser esquivad[oa](?:s)?", tip: "Não pode ser esquivado: ignora a reação de esquiva do alvo. O ataque sempre acerta." },
   { re: "não consegue fugir|sem poder fugir|não conseguem fugir", tip: "Fuga bloqueada: o alvo não pode usar a ação de fugir do combate enquanto o efeito durar." },
+  // ---- exclusivo do clã Nara ----
+  { re: "Vínculo de Sombra", tip: "Vínculo de Sombra: sem dano, mas o alvo não pode se mover nem reagir (Esquivar/Bloquear/Aparar) enquanto durar — o corpo dele copia o do usuário. Só uma Esquiva bem-sucedida ANTES do vínculo prender evita o efeito." },
   // ---- kekkei genkai: Cristal ----
   { re: "Cristalizado", tip: "Cristalizado: cristais cravados no corpo do alvo. Cada acúmulo tira 8% de esquiva e 1 de movimento, e não causa dano por turno. Ao juntar 4 acúmulos o cristal se fecha: o alvo é selado (Atordoamento + preso ao chão) e os acúmulos zeram." },
   { re: "selad[oa](?:s)?|selar", tip: "Selado: o casulo de cristal fechou. O alvo fica Atordoado 1 rodada e preso ao chão por 2." },
@@ -202,8 +206,11 @@ function buildElemBar() {
   bar.innerHTML = "";
   for (const e of ELEMENTS) {
     // So aparece o que o personagem tem. FUNDAMENTOS (Ninjutsu) e' sempre
-    // desbloqueado; elemento/kekkei genkai que ele nao possui nem aparece.
-    const unlocked = e.id === "FUNDAMENTOS" || state.char.elements.includes(e.id);
+    // desbloqueado; elemento/kekkei genkai que ele nao possui nem aparece;
+    // arvore de cla (clanGate) so aparece pra quem e' daquele cla.
+    const unlocked =
+      e.id === "FUNDAMENTOS" ||
+      (e.clanGate ? state.char.clanId === e.clanGate : state.char.elements.includes(e.id));
     if (!unlocked && !PREVIEW_ALL_ELEMENTS) continue;
     const div = document.createElement("div");
     div.className = "elem";

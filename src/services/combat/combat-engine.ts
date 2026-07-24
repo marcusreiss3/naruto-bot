@@ -33,8 +33,10 @@ import {
   hasteContactDamage,
   hasteDodgeBonus,
   hasteFleeChanceBonus,
+  effectsLanded,
   isConfused,
   isRooted,
+  isShadowBound,
   isStunned,
   isFleeLocked,
   isWet,
@@ -446,6 +448,9 @@ export function validateMove(s: SessionFull, participantId: string, dest: string
   }
   if (isStunned(p.effects)) return { ok: false, error: "Você está atordoado e não pode se mover." };
   if (isRooted(p.effects)) return { ok: false, error: "Você está enraizado e não pode se mover." };
+  if (isShadowBound(p.effects)) {
+    return { ok: false, error: "Sua sombra está vinculada — seu corpo não obedece, não dá pra se mover." };
+  }
   if (!cellHasRoom(s, dest, p.isNpc, p.id)) {
     return {
       ok: false,
@@ -912,6 +917,7 @@ export async function resolveHit(
   const logs: string[] = [];
   const ability = hit.ability;
   let damage = hit.rawDamage;
+  let dodged = false;
 
   // passivas do atacante: precisam existir antes da reacao (perfuracao de
   // bloqueio) e depois dela (queimadura, deslocamento).
@@ -920,8 +926,18 @@ export async function resolveHit(
   const undodgeable =
     ability.undodgeable || Boolean(attacker?.flags.nextUndodgeable);
 
-  // reacao
-  const reaction = opts.reaction ?? "NONE";
+  // reacao — Vinculo de Sombra tira a ESCOLHA do alvo: o corpo dele copia o
+  // do atacante, entao nenhuma reacao pedida (Esquivar/Bloquear/Aparar) e'
+  // aceita enquanto durar. Isso e' o que torna o combo Possessao -> Enforcamento
+  // /Shuriken quase garantido no fluxo real do jogo.
+  const requestedReaction = opts.reaction ?? "NONE";
+  const boundByShadow = isShadowBound(target.effects);
+  if (boundByShadow && requestedReaction !== "NONE") {
+    logs.push(
+      `🌑 ${target.name} está com a sombra vinculada — o corpo copia o do atacante e não consegue reagir.`,
+    );
+  }
+  const reaction = boundByShadow ? "NONE" : requestedReaction;
   if (reaction === "DODGE" && !undodgeable && !ability.unblockable) {
     const reactAb = opts.reactionAbilityId ? getAbility(opts.reactionAbilityId) : undefined;
     const physical = ability.category === "TAIJUTSU" || ability.category === "BUKIJUTSU";
@@ -963,6 +979,7 @@ export async function resolveHit(
         const how = reactAb ? `usou ${reactAb.name} e escapou` : "esquivou no reflexo";
         logs.push(`💨 ${target.name} ${how} (${Math.round(dc * 100)}%)!`);
         damage = 0;
+        dodged = true;
       } else {
         logs.push(`${target.name} tentou esquivar (${Math.round(dc * 100)}%) e o golpe acertou.`);
       }
@@ -1007,6 +1024,11 @@ export async function resolveHit(
       logs.push(`🪨 ${target.name} ganhou Barreira ao se defender.`);
     }
   }
+
+  // ver effectsLanded() em effects.ts: distingue "nasceu sem dano de
+  // proposito" (Vinculo de Sombra) de "dano foi reduzido a 0 por
+  // Bloqueio/Barreira".
+  const landed = effectsLanded(damage, ability.baseDamage, dodged);
 
   // limpa flag de undodgeable do atacante (consumido)
   if (attacker?.flags.nextUndodgeable) await setFlag(attacker.id, "nextUndodgeable", false);
@@ -1063,7 +1085,7 @@ export async function resolveHit(
         explodeDamage: atkMods.burnExplodeDamage,
       }
     : undefined;
-  if (damage > 0 && ability.effects) {
+  if (landed && ability.effects) {
     for (const ae of ability.effects) {
       const effectChance = Math.min(
         1,
@@ -1162,7 +1184,7 @@ export async function resolveHit(
   }
 
   // deslocamento: empurra ou puxa o alvo (so se o golpe conectou e ele vive)
-  if (damage > 0 && ability.push && attacker && hpAfterEffects > 0) {
+  if (landed && ability.push && attacker && hpAfterEffects > 0) {
     const scenario = getScenarioById(s.scenarioId)!;
     const bonus = atkMods?.pushBonus ?? 0;
     // o bonus soma no modulo, sem inverter o sentido do puxao
