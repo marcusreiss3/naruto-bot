@@ -67,24 +67,40 @@ export function passiveMods(
   // passiva de clã em vez da passiva elemental. O gate e' `requirements.clanId`,
   // NAO a categoria de combate: o Nara e' categoria NINJUTSU (chakra de
   // verdade, joga com NINJUTSU_BLOCK etc.) mas a passiva ainda vem da arvore
-  // do clã, nao de uma natureza elemental. Qualquer outra ability sem
-  // elemento e sem clã nao tem passiva nenhuma pra ler.
+  // do clã, nao de uma natureza elemental. Um jutsu de clã TAMBEM pode ter
+  // natureza elemental de verdade (ex: os suiton do Hoshigaki/Hozuki/Chinoike
+  // — sao jutsus de Agua de verdade, so' que dentro da arvore do clã) —
+  // nesse caso os dois gates (elemento E clã) sao checados INDEPENDENTEMENTE
+  // abaixo, entao a passiva certa da arvore de Agua e a passiva certa da
+  // arvore do clã aplicam as duas, empilhando. Buff de clã que so' faz
+  // sentido pro proprio clã (a maioria) continua isolado do resto porque
+  // ele nunca bate no `elementMatch` (a ability nao tem `element`).
   const clanId = ability.requirements?.clanId;
-  const clanAbility = !ability.element && Boolean(clanId);
-  if (!ability.element && !clanAbility) return mods;
 
   for (const nodeId of ownedNodeIds) {
-    const p: (Partial<PassiveDef> & Partial<ClanPassiveDef>) | undefined = clanAbility
-      ? getClanPassive(nodeId)
-      : getPassive(nodeId);
+    // tenta os dois catalogos (nao so' o "esperado" pelo tipo da ability):
+    // uma passiva de clã com crossCategory (ex: Olhos de Sangue do Chinoike)
+    // precisa ser encontrada mesmo quando a ability sendo usada não é do
+    // clã dono dela (ex: um genjutsu generico de fundamentos).
+    const p: (Partial<PassiveDef> & Partial<ClanPassiveDef>) | undefined =
+      getClanPassive(nodeId) ?? getPassive(nodeId);
     if (!p) continue;
-    // passiva so vale pro proprio elemento OU pro proprio cla — um
-    // personagem so pode possuir nos de UM cla na pratica, mas o teste
-    // continua correto por conta propria (evita vazamento cruzado de clã).
-    if (!clanAbility && p.element !== ability.element) continue;
-    if (clanAbility && p.clanId !== clanId) continue;
 
-    if (p.damageMult) mods.damageMult *= p.damageMult;
+    // ESCAPE HATCH: passiva com crossCategory ignora os dois gates abaixo e
+    // vale pra qualquer ability da categoria declarada.
+    const crossMatch = p.crossCategory !== undefined && p.crossCategory === ability.category;
+    // passiva elemental (p.element) bate se a ability tiver ESSE elemento —
+    // nao importa se ela tambem tem clanId.
+    const elementMatch = p.element !== undefined && ability.element === p.element;
+    // passiva de clã (p.clanId) bate se a ability for do MESMO clã — nao
+    // importa se ela tambem tem elemento.
+    const clanMatch = p.clanId !== undefined && clanId !== undefined && p.clanId === clanId;
+    if (!crossMatch && !elementMatch && !clanMatch) continue;
+
+    if (p.damageMult) {
+      const scopeOk = !p.damageMultScalingAttribute || ability.scalingAttribute === p.damageMultScalingAttribute;
+      if (scopeOk) mods.damageMult *= p.damageMult;
+    }
     if (p.costMult) {
       const shapeOk = !p.costShapes || p.costShapes.includes(ability.shape);
       if (shapeOk) mods.costMult *= p.costMult;
@@ -132,18 +148,49 @@ export function passiveMods(
 export interface CharacterPassiveMods {
   ninjutsuDodgeBonus: number;
   initiativePriority: number;
+  // soma de todas as passivas do dono — ver ClanPassiveDef.maxHpBonus/hpRegenPerTurn/
+  // chakraRegenPerTurn (ex: Uzumaki, vitalidade e chakra). Elemental (PassiveDef)
+  // tambem pode usar os mesmos nomes de campo no futuro; o agregador aqui nao
+  // distingue a fonte.
+  maxHpBonus: number;
+  hpRegenPerTurn: number;
+  chakraRegenPerTurn: number;
+  // dano fixo devolvido em quem acerta o dono com um golpe físico corpo a
+  // corpo (ex: Armadura de Espinhos do Kaguya) — mesma ideia do
+  // hasteContactDamage (efeito HASTE), so' que permanente/passiva em vez de
+  // um efeito temporario. Ver resolveHit() em combat-engine.ts.
+  meleeCounterDamage: number;
 }
 
 // Modificadores que pertencem ao personagem, e nao a um jutsu especifico.
+// Le TANTO passiva elemental quanto de clã — um personagem so possui nos de
+// UMA arvore de elemento e UM clã por vez, entao nao ha ambiguidade em olhar
+// os dois (mesmo padrao de passiveMods() pra mods por-jutsu).
 export function characterPassiveMods(ownedNodeIds: string[]): CharacterPassiveMods {
   const owned = new Set(ownedNodeIds);
   let ninjutsuDodgeBonus = 0;
   let initiativePriority = 0;
+  let maxHpBonus = 0;
+  let hpRegenPerTurn = 0;
+  let chakraRegenPerTurn = 0;
+  let meleeCounterDamage = 0;
   for (const nodeId of owned) {
-    const p = getPassive(nodeId);
+    const p: (Partial<PassiveDef> & Partial<ClanPassiveDef>) | undefined =
+      getPassive(nodeId) ?? getClanPassive(nodeId);
     if (!p) continue;
     ninjutsuDodgeBonus += p.ninjutsuDodgeBonus ?? 0;
     initiativePriority += p.initiativePriority ?? 0;
+    maxHpBonus += p.maxHpBonus ?? 0;
+    hpRegenPerTurn += p.hpRegenPerTurn ?? 0;
+    chakraRegenPerTurn += p.chakraRegenPerTurn ?? 0;
+    meleeCounterDamage += p.meleeCounterDamage ?? 0;
   }
-  return { ninjutsuDodgeBonus, initiativePriority };
+  return {
+    ninjutsuDodgeBonus,
+    initiativePriority,
+    maxHpBonus,
+    hpRegenPerTurn,
+    chakraRegenPerTurn,
+    meleeCounterDamage,
+  };
 }

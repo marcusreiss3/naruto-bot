@@ -258,6 +258,10 @@ describe("passivas: Raio", () => {
     expect(characterPassiveMods(["raio_raiz"])).toEqual({
       ninjutsuDodgeBonus: 0.08,
       initiativePriority: 1,
+      maxHpBonus: 0,
+      hpRegenPerTurn: 0,
+      chakraRegenPerTurn: 0,
+      meleeCounterDamage: 0,
     });
   });
 });

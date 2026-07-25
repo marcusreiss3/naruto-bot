@@ -1,7 +1,8 @@
 import { prisma } from "../../db/client.js";
 import { BALANCE } from "../../config/balance.js";
 import { ATTRIBUTES, type Attribute, type Element } from "../../config/enums.js";
-import { ALL_ABILITIES } from "../../data/index.js";
+import { ALL_ABILITIES, getClan } from "../../data/index.js";
+import { getNode } from "../../data/element-trees/index.js";
 import { maxHp, expectedMasteryPoints } from "./formulas.js";
 import { meetsRequirements } from "./requirements.js";
 
@@ -187,7 +188,33 @@ export async function setClan(charId: string, clanId: string): Promise<void> {
     create: { charId, clanId },
     update: { clanId },
   });
+  await grantAutoClanNodes(charId, clanId);
   await autoUnlockJutsus(charId);
+}
+
+// Nos que o personagem ja nasce possuindo ao escolher o cla (ex: Inuzuka
+// nasce com o cao ninja, nao desbloqueia upando — ver ClanDef.autoGrantedNodeIds
+// e o no isolado em data/clan-trees/index.ts). Idempotente: pode rodar de
+// novo (ex: admin trocando o cla) sem duplicar nada.
+async function grantAutoClanNodes(charId: string, clanId: string): Promise<void> {
+  const clan = getClan(clanId);
+  if (!clan?.autoGrantedNodeIds?.length) return;
+  for (const nodeId of clan.autoGrantedNodeIds) {
+    const node = getNode(nodeId);
+    if (!node) continue;
+    await prisma.characterSkillNode.upsert({
+      where: { charId_nodeId: { charId, nodeId } },
+      create: { charId, nodeId },
+      update: {},
+    });
+    if (node.kind === "JUTSU" && node.grantsAbilityId) {
+      await prisma.characterJutsu.upsert({
+        where: { charId_jutsuId: { charId, jutsuId: node.grantsAbilityId } },
+        create: { charId, jutsuId: node.grantsAbilityId },
+        update: {},
+      });
+    }
+  }
 }
 
 export async function addJutsu(charId: string, jutsuId: string): Promise<void> {

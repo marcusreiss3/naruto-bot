@@ -3,7 +3,7 @@ import { getAbility, getClan } from "../src/data/index.js";
 import { allNodes } from "../src/data/element-trees/index.js";
 import { CLAN_TREES } from "../src/data/clan-trees/index.js";
 import { CLAN_PASSIVES } from "../src/data/clan-trees/passives.js";
-import { passiveMods } from "../src/services/combat/passives.js";
+import { passiveMods, characterPassiveMods } from "../src/services/combat/passives.js";
 import { lockReason, type CharSnapshot } from "../src/services/characters/skill-tree.js";
 
 const IDS = [
@@ -57,31 +57,66 @@ describe("Hyuuga: integridade da arvore de cla", () => {
     }
   });
 
-  it("os dois nós PASSIVE (raiz e ápice) têm definição de passiva", () => {
+  it("todas as técnicas miram tenketsu só visíveis com o Byakugan ativo — exceto o próprio toggle", () => {
+    for (const id of IDS.filter((i) => i !== "hyuuga_byakugan")) {
+      expect(getAbility(id)!.requiresActiveDoujutsu, id).toEqual({
+        flag: "byakuganActive",
+        label: "Byakugan",
+      });
+    }
+    expect(getAbility("hyuuga_byakugan")!.requiresActiveDoujutsu).toBeUndefined();
+  });
+
+  it("os três nós PASSIVE (raiz, Guarda Perpétua e ápice) têm definição de passiva", () => {
     const semDef = allNodes()
       .filter((n) => n.kind === "PASSIVE" && n.clanId === "hyuuga")
       .filter((n) => !CLAN_PASSIVES.some((p) => p.nodeId === n.id))
       .map((n) => n.id);
     expect(semDef).toEqual([]);
+    expect(allNodes().filter((n) => n.kind === "PASSIVE" && n.clanId === "hyuuga").length).toBe(3);
   });
 
-  it("escalonamento é uma cadeia linear na ordem exata pedida (sem ramos)", () => {
-    const order = [
-      "hyuuga_raiz",
-      "hyuuga_byakugan",
-      "hyuuga_punho_suave",
-      "hyuuga_palma_vacuo",
-      "hyuuga_64_palmas",
-      "hyuuga_palma_rotativa",
-      "hyuuga_128_palmas",
-      "hyuuga_apice",
-      "hyuuga_leoes_gemeos",
-    ];
+  it("tronco reto (col 0) até Punho Suave", () => {
+    const order = ["hyuuga_raiz", "hyuuga_byakugan", "hyuuga_punho_suave"];
     for (let i = 1; i < order.length; i++) {
       const node = allNodes().find((n) => n.id === order[i])!;
       expect(node.requires, order[i]).toEqual([order[i - 1]]);
-      expect(node.col, order[i]).toBe(0); // tronco reto, sem ramificação
+      expect(node.col, order[i]).toBe(0);
     }
+  });
+
+  it("ramifica em ofensivo (col -1, 3 nós) e defensivo (col +1, 2 nós) a partir de Punho Suave", () => {
+    const ofensivos = ["hyuuga_palma_vacuo", "hyuuga_64_palmas", "hyuuga_128_palmas"];
+    for (const id of ofensivos) {
+      const node = allNodes().find((n) => n.id === id)!;
+      expect(node.col, id).toBe(-1);
+    }
+    expect(allNodes().find((n) => n.id === "hyuuga_palma_vacuo")!.requires).toEqual(["hyuuga_punho_suave"]);
+    expect(allNodes().find((n) => n.id === "hyuuga_64_palmas")!.requires).toEqual(["hyuuga_palma_vacuo"]);
+    expect(allNodes().find((n) => n.id === "hyuuga_128_palmas")!.requires).toEqual(["hyuuga_64_palmas"]);
+
+    const rotativa = allNodes().find((n) => n.id === "hyuuga_palma_rotativa")!;
+    expect(rotativa.col).toBe(1);
+    expect(rotativa.requires).toEqual(["hyuuga_punho_suave"]);
+
+    // Guarda Perpétua fecha o ramo defensivo, abaixo da Palma Rotativa
+    const guarda = allNodes().find((n) => n.id === "hyuuga_guarda_perpetua")!;
+    expect(guarda.col).toBe(1);
+    expect(guarda.kind).toBe("PASSIVE");
+    expect(guarda.requires).toEqual(["hyuuga_palma_rotativa"]);
+
+    const dependentesDaRotativa = allNodes().filter((n) => n.requires.includes("hyuuga_palma_rotativa"));
+    expect(dependentesDaRotativa.map((n) => n.id)).toEqual(["hyuuga_guarda_perpetua"]);
+  });
+
+  it("Rede de Tenketsu converge os dois ramos (128 Palmas ofensivo + Guarda Perpétua defensivo) antes dos Leões Gêmeos", () => {
+    const apice = allNodes().find((n) => n.id === "hyuuga_apice")!;
+    expect(new Set(apice.requires)).toEqual(new Set(["hyuuga_128_palmas", "hyuuga_guarda_perpetua"]));
+    expect(apice.col).toBe(0);
+
+    const leoes = allNodes().find((n) => n.id === "hyuuga_leoes_gemeos")!;
+    expect(leoes.requires).toEqual(["hyuuga_apice"]);
+    expect(leoes.col).toBe(0);
   });
 
   it("clã Hyuuga existe e referencia as sete habilidades em activeIds", () => {
@@ -156,5 +191,12 @@ describe("Hyuuga: passivas — atravessa defesa, sela chakra", () => {
   it("passiva de Hyuuga não afeta jutsu elemental", () => {
     const bola = getAbility("katon_goukakyuu")!;
     expect(passiveMods(["hyuuga_raiz"], bola).costMult).toBe(1);
+  });
+
+  it("Guarda Perpétua estende a Barreira da Palma Rotativa e soma esquiva permanente contra Ninjutsu", () => {
+    const rotativa = getAbility("hyuuga_palma_rotativa")!;
+    const m = passiveMods(["hyuuga_guarda_perpetua"], rotativa);
+    expect(m.effectDurationBonus.SHIELD).toBe(1);
+    expect(characterPassiveMods(["hyuuga_guarda_perpetua"]).ninjutsuDodgeBonus).toBeCloseTo(0.08);
   });
 });

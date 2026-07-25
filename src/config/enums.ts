@@ -40,6 +40,11 @@ export const ATTRIBUTES = [
   "kugutsu",
   "senjutsu",
   "dojutsu",
+  // Kenjutsu = espadas, especificamente — separado de bukijutsu (armas em
+  // geral: shuriken, kunai, senbon). Mesmo papel do ninjutsu: só pontos pra
+  // desbloquear skill (reqAttribute em nós de árvore), 0% de escala de dano
+  // (ver kenjutsuScaling em balance.ts).
+  "kenjutsu",
 ] as const;
 export type Attribute = (typeof ATTRIBUTES)[number];
 
@@ -54,6 +59,7 @@ export const ATTRIBUTE_LABELS: Record<Attribute, string> = {
   kugutsu: "Kugutsu",
   senjutsu: "Senjutsu",
   dojutsu: "Dōjutsu",
+  kenjutsu: "Kenjutsu",
 };
 
 // Categoria = que TIPO de jutsu e (dirige /jutsu <sub> e regras da engine:

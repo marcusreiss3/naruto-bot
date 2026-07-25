@@ -38,7 +38,7 @@ export const FUNDAMENTOS: Ability[] = [
     requirements: { manualOnly: true },
     tags: ["fundamentos", "reacao", "fuga", "ilusao"],
     description:
-      "Substitui o próprio corpo por um tronco de madeira no instante em que o ataque chega, criando uma ilusão de ótica. Como reação, aumenta muito a chance de esquiva contra o golpe.",
+      "Substitui o próprio corpo por um tronco de madeira no instante em que o ataque chega, criando uma ilusão de ótica. Como reação, dá +20% de chance de esquiva contra o golpe.",
   },
   {
     id: "tecnica_caminhada_aquatica",

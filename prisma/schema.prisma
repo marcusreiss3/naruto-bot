@@ -68,6 +68,7 @@ model CharacterAttributes {
   kugutsu      Int           @default(1)
   senjutsu     Int           @default(1)
   dojutsu      Int           @default(1)
+  kenjutsu     Int           @default(1)
 }
 
 model CharacterResourceState {

@@ -25,6 +25,16 @@ export interface AppliedEffect {
   // mesmo alvo — ex: a Sobrecarga (EMPOWERED) da Pílula Secreta vira Defesa
   // Reduzida quando passa: o corpo cobra o preço depois do surto de força.
   onExpire?: { effectId: EffectId; stacks?: number; duration?: number };
+  // Restringe a QUEM a Sobrecarga (EMPOWERED) vale, pra nao inflar dano sem
+  // relacao com a fantasia da skill (ex: virar lobo nao deveria turbinar um
+  // jutsu elemental sem nada a ver). So' tem efeito quando effectId ===
+  // "EMPOWERED"; omitido = vale pra qualquer dano, como antes.
+  //   "physical" -> so' categoria TAIJUTSU/BUKIJUTSU (Lobo de Duas/Tres
+  //     Cabecas, Grande Braco de Agua, Pilula Secreta)
+  //   "clan"     -> so' jutsu que exigem o MESMO cla de quem concedeu o
+  //     efeito (Casulo do Aburame: so' golpes que exigem clanId "aburame",
+  //     cobrindo a Mordida de Inseto mesmo sendo categoria NINJUTSU)
+  empoweredScope?: "physical" | "clan";
 }
 
 export interface AbilityRequirements {
@@ -48,6 +58,11 @@ export interface Ability {
   actionType: ActionType;
   baseDamage?: number;
   baseHeal?: number;
+  // junto do baseHeal, tambem devolve recurso pro alvo curado (ex: Regeneracao
+  // de Vigor do Uzumaki, que "energiza rapidamente" quem cura, nao so fecha
+  // ferimento). Independente do `resource` que a PROPRIA ability gasta pra
+  // ser usada.
+  restoreResource?: { resource: "chakra" | "energia"; amount: number };
   // atributo que escala dano/cura
   scalingAttribute?: Attribute;
   range: number; // em celulas; 0 = self/melee adjacente
@@ -73,6 +88,16 @@ export interface Ability {
   chainWetTargets?: boolean;
   // exige chamas ativas no campo ou a passiva que forma nuvens de tempestade
   requiresStorm?: boolean;
+  // exige uma invocacao viva do proprio ator em campo (flags.isSummon +
+  // summonerId === ator) — ex: as tecnicas de combo do cao ninja (Inuzuka)
+  // que nao funcionam se o cao ja morreu na luta.
+  requiresPet?: boolean;
+  // exige que o PROPRIO ator esteja com um dojutsu de toggle ligado no
+  // momento do uso (ex: Palma de Vacuo do Hyuuga usa o Byakugan como mira;
+  // Genjutsu Ketsuryuugan do Chinoike E' o proprio doujutsu agindo). O `flag`
+  // bate com a chave em ParticipantRow.flags que /combate byakugan|ketsuryuugan
+  // liga/desliga (ex: "byakuganActive"); `label` e' so' pra mensagem de erro.
+  requiresActiveDoujutsu?: { flag: string; label: string };
   // pode ser usada uma unica vez por combate
   oncePerCombat?: boolean;
   reactionKind?: "BLOCK" | "DODGE" | "PARRY" | "JUTSU";
@@ -88,6 +113,13 @@ export interface Ability {
   // invoca um aliado no grid (clone, golem). Ele age no turno com a IA de NPC.
   summon?: {
     templateId: string; // NpcTemplate usado como corpo da invocacao
+    // vida proporcional a do invocador em vez do hpMax fixo do template (ex:
+    // cao ninja do Inuzuka = 1/3 da vida do dono). Quando presente, IGNORA
+    // tpl.hpMax; quando ausente, comportamento antigo (hpMax fixo).
+    hpFraction?: number;
+    // quantas copias do template invocar de uma vez (ex: a matilha de ninken
+    // do Hatake — "varios caes", nao um so). Omitido = 1, comportamento antigo.
+    count?: number;
     // clone reativo: ao sofrer dano, desfaz-se e pune quem o acertou
     onHit?: { effectId: EffectId; duration?: number };
     // o que acontece quando a invocacao morre (clone d'agua estoura molhando)
@@ -110,6 +142,12 @@ export interface ClanDef {
   passiveIds: string[]; // ids de abilities passivas
   activeIds: string[]; // ids de abilities ativas
   hooks?: ClanAbilityHook;
+  // nos da arvore de cla que o personagem ja nasce possuindo ao escolher
+  // este cla (ex: Inuzuka nasce com o cao ninja — nao desbloqueia upando,
+  // ver setClan() em services/characters/character-service.ts). O no
+  // continua aparecendo na arvore (normalmente isolado, sem requires),
+  // so' que ja marcado como possuido.
+  autoGrantedNodeIds?: string[];
 }
 
 export interface ScenarioCellMods {

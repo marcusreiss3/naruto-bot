@@ -37,6 +37,9 @@ export const BALANCE = {
   kugutsuScaling: 0,
   senjutsuScaling: 0,
   dojutsuScaling: 0,
+  // kenjutsu (espadas, separado de bukijutsu) segue a mesma regra: so' serve
+  // de orcamento pra desbloquear skill (reqAttribute), nao escala dano.
+  kenjutsuScaling: 0,
 
   // ---- Genjutsu duracao ----
   genjutsuBaseDurationBonusEvery: 10, // +1 rodada a cada 10 de genjutsu
@@ -69,6 +72,13 @@ export const BALANCE = {
   // esquiva vale contra QUALQUER ataque (fisico ou ninjutsu) enquanto ativo.
   byakuganUpkeepPerTurn: 5, // % chakra por turno com o Byakugan ativo
   byakuganDodgeBonus: 0.1, // +10 pontos percentuais de esquiva enquanto ativo
+
+  // Ketsuryuugan (Chinoike): mesmo padrao de toggle do Byakugan — liga/desliga
+  // por /combate ketsuryuugan, upkeep por turno, desliga sozinho se faltar
+  // chakra. O comentario do byakugan() ja avisava "serve de modelo pra outros
+  // doujutsu no futuro" — este e' o primeiro.
+  ketsuryuuganUpkeepPerTurn: 5, // % chakra por turno com o Ketsuryuugan ativo
+  ketsuryuuganDodgeBonus: 0.1, // +10 pontos percentuais de esquiva enquanto ativo
 
   // ---- Maestria: multiplicador de custo por recurso ----
   masteryCostMultiplier: {

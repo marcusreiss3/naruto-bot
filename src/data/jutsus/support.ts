@@ -7,7 +7,7 @@ import type { Ability } from "../types.js";
 // projeto final e nao serao substituidos em lugar: somem.
 //
 // EXCECAO - habilidades de NPC ficam (conteudo real, marcadas abaixo):
-//   pombo_bicada, vespa_ferroada
+//   pombo_bicada, vespa_ferroada, cao_ninja_mordida
 // Como distinguir: NPC nao tem `requirements` de desbloqueio e custa 0.
 // Jogador tem level/element/clanId/attributes. Estar em NpcTemplate.abilityIds
 // NAO faz a habilidade ser de NPC - NPCs reusam jutsu de jogador.
@@ -153,6 +153,21 @@ export const SUPPORT: Ability[] = [
     effects: [{ effectId: "POISON", duration: 2, chance: 0.25 }],
     tags: ["vespa", "veneno", "fisico"],
     description: "Varias ferroadas pequenas, com chance baixa de envenenar.",
+  },
+  // >> DE NPC - CONTEUDO REAL, NAO APAGAR (usada pela invocacao Cao Ninja, cla Inuzuka)
+  {
+    id: "cao_ninja_mordida",
+    name: "Mordida do Cão Ninja",
+    category: "TAIJUTSU",
+    tier: 1,
+    resource: "energia",
+    cost: 0,
+    actionType: "COMUM",
+    baseDamage: 10,
+    range: 1,
+    shape: "MELEE",
+    tags: ["cao", "inuzuka", "fisico"],
+    description: "O cão ninja abocanha o alvo com força — ataque simples e confiável.",
   },
   {
     id: "tai_chute_empurrao",

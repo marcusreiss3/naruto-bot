@@ -539,6 +539,27 @@ export const NPCS: NpcTemplate[] = [
     attributes: { ninjutsu: 8, taijutsu: 16 },
     abilityIds: ["doton_punho_rochoso"],
   },
+  {
+    // Cao ninja do cla Inuzuka. hpMax aqui e' so um fallback — na pratica a
+    // vida real vem de `summon.hpFraction` (1/3 da vida do dono), ver
+    // createSummon() em combat-engine.ts e a ability "inuzuka_cao_ninja".
+    id: "cao_ninja",
+    name: "Cão Ninja",
+    hpMax: 70,
+    attributes: { taijutsu: 10, ninjutsu: 4 },
+    abilityIds: ["cao_ninja_mordida"],
+  },
+  {
+    // Matilha de ninken do Hatake — "varios caes", nao um so, por isso hpMax
+    // bem menor que o Cao Ninja sozinho do Inuzuka: sao varios corpos fracos
+    // em vez de um so forte. Reusa a mesma mordida (cao_ninja_mordida) —
+    // sao caes farejadores/mordedores, mesma logica de combate.
+    id: "ninken_hatake",
+    name: "Ninken",
+    hpMax: 24,
+    attributes: { taijutsu: 6, ninjutsu: 3 },
+    abilityIds: ["cao_ninja_mordida"],
+  },
 ];
 
 const NPC_MAP = new Map<string, NpcTemplate>(NPCS.map((n) => [n.id, n]));

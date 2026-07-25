@@ -2,7 +2,7 @@ import { prisma } from "../../db/client.js";
 import { BALANCE } from "../../config/balance.js";
 import { effectLabel, type Attribute, type EffectId } from "../../config/enums.js";
 import { getAbility, getScenarioById, getNpc } from "../../data/index.js";
-import type { Ability, ScenarioDef } from "../../data/types.js";
+import type { Ability, AppliedEffect, ScenarioDef } from "../../data/types.js";
 import { allCells, neighbors, parseCell, radiusCells, toCell } from "../../utils/grid.js";
 import { pick, randInt, chance } from "../../utils/random.js";
 import { costAfterMastery, moveRange } from "../characters/formulas.js";
@@ -131,6 +131,7 @@ function mapSession(s: any): SessionFull {
         effectId: e.effectId,
         stacks: e.stacks,
         duration: e.duration,
+        dataJson: e.dataJson,
       })),
       flags: parseFlags(p.flagsJson),
     })),
@@ -185,6 +186,11 @@ export async function startCombat(opts: {
   let li = 0;
   for (const p of opts.players) {
     const cell = leftCells[li++] ?? free[0]!;
+    // maxHpBonus (ex: vitalidade do Uzumaki) so' entra AQUI, na entrada em
+    // combate — nao mexe no hpMax persistido do personagem fora de luta.
+    const cMods = characterPassiveMods(p.nodes ?? []);
+    const hpMax = Math.round(p.hpMax * (1 + cMods.maxHpBonus));
+    const hpCurrent = Math.round(p.hpCurrent * (1 + cMods.maxHpBonus));
     const cp = await prisma.combatParticipant.create({
       data: {
         sessionId: session.id,
@@ -192,8 +198,8 @@ export async function startCombat(opts: {
         name: p.name,
         teamId: "A",
         cell,
-        hpCurrent: p.hpCurrent,
-        hpMax: p.hpMax,
+        hpCurrent,
+        hpMax,
         chakra: p.chakra,
         energia: p.energia,
         jutsuIdsJson: JSON.stringify(p.jutsuIds),
@@ -201,7 +207,7 @@ export async function startCombat(opts: {
       },
     });
     participantIds.push(cp.id);
-    initiative.set(cp.id, characterPassiveMods(p.nodes ?? []).initiativePriority);
+    initiative.set(cp.id, cMods.initiativePriority);
   }
   let ri = 0;
   for (const n of opts.npcs ?? []) {
@@ -327,7 +333,8 @@ async function createSummon(
 ): Promise<void> {
   const tpl = getNpc(summon.templateId);
   if (!tpl) return;
-  const hp = Math.round(tpl.hpMax * (1 + hpBonus));
+  const baseHp = summon.hpFraction != null ? summoner.hpMax * summon.hpFraction : tpl.hpMax;
+  const hp = Math.max(1, Math.round(baseHp * (1 + hpBonus)));
   const scenario = getScenarioById(s.scenarioId)!;
 
   const blocked = effectiveObstacles(scenario, s.terrain, s.round);
@@ -335,48 +342,63 @@ async function createSummon(
   const origin = parseCell(summoner.cell);
   if (!origin) return;
 
-  const spot = neighbors(origin)
+  // varias copias de uma vez (ex: a matilha de ninken do Hatake) — cada uma
+  // ocupa sua propria casa livre ao redor de quem invocou.
+  const spots = neighbors(origin)
     .filter((c) => c.row >= 0 && c.row < scenario.rows && c.col >= 1 && c.col <= scenario.cols)
     .map(toCell)
-    .find((c) => !blocked.has(c) && !taken.has(c));
-  if (!spot) {
+    .filter((c) => !blocked.has(c) && !taken.has(c))
+    .slice(0, Math.max(1, summon.count ?? 1));
+  if (!spots.length) {
     logs.push("⚠️ Não há espaço livre ao seu lado para a invocação.");
     return;
   }
 
-  const cp = await prisma.combatParticipant.create({
-    data: {
-      sessionId: s.id,
-      isNpc: true,
-      npcTemplate: tpl.id,
-      name: tpl.name,
-      teamId: summoner.teamId, // luta do SEU lado
-      cell: spot,
-      hpCurrent: hp,
-      hpMax: hp,
-      chakra: 100,
-      energia: 100,
-      jutsuIdsJson: JSON.stringify(tpl.abilityIds),
-      flagsJson: JSON.stringify({
-        isSummon: true,
-        summonerId: summoner.id,
-        onHit: summon.onHit ?? null,
-        onDeath: summon.onDeath ?? null,
-      }),
-    },
-  });
+  const newIds: string[] = [];
+  for (const spot of spots) {
+    const cp = await prisma.combatParticipant.create({
+      data: {
+        sessionId: s.id,
+        isNpc: true,
+        npcTemplate: tpl.id,
+        name: tpl.name,
+        teamId: summoner.teamId, // luta do SEU lado
+        cell: spot,
+        hpCurrent: hp,
+        hpMax: hp,
+        chakra: 100,
+        energia: 100,
+        jutsuIdsJson: JSON.stringify(tpl.abilityIds),
+        flagsJson: JSON.stringify({
+          isSummon: true,
+          summonerId: summoner.id,
+          onHit: summon.onHit ?? null,
+          onDeath: summon.onDeath ?? null,
+        }),
+      },
+    });
+    newIds.push(cp.id);
+  }
+  if ((summon.count ?? 1) > spots.length) {
+    logs.push(`⚠️ Só havia espaço pra ${spots.length} de ${summon.count} invocações.`);
+  }
 
-  // entra logo depois de quem invocou, para agir ainda nesta rodada
+  // entram logo depois de quem invocou, para agir ainda nesta rodada
   const order = [...s.turnOrder];
   const at = order.indexOf(summoner.id);
-  if (at >= 0) order.splice(at + 1, 0, cp.id);
-  else order.push(cp.id);
+  if (at >= 0) order.splice(at + 1, 0, ...newIds);
+  else order.push(...newIds);
   await prisma.combatSession.update({
     where: { id: s.id },
     data: { turnOrderJson: JSON.stringify(order) },
   });
 
-  logs.push(`🌀 ${summoner.name} invocou **${tpl.name}** em ${spot}.`);
+  const where = spots.join(", ");
+  logs.push(
+    spots.length > 1
+      ? `🌀 ${summoner.name} invocou ${spots.length}x **${tpl.name}** em ${where}.`
+      : `🌀 ${summoner.name} invocou **${tpl.name}** em ${where}.`,
+  );
 }
 
 // Estouro da invocacao ao morrer (clone d'agua molha a area em volta).
@@ -714,6 +736,15 @@ export async function useAbility(
   ) {
     return fail("Kirin exige chamas ativas no campo ou a passiva Nuvens de Tempestade.");
   }
+  if (
+    ability.requiresPet &&
+    !s.participants.some((p) => p.hpCurrent > 0 && p.flags.isSummon && p.flags.summonerId === actor.id)
+  ) {
+    return fail("Precisa do seu cão ninja vivo em campo pra usar essa técnica.");
+  }
+  if (ability.requiresActiveDoujutsu && !actor.flags[ability.requiresActiveDoujutsu.flag]) {
+    return fail(`Precisa estar com o ${ability.requiresActiveDoujutsu.label} ativo pra usar essa técnica.`);
+  }
 
   // alcance
   if (needsTarget(ability) && effectiveTarget) {
@@ -738,7 +769,7 @@ export async function useAbility(
   logs.push(`✨ ${actor.name} usou **${ability.name}** (-${cost}% ${ability.resource}).`);
 
   // cura / cleanse / buff
-  if (ability.baseHeal || ability.cleanses) {
+  if (ability.baseHeal || ability.cleanses || ability.restoreResource) {
     const healTarget = targetP ?? actor;
     if (ability.cleanses) {
       for (const eff of ability.cleanses) {
@@ -756,6 +787,18 @@ export async function useAbility(
         data: { hpCurrent: newHp },
       });
       logs.push(`💚 ${healTarget.name} recuperou ${heal} HP.`);
+    }
+    if (ability.restoreResource) {
+      const { resource, amount } = ability.restoreResource;
+      const pool = resource === "chakra" ? healTarget.chakra : healTarget.energia;
+      const restored = Math.min(100, pool + amount) - pool;
+      if (restored > 0) {
+        await prisma.combatParticipant.update({
+          where: { id: healTarget.id },
+          data: { [resource]: pool + restored },
+        });
+        logs.push(`⚡ ${healTarget.name} recuperou ${restored}% de ${resource === "chakra" ? "chakra" : "energia"}.`);
+      }
     }
   }
 
@@ -781,7 +824,11 @@ export async function useAbility(
         ae.effectId,
         ae.stacks ?? 1,
         ae.duration ?? defaultDurationFor(ae.effectId),
-        { replaceGroup: ae.replaceGroup, onExpire: ae.onExpire },
+        {
+          replaceGroup: ae.replaceGroup,
+          onExpire: ae.onExpire,
+          empoweredScope: resolveEmpoweredScope(ae.empoweredScope, ability),
+        },
       );
       logs.push(`⚡ ${actor.name} recebeu efeito **${effectLabel(ae.effectId)}**.`);
     }
@@ -849,8 +896,9 @@ export async function useAbility(
     const weakenMult = dehydrationMultiplier(stacksOf(actor, "DEHYDRATION"));
     // Sobrecarga (EMPOWERED): dano de saida multiplicado por tempo limitado —
     // ex: Pilula Secreta do Akimichi. Nao e' condicional ao alvo, entao entra
-    // no mesmo produto de "cenario e passivas" calculado uma vez so.
-    const empoweredMult = empoweredDamageMult(actor.effects);
+    // no mesmo produto de "cenario e passivas" calculado uma vez so. Pode ter
+    // nascido escopado (so' fisico, so' do mesmo clã) — ver empoweredDamageMult.
+    const empoweredMult = empoweredDamageMult(actor.effects, ability);
     const heightBonus = onHeight(actor);
     for (const t of targets) {
       // dano condicional (ex: Fio d'Agua so vale contra alvo Encharcado) precisa
@@ -981,6 +1029,9 @@ export async function resolveHit(
           // ataque, fisico ou ninjutsu — nao entra no `physical ? 0 : ...` como
           // o bonus de Raio (que so vale contra ninjutsu).
           (target.flags.byakuganActive ? BALANCE.byakuganDodgeBonus : 0) +
+          // Ketsuryuugan (Chinoike) ativo: mesmo raciocinio do Byakugan — le
+          // o instante do golpe, vale contra qualquer ataque.
+          (target.flags.ketsuryuuganActive ? BALANCE.ketsuryuuganDodgeBonus : 0) +
           (physical ? 0 : defenseMods.ninjutsuDodgeBonus) -
           // cada acumulo de cristal trava mais um pouco o corpo do alvo
           crystalDodgePenalty(target.effects),
@@ -1117,6 +1168,7 @@ export async function resolveHit(
           burn: ae.effectId === "BURN" ? burnOpts : undefined,
           replaceGroup: ae.replaceGroup,
           onExpire: ae.onExpire,
+          empoweredScope: resolveEmpoweredScope(ae.empoweredScope, ability),
         },
       );
       logs.push(`☠️ ${target.name} recebeu efeito **${effectLabel(ae.effectId)}**${r.explosion ? ` (EXPLOSÃO ${r.explosion} dano!)` : ""}.`);
@@ -1233,16 +1285,22 @@ export async function resolveHit(
     }
   }
 
-  // A Armadura do Ataque Relampago pune contato fisico enquanto estiver ativa.
+  // A Armadura do Ataque Relampago (efeito HASTE) pune QUALQUER contato
+  // fisico enquanto ativa. A Armadura de Espinhos (passiva do Kaguya) so'
+  // pune golpe FISICO de verdade (TAIJUTSU/BUKIJUTSU) — nao um toque
+  // ninjutsu — mas e' permanente, nao um efeito temporario.
   if (damage > 0 && ability.shape === "MELEE" && attacker) {
-    const shock = hasteContactDamage(target.effects);
+    const physicalHit = ability.category === "TAIJUTSU" || ability.category === "BUKIJUTSU";
+    const shock =
+      hasteContactDamage(target.effects) +
+      (physicalHit ? characterPassiveMods(ownedNodes(target)).meleeCounterDamage : 0);
     if (shock > 0) {
       const attackerHp = Math.max(0, attacker.hpCurrent - shock);
       await prisma.combatParticipant.update({
         where: { id: attacker.id },
         data: { hpCurrent: attackerHp },
       });
-      logs.push(`⚡ A armadura de ${target.name} eletrocutou ${attacker.name} por ${shock} de dano.`);
+      logs.push(`⚡ A armadura de ${target.name} feriu ${attacker.name} por ${shock} de dano.`);
       if (attackerHp <= 0) {
         logs.push(`☠️ ${attacker.name} foi derrotado!`);
         if (attacker.flags.isSummon) await triggerSummonDeath(s, attacker, logs);
@@ -1304,6 +1362,20 @@ async function consumeShield(participantId: string, amount: number): Promise<voi
 
 // ---------------- Efeitos ----------------
 
+// Resolve o AppliedEffect.empoweredScope (string curta no jutsu) pro formato
+// que o dataJson guarda ("clan" precisa saber QUAL clã — vem do proprio
+// jutsu que concedeu o efeito, nao do dono do participante, pra funcionar
+// igual mesmo se um dia um jutsu de clã puder ser usado fora do proprio clã).
+function resolveEmpoweredScope(
+  scope: AppliedEffect["empoweredScope"],
+  ability: Ability,
+): { kind: "physical" } | { kind: "clan"; clanId: string } | undefined {
+  if (!scope) return undefined;
+  if (scope === "physical") return { kind: "physical" };
+  const clanId = ability.requirements?.clanId;
+  return clanId ? { kind: "clan", clanId } : undefined;
+}
+
 export async function applyEffect(
   participantId: string,
   effectId: string,
@@ -1312,14 +1384,16 @@ export async function applyEffect(
   opts?: {
     // passivas do ATACANTE que mudam a queimadura (Brasas Persistentes, Combustao)
     burn?: { extraStacks?: number; explodeAtStacks?: number; explodeDamage?: number };
-    // ver AppliedEffect.replaceGroup / .onExpire em data/types.ts
+    // ver AppliedEffect.replaceGroup / .onExpire / .empoweredScope em data/types.ts
     replaceGroup?: string;
     onExpire?: { effectId: EffectId; stacks?: number; duration?: number };
+    empoweredScope?: { kind: "physical" } | { kind: "clan"; clanId: string };
   },
 ): Promise<{ explosion?: number; sealed?: boolean; hardened?: boolean }> {
   const burnOpts = opts?.burn;
   const replaceGroup = opts?.replaceGroup;
   const onExpire = opts?.onExpire;
+  const empoweredScope = opts?.empoweredScope;
   const dur = clampDuration(effectId as EffectId, duration);
 
   // cristal: acumula ate SELAR. Mesma forma da queimadura, payoff invertido —
@@ -1416,6 +1490,7 @@ export async function applyEffect(
   const prevFormAmount = replaceGroup && data.formGroup?.group === replaceGroup ? data.formGroup.amount : 0;
   if (replaceGroup) data.formGroup = { group: replaceGroup, amount: stacks };
   if (onExpire) data.onExpire = onExpire;
+  if (empoweredScope) data.empoweredScope = empoweredScope;
   if (existing) {
     const newStacks = existing.stacks - prevFormAmount + stacks;
     await prisma.effectInstance.update({
@@ -1600,6 +1675,15 @@ async function processTurnStart(sessionId: string, participantId: string, logs: 
       logs.push(`👁️ ${p.name} ficou sem chakra e o Byakugan se desativou.`);
     }
   }
+  // upkeep Ketsuryuugan (Chinoike) — mesmo padrao do Byakugan
+  if (flags.ketsuryuuganActive) {
+    if (chakra >= BALANCE.ketsuryuuganUpkeepPerTurn) {
+      chakra -= BALANCE.ketsuryuuganUpkeepPerTurn;
+    } else {
+      flags.ketsuryuuganActive = false;
+      logs.push(`🩸 ${p.name} ficou sem chakra e o Ketsuryuugan se desativou.`);
+    }
+  }
   // upkeep Yamanaka (controle)
   if (flags.controllingId) {
     if (chakra >= BALANCE.yamanaka.upkeepPerTurn) {
@@ -1608,6 +1692,23 @@ async function processTurnStart(sessionId: string, participantId: string, logs: 
       logs.push(`🧠 ${p.name} perdeu o controle do corpo (sem chakra).`);
       await releaseControl(sessionId, p.id);
       flags.controllingId = undefined;
+    }
+  }
+
+  // regeneracao passiva (ex: vitalidade/chakra do Uzumaki) — cura/restaura no
+  // INICIO do proprio turno, so' enquanto vivo (nao ressuscita quem ja bateu
+  // 0 nesse mesmo tick de efeitos/terreno acima).
+  if (hp > 0) {
+    const cMods = characterPassiveMods(Array.isArray(flags.nodes) ? (flags.nodes as string[]) : []);
+    if (cMods.hpRegenPerTurn > 0) {
+      const before = hp;
+      hp = Math.min(p.hpMax, hp + cMods.hpRegenPerTurn);
+      if (hp > before) logs.push(`💗 ${p.name} regenerou ${hp - before} HP.`);
+    }
+    if (cMods.chakraRegenPerTurn > 0) {
+      const before = chakra;
+      chakra = Math.min(100, chakra + cMods.chakraRegenPerTurn);
+      if (chakra > before) logs.push(`🌀 ${p.name} recuperou ${chakra - before}% de chakra.`);
     }
   }
 

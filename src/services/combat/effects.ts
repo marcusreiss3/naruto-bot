@@ -5,6 +5,9 @@ export interface EffectState {
   effectId: EffectId;
   stacks: number;
   duration: number;
+  // dataJson bruto da instancia (formGroup/onExpire/empoweredScope) — opcional
+  // pra nao quebrar os varios lugares que ja construiam EffectState sem isso.
+  dataJson?: string | null;
 }
 
 export interface TurnTickResult {
@@ -176,22 +179,42 @@ export function hasteContactDamage(activeEffects: EffectState[]): number {
 }
 
 // Sobrecarga: multiplica o dano de SAIDA de quem tem o efeito ativo (nao do
-// alvo). Generico — qualquer jutsu pode conceder, primeiro uso e' a Pilula
-// Secreta do Akimichi.
-export function empoweredDamageMult(activeEffects: EffectState[]): number {
-  return activeEffects.some((e) => isActive(e, "EMPOWERED")) ? 1 + E.EMPOWERED.dmgMultBonus : 1;
+// alvo). Generico — qualquer jutsu pode conceder. Por padrao vale pra
+// qualquer dano, mas a instancia pode ter nascido com um `empoweredScope`
+// (gravado no dataJson na hora que a skill aplicou o efeito — ver
+// AppliedEffect.empoweredScope em data/types.ts): "physical" so' libera em
+// categoria TAIJUTSU/BUKIJUTSU (Lobo de Duas/Tres Cabecas, Grande Braco de
+// Agua, Pilula Secreta); "clan" so' libera se o jutsu ATUAL exige o MESMO
+// clã de quem concedeu o efeito (Casulo do Aburame: so' golpes que exigem
+// clanId "aburame", mesmo sendo categoria NINJUTSU — "physical" nao serviria).
+export function empoweredDamageMult(
+  activeEffects: EffectState[],
+  usedAbility: { category: string; requirements?: { clanId?: string } },
+): number {
+  const physical = usedAbility.category === "TAIJUTSU" || usedAbility.category === "BUKIJUTSU";
+  const applies = activeEffects.some((e) => {
+    if (!isActive(e, "EMPOWERED")) return false;
+    const data = parseEffectData(e.dataJson);
+    if (!data.empoweredScope) return true;
+    if (data.empoweredScope.kind === "physical") return physical;
+    if (data.empoweredScope.kind === "clan") return usedAbility.requirements?.clanId === data.empoweredScope.clanId;
+    return true;
+  });
+  return applies ? 1 + E.EMPOWERED.dmgMultBonus : 1;
 }
 
 // ---------------------------------------------------- dataJson de efeitos
-// EffectInstance guarda um dataJson livre (schema ja' tinha esse campo). Duas
+// EffectInstance guarda um dataJson livre (schema ja' tinha esse campo). Tres
 // tags usam ele: `formGroup` (Barreira de "forma" substitui a propria
 // contribuicao em vez de somar — ex: Super Tamanho Multiplo troca a do
-// Tamanho Multiplo) e `onExpire` (quando o efeito ACABA, aplica outro —
-// ex: Sobrecarga da Pilula Secreta vira Defesa Reduzida ao passar). Puro e
-// testavel; quem grava/consome no banco e' combat-engine.ts.
+// Tamanho Multiplo), `onExpire` (quando o efeito ACABA, aplica outro —
+// ex: Sobrecarga da Pilula Secreta vira Defesa Reduzida ao passar) e
+// `empoweredScope` (restringe a quem a Sobrecarga vale, ver empoweredDamageMult
+// acima). Puro e testavel; quem grava/consome no banco e' combat-engine.ts.
 export interface EffectData {
   formGroup?: { group: string; amount: number };
   onExpire?: { effectId: EffectId; stacks?: number; duration?: number };
+  empoweredScope?: { kind: "physical" } | { kind: "clan"; clanId: string };
 }
 export function parseEffectData(dataJson: string | null | undefined): EffectData {
   if (!dataJson) return {};

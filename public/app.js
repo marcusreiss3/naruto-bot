@@ -20,6 +20,14 @@ const ELEMENTS = [
   { id: "NARA", name: "Nara", icon: "🌑", color: "#5c5c7a", clanGate: "nara" },
   { id: "HYUUGA", name: "Hyuuga", icon: "👁️", color: "#c9d6e3", clanGate: "hyuuga" },
   { id: "AKIMICHI", name: "Akimichi", icon: "🍖", color: "#d98e3a", clanGate: "akimichi" },
+  { id: "ABURAME", name: "Aburame", icon: "🪲", color: "#6f7a35", clanGate: "aburame" },
+  { id: "INUZUKA", name: "Inuzuka", icon: "🐕", color: "#a8562e", clanGate: "inuzuka" },
+  { id: "UZUMAKI", name: "Uzumaki", icon: "🌀", color: "#c8482f", clanGate: "uzumaki" },
+  { id: "HATAKE", name: "Hatake", icon: "⚔️", color: "#a8a8b0", clanGate: "hatake" },
+  { id: "HOSHIGAKI", name: "Hoshigaki", icon: "🦈", color: "#4a7d8c", clanGate: "hoshigaki" },
+  { id: "HOZUKI", name: "Hozuki", icon: "💧", color: "#3a8fbf", clanGate: "hozuki" },
+  { id: "KAGUYA", name: "Kaguya", icon: "🦴", color: "#d9d0c1", clanGate: "kaguya" },
+  { id: "CHINOIKE", name: "Chinoike", icon: "🩸", color: "#8c2f2f", clanGate: "chinoike" },
 ];
 // Rótulo de atributo pro chip de requisito extra (reqAttribute) no modal —
 // mesmos rótulos de ATTRIBUTE_LABELS em src/config/enums.ts.
@@ -33,10 +41,14 @@ const ATTR_LABEL = {
   kugutsu: "Kugutsu",
   senjutsu: "Senjutsu",
   dojutsu: "Dōjutsu",
+  kenjutsu: "Kenjutsu",
 };
-// TEMPORARIO: mostra TODOS os elementos no footer (preview de icones), ignorando
-// o desbloqueio. Voltar pra false quando terminar de conferir.
-const PREVIEW_ALL_ELEMENTS = false;
+// Toggle "Ver todas as árvores" (botão no topo): mostra toda árvore que
+// existe no jogo (elementos, kekkei genkai e clãs), não só o que o
+// personagem desbloqueou. As que ele não tem entram com classe `locked`
+// (mesmo visual de nó bloqueado) — dá pra abrir e olhar os nós, só não dá
+// pra comprar nada de fora do próprio clã/elemento (o servidor recusa).
+let showAllTrees = false;
 // Imagem de fundo por elemento (public/assets/bg). Ausente = sem imagem, só o gradiente.
 const ELEMENT_BG = {
   FUNDAMENTOS: "url('/assets/bg/ninjutsu.webp')",
@@ -64,6 +76,9 @@ const GLOSSARY = [
   { re: "não pode(?:m)? ser esquivad[oa](?:s)?", tip: "Não pode ser esquivado: ignora a reação de esquiva do alvo. O ataque sempre acerta." },
   { re: "bloque\\w* o Ninjutsu|Bloqueio de Ninjutsu", tip: "Bloqueio de Ninjutsu: o alvo não consegue usar jutsu de categoria Ninjutsu enquanto durar. Não drena chakra (isso seria Dreno de Chakra, outro efeito) — só tranca esse tipo de técnica." },
   { re: "não consegue fugir|sem poder fugir|não conseguem fugir", tip: "Fuga bloqueada: o alvo não pode usar a ação de fugir do combate enquanto o efeito durar." },
+  { re: "perde 10% de chakra por turno|perder 10% de chakra por turno", tip: "Dreno de Chakra: o alvo perde chakra a cada turno enquanto durar." },
+  { re: "Confuso|Confusão", tip: "Confusão: enquanto durar, o alvo confuso ataca alguém aleatório entre todos os vivos em vez de escolher — pode até acertar o próprio time." },
+  { re: "Acelerado", tip: "Acelerado: mais movimento, esquiva e chance de fuga; quem acertar você corpo a corpo no período leva dano de contra-ataque." },
   // ---- exclusivo do clã Nara ----
   { re: "Vínculo de Sombra", tip: "Vínculo de Sombra: sem dano, mas o alvo não pode se mover nem reagir (Esquivar/Bloquear/Aparar) enquanto durar — o corpo dele copia o do usuário. Só uma Esquiva bem-sucedida ANTES do vínculo prender evita o efeito." },
   // ---- kekkei genkai: Cristal ----
@@ -161,7 +176,12 @@ const glow = (hex) => {
 };
 
 // Layout da árvore (coordenadas lógicas; o container escala).
-const CENTER_X = 360, COL_GAP = 150, ROW_GAP = 96, TOP_PAD = 60, WIDTH = 720;
+// ROW_GAP dá espaço pro rótulo (até 2 linhas, ver .node .lbl no CSS) sem
+// nunca alcançar o ícone da linha de baixo — nomes de clã podem ser longos
+// ("Transformação Misturada da Besta Humana — Lobo de Três Cabeças"). A
+// primeira tentativa (118, clamp 3) ainda deixava só ~10px de folga —
+// pouco demais na prática. Agora sobra ~35px mesmo no pior caso.
+const CENTER_X = 360, COL_GAP = 150, ROW_GAP = 132, TOP_PAD = 60, WIDTH = 720;
 
 let state = null;      // resposta de /api/state
 let activeEl = null;   // elemento em exibição
@@ -287,9 +307,9 @@ function buildElemBar() {
     const unlocked =
       e.id === "FUNDAMENTOS" ||
       (e.clanGate ? state.char.clanId === e.clanGate : state.char.elements.includes(e.id));
-    if (!unlocked && !PREVIEW_ALL_ELEMENTS) continue;
+    if (!unlocked && !showAllTrees) continue;
     const div = document.createElement("div");
-    div.className = "elem";
+    div.className = "elem" + (!unlocked ? " locked" : "");
     div.style.setProperty("--ec", e.color);
     div.style.setProperty("--ecg", glow(e.color));
     const eface = e.img
@@ -334,7 +354,11 @@ function renderTree(elId) {
   const pos = (n) => ({ x: CENTER_X + n.col * COL_GAP, y: TOP_PAD + n.row * ROW_GAP });
   const byId = Object.fromEntries(nodes.map((n) => [n.id, n]));
 
-  // arestas: curvas bezier (galho ligando pai -> filho)
+  // arestas: linha reta (galho ligando pai -> filho) — mesmo estilo das árvores
+  // elementais. Quando pai e filho ficam em colunas diferentes (ramificação de
+  // clã), em vez de uma diagonal usa duas linhas retas com uma curva de 90°
+  // (desce reto até a altura do filho, depois vira pro lado) — mesma leitura
+  // ortogonal das árvores sem ramo, só que com um cotovelo no meio.
   const svg = $("edges");
   svg.setAttribute("viewBox", `0 0 ${WIDTH} ${height}`);
   let edges = "";
@@ -345,8 +369,11 @@ function renderTree(elId) {
       if (!p) continue;
       const b = pos(p);
       const on = ownedIds.has(n.id) && ownedIds.has(req) ? " on" : "";
-      const my = (b.y + a.y) / 2; // curva vertical suave entre os pontos de controle
-      edges += `<path class="edge${on}" d="M${b.x},${b.y} C${b.x},${my} ${a.x},${my} ${a.x},${a.y}"/>`;
+      const d =
+        b.x === a.x
+          ? `M${b.x},${b.y} L${a.x},${a.y}`
+          : `M${b.x},${b.y} L${b.x},${a.y} L${a.x},${a.y}`;
+      edges += `<path class="edge${on}" d="${d}"/>`;
     }
   }
   svg.innerHTML = edges;
@@ -513,6 +540,11 @@ $("modal").onclick = (e) => { if (e.target.id === "modal") closeModal(); };
 $("logoutBtn").onclick = async () => {
   await fetch("/auth/logout", { method: "POST", credentials: "same-origin" });
   location.reload();
+};
+$("showAllBtn").onclick = () => {
+  showAllTrees = !showAllTrees;
+  $("showAllBtn").classList.toggle("active", showAllTrees);
+  buildElemBar();
 };
 
 boot();

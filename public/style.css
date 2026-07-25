@@ -172,6 +172,13 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
 .logout .x-ico{width:19px;height:19px;background:currentColor;display:block;
   -webkit-mask:url(/assets/icons/header/sair.svg) center/contain no-repeat;
   mask:url(/assets/icons/header/sair.svg) center/contain no-repeat;}
+.toggle-all{background:transparent;border:1px solid var(--line-soft);color:var(--ink-soft);
+  height:42px;padding:0 14px;cursor:pointer;font-family:var(--hud);font-size:11px;font-weight:700;
+  letter-spacing:.8px;text-transform:uppercase;white-space:nowrap;
+  transition:border-color .12s,color .12s,box-shadow .12s,background .12s;}
+.toggle-all:hover{border-color:var(--orange);color:var(--orange2);box-shadow:0 0 14px rgba(255,122,24,.2);}
+.toggle-all.active{border-color:var(--orange);color:var(--orange2);background:rgba(255,122,24,.12);
+  box-shadow:0 0 14px rgba(255,122,24,.18);}
 
 /* ===== Workspace: dossiê + palco lado a lado ===== */
 .workspace{flex:1;display:flex;min-height:0;}
@@ -257,7 +264,8 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
 .node:hover{transform:translate(-50%,-50%) scale(1.1);z-index:3;}
 .node:focus-visible{outline:2px solid var(--orange);outline-offset:3px;}
 .node .lbl{position:absolute;top:71px;left:50%;transform:translateX(-50%);width:124px;
-  text-align:center;font-size:10.5px;line-height:1.18;color:var(--ink-soft);pointer-events:none;letter-spacing:.2px;}
+  text-align:center;font-size:10.5px;line-height:1.18;color:var(--ink-soft);pointer-events:none;letter-spacing:.2px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;}
 .node .badge{position:absolute;bottom:-5px;right:-5px;font-family:var(--hud);font-size:11px;font-weight:700;color:#fff;
   min-width:19px;height:19px;padding:0 3px;border-radius:10px;display:flex;align-items:center;justify-content:center;
   background:var(--dim);border:2px solid var(--bg);letter-spacing:.3px;}
@@ -296,7 +304,7 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
 }
 
 /* Arestas */
-.edge{fill:none;stroke:var(--line-soft);stroke-width:3;stroke-linecap:round;}
+.edge{fill:none;stroke:var(--line-soft);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;}
 .edge.on{stroke:var(--orange);stroke-width:3.5;opacity:.9;filter:drop-shadow(0 0 5px rgba(255,122,24,.6));}
 
 /* ===== Footer (barra de elementos HUD) ===== */

@@ -114,6 +114,11 @@ export const combate: Command = {
         .setDescription("Ativa/desativa o Byakugan (ação bônus, clã Hyuuga)"),
     )
     .addSubcommand((s) =>
+      s
+        .setName("ketsuryuugan")
+        .setDescription("Ativa/desativa o Ketsuryuugan (ação bônus, clã Chinoike)"),
+    )
+    .addSubcommand((s) =>
       s.setName("fugir").setDescription("Tenta fugir do combate (ação comum, gasta energia)"),
     ),
   async execute(interaction: ChatInputCommandInteraction) {
@@ -129,6 +134,8 @@ export const combate: Command = {
         return agua(interaction);
       case "byakugan":
         return byakugan(interaction);
+      case "ketsuryuugan":
+        return ketsuryuugan(interaction);
       case "fugir":
         return fugir(interaction);
     }
@@ -878,5 +885,38 @@ async function byakugan(interaction: ChatInputCommandInteraction): Promise<void>
     flags.byakuganActive
       ? `👁️ **${me.name}** ativou o Byakugan (+${Math.round(BALANCE.byakuganDodgeBonus * 100)}% de esquiva contra qualquer ataque; gasta ${BALANCE.byakuganUpkeepPerTurn}% chakra/turno).`
       : `👁️ **${me.name}** desativou o Byakugan.`,
+  );
+}
+
+// Ketsuryuugan (Chinoike): mesmo padrao de toggle+upkeep do Byakugan.
+async function ketsuryuugan(interaction: ChatInputCommandInteraction): Promise<void> {
+  const { session, me } = await getMyParticipant(interaction);
+  if (!session || !me) {
+    await interaction.reply({ content: "❌ Você não está em combate aqui.", ephemeral: true });
+    return;
+  }
+  if (me.actedBonus) {
+    await interaction.reply({ content: "❌ Ação bônus já usada.", ephemeral: true });
+    return;
+  }
+  if (!me.isNpc && me.charId) {
+    const has = await prisma.characterJutsu.findFirst({
+      where: { charId: me.charId, jutsuId: "chinoike_doujutsu" },
+    });
+    if (!has) {
+      await interaction.reply({ content: "❌ Você não desbloqueou o Ketsuryuugan.", ephemeral: true });
+      return;
+    }
+  }
+  const flags = me.flags;
+  flags.ketsuryuuganActive = !flags.ketsuryuuganActive;
+  await prisma.combatParticipant.update({
+    where: { id: me.id },
+    data: { flagsJson: JSON.stringify(flags), actedBonus: true },
+  });
+  await interaction.reply(
+    flags.ketsuryuuganActive
+      ? `🩸 **${me.name}** ativou o Ketsuryuugan (+${Math.round(BALANCE.ketsuryuuganDodgeBonus * 100)}% de esquiva contra qualquer ataque; gasta ${BALANCE.ketsuryuuganUpkeepPerTurn}% chakra/turno).`
+      : `🩸 **${me.name}** desativou o Ketsuryuugan.`,
   );
 }

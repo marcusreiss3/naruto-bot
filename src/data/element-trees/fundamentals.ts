@@ -46,7 +46,7 @@ export const FUNDAMENTOS: SkillNodeDef[] = [
     reqLevel: 1,
     reqNinjutsu: 1,
     grantsAbilityId: "tecnica_substituicao",
-    desc: "Substitui o próprio corpo por um tronco de madeira no instante em que o ataque chega. Como reação, aumenta muito a chance de esquiva contra o golpe.",
+    desc: "Substitui o próprio corpo por um tronco de madeira no instante em que o ataque chega. Como reação, dá +20% de chance de esquiva contra o golpe.",
   },
   {
     id: "funda_caminhada",

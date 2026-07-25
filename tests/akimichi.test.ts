@@ -223,16 +223,32 @@ describe("Pílula Secreta: skill com duração (EMPOWERED) e debuff ao expirar (
   });
 
   it("EMPOWERED multiplica o dano em +60% (bônus da Sobrecarga) e some quando expira", () => {
+    const fisico = { category: "TAIJUTSU" };
     const ativo: EffectState[] = [{ effectId: "EMPOWERED", stacks: 1, duration: 3 }];
     const expirado: EffectState[] = [{ effectId: "EMPOWERED", stacks: 1, duration: 0 }];
-    expect(empoweredDamageMult(ativo)).toBeCloseTo(1 + BALANCE.effects.EMPOWERED.dmgMultBonus);
-    expect(empoweredDamageMult(expirado)).toBe(1);
-    expect(empoweredDamageMult([])).toBe(1);
+    expect(empoweredDamageMult(ativo, fisico)).toBeCloseTo(1 + BALANCE.effects.EMPOWERED.dmgMultBonus);
+    expect(empoweredDamageMult(expirado, fisico)).toBe(1);
+    expect(empoweredDamageMult([], fisico)).toBe(1);
+  });
+
+  it("a Pílula nasce escopada pra dano FÍSICO — não deveria turbinar um ninjutsu elemental sem nada a ver", () => {
+    const eff = pilula.effects!.find((e) => e.effectId === "EMPOWERED")!;
+    expect(eff.empoweredScope).toBe("physical");
+  });
+
+  it("EMPOWERED escopado como 'physical' só multiplica golpe TAIJUTSU/BUKIJUTSU, não NINJUTSU/GENJUTSU", () => {
+    const comEscopo: EffectState[] = [
+      { effectId: "EMPOWERED", stacks: 1, duration: 3, dataJson: JSON.stringify({ empoweredScope: { kind: "physical" } }) },
+    ];
+    expect(empoweredDamageMult(comEscopo, { category: "TAIJUTSU" })).toBeCloseTo(1.6);
+    expect(empoweredDamageMult(comEscopo, { category: "BUKIJUTSU" })).toBeCloseTo(1.6);
+    expect(empoweredDamageMult(comEscopo, { category: "NINJUTSU" })).toBe(1);
+    expect(empoweredDamageMult(comEscopo, { category: "GENJUTSU" })).toBe(1);
   });
 
   it("empilhado com a passiva da raiz, o pico de dano fica mais forte que a antiga passiva permanente (~2,0x) — é o preço de ser temporário", () => {
     const raizMult = passiveMods(["akimichi_raiz"], getAbility("akimichi_baika_parcial")!).damageMult;
-    const pico = raizMult * empoweredDamageMult([{ effectId: "EMPOWERED", stacks: 1, duration: 3 }]);
+    const pico = raizMult * empoweredDamageMult([{ effectId: "EMPOWERED", stacks: 1, duration: 3 }], { category: "TAIJUTSU" });
     expect(pico).toBeGreaterThan(1.3 * 1.55); // mais forte que a curva antiga (raiz*ápice permanentes)
   });
 });

@@ -113,10 +113,11 @@ export const CLAN_ABILITIES: Ability[] = [
     range: 1,
     shape: "MELEE",
     effects: [{ effectId: "NINJUTSU_BLOCK", duration: 1, chance: 0.4 }],
+    requiresActiveDoujutsu: { flag: "byakuganActive", label: "Byakugan" },
     requirements: { clanId: "hyuuga", manualOnly: true },
     tags: ["hyuuga", "tenketsu", "fisico"],
     description:
-      "Estilo de combate básico dos Hyūga: injeta chakra no golpe para ferir órgãos internos e a rede de chakra do adversário, em vez de só o corpo. 40% de chance de bloquear o Ninjutsu do alvo por 1 rodada.",
+      "Estilo de combate básico dos Hyūga: injeta chakra no golpe para ferir órgãos internos e a rede de chakra do adversário, em vez de só o corpo. 40% de chance de bloquear o Ninjutsu do alvo por 1 rodada. Exige o Byakugan ativo.",
   },
   {
     id: "hyuuga_palma_vacuo",
@@ -132,10 +133,11 @@ export const CLAN_ABILITIES: Ability[] = [
     shape: "SINGLE_TARGET",
     undodgeable: true,
     push: 3,
+    requiresActiveDoujutsu: { flag: "byakuganActive", label: "Byakugan" },
     requirements: { clanId: "hyuuga", manualOnly: true },
     tags: ["hyuuga", "precisao", "impacto"],
     description:
-      "Usando o Byakugan como mira, identifica os pontos vitais do oponente e dispara uma 'bala de vácuo' comprimida à distância — não pode ser esquivada e empurra o alvo 3 casas para trás antes mesmo dele perceber o que aconteceu.",
+      "Usando o Byakugan como mira, identifica os pontos vitais do oponente e dispara uma 'bala de vácuo' comprimida à distância — não pode ser esquivada e empurra o alvo 3 casas para trás antes mesmo dele perceber o que aconteceu. Exige o Byakugan ativo.",
   },
   {
     id: "hyuuga_64_palmas",
@@ -153,10 +155,11 @@ export const CLAN_ABILITIES: Ability[] = [
       { effectId: "NINJUTSU_BLOCK", duration: 2, chance: 0.85 },
       { effectId: "STUN", duration: 1, chance: 0.3 },
     ],
+    requiresActiveDoujutsu: { flag: "byakuganActive", label: "Byakugan" },
     requirements: { clanId: "hyuuga", manualOnly: true },
     tags: ["hyuuga", "tenketsu", "barragem"],
     description:
-      "Sequência de 64 golpes extremamente rápidos que bloqueiam dezenas de tenketsu de uma vez: 85% de chance de bloquear o Ninjutsu do alvo por 2 rodadas, e 30% de chance de Atordoar por 1 rodada.",
+      "Sequência de 64 golpes extremamente rápidos que bloqueiam dezenas de tenketsu de uma vez: 85% de chance de bloquear o Ninjutsu do alvo por 2 rodadas, e 30% de chance de Atordoar por 1 rodada. Exige o Byakugan ativo.",
   },
   {
     id: "hyuuga_palma_rotativa",
@@ -170,10 +173,11 @@ export const CLAN_ABILITIES: Ability[] = [
     shape: "SELF",
     effects: [{ effectId: "SHIELD", stacks: 24, duration: 3 }],
     cleanses: ["ROOT"],
+    requiresActiveDoujutsu: { flag: "byakuganActive", label: "Byakugan" },
     requirements: { clanId: "hyuuga", manualOnly: true },
     tags: ["hyuuga", "defesa", "barreira"],
     description:
-      "Gira rapidamente enquanto libera chakra por todos os tenketsu, criando uma esfera defensiva quase impenetrável. Ganha 24 pontos de Barreira por 3 rodadas e livra você de ficar preso ao chão.",
+      "Gira rapidamente enquanto libera chakra por todos os tenketsu, criando uma esfera defensiva quase impenetrável. Ganha 24 pontos de Barreira por 3 rodadas e livra você de ficar preso ao chão. Exige o Byakugan ativo.",
   },
   {
     id: "hyuuga_128_palmas",
@@ -191,10 +195,11 @@ export const CLAN_ABILITIES: Ability[] = [
       { effectId: "NINJUTSU_BLOCK", duration: 2, chance: 0.8 },
       { effectId: "SLOW", duration: 2, chance: 0.5 },
     ],
+    requiresActiveDoujutsu: { flag: "byakuganActive", label: "Byakugan" },
     requirements: { clanId: "hyuuga", manualOnly: true },
     tags: ["hyuuga", "tenketsu", "area", "barragem"],
     description:
-      "Versão em dobro de velocidade das 64 Palmas: 80% de chance de bloquear o Ninjutsu do alvo por 2 rodadas e 50% de chance de deixá-lo mais lento por 2 rodadas.",
+      "Versão em dobro de velocidade das 64 Palmas: 80% de chance de bloquear o Ninjutsu do alvo por 2 rodadas e 50% de chance de deixá-lo mais lento por 2 rodadas. Exige o Byakugan ativo.",
   },
   {
     id: "hyuuga_leoes_gemeos",
@@ -213,10 +218,11 @@ export const CLAN_ABILITIES: Ability[] = [
       { effectId: "NINJUTSU_BLOCK", duration: 3 },
       { effectId: "DEFENSE_DOWN", duration: 2 },
     ],
+    requiresActiveDoujutsu: { flag: "byakuganActive", label: "Byakugan" },
     requirements: { clanId: "hyuuga", manualOnly: true },
     tags: ["hyuuga", "tenketsu", "apice", "finalizador"],
     description:
-      "Libera uma grande quantidade de chakra pelos punhos, moldado em duas cabeças de leão. Não pode ser esquivado. Ao acertar, destroça por completo os meridianos do alvo: bloqueia o Ninjutsu dele por 3 rodadas e reduz a defesa dele por 2 rodadas.",
+      "Libera uma grande quantidade de chakra pelos punhos, moldado em duas cabeças de leão. Não pode ser esquivado. Ao acertar, destroça por completo os meridianos do alvo: bloqueia o Ninjutsu dele por 3 rodadas e reduz a defesa dele por 2 rodadas. Exige o Byakugan ativo.",
   },
 
   // ---- Nara ----
@@ -471,12 +477,17 @@ export const CLAN_ABILITIES: Ability[] = [
     range: 0,
     shape: "SELF",
     effects: [
-      { effectId: "EMPOWERED", duration: 3, onExpire: { effectId: "DEFENSE_DOWN", duration: 2 } },
+      {
+        effectId: "EMPOWERED",
+        duration: 3,
+        onExpire: { effectId: "DEFENSE_DOWN", duration: 2 },
+        empoweredScope: "physical",
+      },
     ],
     requirements: { clanId: "akimichi", manualOnly: true },
     tags: ["akimichi", "pilulas", "buff", "risco"],
     description:
-      "Engole uma das pílulas secretas do clã: por 3 rodadas, +60% de dano nos seus golpes. Quando o efeito passa, o corpo cobra o preço: reduz a defesa por 2 rodadas.",
+      "Engole uma das pílulas secretas do clã: por 3 rodadas, +60% de dano nos seus golpes físicos (Taijutsu/Kenjutsu). Quando o efeito passa, o corpo cobra o preço: reduz a defesa por 2 rodadas.",
   },
   {
     id: "akimichi_modo_borboleta",
@@ -512,6 +523,854 @@ export const CLAN_ABILITIES: Ability[] = [
     tags: ["akimichi", "borboleta", "apice", "finalizador"],
     description:
       "Depois do Modo Borboleta, concentra todo o poder acumulado num único golpe de taijutsu devastador. Não pode ser esquivado.",
+  },
+
+  // ---- Aburame ----
+  // Habilidades concedidas pela arvore de cla (src/data/clan-trees/index.ts),
+  // mesmo padrao dos outros. Todas NINJUTSU (chakra manipulando o proprio
+  // enxame de kikaichu, mesmo quando o resultado e' fisico/dano). O tronco
+  // (Clones de Inseto -> Casulo) e' generico; dali a arvore se ramifica em
+  // Kikaichu (Esfera/Parede/Mordida — controle e dreno de chakra, sem
+  // veneno) e Rinkaichu (Nuvem/Jarro de Veneno — a linhagem venenosa de
+  // Torune). Nenhuma tem baseDamage de sobra: o clã ganha por DRENAR e
+  // ENVENENAR, nao por rajada (como o Nara ganha por controle, nao dano).
+  {
+    id: "aburame_clone_inseto",
+    name: "Técnica dos Clones de Inseto",
+    category: "NINJUTSU",
+    tier: 1,
+    resource: "chakra",
+    cost: 16,
+    actionType: "REACAO",
+    reactionKind: "DODGE",
+    reactionDodgeBonus: 0.22,
+    range: 0,
+    shape: "SELF",
+    requirements: { clanId: "aburame", manualOnly: true },
+    tags: ["aburame", "inseto", "reacao", "fuga"],
+    description:
+      "Um clone formado por milhares de kikaichū assume o próprio lugar no instante do golpe. Como reação, dá +22% de chance de esquiva contra o ataque: se for atingido mesmo assim, o clone se desfaz num enxame que confunde o atacante, abrindo espaço pra fugir ou contra-atacar.",
+  },
+  {
+    id: "aburame_casulo",
+    name: "Casulo de Insetos",
+    category: "NINJUTSU",
+    tier: 1,
+    resource: "chakra",
+    cost: 20,
+    actionType: "COMUM",
+    range: 0,
+    shape: "SELF",
+    effects: [
+      { effectId: "ROOT", duration: 2 },
+      { effectId: "DEFENSE_DOWN", duration: 2 },
+      { effectId: "EMPOWERED", duration: 3, empoweredScope: "clan" },
+    ],
+    requirements: { clanId: "aburame", manualOnly: true },
+    tags: ["aburame", "inseto", "buff", "risco"],
+    description:
+      "Envolve-se num casulo real pra acelerar o crescimento dos próprios insetos: por 3 rodadas, +60% de dano nos golpes que usam kikaichū. O preço: por 2 rodadas fica preso ao chão e reduz a defesa — melhor fazer isso longe da linha de frente ou protegido por um aliado.",
+  },
+  {
+    id: "aburame_esfera",
+    name: "Esfera de Insetos",
+    category: "NINJUTSU",
+    tier: 2,
+    resource: "chakra",
+    cost: 30,
+    actionType: "COMUM",
+    baseDamage: 0,
+    range: 4,
+    shape: "SINGLE_TARGET",
+    effects: [
+      { effectId: "ROOT", duration: 2 },
+      { effectId: "CHAKRA_DRAIN", duration: 3, chance: 0.85 },
+      { effectId: "FLEE_LOCK", duration: 2 },
+    ],
+    requirements: { clanId: "aburame", manualOnly: true },
+    tags: ["aburame", "inseto", "controle", "dreno"],
+    description:
+      "Os kikaichū cercam completamente o alvo, formando uma esfera viva: ele fica preso ao chão e não consegue fugir por 2 rodadas, com 85% de chance de perder 10% de chakra por turno por 3 rodadas.",
+  },
+  {
+    id: "aburame_nuvem_veneno",
+    name: "Técnica da Nuvem de Veneno",
+    category: "NINJUTSU",
+    tier: 2,
+    resource: "chakra",
+    cost: 28,
+    actionType: "COMUM",
+    baseDamage: 0,
+    range: 4,
+    shape: "CONE",
+    effects: [{ effectId: "POISON", stacks: 2, duration: 3, chance: 0.7 }],
+    terrain: { kind: "SMOKE", duration: 1 },
+    requirements: { clanId: "aburame", manualOnly: true },
+    tags: ["aburame", "inseto", "veneno", "area"],
+    description:
+      "Explode uma esfera de rinkaichū numa cortina de veneno bem na frente do usuário: se dissipa rápido se não acertar ninguém, mas quem for tocado ou respirar a nuvem tem 70% de chance de ficar com Veneno por 3 rodadas.",
+  },
+  {
+    id: "aburame_parede",
+    name: "Parede de Insetos",
+    category: "NINJUTSU",
+    tier: 2,
+    resource: "chakra",
+    cost: 24,
+    actionType: "COMUM",
+    range: 2,
+    shape: "ALLY",
+    effects: [{ effectId: "SHIELD", stacks: 22, duration: 3 }],
+    requirements: { clanId: "aburame", manualOnly: true },
+    tags: ["aburame", "inseto", "defesa", "barreira"],
+    description:
+      "Um enxame denso forma uma parede viva de insetos, resistente o bastante pra aguentar entulho caindo ou fogo: dá 22 pontos de Barreira por 3 rodadas a si mesmo ou a um aliado próximo. Não segura gases, como uma cortina de veneno.",
+  },
+  {
+    id: "aburame_jarro_veneno",
+    name: "Técnica do Jarro de Veneno",
+    category: "NINJUTSU",
+    tier: 3,
+    resource: "chakra",
+    cost: 40,
+    actionType: "COMUM",
+    baseDamage: 0,
+    range: 4,
+    shape: "RADIUS",
+    effects: [
+      { effectId: "POISON", stacks: 3, duration: 4, chance: 0.75 },
+      { effectId: "CHAKRA_DRAIN", duration: 3, chance: 0.85 },
+      { effectId: "FLEE_LOCK", duration: 3 },
+    ],
+    requirements: { clanId: "aburame", manualOnly: true },
+    tags: ["aburame", "inseto", "veneno", "area", "prisao", "finalizador"],
+    description:
+      "Concentra uma quantidade enorme de rinkaichū numa área fechada: quem estiver dentro não consegue fugir por 3 rodadas, com 75% de chance de ficar com Veneno por 4 rodadas e 85% de chance de perder 10% de chakra por turno por 3 rodadas.",
+  },
+  {
+    id: "aburame_mordida",
+    name: "Inseto Parasita Gigante — Mordida de Inseto",
+    category: "NINJUTSU",
+    tier: 3,
+    resource: "chakra",
+    cost: 36,
+    actionType: "COMUM",
+    baseDamage: 10,
+    scalingAttribute: "ninjutsu",
+    range: 1,
+    shape: "MELEE",
+    effects: [
+      { effectId: "BLEED", stacks: 2, duration: 3 },
+      { effectId: "CHAKRA_DRAIN", duration: 3, chance: 0.85 },
+    ],
+    requirements: { clanId: "aburame", manualOnly: true },
+    tags: ["aburame", "inseto", "dreno", "finalizador"],
+    description:
+      "Planta uma leva de kidaichū na pele do alvo: eles se enterram na hora e passam a devorar carne e chakra, crescendo enquanto se alimentam — o hospedeiro sangra por 3 rodadas, com 85% de chance de perder 10% de chakra por turno pelo mesmo período.",
+  },
+
+  // ---- Inuzuka ----
+  // Habilidades concedidas pela arvore de cla (src/data/clan-trees/index.ts),
+  // mesmo padrao dos outros. "Crescer/transformar" (Cao Ninja, Clone da
+  // Besta, as duas Fusoes) sao NINJUTSU/chakra; "usar o corpo pra bater"
+  // (Sobre Presa e as duas Presas) sao TAIJUTSU/energia — mesma logica do
+  // Akimichi. `requiresPet: true` marca as tecnicas que dependem do cao
+  // ninja vivo em campo (ver useAbility() em combat-engine.ts): se ele
+  // morreu na luta, elas ficam bloqueadas ate o combate acabar.
+  {
+    id: "inuzuka_cao_ninja",
+    name: "Cão Ninja",
+    category: "NINJUTSU",
+    tier: 1,
+    resource: "chakra",
+    cost: 15,
+    actionType: "BONUS",
+    range: 0,
+    shape: "SELF",
+    oncePerCombat: true,
+    summon: { templateId: "cao_ninja", hpFraction: 1 / 3 },
+    requirements: { clanId: "inuzuka", manualOnly: true },
+    tags: ["inuzuka", "cao", "invocacao"],
+    description:
+      "Invoca seu cão ninja: um companheiro treinado desde filhote. Ele entra no mapa com 1/3 da sua vida máxima e ataca sozinho todo turno, como uma invocação comum. Só pode ser chamado uma vez por combate: se ele cair em combate, as técnicas que dependem dele ficam bloqueadas até o fim da luta — mas ele volta saudável na próxima.",
+  },
+  {
+    id: "inuzuka_quatro_patas",
+    name: "Técnica das Quatro Patas",
+    category: "NINJUTSU",
+    tier: 1,
+    resource: "chakra",
+    cost: 18,
+    actionType: "BONUS",
+    range: 0,
+    shape: "SELF",
+    effects: [{ effectId: "HASTE", duration: 3 }],
+    requirements: { clanId: "inuzuka", manualOnly: true },
+    tags: ["inuzuka", "buff", "instinto"],
+    description:
+      "Assume uma postura animal, ficando Acelerado por 3 rodadas: o movimento aumenta em 2 casas, a esquiva em 10 pontos percentuais e a chance de fuga em 25 pontos percentuais. As unhas afiadas devolvem 8 de dano em quem acertar você corpo a corpo.",
+  },
+  {
+    id: "inuzuka_clone_besta",
+    name: "Clone da Besta Humana",
+    category: "NINJUTSU",
+    tier: 1,
+    resource: "chakra",
+    cost: 20,
+    actionType: "COMUM",
+    baseDamage: 16,
+    scalingAttribute: "taijutsu",
+    range: 1,
+    shape: "MELEE",
+    effects: [{ effectId: "CONFUSION", duration: 2, chance: 0.6 }],
+    requiresPet: true,
+    requirements: { clanId: "inuzuka", manualOnly: true },
+    tags: ["inuzuka", "cao", "clone", "combo"],
+    description:
+      "O cão ninja se transforma numa cópia física do usuário: os dois atacam juntos e coordenados. 60% de chance de deixar o alvo Confuso por 2 rodadas, sem conseguir identificar qual dos dois é o verdadeiro. Precisa do cão ninja vivo em campo.",
+  },
+  {
+    id: "inuzuka_sobre_presa",
+    name: "Sobre Presa",
+    category: "TAIJUTSU",
+    tier: 2,
+    resource: "energia",
+    cost: 26,
+    actionType: "COMUM",
+    baseDamage: 24,
+    scalingAttribute: "taijutsu",
+    range: 3,
+    shape: "LINE",
+    push: 1,
+    requirements: { clanId: "inuzuka", manualOnly: true },
+    tags: ["inuzuka", "presa", "perfuracao"],
+    description:
+      "Gira em altíssima velocidade, virando uma espécie de broca humana: avança em linha reta perfurando tudo no caminho e empurra o alvo 1 casa.",
+  },
+  {
+    id: "inuzuka_presa_sobre_presa",
+    name: "Presa Sobre Presa",
+    category: "TAIJUTSU",
+    tier: 2,
+    resource: "energia",
+    cost: 30,
+    actionType: "COMUM",
+    baseDamage: 30,
+    scalingAttribute: "taijutsu",
+    range: 3,
+    shape: "LINE",
+    push: 2,
+    undodgeable: true,
+    effects: [{ effectId: "STUN", duration: 1, chance: 0.3 }],
+    requiresPet: true,
+    requirements: { clanId: "inuzuka", manualOnly: true },
+    tags: ["inuzuka", "cao", "presa", "combo", "perfuracao"],
+    description:
+      "Versão evoluída do Sobre Presa: usuário e cão giram juntos, multiplicando a potência da broca. Não pode ser esquivado, empurra o alvo 2 casas e tem 30% de chance de Atordoar por 1 rodada. Precisa do cão ninja vivo em campo.",
+  },
+  {
+    id: "inuzuka_lobo_duas_cabecas",
+    name: "Transformação Combinada da Besta Humana: Lobo de Duas Cabeças",
+    category: "NINJUTSU",
+    tier: 3,
+    resource: "chakra",
+    cost: 32,
+    actionType: "COMUM",
+    range: 0,
+    shape: "SELF",
+    effects: [{ effectId: "EMPOWERED", duration: 3, empoweredScope: "physical" }],
+    requiresPet: true,
+    requirements: { clanId: "inuzuka", manualOnly: true },
+    tags: ["inuzuka", "cao", "fusao", "buff"],
+    description:
+      "Usuário e cão se fundem num enorme lobo de duas cabeças: por 3 rodadas, +60% de dano nos seus golpes físicos (Taijutsu/Kenjutsu). Precisa do cão ninja vivo em campo.",
+  },
+  {
+    id: "inuzuka_presa_de_lobo",
+    name: "Presa de Lobo Sobre Presa",
+    category: "TAIJUTSU",
+    tier: 3,
+    resource: "energia",
+    cost: 36,
+    actionType: "COMUM",
+    baseDamage: 34,
+    scalingAttribute: "taijutsu",
+    range: 4,
+    shape: "LINE",
+    push: 2,
+    undodgeable: true,
+    requiresPet: true,
+    requirements: { clanId: "inuzuka", manualOnly: true },
+    tags: ["inuzuka", "cao", "fusao", "perfuracao"],
+    description:
+      "Depois da fusão em Lobo de Duas Cabeças, reúnem toda a força na super-rotação: perfuram o alvo com velocidade avassaladora numa linha reta. Não pode ser esquivado e empurra o alvo 2 casas. Precisa do cão ninja vivo em campo.",
+  },
+  {
+    id: "inuzuka_lobo_tres_cabecas",
+    name: "Transformação Misturada da Besta Humana — Lobo de Três Cabeças",
+    category: "NINJUTSU",
+    tier: 3,
+    resource: "chakra",
+    cost: 40,
+    actionType: "COMUM",
+    range: 0,
+    shape: "SELF",
+    effects: [
+      { effectId: "EMPOWERED", duration: 3, empoweredScope: "physical" },
+      { effectId: "SHIELD", stacks: 26, duration: 3 },
+    ],
+    requiresPet: true,
+    requirements: { clanId: "inuzuka", manualOnly: true },
+    tags: ["inuzuka", "cao", "fusao", "buff", "apice"],
+    description:
+      "Depois de criar um clone de sombra, o usuário se funde com o clone e o cão ninja num lobo gigante de três cabeças: por 3 rodadas, +60% de dano nos golpes físicos (Taijutsu/Kenjutsu), e ganha 26 pontos de Barreira por 3 rodadas. Garras e presas ficam brutalmente eficientes em ataques diretos. Precisa do cão ninja vivo em campo.",
+  },
+  {
+    id: "inuzuka_cauda_perseguidora",
+    name: "Cauda Perseguidora de Presa da Presa Giratória de Presa",
+    category: "TAIJUTSU",
+    tier: 3,
+    resource: "energia",
+    cost: 50,
+    actionType: "COMUM",
+    baseDamage: 42,
+    scalingAttribute: "taijutsu",
+    range: 5,
+    shape: "LINE",
+    undodgeable: true,
+    effects: [{ effectId: "STUN", duration: 1, chance: 0.35 }],
+    requiresPet: true,
+    requirements: { clanId: "inuzuka", manualOnly: true },
+    tags: ["inuzuka", "cao", "fusao", "apice", "finalizador"],
+    description:
+      "Ainda fundido no lobo gigante de três cabeças, o usuário se enrola numa bola e rola numa velocidade feroz, como se corresse atrás da própria cauda: a rotação ultra-violenta rasga através de vários inimigos na linha de ataque. Não pode ser esquivado e tem 35% de chance de Atordoar por 1 rodada. Precisa do cão ninja vivo em campo.",
+  },
+
+  // ---- Uzumaki ----
+  // Habilidades concedidas pela arvore de cla (src/data/clan-trees/index.ts),
+  // mesmo padrao dos outros. So 2 jutsu foram pedidos: Regeneracao de Vigor
+  // (IRYO_NINJUTSU — cura de verdade, escala com iryoNinjutsu igual o resto
+  // do roster medico) e Correntes de Selamento Adamantinas (NINJUTSU —
+  // controle puro, baseDamage 0 DE PROPOSITO, mesmo marcador que o Nara usa
+  // pras tecnicas de imitacao: libera os efeitos mesmo sem dano real).
+  {
+    id: "uzumaki_regeneracao",
+    name: "Regeneração de Vigor",
+    category: "IRYO_NINJUTSU",
+    tier: 2,
+    resource: "chakra",
+    cost: 22,
+    actionType: "COMUM",
+    baseHeal: 30,
+    restoreResource: { resource: "chakra", amount: 15 },
+    scalingAttribute: "iryoNinjutsu",
+    range: 1,
+    shape: "ALLY",
+    requirements: { clanId: "uzumaki", manualOnly: true },
+    tags: ["uzumaki", "cura", "vitalidade"],
+    description:
+      "Deixa um aliado morder sua pele e sugar um pouco do próprio chakra Uzumaki: em troca, fecha os ferimentos dele. Cura 30 de vida e devolve 15% de chakra — funciona até em ferimentos graves. Só em aliado, não cura o próprio usuário.",
+  },
+  {
+    id: "uzumaki_correntes",
+    name: "Correntes de Selamento Adamantinas",
+    category: "NINJUTSU",
+    tier: 3,
+    resource: "chakra",
+    cost: 40,
+    actionType: "COMUM",
+    baseDamage: 0,
+    range: 4,
+    shape: "RADIUS",
+    undodgeable: true,
+    effects: [
+      { effectId: "ROOT", duration: 3 },
+      { effectId: "CHAKRA_DRAIN", duration: 3, chance: 0.85 },
+      { effectId: "FLEE_LOCK", duration: 3 },
+    ],
+    requirements: { clanId: "uzumaki", manualOnly: true },
+    tags: ["uzumaki", "selamento", "controle", "area", "finalizador"],
+    description:
+      "Correntes de chakra douradas brotam do corpo do usuário e se espalham pela área: prendem quem estiver no caminho por 3 rodadas, com 85% de chance de sugar 10% de chakra por turno pelo mesmo período, e ninguém consegue fugir enquanto durar. Não pode ser esquivado — as mesmas correntes que, na lenda do clã, já continham até Bestas com Cauda.",
+  },
+
+  // ---- Hatake ----
+  // Habilidades concedidas pela arvore de cla (src/data/clan-trees/index.ts),
+  // mesmo padrao dos outros. Cães Ninja e Cerco da Matilha sao NINJUTSU
+  // (chakra ligando o usuario aos ninken, mesmo golpe fisico); a Lâmina e'
+  // BUKIJUTSU de verdade, escalando por `kenjutsu` (nao `bukijutsu`) — a
+  // primeira habilidade do jogo a usar o atributo novo.
+  {
+    id: "hatake_caes_ninja",
+    name: "Técnica de Invocação: Cão Ninja",
+    category: "NINJUTSU",
+    tier: 1,
+    resource: "chakra",
+    cost: 20,
+    actionType: "BONUS",
+    range: 0,
+    shape: "SELF",
+    oncePerCombat: true,
+    summon: { templateId: "ninken_hatake", count: 3 },
+    requirements: { clanId: "hatake", manualOnly: true },
+    tags: ["hatake", "cao", "invocacao", "rastreamento"],
+    description:
+      "Invoca três cães ninja da matilha: eles entram no mapa e atacam sozinhos todo turno, como invocações — servem tanto pra rastrear quanto pra imobilizar o alvo em combate. Só pode ser chamado uma vez por combate; se todos caírem, as técnicas que dependem da matilha ficam bloqueadas até o fim da luta, mas eles voltam saudáveis na próxima.",
+  },
+  {
+    id: "hatake_cerco_matilha",
+    name: "Cerco da Matilha",
+    category: "NINJUTSU",
+    tier: 2,
+    resource: "chakra",
+    cost: 24,
+    actionType: "COMUM",
+    baseDamage: 14,
+    scalingAttribute: "ninjutsu",
+    range: 2,
+    shape: "SINGLE_TARGET",
+    push: 1,
+    effects: [
+      { effectId: "ROOT", duration: 2, chance: 0.85 },
+      { effectId: "STUN", duration: 1, chance: 0.3 },
+    ],
+    requiresPet: true,
+    requirements: { clanId: "hatake", manualOnly: true },
+    tags: ["hatake", "cao", "controle", "combo"],
+    description:
+      "A matilha cerca o alvo, mordendo e pesando sobre ele: 85% de chance de imobilizar por 2 rodadas e 30% de chance de Atordoar por 1 rodada. Precisa de pelo menos um cão vivo em campo.",
+  },
+  {
+    id: "hatake_lamina",
+    name: "Lâmina da Luz Branca",
+    category: "BUKIJUTSU",
+    tier: 3,
+    resource: "energia",
+    cost: 34,
+    actionType: "COMUM",
+    baseDamage: 38,
+    scalingAttribute: "kenjutsu",
+    range: 1,
+    shape: "MELEE",
+    undodgeable: true,
+    effects: [{ effectId: "BLEED", duration: 3 }],
+    requirements: { clanId: "hatake", manualOnly: true },
+    tags: ["hatake", "kenjutsu", "lamina", "finalizador"],
+    description:
+      "Usando a Lâmina de Chakra de Luz Branca, desfere um corte diagonal descendente que deixa um rastro de chakra branco: um golpe rápido demais pra esquivar, que abre um corte profundo.",
+  },
+
+  // ---- Hoshigaki ----
+  // Habilidades concedidas pela arvore de cla (src/data/clan-trees/index.ts),
+  // mesmo padrao dos outros. Todas NINJUTSU e todas Suiton DE VERDADE — por
+  // isso `element: "AGUA"` fica ao lado de `requirements.clanId`: os dois
+  // gates valem ao mesmo tempo. `requirements` continua SO' com clanId (o
+  // personagem desbloqueia comprando o no' da arvore do clã, nao precisa
+  // ter elemento Agua pra isso) — mas o campo `element` no topo da ability
+  // faz essas tecnicas tambem responderem a passiva elemental de Agua (ex:
+  // Fluxo Constante) e a modificador de cenario por elemento, empilhando
+  // com a passiva propria do clã (ver passiveMods() em
+  // services/combat/passives.ts).
+  {
+    id: "hoshigaki_bomba_tubarao",
+    name: "Técnica da Bomba do Tubarão de Água",
+    category: "NINJUTSU",
+    element: "AGUA",
+    tier: 1,
+    resource: "chakra",
+    cost: 20,
+    actionType: "COMUM",
+    baseDamage: 24,
+    scalingAttribute: "ninjutsu",
+    range: 4,
+    shape: "LINE",
+    push: 2,
+    requirements: { clanId: "hoshigaki", manualOnly: true },
+    tags: ["hoshigaki", "suiton", "tubarao"],
+    description:
+      "Concentra um grande volume de água e a dispara com um empurrão de mão: um jato compacto em forma de tubarão que avança em linha reta e empurra o alvo 2 casas.",
+  },
+  {
+    id: "hoshigaki_cinco_tubaroes",
+    name: "Técnica dos Cinco Tubarões Famintos",
+    category: "NINJUTSU",
+    element: "AGUA",
+    tier: 2,
+    resource: "chakra",
+    cost: 26,
+    actionType: "COMUM",
+    baseDamage: 26,
+    scalingAttribute: "ninjutsu",
+    range: 3,
+    shape: "CONE",
+    effects: [{ effectId: "BLEED", duration: 2, chance: 0.6 }],
+    requirements: { clanId: "hoshigaki", manualOnly: true },
+    tags: ["hoshigaki", "suiton", "tubarao", "area"],
+    description:
+      "Com a mão sobre uma superfície de água, os cinco dedos emitem chakra que ganha forma de cinco tubarões famintos: avançam em leque e mordem tudo pela frente. 60% de chance de Sangramento por 2 rodadas.",
+  },
+  {
+    id: "hoshigaki_esfera_selvagem",
+    name: "Técnica da Esfera Selvagem do Tubarão de Água",
+    category: "NINJUTSU",
+    element: "AGUA",
+    tier: 2,
+    resource: "chakra",
+    cost: 28,
+    actionType: "COMUM",
+    baseDamage: 22,
+    scalingAttribute: "ninjutsu",
+    range: 2,
+    shape: "RADIUS",
+    effects: [{ effectId: "SLOW", duration: 2, chance: 0.7 }],
+    requirements: { clanId: "hoshigaki", manualOnly: true },
+    tags: ["hoshigaki", "suiton", "tubarao", "area", "defesa"],
+    description:
+      "Cria uma esfera de água ao seu redor: quem tentar se aproximar entra na área de ataque dos tubarões que nadam dentro dela. Dano em área e 70% de chance de deixar mais lento por 2 rodadas quem for atingido.",
+  },
+  {
+    id: "hoshigaki_mil_tubaroes",
+    name: "Técnica dos Mil Tubarões de Alimentação",
+    category: "NINJUTSU",
+    element: "AGUA",
+    tier: 3,
+    resource: "chakra",
+    cost: 36,
+    actionType: "COMUM",
+    baseDamage: 32,
+    scalingAttribute: "ninjutsu",
+    range: 5,
+    shape: "RADIUS",
+    effects: [{ effectId: "BLEED", duration: 3, chance: 0.7 }],
+    requirements: { clanId: "hoshigaki", manualOnly: true },
+    tags: ["hoshigaki", "suiton", "tubarao", "area", "finalizador"],
+    description:
+      "Versão monumental do Cinco Tubarões Famintos: mil tubarões brotam de uma vasta fonte de água e caem como chuva sobre a área. 70% de chance de Sangramento por 3 rodadas.",
+  },
+  {
+    id: "hoshigaki_grande_bomba",
+    name: "Técnica da Grande Bomba do Tubarão de Água",
+    category: "NINJUTSU",
+    element: "AGUA",
+    tier: 3,
+    resource: "chakra",
+    cost: 50,
+    actionType: "COMUM",
+    baseDamage: 42,
+    scalingAttribute: "ninjutsu",
+    range: 4,
+    shape: "LINE",
+    undodgeable: true,
+    effects: [{ effectId: "CHAKRA_DRAIN", duration: 3, chance: 0.9 }],
+    requirements: { clanId: "hoshigaki", manualOnly: true },
+    tags: ["hoshigaki", "suiton", "tubarao", "dreno", "finalizador"],
+    description:
+      "Cria um tubarão gigantesco fora da água e o arremessa com as duas mãos: não pode ser esquivado, e absorve o chakra da técnica do adversário, crescendo ainda mais no impacto — sugando 10% de chakra por turno por 3 rodadas.",
+  },
+
+  // ---- Hozuki ----
+  // Habilidades concedidas pela arvore de cla (src/data/clan-trees/index.ts),
+  // mesmo padrao dos outros. Todas NINJUTSU e todas Suiton DE VERDADE (corpo
+  // liquido) — `element: "AGUA"` ao lado de `requirements.clanId`, mesmo
+  // raciocinio do Hoshigaki (ver comentario la'). Sem jutsu de Kenjutsu aqui
+  // de proposito — as passivas de Kenjutsu (Lamina Liquida / Corte Sem Peso)
+  // ficam prontas pra quando o personagem pegar uma arma por outro caminho.
+  {
+    id: "hozuki_hidratacao",
+    name: "Hidratação",
+    category: "NINJUTSU",
+    element: "AGUA",
+    tier: 1,
+    resource: "chakra",
+    cost: 18,
+    actionType: "REACAO",
+    reactionKind: "DODGE",
+    reactionDodgeBonus: 0.3,
+    range: 0,
+    shape: "SELF",
+    requirements: { clanId: "hozuki", manualOnly: true },
+    tags: ["hozuki", "hidratacao", "reacao", "defesa"],
+    description:
+      "Ao ser atingido por um golpe físico, a parte do corpo alcançada vira líquido na hora: o ataque atravessa sem te machucar. Como reação, dá +30% de chance de esquiva contra qualquer ataque.",
+  },
+  {
+    id: "hozuki_braco_agua",
+    name: "Grande Braço de Água",
+    category: "NINJUTSU",
+    element: "AGUA",
+    tier: 1,
+    resource: "chakra",
+    cost: 22,
+    actionType: "BONUS",
+    range: 0,
+    shape: "SELF",
+    effects: [{ effectId: "EMPOWERED", duration: 3, empoweredScope: "physical" }],
+    requirements: { clanId: "hozuki", manualOnly: true },
+    tags: ["hozuki", "buff", "forca"],
+    description:
+      "Usa o próprio estado líquido pra empilhar mais água sobre o corpo, principalmente o braço: por 3 rodadas, +60% de dano nos seus golpes físicos (Taijutsu/Kenjutsu).",
+  },
+  {
+    id: "hozuki_revolver_agua",
+    name: "Revólver de Água",
+    category: "NINJUTSU",
+    element: "AGUA",
+    tier: 2,
+    resource: "chakra",
+    cost: 28,
+    actionType: "COMUM",
+    baseDamage: 30,
+    scalingAttribute: "ninjutsu",
+    range: 5,
+    shape: "SINGLE_TARGET",
+    undodgeable: true,
+    effects: [{ effectId: "WET", duration: 2, chance: 0.7 }],
+    requirements: { clanId: "hozuki", manualOnly: true },
+    tags: ["hozuki", "suiton", "distancia"],
+    description:
+      "Imita uma arma de fogo com a mão e comprime água no dedo indicador: dispara uma bala de água com força e velocidade de tiro de verdade. Não pode ser esquivado, e 70% de chance de deixar o alvo Encharcado por 2 rodadas.",
+  },
+  {
+    id: "hozuki_tate_eboshi",
+    name: "Tate Eboshi",
+    category: "NINJUTSU",
+    element: "AGUA",
+    tier: 3,
+    resource: "chakra",
+    cost: 46,
+    actionType: "COMUM",
+    baseDamage: 40,
+    scalingAttribute: "ninjutsu",
+    range: 5,
+    shape: "RADIUS",
+    undodgeable: true,
+    push: 3,
+    effects: [{ effectId: "SLOW", duration: 2, chance: 0.75 }],
+    requirements: { clanId: "hozuki", manualOnly: true },
+    tags: ["hozuki", "suiton", "area", "finalizador"],
+    description:
+      "Forma uma onda gigante em formato de peixe demoníaco: capaz de lutar contra adversários muito maiores, arrasando a área. Não pode ser esquivada, empurra 3 casas quem for atingido e tem 75% de chance de deixar mais lento por 2 rodadas.",
+  },
+
+  // ---- Kaguya ----
+  // Habilidades concedidas pela arvore de cla (src/data/clan-trees/index.ts),
+  // mesmo padrao dos outros. Todas TAIJUTSU (osso e' fisico, nao chakra
+  // elemental), exceto a Danca das Camelias — BUKIJUTSU escalando por
+  // kenjutsu de verdade (espada viva feita do proprio osso do braco).
+  {
+    id: "kaguya_dez_dedos",
+    name: "Técnica dos Dez Dedos Perfuradores",
+    category: "TAIJUTSU",
+    tier: 1,
+    resource: "energia",
+    cost: 22,
+    actionType: "COMUM",
+    baseDamage: 24,
+    scalingAttribute: "taijutsu",
+    range: 4,
+    shape: "SINGLE_TARGET",
+    effects: [{ effectId: "BLEED", duration: 2, chance: 0.55 }],
+    requirements: { clanId: "kaguya", manualOnly: true },
+    tags: ["kaguya", "osso", "distancia"],
+    description:
+      "Abre as pontas dos dedos, expondo os ossos endurecidos: atira uma rajada de balas de osso à distância, movimentando as mãos. 55% de chance de causar Sangramento por 2 rodadas.",
+  },
+  {
+    id: "kaguya_salgueiro",
+    name: "Técnica da Dança do Salgueiro",
+    category: "TAIJUTSU",
+    tier: 2,
+    resource: "energia",
+    cost: 28,
+    actionType: "COMUM",
+    baseDamage: 26,
+    scalingAttribute: "taijutsu",
+    range: 2,
+    shape: "CONE",
+    undodgeable: true,
+    requirements: { clanId: "kaguya", manualOnly: true },
+    tags: ["kaguya", "osso", "area"],
+    description:
+      "Ossos saem das palmas, cotovelos, joelhos e ombros ao mesmo tempo, golpeando o alvo de vários ângulos de uma vez: rápido demais e de direções demais pra esquivar. Não pode ser esquivado.",
+  },
+  {
+    id: "kaguya_larico",
+    name: "Técnica da Dança do Lariço",
+    category: "TAIJUTSU",
+    tier: 2,
+    resource: "energia",
+    cost: 30,
+    actionType: "COMUM",
+    baseDamage: 24,
+    scalingAttribute: "taijutsu",
+    range: 2,
+    shape: "RADIUS",
+    effects: [{ effectId: "BLEED", duration: 3, chance: 0.75 }],
+    requirements: { clanId: "kaguya", manualOnly: true },
+    tags: ["kaguya", "osso", "area"],
+    description:
+      "Inúmeros ossos brotam de dentro do próprio corpo de uma vez, formando espetos afiados que dilaceram qualquer um por perto. 75% de chance de causar Sangramento por 3 rodadas em quem estiver na área.",
+  },
+  {
+    id: "kaguya_camelias",
+    name: "Técnica da Dança das Camélias",
+    category: "BUKIJUTSU",
+    tier: 2,
+    resource: "energia",
+    cost: 32,
+    actionType: "COMUM",
+    baseDamage: 32,
+    scalingAttribute: "kenjutsu",
+    range: 1,
+    shape: "MELEE",
+    effects: [{ effectId: "BLEED", duration: 3, chance: 0.7 }],
+    requirements: { clanId: "kaguya", manualOnly: true },
+    tags: ["kaguya", "kenjutsu", "osso"],
+    description:
+      "Modifica o osso do próprio braço numa espada viva e desfere uma sequência de estocadas furiosas, rápidas demais pra contar. 70% de chance de causar Sangramento por 3 rodadas.",
+  },
+  {
+    id: "kaguya_impulso_flor",
+    name: "Técnica do Impulso da Flor",
+    category: "TAIJUTSU",
+    tier: 3,
+    resource: "energia",
+    cost: 34,
+    actionType: "COMUM",
+    baseDamage: 30,
+    scalingAttribute: "taijutsu",
+    range: 3,
+    shape: "MELEE",
+    push: 2,
+    requirements: { clanId: "kaguya", manualOnly: true },
+    tags: ["kaguya", "osso", "investida"],
+    description:
+      "Corre em disparada até o alvo e golpeia com os ossos das próprias costas, empurrando-o 2 casas com o impacto.",
+  },
+  {
+    id: "kaguya_danca_flor",
+    name: "Técnica da Dança da Flor",
+    category: "TAIJUTSU",
+    tier: 3,
+    resource: "energia",
+    cost: 55,
+    actionType: "COMUM",
+    baseDamage: 44,
+    scalingAttribute: "taijutsu",
+    range: 3,
+    shape: "SINGLE_TARGET",
+    undodgeable: true,
+    effects: [{ effectId: "BLEED", duration: 3, chance: 0.85 }],
+    requirements: { clanId: "kaguya", manualOnly: true },
+    tags: ["kaguya", "osso", "finalizador"],
+    description:
+      "Concentra todo o poder do próprio corpo, projetando os ossos comprimidos em lanças rígidas ao extremo: uma arma de osso incrivelmente destrutiva. Não pode ser esquivada. 85% de chance de causar Sangramento por 3 rodadas.",
+  },
+
+  // ---- Chinoike ----
+  // Habilidades concedidas pela arvore de cla (src/data/clan-trees/index.ts),
+  // mesmo padrao dos outros. A Genjutsu Ketsuryuugan e' a excecao real do
+  // catalogo de Genjutsu: tem baseDamage (a ilusao causa dano de verdade),
+  // enquanto os genjutsu genericos de fundamentos (gen_confusao etc.) so'
+  // aplicam efeito, sem dano — identidade do doujutsu do clã. Chuva de
+  // Granizo e Bolhas de Água SAO Suiton de verdade — `element: "AGUA"` ao
+  // lado de `requirements.clanId`, mesmo raciocinio do Hoshigaki/Hozuki
+  // (ver comentario la'). Ketsuryuugan (o doujutsu) e Genjutsu Ketsuryuugan
+  // NAO tem elemento — sao o proprio olho agindo, nao chakra de natureza; a
+  // Ascensao do Dragao de Sangue tambem fica sem elemento (e' sangue/doujutsu,
+  // nao Suiton puro, apesar do "libera vapor").
+  {
+    id: "chinoike_chuva_granizo",
+    name: "Técnica Chuva de Granizo",
+    category: "NINJUTSU",
+    element: "AGUA",
+    tier: 1,
+    resource: "chakra",
+    cost: 20,
+    actionType: "COMUM",
+    baseDamage: 22,
+    scalingAttribute: "ninjutsu",
+    range: 4,
+    shape: "CONE",
+    requirements: { clanId: "chinoike", manualOnly: true },
+    tags: ["chinoike", "suiton", "distancia"],
+    description:
+      "Molda o chakra em incontáveis pequenos projéteis de água e os dispara em leque na direção do oponente.",
+  },
+  {
+    id: "chinoike_doujutsu",
+    name: "Ketsuryuugan",
+    category: "NINJUTSU",
+    tier: 1,
+    // custo 0: nunca e' "usada" via /jutsu — e' ligada/desligada com
+    // /combate ketsuryuugan (mesmo padrao do Byakugan/Caminhada Aquatica),
+    // gasta BALANCE.ketsuryuuganUpkeepPerTurn por turno enquanto ativa.
+    resource: "chakra",
+    cost: 0,
+    actionType: "BONUS",
+    range: 0,
+    shape: "SELF",
+    requirements: { clanId: "chinoike", manualOnly: true },
+    tags: ["chinoike", "doujutsu", "ketsuryuugan"],
+    description:
+      "O dōjutsu do clã: olhos avermelhados como sangue, capazes de ler o instante exato em que o corpo do oponente vai se mover. Ative e desative a qualquer momento com /combate ketsuryuugan: enquanto ligado, dá +10% de chance de esquiva contra qualquer ataque e gasta 5% de chakra por rodada — desliga sozinho se o chakra acabar.",
+  },
+  {
+    id: "chinoike_bolhas_agua",
+    name: "Técnica das Bolhas de Água",
+    category: "NINJUTSU",
+    element: "AGUA",
+    tier: 2,
+    resource: "chakra",
+    cost: 26,
+    actionType: "COMUM",
+    baseDamage: 26,
+    scalingAttribute: "ninjutsu",
+    range: 4,
+    shape: "RADIUS",
+    effects: [{ effectId: "BURN", duration: 2, chance: 0.65 }],
+    requirements: { clanId: "chinoike", manualOnly: true },
+    tags: ["chinoike", "suiton", "area"],
+    description:
+      "Cria bolhas de composição explosiva ao redor do alvo, capazes de estourar sozinhas ou sob comando. Dano em área com 65% de chance de causar Queimadura por 2 rodadas.",
+  },
+  {
+    id: "chinoike_genjutsu_ketsuryuugan",
+    name: "Genjutsu Ketsuryuugan",
+    category: "GENJUTSU",
+    tier: 2,
+    resource: "chakra",
+    cost: 30,
+    actionType: "COMUM",
+    baseDamage: 28,
+    scalingAttribute: "genjutsu",
+    range: 4,
+    shape: "SINGLE_TARGET",
+    effects: [{ effectId: "CONFUSION", duration: 2, chance: 0.6 }],
+    requiresActiveDoujutsu: { flag: "ketsuryuuganActive", label: "Ketsuryuugan" },
+    requirements: { clanId: "chinoike", manualOnly: true },
+    tags: ["chinoike", "genjutsu", "doujutsu"],
+    description:
+      "Prende o oponente numa ilusão sangrenta que o próprio corpo dele acredita ser real — a dor é real. 60% de chance de causar Confusão por 2 rodadas. Exige o Ketsuryuugan ativo (/combate ketsuryuugan).",
+  },
+  {
+    id: "chinoike_dragao_sangue",
+    name: "Técnica da Ascensão do Dragão de Sangue",
+    category: "NINJUTSU",
+    tier: 3,
+    resource: "chakra",
+    cost: 48,
+    actionType: "COMUM",
+    baseDamage: 42,
+    scalingAttribute: "ninjutsu",
+    range: 5,
+    shape: "SINGLE_TARGET",
+    undodgeable: true,
+    effects: [{ effectId: "BLEED", duration: 3, chance: 0.8 }],
+    requirements: { clanId: "chinoike", manualOnly: true },
+    tags: ["chinoike", "suiton", "finalizador"],
+    description:
+      "Libera um grande dragão de sangue de 8 cabeças que avança sobre o alvo e libera vapor após morder. Não pode ser esquivado. 80% de chance de causar Sangramento por 3 rodadas.",
   },
 ];
 
@@ -588,7 +1447,23 @@ export const CLANS: ClanDef[] = [
     name: "Inuzuka",
     description: "Clã dos ninken de Konoha: luta ao lado de cães, faro apurado e ataques de garra.",
     passiveIds: [],
-    activeIds: [],
+    // concedidas pela arvore de cla (src/data/clan-trees/index.ts). Cao Ninja
+    // e' a excecao: nasce com o personagem (ver autoGrantedNodeIds abaixo),
+    // as outras oito continuam exigindo compra manual normal.
+    activeIds: [
+      "inuzuka_cao_ninja",
+      "inuzuka_quatro_patas",
+      "inuzuka_clone_besta",
+      "inuzuka_sobre_presa",
+      "inuzuka_presa_sobre_presa",
+      "inuzuka_lobo_duas_cabecas",
+      "inuzuka_presa_de_lobo",
+      "inuzuka_lobo_tres_cabecas",
+      "inuzuka_cauda_perseguidora",
+    ],
+    // Inuzuka nasce com o cao ninja — nao desbloqueia upando (pedido
+    // explicito). O no continua na arvore, isolado (sem requires).
+    autoGrantedNodeIds: ["inuzuka_cao_ninja"],
     hooks: {},
   },
   {
@@ -624,7 +1499,9 @@ export const CLANS: ClanDef[] = [
     name: "Uzumaki",
     description: "Clã de Uzushiogakure: chakra vasto, longevidade e mestria em fuinjutsu.",
     passiveIds: [],
-    activeIds: [],
+    // concedidas pela arvore de cla (src/data/clan-trees/index.ts), nao por
+    // requisito automatico — mesmo padrao dos outros clas com arvore propria.
+    activeIds: ["uzumaki_regeneracao", "uzumaki_correntes"],
     hooks: {},
   },
   {
@@ -632,7 +1509,17 @@ export const CLANS: ClanDef[] = [
     name: "Aburame",
     description: "Clã dos insetos de Konoha: hospedam kikaichu que drenam o chakra alheio.",
     passiveIds: [],
-    activeIds: [],
+    // concedidas pela arvore de cla (src/data/clan-trees/index.ts), nao por
+    // requisito automatico — mesmo padrao do Nara/Hyuuga/Akimichi.
+    activeIds: [
+      "aburame_clone_inseto",
+      "aburame_casulo",
+      "aburame_esfera",
+      "aburame_nuvem_veneno",
+      "aburame_parede",
+      "aburame_jarro_veneno",
+      "aburame_mordida",
+    ],
     hooks: {},
   },
   {
@@ -640,7 +1527,9 @@ export const CLANS: ClanDef[] = [
     name: "Hatake",
     description: "Linhagem de Kakashi: gênios versáteis com forte afinidade de raio.",
     passiveIds: [],
-    activeIds: [],
+    // concedidas pela arvore de cla (src/data/clan-trees/index.ts), nao por
+    // requisito automatico — mesmo padrao dos outros clas com arvore propria.
+    activeIds: ["hatake_caes_ninja", "hatake_cerco_matilha", "hatake_lamina"],
     hooks: {},
   },
   {
@@ -684,7 +1573,15 @@ export const CLANS: ClanDef[] = [
     name: "Hoshigaki",
     description: "Clã de Kiri: aparência de tubarão e mestria absoluta em Suiton.",
     passiveIds: [],
-    activeIds: [],
+    // concedidas pela arvore de cla (src/data/clan-trees/index.ts), nao por
+    // requisito automatico — mesmo padrao dos outros clas com arvore propria.
+    activeIds: [
+      "hoshigaki_bomba_tubarao",
+      "hoshigaki_cinco_tubaroes",
+      "hoshigaki_esfera_selvagem",
+      "hoshigaki_mil_tubaroes",
+      "hoshigaki_grande_bomba",
+    ],
     hooks: {},
   },
   {
@@ -692,7 +1589,9 @@ export const CLANS: ClanDef[] = [
     name: "Hozuki",
     description: "Clã de Kiri: hidrificação — o corpo se converte em água.",
     passiveIds: [],
-    activeIds: [],
+    // concedidas pela arvore de cla (src/data/clan-trees/index.ts), nao por
+    // requisito automatico — mesmo padrao dos outros clas com arvore propria.
+    activeIds: ["hozuki_hidratacao", "hozuki_braco_agua", "hozuki_revolver_agua", "hozuki_tate_eboshi"],
     hooks: {},
   },
   {
@@ -700,7 +1599,16 @@ export const CLANS: ClanDef[] = [
     name: "Kaguya",
     description: "Clã de Kiri: Shikotsumyaku, a manipulação dos próprios ossos.",
     passiveIds: [],
-    activeIds: [],
+    // concedidas pela arvore de cla (src/data/clan-trees/index.ts), nao por
+    // requisito automatico — mesmo padrao dos outros clas com arvore propria.
+    activeIds: [
+      "kaguya_dez_dedos",
+      "kaguya_salgueiro",
+      "kaguya_larico",
+      "kaguya_camelias",
+      "kaguya_impulso_flor",
+      "kaguya_danca_flor",
+    ],
     hooks: {},
   },
   {
@@ -734,7 +1642,15 @@ export const CLANS: ClanDef[] = [
     name: "Chinoike",
     description: "Clã de Kumo: Ketsuryugan, o olho que domina o sangue.",
     passiveIds: [],
-    activeIds: [],
+    // concedidas pela arvore de cla (src/data/clan-trees/index.ts), nao por
+    // requisito automatico — mesmo padrao dos outros clas com arvore propria.
+    activeIds: [
+      "chinoike_chuva_granizo",
+      "chinoike_doujutsu",
+      "chinoike_bolhas_agua",
+      "chinoike_genjutsu_ketsuryuugan",
+      "chinoike_dragao_sangue",
+    ],
     hooks: {},
   },
   {

@@ -21,6 +21,7 @@ const SCALE: Record<Attribute, number> = {
   kugutsu: BALANCE.kugutsuScaling,
   senjutsu: BALANCE.senjutsuScaling,
   dojutsu: BALANCE.dojutsuScaling,
+  kenjutsu: BALANCE.kenjutsuScaling,
 };
 
 // Atributos que ainda nao afetam nada em combate. A UI de distribuicao usa isto
@@ -30,6 +31,8 @@ export const ATTRIBUTES_SEM_EFEITO: readonly Attribute[] = [
   "kugutsu",
   "senjutsu",
   "dojutsu",
+  // remover daqui quando o primeiro jutsu/no de arvore usar reqAttribute kenjutsu
+  "kenjutsu",
 ];
 
 export interface DamageContext {
