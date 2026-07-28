@@ -183,15 +183,18 @@ export function hasteContactDamage(activeEffects: EffectState[]): number {
 // qualquer dano, mas a instancia pode ter nascido com um `empoweredScope`
 // (gravado no dataJson na hora que a skill aplicou o efeito — ver
 // AppliedEffect.empoweredScope em data/types.ts): "physical" so' libera em
-// categoria TAIJUTSU/BUKIJUTSU (Lobo de Duas/Tres Cabecas, Grande Braco de
-// Agua, Pilula Secreta); "clan" so' libera se o jutsu ATUAL exige o MESMO
-// clã de quem concedeu o efeito (Casulo do Aburame: so' golpes que exigem
-// clanId "aburame", mesmo sendo categoria NINJUTSU — "physical" nao serviria).
+// TAIJUTSU/KENJUTSU — as 4 abilities que usam isto (Lobo de Duas/Tres
+// Cabecas, Grande Braco de Agua, Pilula Secreta) prometem "golpes fisicos
+// (Taijutsu/Kenjutsu)" na descricao, entao BUKIJUTSU generico (arremesso de
+// kunai/shuriken) fica de fora de proposito — NAO usa isPhysicalCategory por
+// isso; "clan" so' libera se o jutsu ATUAL exige o MESMO clã de quem
+// concedeu o efeito (Casulo do Aburame: so' golpes que exigem clanId
+// "aburame", mesmo sendo categoria NINJUTSU — "physical" nao serviria).
 export function empoweredDamageMult(
   activeEffects: EffectState[],
   usedAbility: { category: string; requirements?: { clanId?: string } },
 ): number {
-  const physical = usedAbility.category === "TAIJUTSU" || usedAbility.category === "BUKIJUTSU";
+  const physical = usedAbility.category === "TAIJUTSU" || usedAbility.category === "KENJUTSU";
   const applies = activeEffects.some((e) => {
     if (!isActive(e, "EMPOWERED")) return false;
     const data = parseEffectData(e.dataJson);

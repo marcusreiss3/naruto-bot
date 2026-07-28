@@ -436,8 +436,8 @@ function renderTree(elId) {
 
 // 1 casa do grid ≈ 1,5 m (escala tática usada só p/ exibir alcance no site).
 const METERS_PER_CELL = 1.5;
-const CAT_LABEL = { NINJUTSU: "Ninjutsu", TAIJUTSU: "Taijutsu", BUKIJUTSU: "Kenjutsu",
-  IRYO: "Ninjutsu Médico", GENJUTSU: "Genjutsu", CLA: "Técnica de Clã" };
+const CAT_LABEL = { NINJUTSU: "Ninjutsu", TAIJUTSU: "Taijutsu", BUKIJUTSU: "Bukijutsu",
+  KENJUTSU: "Kenjutsu", IRYO_NINJUTSU: "Ninjutsu Médico", GENJUTSU: "Genjutsu", CLA: "Técnica de Clã" };
 const ACT_LABEL = { COMUM: "Ação comum", BONUS: "Ação bônus", REACAO: "Reação" };
 const RES_LABEL = { chakra: "Chakra", energia: "Energia" };
 

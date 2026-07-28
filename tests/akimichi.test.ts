@@ -241,12 +241,15 @@ describe("Pílula Secreta: skill com duração (EMPOWERED) e debuff ao expirar (
     expect(eff.empoweredScope).toBe("physical");
   });
 
-  it("EMPOWERED escopado como 'physical' só multiplica golpe TAIJUTSU/BUKIJUTSU, não NINJUTSU/GENJUTSU", () => {
+  it("EMPOWERED escopado como 'physical' só multiplica TAIJUTSU/KENJUTSU (a descrição promete só 'Taijutsu/Kenjutsu')", () => {
     const comEscopo: EffectState[] = [
       { effectId: "EMPOWERED", stacks: 1, duration: 3, dataJson: JSON.stringify({ empoweredScope: { kind: "physical" } }) },
     ];
     expect(empoweredDamageMult(comEscopo, { category: "TAIJUTSU" })).toBeCloseTo(1.6);
-    expect(empoweredDamageMult(comEscopo, { category: "BUKIJUTSU" })).toBeCloseTo(1.6);
+    expect(empoweredDamageMult(comEscopo, { category: "KENJUTSU" })).toBeCloseTo(1.6);
+    // Bukijutsu (arremesso de kunai/shuriken) fica de fora de propósito —
+    // é físico, mas a descrição só promete Taijutsu/Kenjutsu.
+    expect(empoweredDamageMult(comEscopo, { category: "BUKIJUTSU" })).toBe(1);
     expect(empoweredDamageMult(comEscopo, { category: "NINJUTSU" })).toBe(1);
     expect(empoweredDamageMult(comEscopo, { category: "GENJUTSU" })).toBe(1);
   });

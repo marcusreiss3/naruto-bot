@@ -34,11 +34,11 @@ describe("Kaguya: integridade da arvore de cla", () => {
     }
   });
 
-  it("cinco são TAIJUTSU; a Dança das Camélias é BUKIJUTSU escalando por Kenjutsu (espada de osso de verdade)", () => {
+  it("cinco são TAIJUTSU; a Dança das Camélias é KENJUTSU (espada de osso de verdade)", () => {
     for (const id of IDS.filter((i) => i !== "kaguya_camelias")) {
       expect(getAbility(id)!.category, id).toBe("TAIJUTSU");
     }
-    expect(getAbility("kaguya_camelias")!.category).toBe("BUKIJUTSU");
+    expect(getAbility("kaguya_camelias")!.category).toBe("KENJUTSU");
     expect(getAbility("kaguya_camelias")!.scalingAttribute).toBe("kenjutsu");
   });
 

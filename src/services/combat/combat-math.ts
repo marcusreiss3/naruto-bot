@@ -26,14 +26,22 @@ const SCALE: Record<Attribute, number> = {
 
 // Atributos que ainda nao afetam nada em combate. A UI de distribuicao usa isto
 // para avisar o jogador antes de ele gastar ponto.
-export const ATTRIBUTES_SEM_EFEITO: readonly Attribute[] = [
-  "fuinjutsu",
-  "kugutsu",
-  "senjutsu",
-  "dojutsu",
-  // remover daqui quando o primeiro jutsu/no de arvore usar reqAttribute kenjutsu
-  "kenjutsu",
-];
+// kenjutsu/dojutsu/fuinjutsu SAIRAM daqui: viraram `pool` de nos de arvore de
+// cla (ver skill-tree.ts), entao gastar ponto neles compra habilidade.
+// kugutsu/senjutsu continuam sem nenhum consumidor.
+export const ATTRIBUTES_SEM_EFEITO: readonly Attribute[] = ["kugutsu", "senjutsu"];
+
+// UNICA fonte de verdade do que conta como golpe FISICO. Usada em ~7 lugares
+// (queimadura corta dano fisico, esquiva gasta energia em vez de chakra,
+// Prisma NAO refrata fisico, Armadura de Espinhos so' pune fisico, sangramento
+// reabre em esforco fisico...). Centralizada de proposito: se um dia entrar
+// uma categoria fisica nova, ela passa a valer em todas as regras de uma vez,
+// em vez de depender de lembrar de 7 `||` espalhados.
+// NAO cobre "e' projetil?" — isso e' so' BUKIJUTSU e e' checado direto onde
+// importa (reflectsProjectiles da Explosao Defensiva).
+export function isPhysicalCategory(category: string): boolean {
+  return category === "TAIJUTSU" || category === "BUKIJUTSU" || category === "KENJUTSU";
+}
 
 export interface DamageContext {
   attrValue: number;
@@ -52,11 +60,15 @@ export function computeDamage(ability: Ability, ctx: DamageContext): number {
   if (!ability.baseDamage) return 0;
   const scale = ability.scalingAttribute ? SCALE[ability.scalingAttribute] : 0;
   let dmg = ability.baseDamage + ctx.attrValue * scale;
-  if (ability.category === "TAIJUTSU" || ability.category === "BUKIJUTSU") {
+  if (isPhysicalCategory(ability.category)) {
     if (ctx.burnTaiMult !== undefined) dmg *= ctx.burnTaiMult;
   }
   if (ctx.weakenMult !== undefined) dmg *= ctx.weakenMult;
-  if (ability.category === "BUKIJUTSU") dmg += ctx.weaponDamage ?? 0;
+  // arma equipada soma em quem empunha arma: arremesso (BUKIJUTSU) e espada
+  // (KENJUTSU). Taijutsu e' o corpo, nao usa arma.
+  if (ability.category === "BUKIJUTSU" || ability.category === "KENJUTSU") {
+    dmg += ctx.weaponDamage ?? 0;
+  }
   if (ctx.scenarioDmgMult) dmg *= ctx.scenarioDmgMult;
   if (ctx.heightBonus) dmg *= 1.1;
   return Math.max(0, Math.round(dmg));

@@ -147,7 +147,9 @@ describe("Hoshigaki: passivas — dano de graça + Kenjutsu em ramo separado, ma
     const fio = CLAN_PASSIVES.find((p) => p.nodeId === "hoshigaki_fio_afiado")!;
     const golpe = CLAN_PASSIVES.find((p) => p.nodeId === "hoshigaki_golpe_certeiro")!;
     expect(fio.damageMult).toBeCloseTo(1.15); // era 1.3
-    expect(fio.damageMultScalingAttribute).toBe("kenjutsu");
+    // escopo por CATEGORIA (não por scalingAttribute): espada nova nasce coberta
+    expect(fio.crossCategory).toBe("KENJUTSU");
+    expect(fio.damageMultScalingAttribute).toBeUndefined();
     expect(golpe.ignoresShield).toBe(true);
     expect(golpe.executeBonus).toEqual({ hpThreshold: 0.3, mult: 1.15 }); // era 1.25
     // não há stacking multiplicativo de damageMult: só Fio Afiado tem o campo

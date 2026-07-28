@@ -97,10 +97,23 @@ export function passiveMods(
     const clanMatch = p.clanId !== undefined && clanId !== undefined && p.clanId === clanId;
     if (!crossMatch && !elementMatch && !clanMatch) continue;
 
-    if (p.damageMult) {
-      const scopeOk = !p.damageMultScalingAttribute || ability.scalingAttribute === p.damageMultScalingAttribute;
-      if (scopeOk) mods.damageMult *= p.damageMult;
-    }
+    // ESCOPO do pacote de dano (damageMult + ignoresShield + executeBonus).
+    // Duas travas independentes, as duas opcionais:
+    //
+    // 1) crossCategory NARROWS alem de abrir. Ele ja' abriu o alcance acima
+    //    (crossMatch), mas tambem limita: um no' com crossCategory "KENJUTSU"
+    //    NAO solta o pacote nas outras abilities do proprio clã que entraram
+    //    por clanMatch — e' o que impede o Corte Perfeito (Hatake) de buffar
+    //    a invocacao de caes. Como a trava e' por CATEGORIA, qualquer espada
+    //    futura marcada `category: "KENJUTSU"` ja' nasce coberta, mesmo sem
+    //    scalingAttribute definido.
+    // 2) damageMultScalingAttribute trava por ATRIBUTO de escala — usado
+    //    onde nao ha' categoria propria pra discriminar (ex: apice do
+    //    Chinoike, so' a Genjutsu Ketsuryuugan entre os genjutsus do clã).
+    const categoryScopeOk = p.crossCategory === undefined || ability.category === p.crossCategory;
+    const scaleScopeOk = !p.damageMultScalingAttribute || ability.scalingAttribute === p.damageMultScalingAttribute;
+    const scopeOk = categoryScopeOk && scaleScopeOk;
+    if (p.damageMult && scopeOk) mods.damageMult *= p.damageMult;
     if (p.costMult) {
       const shapeOk = !p.costShapes || p.costShapes.includes(ability.shape);
       if (shapeOk) mods.costMult *= p.costMult;
@@ -114,13 +127,13 @@ export function passiveMods(
     if (p.pushBonus) mods.pushBonus += p.pushBonus;
     if (p.armorPierce) mods.armorPierce = Math.min(1, mods.armorPierce + p.armorPierce);
     if (p.spreadsBurn) mods.spreadsBurn = true;
-    if (p.ignoresShield) mods.ignoresShield = true;
+    if (p.ignoresShield && scopeOk) mods.ignoresShield = true;
     if (p.effectChanceBonus) {
       for (const [effectId, bonus] of Object.entries(p.effectChanceBonus) as [EffectId, number][]) {
         mods.effectChanceBonus[effectId] = (mods.effectChanceBonus[effectId] ?? 0) + bonus;
       }
     }
-    if (p.executeBonus) mods.executeBonus = p.executeBonus;
+    if (p.executeBonus && scopeOk) mods.executeBonus = p.executeBonus;
     if (p.summonHpBonus) mods.summonHpBonus += p.summonHpBonus;
     if (p.terrainDurationBonus) mods.terrainDurationBonus += p.terrainDurationBonus;
     if (p.rangeBonus) {

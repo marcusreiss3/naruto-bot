@@ -16,12 +16,17 @@ import {
 } from "../services/combat/combat-engine.js";
 import { usar } from "./combate.js";
 
-// subcomando -> categoria de habilidade
+// subcomando -> categoria de habilidade. Tem que bater EXATAMENTE com
+// CATEGORIES (config/enums.ts): valor errado aqui nao da erro, so' faz o
+// autocomplete voltar vazio pra sempre — foi o que aconteceu com "IRYO"
+// (a categoria real e' IRYO_NINJUTSU) e com "KENJUTSU" antes de a categoria
+// existir de verdade.
 const CAT_BY_SUB: Record<string, string> = {
   ninjutsu: "NINJUTSU",
   taijutsu: "TAIJUTSU",
   kenjutsu: "KENJUTSU",
-  iryo: "IRYO",
+  bukijutsu: "BUKIJUTSU",
+  iryo: "IRYO_NINJUTSU",
   genjutsu: "GENJUTSU",
   cla: "CLA",
 };
@@ -43,7 +48,8 @@ export const jutsu: Command = {
     .setDescription("Usa uma habilidade no combate")
     .addSubcommand(addCatSub("ninjutsu", "Ninjutsu"))
     .addSubcommand(addCatSub("taijutsu", "Taijutsu"))
-    .addSubcommand(addCatSub("kenjutsu", "Kenjutsu"))
+    .addSubcommand(addCatSub("kenjutsu", "Kenjutsu (espada)"))
+    .addSubcommand(addCatSub("bukijutsu", "Bukijutsu (armas/arremesso)"))
     .addSubcommand(addCatSub("iryo", "Iryō (médico)"))
     .addSubcommand(addCatSub("genjutsu", "Genjutsu"))
     .addSubcommand(addCatSub("cla", "Clã")),

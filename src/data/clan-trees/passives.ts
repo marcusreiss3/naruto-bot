@@ -15,10 +15,12 @@ export interface ClanPassiveDef {
   // clã que ganha dano de graça igual os elementos; Nara/Hyuuga ganham por
   // controle/perfuracao, nao por multiplicador bruto.
   damageMult?: number;
-  // restringe o damageMult acima a jutsus que escalam por UM atributo
-  // especifico (ex: Hatake — so' golpes de Kenjutsu ganham o bonus, nao a
-  // invocacao dos caes nem o resto do kit). Omitido = damageMult vale pra
-  // qualquer jutsu do clã, como sempre foi.
+  // restringe damageMult + ignoresShield + executeBonus deste no' a
+  // abilities que escalam por UM atributo especifico. Use SO' quando nao
+  // houver uma categoria propria pra discriminar (ex: apice do Chinoike —
+  // dentro dos GENJUTSU do clã, so' a Genjutsu Ketsuryuugan deve ganhar).
+  // Pra "so' espada", prefira crossCategory: "KENJUTSU": trava por
+  // categoria, entao espada nova nasce coberta mesmo sem scalingAttribute.
   damageMultScalingAttribute?: Attribute;
   // multiplica o custo de recurso dos jutsus de clã (0.85 = -15%)
   costMult?: number;
@@ -221,9 +223,10 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
   // mas de tier alto — o golpe de assinatura não precisa de uma cadeia
   // longa pra justificar o peso). A raiz cuida do vínculo com os cães
   // (summonHpBonus, mesmo campo do Inuzuka); o ápice e' o pedido explícito
-  // do dano de Kenjutsu — damageMultScalingAttribute restringe o bônus SÓ
-  // à Lâmina (e a qualquer golpe futuro que escale por kenjutsu), sem
-  // encostar na invocação nem no Cerco da Matilha.
+  // do dano de Kenjutsu — crossCategory: "KENJUTSU" faz o bônus valer em
+  // QUALQUER katana/espada (de outro clã ou de árvore genérica futura), não
+  // só a Lâmina da Luz Branca, e ao mesmo tempo impede que ele encoste na
+  // invocação dos cães ou no Cerco da Matilha (que são NINJUTSU do clã).
   {
     nodeId: "hatake_raiz",
     clanId: "hatake",
@@ -238,8 +241,8 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
   {
     nodeId: "hatake_apice",
     clanId: "hatake",
+    crossCategory: "KENJUTSU",
     damageMult: 1.3,
-    damageMultScalingAttribute: "kenjutsu",
     executeBonus: { hpThreshold: 0.3, mult: 1.25 },
   },
 
@@ -250,11 +253,11 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
   // tubarão" (sangramento + alcance). As de Kenjutsu ficam numa RAMIFICAÇÃO
   // separada (ver clan-trees/index.ts) — pedido explícito do usuário, mas
   // o clã NÃO nasce com espada (sem jutsu de Kenjutsu aqui de propósito).
-  // damageMultScalingAttribute restringe o bônus a golpes de Kenjutsu
-  // especificamente, então a passiva fica pronta pra quando o personagem
-  // pegar uma arma por outro caminho. Eram uma passiva só (+30% dano,
-  // ignora Barreira, +25% execução); separei em duas mais fracas (Fio
-  // Afiado / Golpe Certeiro) pra não ficar quebrado quando as duas somam.
+  // crossCategory: "KENJUTSU" faz o bônus valer em QUALQUER katana/espada
+  // — de outro clã, de árvore genérica — não só num jutsu exclusivo do
+  // Hoshigaki (que nem existe). Eram uma passiva só (+30% dano, ignora
+  // Barreira, +25% execução); separei em duas mais fracas (Fio Afiado /
+  // Golpe Certeiro) pra não ficar quebrado quando as duas somam.
   {
     nodeId: "hoshigaki_raiz",
     clanId: "hoshigaki",
@@ -271,12 +274,13 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
   {
     nodeId: "hoshigaki_fio_afiado",
     clanId: "hoshigaki",
+    crossCategory: "KENJUTSU",
     damageMult: 1.15,
-    damageMultScalingAttribute: "kenjutsu",
   },
   {
     nodeId: "hoshigaki_golpe_certeiro",
     clanId: "hoshigaki",
+    crossCategory: "KENJUTSU",
     ignoresShield: true,
     executeBonus: { hpThreshold: 0.3, mult: 1.15 },
   },
@@ -289,9 +293,10 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
   // chance de Encharcar e mais alcance nos jutsus à distância. As de
   // Kenjutsu (Suigetsu carrega a Kubikiribōchō) ficam numa RAMIFICAÇÃO
   // separada (mesmo padrão do Hoshigaki), sem jutsu de clã que escale por
-  // kenjutsu de propósito — a passiva fica pronta pra quando o personagem
-  // pegar uma arma por outro caminho. Já nasce dividida em duas (mesma
-  // regra do Hoshigaki: uma só ficaria forte demais somada).
+  // kenjutsu de propósito — crossCategory: "KENJUTSU" faz o bônus valer
+  // em QUALQUER katana/espada, de outro clã ou de arma genérica. Já nasce
+  // dividida em duas (mesma regra do Hoshigaki: uma só ficaria forte
+  // demais somada).
   {
     nodeId: "hozuki_raiz",
     clanId: "hozuki",
@@ -308,12 +313,13 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
   {
     nodeId: "hozuki_lamina_liquida",
     clanId: "hozuki",
+    crossCategory: "KENJUTSU",
     damageMult: 1.15,
-    damageMultScalingAttribute: "kenjutsu",
   },
   {
     nodeId: "hozuki_corte_sem_peso",
     clanId: "hozuki",
+    crossCategory: "KENJUTSU",
     ignoresShield: true,
     executeBonus: { hpThreshold: 0.3, mult: 1.15 },
   },
@@ -329,8 +335,9 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
   // (temporario). Fio de Osso e' a passiva de Kenjutsu (a Dança das
   // Camélias é uma espada de osso de verdade — combinada, nao dividida em
   // duas, porque o clã já tem o jutsu pra justificar o peso, igual o
-  // Hatake). O ápice converge os dois ramos (Impulso da Flor + Fio de
-  // Osso) antes da Dança da Flor.
+  // Hatake). crossCategory: "KENJUTSU" estende o bônus pra QUALQUER
+  // katana/espada, não só a Camélias. O ápice converge os dois ramos
+  // (Impulso da Flor + Fio de Osso) antes da Dança da Flor.
   {
     nodeId: "kaguya_raiz",
     clanId: "kaguya",
@@ -345,8 +352,8 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
   {
     nodeId: "kaguya_fio_osso",
     clanId: "kaguya",
+    crossCategory: "KENJUTSU",
     damageMult: 1.3,
-    damageMultScalingAttribute: "kenjutsu",
     executeBonus: { hpThreshold: 0.3, mult: 1.25 },
   },
   {

@@ -12,6 +12,7 @@ import {
   dodgeChance,
   resolveAreaCells,
   cellDistance,
+  isPhysicalCategory,
 } from "./combat-math.js";
 import {
   applyBurnStacks,
@@ -921,7 +922,7 @@ export async function useAbility(
   }
 
   // sangramento: esforco fisico reabre a ferida do proprio atacante
-  if (ability.category === "TAIJUTSU" || ability.category === "BUKIJUTSU") {
+  if (isPhysicalCategory(ability.category)) {
     const extra = bleedExtraOnPhysical(actor.effects);
     if (extra > 0) {
       const hp = Math.max(0, actor.hpCurrent - extra);
@@ -995,7 +996,7 @@ export async function resolveHit(
   const reaction = boundByShadow ? "NONE" : requestedReaction;
   if (reaction === "DODGE" && !undodgeable && !ability.unblockable) {
     const reactAb = opts.reactionAbilityId ? getAbility(opts.reactionAbilityId) : undefined;
-    const physical = ability.category === "TAIJUTSU" || ability.category === "BUKIJUTSU";
+    const physical = isPhysicalCategory(ability.category);
     const defenseMods = characterPassiveMods(ownedNodes(target));
 
     // Custo da reacao. Jutsu (Substituicao etc) paga o proprio custo/recurso.
@@ -1058,6 +1059,9 @@ export async function resolveHit(
     // Explosao Defensiva (Explosao): apara um projetil (BUKIJUTSU) e devolve
     // o golpe INTEIRO no proprio atacante, em vez de so reduzir o dano. Contra
     // qualquer outra categoria, funciona como um aparo comum (cai no else).
+    // NAO usa isPhysicalCategory de proposito: KENJUTSU e' fisico, mas NAO e'
+    // projetil — nao da' pra "defletir de volta" um corte de katana empunhada,
+    // so' um arremesso (kunai/shuriken). Taijutsu idem.
     if (reaction === "PARRY" && reactAb?.reflectsProjectiles && ability.category === "BUKIJUTSU") {
       const reflected = damage;
       damage = 0;
@@ -1108,7 +1112,7 @@ export async function resolveHit(
   // parte no atacante. Vem ANTES da Barreira: a luz desvia o golpe antes de ele
   // chegar a qualquer camada de defesa. Nao vale para TAI/BUKI de proposito.
   if (damage > 0 && isPrismed(target.effects)) {
-    const fisico = ability.category === "TAIJUTSU" || ability.category === "BUKIJUTSU";
+    const fisico = isPhysicalCategory(ability.category);
     const { damageTaken, reflected } = refractDamage(damage, !fisico, target.effects);
     if (damageTaken !== damage) {
       logs.push(`💎 O Prisma de ${target.name} refratou o golpe: ${damage} → ${damageTaken}.`);
@@ -1293,10 +1297,10 @@ export async function resolveHit(
 
   // A Armadura do Ataque Relampago (efeito HASTE) pune QUALQUER contato
   // fisico enquanto ativa. A Armadura de Espinhos (passiva do Kaguya) so'
-  // pune golpe FISICO de verdade (TAIJUTSU/BUKIJUTSU) — nao um toque
-  // ninjutsu — mas e' permanente, nao um efeito temporario.
+  // pune golpe FISICO de verdade (Taijutsu/Bukijutsu/Kenjutsu) — nao um
+  // toque ninjutsu — mas e' permanente, nao um efeito temporario.
   if (damage > 0 && ability.shape === "MELEE" && attacker) {
-    const physicalHit = ability.category === "TAIJUTSU" || ability.category === "BUKIJUTSU";
+    const physicalHit = isPhysicalCategory(ability.category);
     const shock =
       hasteContactDamage(target.effects) +
       (physicalHit ? characterPassiveMods(ownedNodes(target)).meleeCounterDamage : 0);

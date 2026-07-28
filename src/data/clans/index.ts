@@ -944,7 +944,7 @@ export const CLAN_ABILITIES: Ability[] = [
   {
     id: "hatake_lamina",
     name: "Lâmina da Luz Branca",
-    category: "BUKIJUTSU",
+    category: "KENJUTSU",
     tier: 3,
     resource: "energia",
     cost: 34,
@@ -1215,7 +1215,7 @@ export const CLAN_ABILITIES: Ability[] = [
   {
     id: "kaguya_camelias",
     name: "Técnica da Dança das Camélias",
-    category: "BUKIJUTSU",
+    category: "KENJUTSU",
     tier: 2,
     resource: "energia",
     cost: 32,

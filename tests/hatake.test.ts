@@ -115,8 +115,8 @@ describe("Hatake: Cerco da Matilha — precisa de cão vivo, imobiliza e atordoa
 describe("Hatake: Lâmina da Luz Branca — Kenjutsu de verdade, não precisa da matilha", () => {
   const lamina = getAbility("hatake_lamina")!;
 
-  it("categoria BUKIJUTSU, escala por kenjutsu (não bukijutsu genérico)", () => {
-    expect(lamina.category).toBe("BUKIJUTSU");
+  it("categoria KENJUTSU (espada empunhada, não arremesso), escalando por kenjutsu", () => {
+    expect(lamina.category).toBe("KENJUTSU");
     expect(lamina.scalingAttribute).toBe("kenjutsu");
   });
 

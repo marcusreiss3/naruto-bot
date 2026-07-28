@@ -224,12 +224,13 @@ describe("Inuzuka: EMPOWERED das fusões de lobo é FÍSICO só — virar fera n
     expect(tresCabecas.effects!.find((e) => e.effectId === "EMPOWERED")!.empoweredScope).toBe("physical");
   });
 
-  it("EMPOWERED escopado como 'physical' só multiplica TAIJUTSU/BUKIJUTSU, não NINJUTSU/GENJUTSU", () => {
+  it("EMPOWERED escopado como 'physical' só multiplica TAIJUTSU/KENJUTSU, não Bukijutsu (arremesso) nem Ninjutsu", () => {
     const comEscopo: EffectState[] = [
       { effectId: "EMPOWERED", stacks: 1, duration: 3, dataJson: JSON.stringify({ empoweredScope: { kind: "physical" } }) },
     ];
     expect(empoweredDamageMult(comEscopo, { category: "TAIJUTSU" })).toBeGreaterThan(1);
-    expect(empoweredDamageMult(comEscopo, { category: "BUKIJUTSU" })).toBeGreaterThan(1);
+    expect(empoweredDamageMult(comEscopo, { category: "KENJUTSU" })).toBeGreaterThan(1);
+    expect(empoweredDamageMult(comEscopo, { category: "BUKIJUTSU" })).toBe(1);
     expect(empoweredDamageMult(comEscopo, { category: "NINJUTSU" })).toBe(1);
   });
 });

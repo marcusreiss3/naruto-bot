@@ -71,7 +71,14 @@ export const CATEGORIES = [
   "IRYO_NINJUTSU",
   "TAIJUTSU",
   "GENJUTSU",
+  // BUKIJUTSU = arma em geral / arremesso (shuriken, kunai, senbon).
+  // KENJUTSU  = espada empunhada, categoria separada. Os dois sao FISICOS
+  // (ver isPhysicalCategory em combat/combat-math.ts) e os dois somam o dano
+  // da arma equipada, mas so' BUKIJUTSU e' "projetil" — e' isso que decide se
+  // a Explosao Defensiva consegue defletir o golpe de volta. Um corte de
+  // katana nao e' projetil; um kunai arremessado e'.
   "BUKIJUTSU",
+  "KENJUTSU",
   "CLA",
 ] as const;
 export type Category = (typeof CATEGORIES)[number];

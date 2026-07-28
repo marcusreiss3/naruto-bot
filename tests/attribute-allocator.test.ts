@@ -92,12 +92,15 @@ describe("distribuicao de pontos", () => {
   });
 
   it("marca os atributos que ainda nao tem efeito", () => {
-    expect(attrHasNoEffect("fuinjutsu")).toBe(true);
+    // so' estes dois sobraram sem nenhum consumidor no jogo
     expect(attrHasNoEffect("kugutsu")).toBe(true);
     expect(attrHasNoEffect("senjutsu")).toBe(true);
-    expect(attrHasNoEffect("dojutsu")).toBe(true);
-    expect(attrHasNoEffect("kenjutsu")).toBe(true);
     expect(attrHasNoEffect("ninjutsu")).toBe(false);
     expect(attrHasNoEffect("taijutsu")).toBe(false);
+    // estes viraram `pool` de nos de arvore de cla — gastar ponto neles
+    // compra habilidade, entao nao sao mais "sem efeito"
+    expect(attrHasNoEffect("kenjutsu")).toBe(false);
+    expect(attrHasNoEffect("dojutsu")).toBe(false);
+    expect(attrHasNoEffect("fuinjutsu")).toBe(false);
   });
 });

@@ -144,12 +144,62 @@ describe("Hozuki: passivas — regeneração/fluidez + Kenjutsu em ramo separado
     const lamina = CLAN_PASSIVES.find((p) => p.nodeId === "hozuki_lamina_liquida")!;
     const corte = CLAN_PASSIVES.find((p) => p.nodeId === "hozuki_corte_sem_peso")!;
     expect(lamina.damageMult).toBeCloseTo(1.15);
-    expect(lamina.damageMultScalingAttribute).toBe("kenjutsu");
+    // escopo por CATEGORIA (não por scalingAttribute): espada nova nasce coberta
+    expect(lamina.crossCategory).toBe("KENJUTSU");
+    expect(lamina.damageMultScalingAttribute).toBeUndefined();
     expect(corte.ignoresShield).toBe(true);
     expect(corte.executeBonus).toEqual({ hpThreshold: 0.3, mult: 1.15 });
 
     for (const id of IDS) expect(getAbility(id)!.scalingAttribute).not.toBe("kenjutsu");
     expect(passiveMods(["hozuki_lamina_liquida", "hozuki_corte_sem_peso"], revolver).damageMult).toBe(1);
+  });
+
+  it("Lâmina Líquida/Corte Sem Peso valem em QUALQUER espada, não só do próprio clã (crossCategory: KENJUTSU)", () => {
+    // hatake_lamina e' de OUTRO clã (Hatake), sem clanId "hozuki" — so' bate
+    // via crossCategory + damageMultScalingAttribute.
+    const laminaDoHatake = getAbility("hatake_lamina")!;
+    expect(laminaDoHatake.category).toBe("KENJUTSU");
+    expect(laminaDoHatake.scalingAttribute).toBe("kenjutsu");
+
+    const m = passiveMods(["hozuki_lamina_liquida", "hozuki_corte_sem_peso"], laminaDoHatake);
+    expect(m.damageMult).toBeCloseTo(1.15);
+    expect(m.ignoresShield).toBe(true);
+    expect(m.executeBonus).toEqual({ hpThreshold: 0.3, mult: 1.15 });
+  });
+
+  it("uma espada FUTURA só precisa nascer `category: KENJUTSU` — não depende de lembrar do scalingAttribute", () => {
+    // regressao: antes o escopo era por damageMultScalingAttribute, entao uma
+    // espada nova sem esse campo ficava silenciosamente sem buff nenhum.
+    const espadaNova = {
+      id: "espada_futura",
+      name: "Espada Futura",
+      category: "KENJUTSU",
+      tier: 3,
+      resource: "energia",
+      cost: 30,
+      actionType: "COMUM",
+      baseDamage: 40,
+      range: 1,
+      shape: "MELEE",
+      tags: [],
+      description: "",
+    } as unknown as Parameters<typeof passiveMods>[1];
+
+    const m = passiveMods(["hozuki_lamina_liquida", "hozuki_corte_sem_peso"], espadaNova);
+    expect(m.damageMult).toBeCloseTo(1.15);
+    expect(m.ignoresShield).toBe(true);
+    expect(m.executeBonus).toEqual({ hpThreshold: 0.3, mult: 1.15 });
+  });
+
+  it("mas NÃO vale numa arma de arremesso (BUKIJUTSU genérico, kunai/shuriken)", () => {
+    const kunai = getAbility("ken_corte_simples")!;
+    expect(kunai.category).toBe("BUKIJUTSU");
+    expect(kunai.scalingAttribute).not.toBe("kenjutsu");
+
+    const m = passiveMods(["hozuki_lamina_liquida", "hozuki_corte_sem_peso"], kunai);
+    expect(m.damageMult).toBe(1);
+    expect(m.ignoresShield).toBe(false);
+    expect(m.executeBonus).toBeNull();
   });
 
   it("nenhuma passiva de Hozuki afeta jutsu de outro clã, nem jutsu de outro elemento", () => {
@@ -191,11 +241,13 @@ describe("Hozuki: EMPOWERED de Grande Braço de Água é FÍSICO só — engross
     expect(braco.effects!.find((e) => e.effectId === "EMPOWERED")!.empoweredScope).toBe("physical");
   });
 
-  it("EMPOWERED escopado como 'physical' só multiplica TAIJUTSU/BUKIJUTSU, não NINJUTSU/GENJUTSU", () => {
+  it("EMPOWERED escopado como 'physical' só multiplica TAIJUTSU/KENJUTSU, não Bukijutsu nem Ninjutsu", () => {
     const comEscopo: EffectState[] = [
       { effectId: "EMPOWERED", stacks: 1, duration: 3, dataJson: JSON.stringify({ empoweredScope: { kind: "physical" } }) },
     ];
     expect(empoweredDamageMult(comEscopo, { category: "TAIJUTSU" })).toBeGreaterThan(1);
+    expect(empoweredDamageMult(comEscopo, { category: "KENJUTSU" })).toBeGreaterThan(1);
+    expect(empoweredDamageMult(comEscopo, { category: "BUKIJUTSU" })).toBe(1);
     expect(empoweredDamageMult(comEscopo, { category: "NINJUTSU" })).toBe(1);
   });
 });
