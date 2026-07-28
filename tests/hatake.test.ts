@@ -151,7 +151,7 @@ describe("Hatake: passivas — vínculo com a matilha + domínio da Lâmina", ()
 
   it("Corte Perfeito só multiplica dano de jutsu que escala por Kenjutsu — pedido explícito do usuário", () => {
     const mLamina = passiveMods(["hatake_apice"], lamina);
-    expect(mLamina.damageMult).toBeCloseTo(1.3);
+    expect(mLamina.damageMult).toBeCloseTo(1.15);
     expect(mLamina.executeBonus).toEqual({ hpThreshold: 0.3, mult: 1.25 });
 
     // Cães Ninja não escala por kenjutsu (é SELF/summon) — não deve ganhar o bônus

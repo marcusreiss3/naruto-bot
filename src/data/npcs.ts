@@ -560,6 +560,15 @@ export const NPCS: NpcTemplate[] = [
     attributes: { taijutsu: 6, ninjutsu: 3 },
     abilityIds: ["cao_ninja_mordida"],
   },
+  {
+    // Abelha gigante do cla Kamizuru — mandibula/ferrao (fisico) + cuspe de
+    // mel (controle), ver a ability "kamizuru_abelha_gigante".
+    id: "kamizuru_abelha_gigante",
+    name: "Abelha Gigante",
+    hpMax: 60,
+    attributes: { taijutsu: 8, ninjutsu: 6 },
+    abilityIds: ["abelha_gigante_ferroada", "abelha_gigante_mel"],
+  },
 ];
 
 const NPC_MAP = new Map<string, NpcTemplate>(NPCS.map((n) => [n.id, n]));

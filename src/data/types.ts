@@ -76,6 +76,33 @@ export interface Ability {
   // flags especiais
   unblockable?: boolean;
   undodgeable?: boolean;
+  // impede APENAS Bloquear/Aparar como reacao — Esquiva continua valendo.
+  // Diferente de unblockable (mata as 3 reacoes) e undodgeable (mata so a
+  // esquiva). Ex: Shintenshin no Jutsu (Yamanaka) — nao da pra "bloquear com
+  // os bracos" uma transferencia de mente, so esquivar dela.
+  unguardable?: boolean;
+  // ao acertar (nao esquivado), concede controle mental do corpo do alvo em
+  // vez de causar dano — ver establishControl() em combat-engine.ts. Pensada
+  // pra abilities com baseDamage: 0 (captura, nao machuca). O multiplicador
+  // de dano reduzido enquanto PILOTANDO um corpo emprestado nao mora aqui —
+  // e' estado continuo (BALANCE.yamanaka.pilotedDamageMult), avaliado a cada
+  // golpe enquanto actor.controlledById estiver setado.
+  mindTransfer?: boolean;
+  // quantos corpos essa ability pode controlar AO MESMO TEMPO por atacante
+  // (establishControl rejeita alem do teto). Omitido = 1 (Shintenshin classico).
+  // Ex: Clones de Transferencia de Mente (Yamanaka) = 3.
+  mindTransferMax?: number;
+  // se definido, o controle expira sozinho apos N turnos DO CORPO CONTROLADO
+  // (sem a disputa por Genjutsu de yamanakaResistChance) — ver
+  // processTurnStart em combat-engine.ts. Omitido = disputa normal por turno.
+  mindTransferTurns?: number;
+  // so' vale em shape SELF: em vez de buffar so' o ator, aplica `effects`
+  // tambem em ate' `teamBuffMax` aliados vivos mais proximos (rede telepatica
+  // do Yamanaka) — ver bloco SELF em useAbility, combat-engine.ts.
+  teamBuff?: boolean;
+  // teto de destinatarios do teamBuff, CONTANDO o proprio ator. Omitido = 1
+  // (so' o ator, igual buff SELF normal). Ex: Transmissao de Mentes = 3.
+  teamBuffMax?: number;
   // reacao PARRY contra jutsu de categoria BUKIJUTSU: em vez de reduzir o
   // dano, redireciona o golpe inteiro de volta no atacante (Explosao Defensiva)
   reflectsProjectiles?: boolean;
@@ -130,6 +157,14 @@ export interface Ability {
     // o que acontece quando a invocacao morre (clone d'agua estoura molhando)
     onDeath?: { effectId: EffectId; radius: number; duration?: number };
   };
+  // SELF apenas: ao usar, aplica `effectId` (ex: ROOT) em todo INIMIGO dentro
+  // de `radius` casas (Chebyshev) do ator, por `duration` rodadas — ex: Domo
+  // de Iceberg (Yuki), prendendo quem estiver perto quando o domo sobe. A
+  // duracao normal e' o teto; se a Barreira (SHIELD) do ator chegar a ZERO
+  // antes disso, quem estiver preso e' liberado na hora (ver consumeShield/
+  // resolveHit em combat-engine.ts). Marca o alvo com flags.trappedBy = id do
+  // ator, pra saber quem liberar quando a Barreira quebrar.
+  trapField?: { effectId: EffectId; radius: number; duration: number };
 }
 
 export interface ClanAbilityHook {

@@ -223,10 +223,17 @@ export const BALANCE = {
   maxParticipants: 25,
 
   // ---- Yamanaka (Shintenshin) ----
+  // Custo de iniciar mora so' em yamanaka_shintenshin.cost (clans/index.ts) —
+  // uma unica fonte de verdade, sem duplicar o numero aqui.
   yamanaka: {
-    initCost: 40, // % chakra para iniciar
-    upkeepPerTurn: 10, // % chakra por turno mantendo
+    upkeepPerTurn: 10, // % chakra por turno mantendo o controle
+    // ponto percentual de chance de o dono do corpo resistir, por ponto de
+    // diferenca de Genjutsu (vitima - controlador) — ver yamanakaResistChance
+    // em combat-math.ts. Simetrico em torno de 50%.
     resistBasePerGenjutsuDiff: 0.05,
+    // dano do controlador ATRAVES do corpo emprestado: nao domina o corpo
+    // 100%, entao todo golpe sai com 1/3 a menos enquanto durar o controle.
+    pilotedDamageMult: 0.67,
   },
 
   // ---- Progressao / XP ----

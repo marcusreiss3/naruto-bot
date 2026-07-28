@@ -111,6 +111,34 @@ Regras de proporção:
 },
 ```
 
+## Custo total da árvore de clã vs dano entregue
+
+Balanceamento ENTRE clãs (não só entre jutsus dentro de um clã): o custo TOTAL
+da árvore de habilidades do clã (soma de `cost` de todos os nós em
+`clan-trees/index.ts`) tem que correlacionar com o dano que o clã entrega. Um
+clã barato de upar (poucos nós, gates de nível/atributo baixos) sobra ponto
+pro jogador investir noutra coisa (elemento, fundamentos, outro atributo) —
+por isso ele DEVE dar menos dano que um clã caro. Se dois clãs custam preços
+bem diferentes mas entregam dano igual (via `baseDamage` alto ou
+`damageMult` de passiva em `clan-trees/passives.ts`), o mais barato está
+furando essa relação e precisa ser cortado, não o mais caro elevado — o
+barato existe pra ser barato.
+
+Referência (rebalanceamento de 2026-07-28, ver `git log` pra números
+anteriores): Uzumaki (14 PN) não dá dano nenhum — puro suporte, é o piso
+correto. Nara/Hyuuga/Aburame (33–37 PN) são clãs de controle: dano baixo
+(~10–23 de `baseDamage` médio), sem `damageMult` ou com ele nulo. Akimichi
+(49 PN, o mais caro) tem `damageMult` 1.3x incondicional — correto, clã caro
+dá dano de verdade. Hatake, Hozuki e Chinoike custavam 15–29 PN mas
+entregavam dano de clã caro (`baseDamage` 38–42 num único golpe, `damageMult`
+1.3x nas passivas de ápice) — foram cortados pra `baseDamage` 20–30 e
+`damageMult` 1.15x, pra ficar na curva dos clãs do mesmo custo.
+
+Ao criar ou reforçar uma árvore de clã: some o `cost` de todos os nós, pegue
+o `baseDamage` médio/máximo das habilidades concedidas, e compare com um clã
+de custo total parecido. Se destoar da curva, ajuste ANTES de commitar — não
+espere alguém notar jogando.
+
 ## Armadilhas
 
 - Efeito sem `baseDamage` = efeito nunca aplicado (`if (damage > 0 && ability.effects)`).

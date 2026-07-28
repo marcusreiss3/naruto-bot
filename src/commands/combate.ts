@@ -23,7 +23,7 @@ import {
   completeMission,
 } from "../services/missions/mission-service.js";
 import { catMissionStep, renderCatMission, spawnCat, type CatState, type CatMissionData } from "../services/missions/cat.js";
-import { cellDistance } from "../services/combat/combat-math.js";
+import { cellDistance, resolveActingParticipantId } from "../services/combat/combat-math.js";
 import { BALANCE } from "../config/balance.js";
 import { getOrCreateCharacter, attrsFromRow } from "../services/characters/character-service.js";
 import {
@@ -144,14 +144,11 @@ export const combate: Command = {
 
 // Tenta sair do combate. Quanto mais inimigo colado, menor a chance.
 async function fugir(interaction: ChatInputCommandInteraction): Promise<void> {
-  const session = await getActiveSession(interaction.channelId);
+  const { session, me } = await getMyParticipant(interaction);
   if (!session) {
     await interaction.reply({ content: "Não há combate ativo neste canal.", ephemeral: true });
     return;
   }
-  const guildId = interaction.guildId ?? "global";
-  const char = await getOrCreateCharacter(interaction.user.id, guildId, interaction.user.username);
-  const me = session.participants.find((p) => p.charId === char.id);
   if (!me) {
     await interaction.reply({ content: "Você não está neste combate.", ephemeral: true });
     return;
@@ -264,13 +261,24 @@ async function iniciar(interaction: ChatInputCommandInteraction): Promise<void> 
   );
 }
 
+// Resolve por qual CombatParticipant o usuario age agora: o proprio, ou o
+// corpo que estiver pilotando via Shintenshin (Yamanaka) — ver
+// resolveActingParticipantId em combat-math.ts. `me` vem null tanto se o
+// jogador nao esta em combate quanto se o PROPRIO corpo dele foi capturado
+// (a mente esta em outro lugar, nao pode agir).
 async function getMyParticipant(interaction: ChatInputCommandInteraction) {
   const channelId = interaction.channelId;
   const guildId = interaction.guildId ?? "global";
   const session = await getActiveSession(channelId);
   if (!session) return { session: null, me: null };
   const char = await getOrCreateCharacter(interaction.user.id, guildId, interaction.user.username);
-  const me = session.participants.find((p) => p.charId === char.id) ?? null;
+  const own = session.participants.find((p) => p.charId === char.id) ?? null;
+  if (!own) return { session, me: null };
+  // passa quem esta na vez agora: com os Clones de Transferencia de Mente o
+  // jogador pode pilotar ate' 3 corpos ao mesmo tempo, entao precisa saber
+  // QUAL deles esta ativo pra ensureMyTurn nao acusar "nao e' seu turno" errado.
+  const actingId = resolveActingParticipantId(own, session.participants, activeParticipant(session)?.id);
+  const me = actingId ? session.participants.find((p) => p.id === actingId) ?? null : null;
   return { session, me };
 }
 
@@ -627,15 +635,21 @@ async function resolveWithReaction(
   const session = await getSessionById(sessionId);
   const target = session?.participants.find((p) => p.id === hit.targetId);
   if (!target) return [];
-  if (target.isNpc || !target.charId) {
+  // Yamanaka: se o corpo alvo estiver sob controle mental, quem escolhe a
+  // reacao e' o CONTROLADOR (a mente que esta la agora), nao o dono original
+  // (que esta imovel/inconsciente em outro lugar).
+  const reactor = target.controlledById
+    ? (session!.participants.find((p) => p.id === target.controlledById) ?? target)
+    : target;
+  if (reactor.isNpc || !reactor.charId) {
     return resolveHit(sessionId, hit, attackerId, { reaction: "NONE" });
   }
-  const targetChar = await prisma.userCharacter.findUnique({ where: { id: target.charId } });
+  const targetChar = await prisma.userCharacter.findUnique({ where: { id: reactor.charId } });
   if (!targetChar) return resolveHit(sessionId, hit, attackerId, { reaction: "NONE" });
 
   // reacoes por JUTSU que o alvo possui (Substituicao etc). Lidas ao vivo do DB.
   const ownedRows = await prisma.characterJutsu.findMany({
-    where: { charId: target.charId },
+    where: { charId: reactor.charId },
     select: { jutsuId: true },
   });
   const reactionJutsus = ownedRows
@@ -782,7 +796,9 @@ async function fimTurno(interaction: ChatInputCommandInteraction): Promise<void>
     const s = await getSessionById(session.id);
     if (!s || s.status !== "ACTIVE") break;
     const active = activeParticipant(s);
-    if (!active || !active.isNpc || active.hpCurrent <= 0) break;
+    // controlledById: um jogador roubou o corpo deste NPC (Shintenshin) —
+    // quem age agora e' o jogador, nao a IA.
+    if (!active || !active.isNpc || active.hpCurrent <= 0 || active.controlledById) break;
     logs.push(`— Turno de **${active.name}** (${active.flags.isSummon ? "invocação" : "NPC"}) —`);
     logs.push(...(await runNpcTurn(s.id, active.id)));
     result = await endTurn(s.id);

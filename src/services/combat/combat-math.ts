@@ -142,3 +142,44 @@ export function cellDistance(a: string, b: string): number {
   if (!ca || !cb) return Infinity;
   return distance(ca, cb);
 }
+
+// ---------------- Yamanaka (Shintenshin) ----------------
+
+// Chance do dono do corpo RESISTIR e expulsar a mente intrusa, avaliada uma
+// vez por rodada no proprio turno do corpo controlado (ver processTurnStart
+// em combat-engine.ts). Simetrica em torno de 50%: Genjutsu da vitima maior
+// que o do controlador ajuda a vitima; menor, atrapalha. Clampada em
+// [5%, 95%] pra nunca ser garantida nem impossivel.
+export function yamanakaResistChance(victimGenjutsu: number, casterGenjutsu: number): number {
+  const raw = 0.5 + (victimGenjutsu - casterGenjutsu) * BALANCE.yamanaka.resistBasePerGenjutsuDiff;
+  return Math.max(0.05, Math.min(0.95, raw));
+}
+
+// Por qual CombatParticipant o dono do personagem age agora: o proprio
+// corpo, ou um dos corpos que estiver pilotando (flags.controllingIds — array,
+// pode ter mais de um com os Clones de Transferencia de Mente), ou null se o
+// PROPRIO corpo estiver sob controle de outra mente (nao pode agir — a
+// consciencia esta em outro lugar). Pura de proposito: sem Prisma, sem import
+// de combat-engine.ts (evita ciclo), facil de testar.
+//
+// `activeId`, se passado, e' o id de quem esta na vez (turnOrder) agora —
+// usado pra escolher QUAL dos corpos pilotados e' o certo quando ha mais de
+// um (ensureMyTurn em combate.ts compara o retorno com o participante ativo).
+// Sem activeId, cai no 1o corpo pilotado vivo (ou o proprio), pra usos fora
+// de turno (autocomplete de jutsu.ts).
+export function resolveActingParticipantId(
+  own: { id: string; controlledById: string | null; flags: Record<string, unknown> },
+  allParticipants: { id: string; hpCurrent: number }[],
+  activeId?: string,
+): string | null {
+  if (own.controlledById) return null;
+  const controllingIds = (own.flags.controllingIds as string[] | undefined) ?? [];
+  const aliveControlled = controllingIds.filter((id) =>
+    allParticipants.some((p) => p.id === id && p.hpCurrent > 0),
+  );
+  if (activeId !== undefined) {
+    if (activeId === own.id) return own.id;
+    if (aliveControlled.includes(activeId)) return activeId;
+  }
+  return aliveControlled[0] ?? own.id;
+}

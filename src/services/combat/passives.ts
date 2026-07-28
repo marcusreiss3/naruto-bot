@@ -28,6 +28,10 @@ export interface PassiveMods {
   effectChanceBonus: Partial<Record<EffectId, number>>;
   executeBonus: { hpThreshold: number; mult: number } | null;
   extraCrystalStacks: number;
+  // +N corpos simultaneos alem do mindTransferMax da propria ability — so'
+  // relevante pra abilities com mindTransfer (Clones de Transferencia de
+  // Mente, Yamanaka). Ver establishControl() em combat-engine.ts.
+  mindTransferMaxBonus: number;
 }
 
 export const NEUTRAL_MODS: PassiveMods = {
@@ -48,6 +52,7 @@ export const NEUTRAL_MODS: PassiveMods = {
   effectChanceBonus: {},
   executeBonus: null,
   extraCrystalStacks: 0,
+  mindTransferMaxBonus: 0,
 };
 
 // targetEffects e' opcional porque na hora de calcular custo ainda nao ha alvo.
@@ -154,6 +159,7 @@ export function passiveMods(
       mods.burnExplodeDamage = Math.max(mods.burnExplodeDamage, p.burnExplodeDamage);
     }
     if (p.terrainOnHit) mods.terrainOnHit.push(p.terrainOnHit);
+    if (p.mindTransferMaxBonus) mods.mindTransferMaxBonus += p.mindTransferMaxBonus;
   }
   return mods;
 }
@@ -173,6 +179,13 @@ export interface CharacterPassiveMods {
   // hasteContactDamage (efeito HASTE), so' que permanente/passiva em vez de
   // um efeito temporario. Ver resolveHit() em combat-engine.ts.
   meleeCounterDamage: number;
+  // multiplica o upkeep por turno do controle mental (BALANCE.yamanaka.
+  // upkeepPerTurn) — 1 = neutro, 0.8 = -20%. Ver processTurnStart em
+  // combat-engine.ts.
+  mindControlUpkeepMult: number;
+  // bonus fixo de Genjutsu EFETIVO so' pra disputa de controle mental
+  // (yamanakaResistChance) — ver processTurnStart em combat-engine.ts.
+  mindControlGenjutsuBonus: number;
 }
 
 // Modificadores que pertencem ao personagem, e nao a um jutsu especifico.
@@ -187,6 +200,8 @@ export function characterPassiveMods(ownedNodeIds: string[]): CharacterPassiveMo
   let hpRegenPerTurn = 0;
   let chakraRegenPerTurn = 0;
   let meleeCounterDamage = 0;
+  let mindControlUpkeepMult = 1;
+  let mindControlGenjutsuBonus = 0;
   for (const nodeId of owned) {
     const p: (Partial<PassiveDef> & Partial<ClanPassiveDef>) | undefined =
       getPassive(nodeId) ?? getClanPassive(nodeId);
@@ -197,6 +212,8 @@ export function characterPassiveMods(ownedNodeIds: string[]): CharacterPassiveMo
     hpRegenPerTurn += p.hpRegenPerTurn ?? 0;
     chakraRegenPerTurn += p.chakraRegenPerTurn ?? 0;
     meleeCounterDamage += p.meleeCounterDamage ?? 0;
+    mindControlUpkeepMult *= p.mindControlUpkeepMult ?? 1;
+    mindControlGenjutsuBonus += p.mindControlGenjutsuBonus ?? 0;
   }
   return {
     ninjutsuDodgeBonus,
@@ -205,5 +222,7 @@ export function characterPassiveMods(ownedNodeIds: string[]): CharacterPassiveMo
     hpRegenPerTurn,
     chakraRegenPerTurn,
     meleeCounterDamage,
+    mindControlUpkeepMult,
+    mindControlGenjutsuBonus,
   };
 }

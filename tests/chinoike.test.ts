@@ -151,7 +151,7 @@ describe("Chinoike: passivas — vitalidade de sangue, Genjutsu amplo e Genjutsu
 
   it("Sangue Desperto (ápice) só multiplica dano da própria Genjutsu Ketsuryuugan, não os outros jutsus do clã", () => {
     const mKetsuryuugan = passiveMods(["chinoike_apice"], ketsuryuugan);
-    expect(mKetsuryuugan.damageMult).toBeCloseTo(1.3);
+    expect(mKetsuryuugan.damageMult).toBeCloseTo(1.15);
     expect(mKetsuryuugan.executeBonus).toEqual({ hpThreshold: 0.3, mult: 1.25 });
 
     const mChuva = passiveMods(["chinoike_apice"], chuva); // escala por ninjutsu, não genjutsu

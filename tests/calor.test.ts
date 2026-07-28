@@ -8,7 +8,16 @@ import { computeDamage } from "../src/services/combat/combat-math.js";
 import { BALANCE } from "../src/config/balance.js";
 import { isKekkeiGenkai } from "../src/config/enums.js";
 
-const IDS = ["calor_disparo_bolas", "calor_esfera", "calor_assassinato_extremo"] as const;
+const IDS = [
+  "calor_disparo_bolas",
+  "calor_esfera",
+  "calor_rajada",
+  "calor_vapor_corporal",
+  "calor_assassinato_extremo",
+  "calor_miragem",
+  "calor_nucleo_ardente",
+  "calor_sol_interior",
+] as const;
 
 describe("Calor: integridade da arvore", () => {
   it("liga os tres jutsus aos nos da arvore", () => {
@@ -43,11 +52,16 @@ describe("Calor: integridade da arvore", () => {
 describe("Calor: passiva de dano", () => {
   const disparo = getAbility("calor_disparo_bolas")!;
 
-  it("Ebulição Corporal fecha em 2.2x — mesmo nível do Vapor", () => {
-    const calor = passiveMods(["calor_raiz"], disparo);
-    const vaporMod = passiveMods(["vapor_raiz"], getAbility("vapor_nevoa_qualificada")!);
-    expect(calor.damageMult).toBeCloseTo(vaporMod.damageMult, 5);
-    expect(calor.damageMult).toBeCloseTo(2.2, 3);
+  it("Ebulição Corporal (raiz) sozinha dá só +35% — mesmo nível do Vapor", () => {
+    const calor = passiveMods(["calor_raiz"], disparo).damageMult;
+    const vapor = passiveMods(["vapor_raiz"], getAbility("vapor_nevoa_qualificada")!).damageMult;
+    expect(calor).toBeCloseTo(vapor, 5);
+    expect(calor).toBeCloseTo(1.35, 3);
+  });
+
+  it("raiz + Combustão Interna (ápice) fecham em 2.295x — mesmo nível do Cristal", () => {
+    const mods = passiveMods(["calor_raiz", "calor_combustao_interna"], disparo);
+    expect(mods.damageMult).toBeCloseTo(2.295, 3);
   });
 
   it("passiva de Calor não afeta jutsu de Fogo", () => {

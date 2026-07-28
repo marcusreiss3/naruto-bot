@@ -1419,6 +1419,136 @@ const KAGUYA: SkillNodeDef[] = [
   ),
 ];
 
+// -------------------------------------------------------------------- YUKI
+// Terceiro clã de Kirigakure com árvore própria. Hyoton (o Gelo) é Suiton na
+// base — o clã paga do pool ninjutsu, igual Hoshigaki/Hozuki. Tronco central
+// (raiz -> Agulhas de Gelo -> Espelho Demoníaco -> Presença Silenciosa ->
+// Chuva de Agulhas -> ápice -> Mil Agulhas Voadoras) com um RAMO de defesa
+// isolado (coluna +1: Domo de Iceberg -> Reflexos Gélidos) que sai das
+// Agulhas de Gelo e termina em beco sem saída — mesmo padrão da ramificação
+// de Kenjutsu do Hoshigaki/Hozuki: não gate nem é gateado pelo tronco. Custo
+// total fecha em 34 PN, IGUAL ao Hoshigaki (mesmo +15% de dano na raiz,
+// nenhum multiplicador extra no ápice) — clã de dano médio a esse preço, não
+// o mais forte do jogo (ver "Custo total da árvore vs dano" na skill
+// jutsu-authoring).
+const YK = makeClan("yuki", "ninjutsu");
+const YUKI: SkillNodeDef[] = [
+  YK.pass(
+    "yuki_raiz",
+    "Sangue de Gelo",
+    "❄️",
+    "Raiz",
+    0,
+    0,
+    [],
+    1,
+    1,
+    "Passiva sempre ativa: a linhagem gélida do clã Yuki potencializa cada golpe. Seus jutsus de clã causam +15% de dano e custam 10% menos recurso.",
+    true,
+  ),
+  YK.jutsu(
+    "yuki_agulhas",
+    "Agulhas de Gelo",
+    "🧊",
+    "C",
+    "Gelo",
+    0,
+    1,
+    ["yuki_raiz"],
+    4,
+    4,
+    "Congela a umidade do ar em agulhas afiadas e as dispara em linha reta contra o alvo, cortando fundo.",
+  ),
+  YK.jutsu(
+    "yuki_espelho",
+    "Espelho Demoníaco de Gelo Fino",
+    "🪞",
+    "B",
+    "Gelo",
+    0,
+    2,
+    ["yuki_agulhas"],
+    9,
+    8,
+    "Cria um único espelho de gelo fino e ataca de dentro dele com agulhas em vários ângulos ao mesmo tempo. O alvo, distraído tentando achar de onde vem o golpe, baixa a guarda.",
+  ),
+  YK.jutsu(
+    "yuki_domo",
+    "Domo de Iceberg",
+    "🏔️",
+    "B",
+    "Defesa",
+    1,
+    2,
+    ["yuki_agulhas"],
+    9,
+    8,
+    "Ergue rapidamente uma cúpula de gelo ao seu redor: ganha Barreira na hora, e qualquer inimigo que já estiver corpo a corpo fica preso lá dentro com você, sem conseguir sair. A prisão dura enquanto a Barreira aguentar — se ela quebrar antes, quem estava preso se solta na hora.",
+  ),
+  YK.pass(
+    "yuki_presenca",
+    "Presença Silenciosa",
+    "🌫️",
+    "Gelo",
+    0,
+    3,
+    ["yuki_espelho"],
+    13,
+    11,
+    "Passiva sempre ativa: os espelhos e reflexos gélidos do clã confundem qualquer um. Seus jutsus de clã têm +15 pontos percentuais de chance de deixar o alvo com a guarda baixa (Defesa Reduzida).",
+  ),
+  YK.pass(
+    "yuki_reflexos",
+    "Reflexos Gélidos",
+    "💠",
+    "Defesa",
+    1,
+    3,
+    ["yuki_domo"],
+    13,
+    11,
+    "Passiva sempre ativa: anos refletindo o próprio corpo no gelo afiam os reflexos. +8 pontos percentuais de esquiva contra qualquer jutsu de Ninjutsu.",
+  ),
+  YK.jutsu(
+    "yuki_chuva_agulhas",
+    "Chuva de Agulhas Geladas",
+    "🌨️",
+    "A",
+    "Gelo",
+    0,
+    4,
+    ["yuki_presenca"],
+    18,
+    15,
+    "Multiplica os espelhos e enche a área de agulhas de gelo caindo de todos os ângulos, deixando quem for atingido mais lento pelo frio nos ferimentos.",
+  ),
+  YK.pass(
+    "yuki_apice",
+    "Domínio do Espelho de Gelo",
+    "🔷",
+    "Ápice",
+    0,
+    5,
+    ["yuki_chuva_agulhas"],
+    24,
+    19,
+    "Passiva: o domínio total da técnica do espelho chega ao ápice. Seus jutsus de clã têm +10 pontos percentuais a mais de chance de Defesa Reduzida, e a Lentidão que você aplica dura 1 rodada a mais.",
+  ),
+  YK.jutsu(
+    "yuki_agulhas_mil",
+    "Mil Agulhas Voadoras de Água da Morte",
+    "❄️",
+    "S",
+    "Ápice",
+    0,
+    6,
+    ["yuki_apice"],
+    30,
+    24,
+    "Produz mil agulhas de gelo afiadas e longas, mira num único alvo específico e as lança todas de uma vez em altíssima velocidade. Rápido demais pra esquivar.",
+  ),
+];
+
 // ----------------------------------------------------------- CHINOIKE
 // Primeiro clã de Kumogakure. Tronco curto (raiz -> Chuva de Granizo) que
 // se ramifica em dois caminhos: Doujutsu -> Genjutsu Ketsuryuugan (col -1,
@@ -1553,6 +1683,483 @@ const CHINOIKE: SkillNodeDef[] = [
   ),
 ];
 
+// ---------------------------------------------------------- KAMAITACHI
+// Clã do vento de Suna (Temari): leque gigante, golpes de foice cortante.
+// Fuuton na base — paga do pool ninjutsu, igual Hoshigaki/Hozuki/Yuki. Tronco
+// reto (raiz -> Foice -> Grande Foice -> Corte Profundo -> Rede -> Lâmina
+// Viva -> ápice -> Decapitação), sem ramificação — só 4 técnicas foram
+// pedidas, então nada de inventar um ramo extra pra encher. Fica dentro do
+// vocabulário já estabelecido de Vento (Sangramento, indefensável/
+// imparável, perfuração de guarda). Custo total 30 PN — entre o Chinoike
+// (29) e o Hoshigaki/Yuki (34), ver "Custo total da árvore vs dano" na
+// skill jutsu-authoring.
+const KM = makeClan("kamaitachi", "ninjutsu");
+const KAMAITACHI: SkillNodeDef[] = [
+  KM.pass(
+    "kamaitachi_raiz",
+    "Fio do Leque",
+    "🌪️",
+    "Raiz",
+    0,
+    0,
+    [],
+    1,
+    1,
+    "Passiva sempre ativa: a mestria do clã com o leque gigante potencializa cada golpe. Seus jutsus de clã causam +15% de dano e custam 10% menos recurso.",
+    true,
+  ),
+  KM.jutsu(
+    "kamaitachi_foice",
+    "Foice da Doninha",
+    "🍃",
+    "C",
+    "Foice",
+    0,
+    1,
+    ["kamaitachi_raiz"],
+    4,
+    4,
+    "Técnica de Estilo Vento que cria lâminas cortantes de vento em cone à sua frente, dilacerando quem for atingido.",
+  ),
+  KM.jutsu(
+    "kamaitachi_grande_foice",
+    "Grande Foice da Doninha",
+    "🌀",
+    "B",
+    "Foice",
+    0,
+    2,
+    ["kamaitachi_foice"],
+    9,
+    8,
+    "Usa o leque gigante para criar uma versão mais poderosa e em maior escala dos ventos cortantes: correntes de ar pesado se chocam em várias bolsas de vácuo que cortam tudo na área.",
+  ),
+  KM.pass(
+    "kamaitachi_corte_profundo",
+    "Corte Profundo",
+    "🩸",
+    "Foice",
+    0,
+    3,
+    ["kamaitachi_grande_foice"],
+    13,
+    11,
+    "Passiva sempre ativa: os cortes de vento do clã vão fundo demais pra fechar rápido. O Sangramento que você aplica dura 1 rodada a mais.",
+  ),
+  KM.jutsu(
+    "kamaitachi_rede",
+    "Lançamento da Rede",
+    "🕸️",
+    "A",
+    "Rede",
+    0,
+    4,
+    ["kamaitachi_corte_profundo"],
+    18,
+    15,
+    "Cria várias correntes estreitas de vento que se entrelaçam numa grande rede de corte. Os fios são afiados e rápidos demais pra esquivar.",
+  ),
+  KM.pass(
+    "kamaitachi_lamina_viva",
+    "Lâmina Viva",
+    "🛡️",
+    "Rede",
+    0,
+    5,
+    ["kamaitachi_rede"],
+    22,
+    17,
+    "Passiva sempre ativa: o fio do vento do clã encontra a brecha certa na guarda do alvo. Seus jutsus de clã perfuram 20% da redução de quem bloqueia ou apara.",
+  ),
+  KM.pass(
+    "kamaitachi_apice",
+    "Domínio da Foice",
+    "📏",
+    "Ápice",
+    0,
+    6,
+    ["kamaitachi_lamina_viva"],
+    26,
+    20,
+    "Passiva: o domínio total do leque chega ao ápice. Seus jutsus de clã em linha reta ganham +1 casa de alcance e têm +10 pontos percentuais a mais de chance de causar Sangramento.",
+  ),
+  KM.jutsu(
+    "kamaitachi_decapitacao",
+    "Dança da Decapitação Rápida",
+    "⚔️",
+    "S",
+    "Ápice",
+    0,
+    7,
+    ["kamaitachi_apice"],
+    32,
+    25,
+    "O leque provoca um vendaval poderoso que corta através de tudo o que toca — bloqueio, aparo ou desvio não fazem diferença.",
+  ),
+];
+
+// ------------------------------------------------------------- YAMANAKA
+// Clã mental de Konoha: nenhuma das 4 habilidades causa dano de verdade
+// (todas baseDamage: 0 ou buff SELF) — o poder inteiro é controle, não
+// dano bruto, então não faz sentido copiar o damageMult de raiz dos outros
+// clãs (ver "Custo total da árvore vs dano" na skill jutsu-authoring: clã
+// sem dano de graça pode custar barato mesmo tendo uma finalização forte).
+// Tronco (raiz -> Destruição de Mente, a confusão básica e barata) abre em
+// dois ramos no fork pedido: Controle (col -1, Transferência de Mente -> Domínio
+// Mental — upkeep mais barato) e Rede (col +1, Transmissão de Mentes -> Elo
+// Telepático — Aceleração dura mais). Os dois convergem no ápice (que soma
+// bônus de disputa + mais 1 corpo simultâneo) antes dos Clones de
+// Transferência de Mente, o S final. 27 PN de custo total — perto do
+// Hozuki (27), coerente com "zero dano de graça" no preço.
+const YM = makeClan("yamanaka", "ninjutsu");
+const YAMANAKA: SkillNodeDef[] = [
+  YM.pass(
+    "yamanaka_raiz",
+    "Sintonia Mental",
+    "🧠",
+    "Raiz",
+    0,
+    0,
+    [],
+    1,
+    1,
+    "Passiva sempre ativa: gerações de leitura mental afinam o próprio chakra. Seus jutsus de clã custam 10% menos recurso, e a Confusão que você aplicar dura 1 rodada a mais.",
+    true,
+  ),
+  YM.jutsu(
+    "yamanaka_destruicao_mente",
+    "Técnica de Destruição de Mente",
+    "💫",
+    "C",
+    "Mente",
+    0,
+    1,
+    ["yamanaka_raiz"],
+    5,
+    6,
+    "Interfere na mente do alvo — se ele não esquivar, perde a noção de aliados e inimigos por um turno: o próximo ataque dele mira alguém aleatório, não importa quem ele escolher.",
+  ),
+  YM.jutsu(
+    "yamanaka_shintenshin",
+    "Técnica de Transferência de Mente",
+    "👤",
+    "B",
+    "Controle",
+    -1,
+    2,
+    ["yamanaka_destruicao_mente"],
+    10,
+    10,
+    "Projeta a consciência para o corpo do alvo, assumindo o controle — só dá pra esquivar, bloqueio e aparo não adiantam contra um ataque mental. Enquanto durar, seu corpo original fica imóvel e vulnerável, e todo dano que o corpo tomado sofrer também atinge o seu.",
+  ),
+  YM.jutsu(
+    "yamanaka_transmissao_mentes",
+    "Técnica de Transmissão de Mentes",
+    "📡",
+    "C",
+    "Rede",
+    1,
+    2,
+    ["yamanaka_destruicao_mente"],
+    10,
+    8,
+    "Cria uma rede telepática entre até 3 aliados (contando o usuário) — comunicação instantânea deixa o grupo mais ágil e reativo por um tempo (Aceleração).",
+  ),
+  YM.pass(
+    "yamanaka_dominio_mental",
+    "Domínio Mental",
+    "🕹️",
+    "Controle",
+    -1,
+    3,
+    ["yamanaka_shintenshin"],
+    14,
+    13,
+    "Passiva sempre ativa: décadas de prática tornam manter o controle mais barato. Enquanto estiver pilotando um corpo emprestado, o custo de chakra por turno pra manter o controle cai 20%.",
+  ),
+  YM.pass(
+    "yamanaka_elo_telepatico",
+    "Elo Telepático",
+    "🔗",
+    "Rede",
+    1,
+    3,
+    ["yamanaka_transmissao_mentes"],
+    14,
+    12,
+    "Passiva sempre ativa: o elo mental do clã se sustenta com menos esforço. A Aceleração da sua Transmissão de Mentes dura 1 rodada a mais.",
+  ),
+  YM.pass(
+    "yamanaka_apice",
+    "Domínio da Mente",
+    "💠",
+    "Ápice",
+    0,
+    4,
+    ["yamanaka_dominio_mental", "yamanaka_elo_telepatico"],
+    20,
+    17,
+    "Passiva: o domínio total das técnicas mentais do clã chega ao ápice. +6 de Genjutsu efetivo em qualquer disputa de controle mental (tanto controlando quanto resistindo), e os Clones de Transferência de Mente conseguem manter mais 1 corpo simultâneo.",
+  ),
+  YM.jutsu(
+    "yamanaka_clones_shintenshin",
+    "Técnicas dos Clones de Transferência de Mente",
+    "🧿",
+    "S",
+    "Ápice",
+    0,
+    5,
+    ["yamanaka_apice"],
+    25,
+    20,
+    "Divide a consciência em vários alvos ao mesmo tempo (até 3), tomando o controle total de cada corpo — impossível de esquivar ou bloquear. Diferente da Técnica de Transferência de Mente, não dá pra resistir: o controle dura exatamente 1 turno por corpo e se desfaz sozinho depois.",
+  ),
+];
+
+// ------------------------------------------------------------- RAIKAGE
+// Linhagem dos Raikage de Kumo: raio + taijutsu bruto, não um clã de dojutsu
+// nem de ninjutsu elemental de verdade — por isso o pool padrão é TAIJUTSU
+// (os 5 golpes físicos), com override de pool pros 2 jutsus de chakra puro
+// (Deslocamento/Armadura, que saem do pool NINJUTSU) — mesmo padrão de
+// pool cruzado que o Ketsuryuugan do Chinoike usa pro dōjutsu. Tronco reto
+// (raiz -> Deslocamento -> Armadura -> Relâmpago Reto) até o fork: Golpes
+// (col -1, Lariat -> Corte Horizontal) e Queda (col +1, só a Guilhotina,
+// ramo curto — mesmo padrão assimétrico do Kaguya/Chinoike). Os dois
+// convergem no ápice antes da Bomba Liger, o finalizador de agarrão. 35 PN
+// de custo total — entre o Nara (36) e o Aburame (33), coerente com um clã
+// de dano bruto de verdade (ver "Custo total da árvore vs dano" na skill
+// jutsu-authoring).
+const RK = makeClan("raikage", "taijutsu");
+const RAIKAGE: SkillNodeDef[] = [
+  RK.pass(
+    "raikage_raiz",
+    "Sangue de Raikage",
+    "⚡",
+    "Raiz",
+    0,
+    0,
+    [],
+    1,
+    1,
+    "Passiva sempre ativa: a força descomunal da linhagem dos Raikage potencializa cada golpe. Seus jutsus de clã causam +15% de dano e custam 10% menos recurso.",
+    true,
+  ),
+  RK.jutsu(
+    "raikage_deslocamento",
+    "Deslocamento Instantâneo do Estilo Raio",
+    "💨",
+    "D",
+    "Velocidade",
+    0,
+    1,
+    ["raikage_raiz"],
+    1,
+    3,
+    "Jutsu básico de movimento em alta velocidade: o usuário se desloca de um ponto a outro numa velocidade quase indetectável, ficando Acelerado por um instante.",
+    undefined,
+    "ninjutsu",
+  ),
+  RK.jutsu(
+    "raikage_armadura",
+    "Armadura de Raio",
+    "🛡️",
+    "C",
+    "Velocidade",
+    0,
+    2,
+    ["raikage_deslocamento"],
+    6,
+    7,
+    "Envolve o corpo numa camada de chakra relâmpago que estimula eletricamente o sistema nervoso: sinapses mais rápidas e destreza física no limite absoluto — fica Acelerado por um bom tempo.",
+    undefined,
+    "ninjutsu",
+  ),
+  RK.jutsu(
+    "raikage_relampago_reto",
+    "Relâmpago Reto",
+    "⚡",
+    "B",
+    "Velocidade",
+    0,
+    3,
+    ["raikage_armadura"],
+    9,
+    9,
+    "Move-se em alta velocidade para desferir um ataque direto contra o alvo — rápido demais pra esquivar.",
+  ),
+  RK.jutsu(
+    "raikage_lariat",
+    "Lariat",
+    "🦾",
+    "B",
+    "Golpes",
+    -1,
+    4,
+    ["raikage_relampago_reto"],
+    10,
+    10,
+    "Avança rapidamente e encaixa o braço flexionado no pescoço do inimigo, derrubando-o com um golpe forte.",
+  ),
+  RK.jutsu(
+    "raikage_guilhotina",
+    "Queda da Guilhotina",
+    "🦵",
+    "B",
+    "Queda",
+    1,
+    4,
+    ["raikage_relampago_reto"],
+    11,
+    10,
+    "Salta no ar acima do oponente e executa um chute baixo, usando o impulso da queda pra aumentar o poder por trás do golpe e deixar a guarda dele aberta.",
+  ),
+  RK.jutsu(
+    "raikage_corte_horizontal",
+    "Corte Horizontal de Relâmpago Violento",
+    "🔪",
+    "A",
+    "Golpes",
+    -1,
+    5,
+    ["raikage_lariat"],
+    16,
+    14,
+    "Golpeia o adversário com a lateral externa da mão, endurecida em forma de faca por chakra relâmpago — um corte fundo o bastante pra sangrar.",
+  ),
+  RK.pass(
+    "raikage_apice",
+    "Fúria do Raikage",
+    "👑",
+    "Ápice",
+    0,
+    6,
+    ["raikage_corte_horizontal", "raikage_guilhotina"],
+    20,
+    17,
+    "Passiva: a fúria da linhagem chega ao ápice. Seus jutsus de clã causam +25% de dano em quem estiver abaixo de 30% de vida.",
+  ),
+  RK.jutsu(
+    "raikage_bomba_liger",
+    "Bomba Liger",
+    "💥",
+    "S",
+    "Ápice",
+    0,
+    7,
+    ["raikage_apice"],
+    25,
+    21,
+    "Agarra o oponente, levanta-o no ar e usa força extrema pra esmagá-lo de cabeça contra o chão — impossível de esquivar, bloquear ou aparar.",
+  ),
+];
+
+// ------------------------------------------------------------- KAMIZURU
+// Se baseia no Aburame (pedido explícito): clã de enxame/chakra, paga do
+// pool ninjutsu como o Aburame, e ganha por DRENAR/IMOBILIZAR/ENVENENAR, não
+// por rajada — só a Bomba de Abelha foge disso de propósito (a única técnica
+// de dano real do clã). Só 5 técnicas foram pedidas (o Aburame tem 7), então
+// a árvore é mais enxuta: raiz -> Abelha Gigante (invocação, cedo, mesmo
+// padrão do Cão Ninja do Hatake/Inuzuka) -> fork em Enxame (col -1, Abelha
+// do Mel -> Colmeia de Rocha) e Ataque (col +1, Bomba de Abelha -> Mil
+// Ferrões) -> ápice convergindo os dois. Igual o Aburame, termina no ápice
+// (passiva) — sem finalizador S separado. 24 PN de custo total — acima do
+// Hatake (15) e do Uzumaki (14), mas ainda um dos mais baratos do jogo,
+// coerente com "quase zero dano de graça" na tabela de "Custo total da
+// árvore vs dano" da skill jutsu-authoring.
+const KZ = makeClan("kamizuru", "ninjutsu");
+const KAMIZURU: SkillNodeDef[] = [
+  KZ.pass(
+    "kamizuru_raiz",
+    "Colônia de Iwa",
+    "🐝",
+    "Raiz",
+    0,
+    0,
+    [],
+    1,
+    1,
+    "Passiva sempre ativa: gerações inteiras hospedando abelhas de chakra fazem do próprio corpo uma colmeia viva. Seus jutsus de clã custam 10% menos chakra e têm +15 pontos percentuais de chance de fazer o alvo perder 10% de chakra por turno.",
+    true,
+  ),
+  KZ.jutsu(
+    "kamizuru_abelha_gigante",
+    "Técnica de Invocação: Abelha Gigante",
+    "🐝",
+    "D",
+    "Enxame",
+    0,
+    1,
+    ["kamizuru_raiz"],
+    1,
+    3,
+    "Invoca uma abelha gigante: mandíbula de dentes afiados, ferrão mortal e asas capazes de causar ventos fortes. Ataca sozinha todo turno, como uma invocação comum.",
+  ),
+  KZ.jutsu(
+    "kamizuru_abelha_mel",
+    "Técnica da Abelha do Mel",
+    "🍯",
+    "B",
+    "Enxame",
+    -1,
+    2,
+    ["kamizuru_abelha_gigante"],
+    8,
+    8,
+    "Conjura um enxame de abelhas feitas de chakra. Toda vez que uma abelha é ferida ou destruída, libera cera pegajosa sobre o adversário — forte o suficiente pra imobilizá-lo.",
+  ),
+  KZ.jutsu(
+    "kamizuru_bomba_abelha",
+    "Bomba de Abelha",
+    "💣",
+    "B",
+    "Ataque",
+    1,
+    2,
+    ["kamizuru_abelha_gigante"],
+    8,
+    8,
+    "Abelhas carregando amuletos explosivos atacam em enxame. Assim que entram em contato com o alvo, os selos explodem.",
+  ),
+  KZ.jutsu(
+    "kamizuru_colmeia_rocha",
+    "Colmeia de Rocha",
+    "🪨",
+    "A",
+    "Enxame",
+    -1,
+    3,
+    ["kamizuru_abelha_mel"],
+    16,
+    14,
+    "Cria uma caverna em forma de colmeia, abrigando larvas de abelha gigante que se alimentam de chakra e o drenam de cada centímetro das paredes — prendendo quem estiver lá dentro.",
+  ),
+  KZ.jutsu(
+    "kamizuru_mil_ferroes",
+    "Mil Ferrões de Abelha",
+    "🩸",
+    "A",
+    "Ataque",
+    1,
+    3,
+    ["kamizuru_bomba_abelha"],
+    16,
+    14,
+    "Invoca uma nuvem de abelhas que disparam seus ferrões venenosos contra tudo na área, cercando o alvo por dentro.",
+  ),
+  KZ.pass(
+    "kamizuru_apice",
+    "Enxame Completo",
+    "👑",
+    "Ápice",
+    0,
+    4,
+    ["kamizuru_colmeia_rocha", "kamizuru_mil_ferroes"],
+    22,
+    18,
+    "Passiva: domina os dois ramos do clã ao mesmo tempo. Seus jutsus de clã têm +15 pontos percentuais de chance de Imobilizar, e o Veneno que você aplicar dura 1 rodada a mais.",
+  ),
+];
+
 export const CLAN_TREES: Record<string, SkillNodeDef[]> = {
   nara: NARA,
   hyuuga: HYUUGA,
@@ -1564,5 +2171,10 @@ export const CLAN_TREES: Record<string, SkillNodeDef[]> = {
   hoshigaki: HOSHIGAKI,
   hozuki: HOZUKI,
   kaguya: KAGUYA,
+  yuki: YUKI,
   chinoike: CHINOIKE,
+  kamaitachi: KAMAITACHI,
+  yamanaka: YAMANAKA,
+  raikage: RAIKAGE,
+  kamizuru: KAMIZURU,
 };

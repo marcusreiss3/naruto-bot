@@ -60,20 +60,105 @@ export const CLAN_ABILITIES: Ability[] = [
   },
 
   // ---- Yamanaka ----
+  // Concedidas pela arvore de cla (src/data/clan-trees/index.ts), nao pelo
+  // scan de autoUnlockJutsus — por isso `manualOnly: true` em todas (mesmo
+  // padrao do Nara/Hyuuga). baseDamage: 0 de proposito (nao machuca, so'
+  // captura) — mesmo padrao do Nara (nara_possessao). unguardable: so' da
+  // pra esquivar, bloqueio/aparo nao adiantam contra uma transferencia de
+  // mente. mindTransfer: ao acertar, establishControl() (combat-engine.ts)
+  // toma o corpo do alvo em vez de causar dano. Ver BALANCE.yamanaka pro
+  // upkeep/dano reduzido/disputa.
   {
     id: "yamanaka_shintenshin",
-    name: "Shintenshin no Jutsu",
-    category: "CLA",
+    name: "Técnica de Transferência de Mente",
+    category: "NINJUTSU",
     tier: 2,
     resource: "chakra",
     cost: 40,
     actionType: "COMUM",
+    baseDamage: 0,
     range: 4,
     shape: "SINGLE_TARGET",
     scalingAttribute: "genjutsu",
-    requirements: { clanId: "yamanaka", attributes: { genjutsu: 10 } },
-    tags: ["cla", "yamanaka", "controle", "corpo"],
-    description: "Transfere a consciencia para o alvo, controlando seu corpo. Custo alto e upkeep por turno.",
+    unguardable: true,
+    mindTransfer: true,
+    requirements: { clanId: "yamanaka", attributes: { genjutsu: 10 }, manualOnly: true },
+    tags: ["cla", "yamanaka", "controle", "corpo", "mental"],
+    description:
+      "Projeta a consciência para o corpo do alvo, assumindo o controle — só dá pra esquivar, bloqueio e aparo não adiantam contra um ataque mental. Enquanto durar, seu corpo original fica imóvel e vulnerável, e todo dano que o corpo tomado sofrer também atinge o seu. Gasta muito chakra, e mais um pouco a cada turno pra manter o controle; o dono do corpo tenta expulsar sua mente a cada rodada.",
+  },
+  // baseDamage: 0 de proposito (so' efeito, nao machuca). Sem unguardable/
+  // undodgeable: como o dano nunca passa de 0, so' a ESQUIVA impede o efeito
+  // de "landed" (ver effectsLanded em effects.ts) — bloqueio/aparo nao
+  // reduzem um dano que ja' era zero, entao a interferencia mental passa por
+  // cima deles do mesmo jeito. Reusa CONFUSION (ja' mira alvo aleatorio,
+  // aliado ou inimigo — services/combat/effects.ts:isConfused).
+  {
+    id: "yamanaka_destruicao_mente",
+    name: "Técnica de Destruição de Mente",
+    category: "NINJUTSU",
+    tier: 1,
+    resource: "chakra",
+    cost: 25,
+    actionType: "COMUM",
+    baseDamage: 0,
+    range: 4,
+    shape: "SINGLE_TARGET",
+    scalingAttribute: "genjutsu",
+    effects: [{ effectId: "CONFUSION", duration: 1 }],
+    requirements: { clanId: "yamanaka", attributes: { genjutsu: 6 }, manualOnly: true },
+    tags: ["cla", "yamanaka", "genjutsu", "confusao", "mental"],
+    description:
+      "Interfere na mente do alvo — se ele não esquivar, perde a noção de aliados e inimigos por um turno: o próximo ataque dele mira alguém aleatório, não importa quem ele escolher.",
+  },
+  // Versao multi-alvo da Transferencia de Mente: mindTransferMax controla quantos corpos
+  // simultaneos essa ability pode tomar (establishControl rejeita alem do
+  // teto), mindTransferTurns fixa uma duracao (sem disputa de Genjutsu —
+  // libera sozinho, ver processTurnStart). undodgeable + unguardable juntos:
+  // nenhuma reacao impede (o golpe "curva" pra achar a mente, nao da pra
+  // esquivar nem bloquear).
+  {
+    id: "yamanaka_clones_shintenshin",
+    name: "Técnicas dos Clones de Transferência de Mente",
+    category: "NINJUTSU",
+    tier: 3,
+    resource: "chakra",
+    cost: 70,
+    actionType: "COMUM",
+    baseDamage: 0,
+    range: 6,
+    shape: "RADIUS",
+    scalingAttribute: "genjutsu",
+    unguardable: true,
+    undodgeable: true,
+    mindTransfer: true,
+    mindTransferMax: 3,
+    mindTransferTurns: 1,
+    requirements: { clanId: "yamanaka", level: 25, attributes: { genjutsu: 20 }, manualOnly: true },
+    tags: ["cla", "yamanaka", "controle", "corpo", "mental", "area"],
+    description:
+      "Divide a consciência em vários alvos ao mesmo tempo (até 3), tomando o controle total de cada corpo — impossível de esquivar ou bloquear. Diferente da Técnica de Transferência de Mente, não dá pra resistir: o controle dura exatamente 1 turno por corpo e se desfaz sozinho depois. Enquanto durar, seu corpo original fica imóvel e vulnerável.",
+  },
+  // Buff SELF que atinge o time inteiro (teamBuff, ver bloco SELF em
+  // useAbility, combat-engine.ts) em vez de so' o ator. Reusa HASTE pronto —
+  // nao precisa de efeito novo. teamBuffMax: 3 conta o proprio usuario.
+  {
+    id: "yamanaka_transmissao_mentes",
+    name: "Técnica de Transmissão de Mentes",
+    category: "NINJUTSU",
+    tier: 1,
+    resource: "chakra",
+    cost: 20,
+    actionType: "BONUS",
+    range: 0,
+    shape: "SELF",
+    effects: [{ effectId: "HASTE", duration: 3 }],
+    teamBuff: true,
+    teamBuffMax: 3,
+    requirements: { clanId: "yamanaka", manualOnly: true },
+    tags: ["cla", "yamanaka", "buff", "equipe", "mental"],
+    description:
+      "Cria uma rede telepática entre até 3 aliados (contando o usuário) — comunicação instantânea deixa o grupo mais ágil e reativo por um tempo (Aceleração).",
   },
 
   // ---- Hyuuga ----
@@ -949,7 +1034,7 @@ export const CLAN_ABILITIES: Ability[] = [
     resource: "energia",
     cost: 34,
     actionType: "COMUM",
-    baseDamage: 38,
+    baseDamage: 26,
     scalingAttribute: "kenjutsu",
     range: 1,
     shape: "MELEE",
@@ -1120,7 +1205,7 @@ export const CLAN_ABILITIES: Ability[] = [
     resource: "chakra",
     cost: 28,
     actionType: "COMUM",
-    baseDamage: 30,
+    baseDamage: 20,
     scalingAttribute: "ninjutsu",
     range: 5,
     shape: "SINGLE_TARGET",
@@ -1140,7 +1225,7 @@ export const CLAN_ABILITIES: Ability[] = [
     resource: "chakra",
     cost: 46,
     actionType: "COMUM",
-    baseDamage: 40,
+    baseDamage: 26,
     scalingAttribute: "ninjutsu",
     range: 5,
     shape: "RADIUS",
@@ -1268,6 +1353,113 @@ export const CLAN_ABILITIES: Ability[] = [
       "Concentra todo o poder do próprio corpo, projetando os ossos comprimidos em lanças rígidas ao extremo: uma arma de osso incrivelmente destrutiva. Não pode ser esquivada. 85% de chance de causar Sangramento por 3 rodadas.",
   },
 
+  // ---- Yuki ----
+  // Habilidades concedidas pela arvore de cla (src/data/clan-trees/index.ts),
+  // mesmo padrao do Hoshigaki/Hozuki. Hyoton (Gelo) e' Suiton na base —
+  // `element: "AGUA"` ao lado de `requirements.clanId`, mesmo raciocinio dos
+  // outros dois clãs de Kiri (ver CLAN_STARTING_ELEMENT: yuki tambem começa
+  // com Água). Domo de Iceberg NAO tem baseDamage de proposito (e' defesa
+  // pura, SELF) — dar dano E defesa de graça no mesmo nó ficaria forte
+  // demais pro custo (ver "Custo total da árvore vs dano" na skill
+  // jutsu-authoring: essa árvore fecha em 34 PN, igual o Hoshigaki, com o
+  // mesmo +15% de dano de raiz — nada de multiplicador extra no ápice, que
+  // aqui e' so' controle).
+  {
+    id: "yuki_agulhas",
+    name: "Agulhas de Gelo",
+    category: "NINJUTSU",
+    element: "AGUA",
+    tier: 1,
+    resource: "chakra",
+    cost: 20,
+    actionType: "COMUM",
+    baseDamage: 18,
+    scalingAttribute: "ninjutsu",
+    range: 4,
+    shape: "LINE",
+    effects: [{ effectId: "BLEED", duration: 2, chance: 0.6 }],
+    requirements: { clanId: "yuki", manualOnly: true },
+    tags: ["yuki", "gelo", "linha", "agulhas"],
+    description:
+      "Congela a umidade do ar em agulhas afiadas e as dispara em linha reta contra o alvo, cortando fundo.",
+  },
+  {
+    id: "yuki_espelho",
+    name: "Espelho Demoníaco de Gelo Fino",
+    category: "NINJUTSU",
+    element: "AGUA",
+    tier: 2,
+    resource: "chakra",
+    cost: 26,
+    actionType: "COMUM",
+    baseDamage: 24,
+    scalingAttribute: "ninjutsu",
+    range: 3,
+    shape: "CONE",
+    effects: [{ effectId: "DEFENSE_DOWN", duration: 2, chance: 0.7 }],
+    requirements: { clanId: "yuki", manualOnly: true },
+    tags: ["yuki", "gelo", "espelho", "controle"],
+    description:
+      "Cria um único espelho de gelo fino e ataca de dentro dele com agulhas em vários ângulos ao mesmo tempo. O alvo, distraído tentando achar de onde vem o golpe, baixa a guarda.",
+  },
+  {
+    id: "yuki_domo",
+    name: "Domo de Iceberg",
+    category: "NINJUTSU",
+    element: "AGUA",
+    tier: 2,
+    resource: "chakra",
+    cost: 30,
+    actionType: "BONUS",
+    range: 0,
+    shape: "SELF",
+    effects: [{ effectId: "SHIELD", stacks: 16, duration: 3 }],
+    trapField: { effectId: "ROOT", radius: 1, duration: 3 },
+    requirements: { clanId: "yuki", manualOnly: true },
+    tags: ["yuki", "gelo", "defesa", "controle"],
+    description:
+      "Ergue rapidamente uma cúpula de gelo ao seu redor: ganha Barreira na hora, e qualquer inimigo que já estiver corpo a corpo fica preso lá dentro com você, sem conseguir sair. A prisão dura enquanto a Barreira aguentar — se ela quebrar antes, quem estava preso se solta na hora.",
+  },
+  {
+    id: "yuki_chuva_agulhas",
+    name: "Chuva de Agulhas Geladas",
+    category: "NINJUTSU",
+    element: "AGUA",
+    tier: 3,
+    resource: "chakra",
+    cost: 40,
+    actionType: "COMUM",
+    baseDamage: 34,
+    scalingAttribute: "ninjutsu",
+    range: 5,
+    shape: "RADIUS",
+    effects: [{ effectId: "SLOW", duration: 2, chance: 0.75 }],
+    requirements: { clanId: "yuki", manualOnly: true },
+    tags: ["yuki", "gelo", "area", "controle"],
+    description:
+      "Multiplica os espelhos e enche a área de agulhas de gelo caindo de todos os ângulos, deixando quem for atingido mais lento pelo frio nos ferimentos.",
+  },
+  {
+    id: "yuki_agulhas_mil",
+    name: "Mil Agulhas Voadoras de Água da Morte",
+    category: "NINJUTSU",
+    element: "AGUA",
+    tier: 3,
+    resource: "chakra",
+    cost: 74,
+    actionType: "COMUM",
+    baseDamage: 46,
+    scalingAttribute: "ninjutsu",
+    range: 6,
+    shape: "SINGLE_TARGET",
+    undodgeable: true,
+    effects: [{ effectId: "BLEED", stacks: 2, duration: 3, chance: 0.85 }],
+    requirements: { clanId: "yuki", manualOnly: true },
+    tags: ["yuki", "gelo", "finalizador", "indefensavel"],
+    description:
+      "Produz mil agulhas de gelo afiadas e longas, mira num único alvo específico e as lança todas de uma vez em altíssima velocidade. Rápido demais pra esquivar.",
+  },
+
   // ---- Chinoike ----
   // Habilidades concedidas pela arvore de cla (src/data/clan-trees/index.ts),
   // mesmo padrao dos outros. A Genjutsu Ketsuryuugan e' a excecao real do
@@ -1362,7 +1554,7 @@ export const CLAN_ABILITIES: Ability[] = [
     resource: "chakra",
     cost: 48,
     actionType: "COMUM",
-    baseDamage: 42,
+    baseDamage: 30,
     scalingAttribute: "ninjutsu",
     range: 5,
     shape: "SINGLE_TARGET",
@@ -1372,6 +1564,334 @@ export const CLAN_ABILITIES: Ability[] = [
     tags: ["chinoike", "suiton", "finalizador"],
     description:
       "Libera um grande dragão de sangue de 8 cabeças que avança sobre o alvo e libera vapor após morder. Não pode ser esquivado. 80% de chance de causar Sangramento por 3 rodadas.",
+  },
+
+  // ---- Kamaitachi ----
+  // Habilidades concedidas pela arvore de cla (src/data/clan-trees/index.ts),
+  // mesmo padrao do Hoshigaki/Yuki. O clã do vento de Suna (leque gigante,
+  // golpes de foice) e' Fuuton na base — `element: "VENTO"` ao lado de
+  // `requirements.clanId`, mesmo raciocinio dos clãs de Kiri (ver
+  // CLAN_STARTING_ELEMENT: kamaitachi tambem começa com Vento). Fica dentro
+  // do vocabulario ja estabelecido de Vento (Sangramento, indefensavel/
+  // imparavel, perfuracao de guarda — ver skill ninjutsu-authoring). Custo
+  // total fecha em 30 PN, entre o Chinoike (29) e o Hoshigaki/Yuki (34) — ver
+  // "Custo total da árvore vs dano" na skill jutsu-authoring.
+  {
+    id: "kamaitachi_foice",
+    name: "Foice da Doninha",
+    category: "NINJUTSU",
+    element: "VENTO",
+    tier: 1,
+    resource: "chakra",
+    cost: 20,
+    actionType: "COMUM",
+    baseDamage: 18,
+    scalingAttribute: "ninjutsu",
+    range: 4,
+    shape: "CONE",
+    effects: [{ effectId: "BLEED", duration: 2, chance: 0.6 }],
+    requirements: { clanId: "kamaitachi", manualOnly: true },
+    tags: ["kamaitachi", "vento", "cone", "sangramento"],
+    description:
+      "Técnica de Estilo Vento que cria lâminas cortantes de vento em cone à sua frente, dilacerando quem for atingido.",
+  },
+  {
+    id: "kamaitachi_grande_foice",
+    name: "Grande Foice da Doninha",
+    category: "NINJUTSU",
+    element: "VENTO",
+    tier: 2,
+    resource: "chakra",
+    cost: 28,
+    actionType: "COMUM",
+    baseDamage: 26,
+    scalingAttribute: "ninjutsu",
+    range: 5,
+    shape: "RADIUS",
+    push: 1,
+    effects: [{ effectId: "BLEED", duration: 3, chance: 0.7 }],
+    requirements: { clanId: "kamaitachi", manualOnly: true },
+    tags: ["kamaitachi", "vento", "area", "leque", "sangramento"],
+    description:
+      "Usa o leque gigante para criar uma versão mais poderosa e em maior escala dos ventos cortantes: correntes de ar pesado se chocam em várias bolsas de vácuo que cortam tudo na área.",
+  },
+  {
+    id: "kamaitachi_rede",
+    name: "Lançamento da Rede",
+    category: "NINJUTSU",
+    element: "VENTO",
+    tier: 3,
+    resource: "chakra",
+    cost: 40,
+    actionType: "COMUM",
+    baseDamage: 34,
+    scalingAttribute: "ninjutsu",
+    range: 6,
+    shape: "RADIUS",
+    undodgeable: true,
+    effects: [{ effectId: "BLEED", stacks: 2, duration: 3, chance: 0.8 }],
+    requirements: { clanId: "kamaitachi", manualOnly: true },
+    tags: ["kamaitachi", "vento", "area", "indefensavel", "sangramento"],
+    description:
+      "Cria várias correntes estreitas de vento que se entrelaçam numa grande rede de corte. Os fios são afiados e rápidos demais pra esquivar.",
+  },
+  {
+    id: "kamaitachi_decapitacao",
+    name: "Dança da Decapitação Rápida",
+    category: "NINJUTSU",
+    element: "VENTO",
+    tier: 3,
+    resource: "chakra",
+    cost: 74,
+    actionType: "COMUM",
+    baseDamage: 46,
+    scalingAttribute: "ninjutsu",
+    range: 6,
+    shape: "LINE",
+    unblockable: true,
+    effects: [{ effectId: "BLEED", stacks: 3, duration: 3, chance: 0.9 }],
+    requirements: { clanId: "kamaitachi", manualOnly: true },
+    tags: ["kamaitachi", "vento", "linha", "finalizador"],
+    description:
+      "O leque provoca um vendaval poderoso que corta através de tudo o que toca — bloqueio, aparo ou desvio não fazem diferença.",
+  },
+
+  // ---- Raikage ----
+  // Concedidas pela arvore de cla (src/data/clan-trees/index.ts), manualOnly:
+  // true em todas — mesmo padrao do Nara/Hyuuga/Yamanaka. Categoria reflete a
+  // natureza real de cada golpe (nao "CLA" generico): os 5 golpes fisicos sao
+  // TAIJUTSU (chakra de raio so' tempera o soco, quem golpeia e' o corpo —
+  // mesmo raciocinio do Jyuuken do Hyuuga), so' os 2 jutsus de chakra puro
+  // (deslocamento e a armadura, sem golpe nenhum) sao NINJUTSU de verdade.
+  {
+    id: "raikage_deslocamento",
+    name: "Deslocamento Instantâneo do Estilo Raio",
+    category: "NINJUTSU",
+    tier: 1,
+    resource: "chakra",
+    cost: 12,
+    actionType: "MOVIMENTO",
+    range: 0,
+    shape: "SELF",
+    scalingAttribute: "ninjutsu",
+    effects: [{ effectId: "HASTE", duration: 2 }],
+    requirements: { clanId: "raikage", manualOnly: true },
+    tags: ["cla", "raikage", "raio", "movimento", "velocidade"],
+    description:
+      "Jutsu básico de movimento em alta velocidade: o usuário se desloca de um ponto a outro numa velocidade quase indetectável, ficando Acelerado por um instante.",
+  },
+  {
+    id: "raikage_armadura",
+    name: "Armadura de Raio",
+    category: "NINJUTSU",
+    tier: 2,
+    resource: "chakra",
+    cost: 22,
+    actionType: "BONUS",
+    range: 0,
+    shape: "SELF",
+    scalingAttribute: "ninjutsu",
+    effects: [{ effectId: "HASTE", duration: 4 }],
+    requirements: { clanId: "raikage", manualOnly: true },
+    tags: ["cla", "raikage", "raio", "buff", "velocidade"],
+    description:
+      "Envolve o corpo numa camada de chakra relâmpago que estimula eletricamente o sistema nervoso: sinapses mais rápidas e destreza física no limite absoluto — fica Acelerado por um bom tempo.",
+  },
+  // undodgeable: golpe rápido demais pra reagir (a mesma ideia do Relampago
+  // Reto do material de origem), mas ainda dá pra bloquear/aparar.
+  {
+    id: "raikage_relampago_reto",
+    name: "Relâmpago Reto",
+    category: "TAIJUTSU",
+    tier: 2,
+    resource: "energia",
+    cost: 26,
+    actionType: "COMUM",
+    baseDamage: 28,
+    scalingAttribute: "taijutsu",
+    range: 3,
+    shape: "LINE",
+    undodgeable: true,
+    requirements: { clanId: "raikage", manualOnly: true },
+    tags: ["cla", "raikage", "raio", "velocidade", "linha"],
+    description:
+      "Move-se em alta velocidade para desferir um ataque direto contra o alvo — rápido demais pra esquivar.",
+  },
+  {
+    id: "raikage_lariat",
+    name: "Lariat",
+    category: "TAIJUTSU",
+    tier: 2,
+    resource: "energia",
+    cost: 28,
+    actionType: "COMUM",
+    baseDamage: 26,
+    scalingAttribute: "taijutsu",
+    range: 1,
+    shape: "MELEE",
+    effects: [{ effectId: "STUN", duration: 1, chance: 0.5 }],
+    requirements: { clanId: "raikage", manualOnly: true },
+    tags: ["cla", "raikage", "corpo-a-corpo", "atordoamento"],
+    description:
+      "Avança rapidamente e encaixa o braço flexionado no pescoço do inimigo, derrubando-o com um golpe forte.",
+  },
+  {
+    id: "raikage_guilhotina",
+    name: "Queda da Guilhotina",
+    category: "TAIJUTSU",
+    tier: 2,
+    resource: "energia",
+    cost: 30,
+    actionType: "COMUM",
+    baseDamage: 28,
+    scalingAttribute: "taijutsu",
+    range: 1,
+    shape: "MELEE",
+    effects: [{ effectId: "DEFENSE_DOWN", duration: 2, chance: 0.4 }],
+    requirements: { clanId: "raikage", manualOnly: true },
+    tags: ["cla", "raikage", "corpo-a-corpo", "queda"],
+    description:
+      "Salta no ar acima do oponente e executa um chute baixo, usando o impulso da queda pra aumentar o poder por trás do golpe e deixar a guarda dele aberta.",
+  },
+  {
+    id: "raikage_corte_horizontal",
+    name: "Corte Horizontal de Relâmpago Violento",
+    category: "TAIJUTSU",
+    tier: 3,
+    resource: "energia",
+    cost: 38,
+    actionType: "COMUM",
+    baseDamage: 36,
+    scalingAttribute: "taijutsu",
+    range: 1,
+    shape: "MELEE",
+    effects: [{ effectId: "BLEED", duration: 2, chance: 0.5 }],
+    requirements: { clanId: "raikage", manualOnly: true },
+    tags: ["cla", "raikage", "raio", "corte", "sangramento"],
+    description:
+      "Golpeia o adversário com a lateral externa da mão, endurecida em forma de faca por chakra relâmpago — um corte fundo o bastante pra sangrar.",
+  },
+  // unblockable: agarra e derruba, nao da' pra bloquear/aparar NEM esquivar
+  // um golpe que ja' comecou pelo agarrao — o finalizador do cla.
+  {
+    id: "raikage_bomba_liger",
+    name: "Bomba Liger",
+    category: "TAIJUTSU",
+    tier: 3,
+    resource: "energia",
+    cost: 55,
+    actionType: "COMUM",
+    baseDamage: 48,
+    scalingAttribute: "taijutsu",
+    range: 1,
+    shape: "MELEE",
+    unblockable: true,
+    effects: [{ effectId: "STUN", duration: 1, chance: 0.5 }],
+    requirements: { clanId: "raikage", manualOnly: true },
+    tags: ["cla", "raikage", "corpo-a-corpo", "finalizador", "forca"],
+    description:
+      "Agarra o oponente, levanta-o no ar e usa força extrema pra esmagá-lo de cabeça contra o chão — impossível de esquivar, bloquear ou aparar.",
+  },
+
+  // ---- Kamizuru ----
+  // Se baseia no Aburame (mesmo pedido do usuario): clã de enxame/chakra,
+  // categoria NINJUTSU em tudo (chakra manipulando o proprio enxame, mesmo
+  // quando o resultado e' fisico), quase nenhuma tem baseDamage de sobra —
+  // ganha por DRENAR/IMOBILIZAR/ENVENENAR, nao por rajada (so' a Bomba de
+  // Abelha foge disso de proposito, e' a UNICA tecnica de dano real do
+  // clã — o resto e' puro controle). manualOnly: true em todas, mesmo padrao.
+  {
+    id: "kamizuru_abelha_gigante",
+    name: "Técnica de Invocação: Abelha Gigante",
+    category: "NINJUTSU",
+    tier: 1,
+    resource: "chakra",
+    cost: 20,
+    actionType: "BONUS",
+    range: 0,
+    shape: "SELF",
+    oncePerCombat: true,
+    summon: { templateId: "kamizuru_abelha_gigante" },
+    requirements: { clanId: "kamizuru", manualOnly: true },
+    tags: ["kamizuru", "abelha", "invocacao"],
+    description:
+      "Invoca uma abelha gigante: mandíbula de dentes afiados, ferrão mortal e asas capazes de causar ventos fortes. Ataca sozinha todo turno, como uma invocação comum. Só pode ser chamada uma vez por combate; se ela cair em combate, as técnicas que dependem do enxame ficam bloqueadas até o fim da luta, mas ela volta saudável na próxima.",
+  },
+  {
+    id: "kamizuru_abelha_mel",
+    name: "Técnica da Abelha do Mel",
+    category: "NINJUTSU",
+    tier: 2,
+    resource: "chakra",
+    cost: 26,
+    actionType: "COMUM",
+    baseDamage: 0,
+    range: 4,
+    shape: "SINGLE_TARGET",
+    effects: [{ effectId: "ROOT", duration: 2, chance: 0.75 }],
+    requirements: { clanId: "kamizuru", manualOnly: true },
+    tags: ["kamizuru", "abelha", "controle", "imobilizacao"],
+    description:
+      "Conjura um enxame de abelhas feitas de chakra. Toda vez que uma abelha é ferida ou destruída, libera cera pegajosa sobre o adversário — forte o suficiente pra imobilizá-lo.",
+  },
+  {
+    id: "kamizuru_bomba_abelha",
+    name: "Bomba de Abelha",
+    category: "NINJUTSU",
+    tier: 2,
+    resource: "chakra",
+    cost: 28,
+    actionType: "COMUM",
+    baseDamage: 26,
+    scalingAttribute: "ninjutsu",
+    range: 5,
+    shape: "RADIUS",
+    push: 1,
+    requirements: { clanId: "kamizuru", manualOnly: true },
+    tags: ["kamizuru", "abelha", "explosao", "area"],
+    description:
+      "Abelhas carregando amuletos explosivos atacam em enxame. Assim que entram em contato com o alvo, os selos explodem.",
+  },
+  {
+    id: "kamizuru_mil_ferroes",
+    name: "Mil Ferrões de Abelha",
+    category: "NINJUTSU",
+    tier: 3,
+    resource: "chakra",
+    cost: 38,
+    actionType: "COMUM",
+    baseDamage: 0,
+    range: 5,
+    shape: "RADIUS",
+    effects: [
+      { effectId: "POISON", stacks: 2, duration: 3, chance: 0.75 },
+      { effectId: "FLEE_LOCK", duration: 2 },
+    ],
+    requirements: { clanId: "kamizuru", manualOnly: true },
+    tags: ["kamizuru", "abelha", "veneno", "area"],
+    description:
+      "Invoca uma nuvem de abelhas que disparam seus ferrões venenosos contra tudo na área, cercando o alvo por dentro.",
+  },
+  {
+    id: "kamizuru_colmeia_rocha",
+    name: "Colmeia de Rocha",
+    category: "NINJUTSU",
+    tier: 3,
+    resource: "chakra",
+    cost: 40,
+    actionType: "COMUM",
+    baseDamage: 0,
+    range: 4,
+    shape: "SINGLE_TARGET",
+    effects: [
+      { effectId: "ROOT", duration: 3, chance: 0.85 },
+      { effectId: "CHAKRA_DRAIN", duration: 3, chance: 0.85 },
+    ],
+    terrain: { kind: "OBSTACLE", duration: 2 },
+    requirements: { clanId: "kamizuru", manualOnly: true },
+    tags: ["kamizuru", "abelha", "prisao", "dreno", "finalizador"],
+    description:
+      "Cria uma caverna em forma de colmeia, abrigando larvas de abelha gigante que se alimentam de chakra e o drenam de cada centímetro das paredes — prendendo quem estiver lá dentro.",
   },
 ];
 
@@ -1387,9 +1907,16 @@ export const CLANS: ClanDef[] = [
   {
     id: "yamanaka",
     name: "Yamanaka",
-    description: "Clã das técnicas mentais: controle de corpo (Shintenshin).",
+    description: "Clã das técnicas mentais: confusão, controle de corpo (Transferência de Mente) e controle em massa (Clones).",
     passiveIds: [],
-    activeIds: ["yamanaka_shintenshin"],
+    // concedidas pela arvore de cla (src/data/clan-trees/index.ts), nao por
+    // requisito automatico — mesmo padrao dos outros clas com arvore propria.
+    activeIds: [
+      "yamanaka_destruicao_mente",
+      "yamanaka_transmissao_mentes",
+      "yamanaka_shintenshin",
+      "yamanaka_clones_shintenshin",
+    ],
     hooks: {},
   },
   {
@@ -1564,7 +2091,14 @@ export const CLANS: ClanDef[] = [
     name: "Kamaitachi",
     description: "Clã do vento de Suna: golpes de foice de vento (kamaitachi).",
     passiveIds: [],
-    activeIds: [],
+    // concedidas pela arvore de cla (src/data/clan-trees/index.ts), nao por
+    // requisito automatico — mesmo padrao dos outros clas com arvore propria.
+    activeIds: [
+      "kamaitachi_foice",
+      "kamaitachi_grande_foice",
+      "kamaitachi_rede",
+      "kamaitachi_decapitacao",
+    ],
     hooks: {},
   },
 
@@ -1625,7 +2159,15 @@ export const CLANS: ClanDef[] = [
     name: "Yuki",
     description: "Clã de Kiri: Hyoton, o Gelo — combina água e vento.",
     passiveIds: [],
-    activeIds: [],
+    // concedidas pela arvore de cla (src/data/clan-trees/index.ts), nao por
+    // requisito automatico — mesmo padrao dos outros clas com arvore propria.
+    activeIds: [
+      "yuki_agulhas",
+      "yuki_espelho",
+      "yuki_domo",
+      "yuki_chuva_agulhas",
+      "yuki_agulhas_mil",
+    ],
     hooks: {},
   },
 
@@ -1665,9 +2207,19 @@ export const CLANS: ClanDef[] = [
   {
     id: "raikage",
     name: "Raikage",
-    description: "Linhagem dos Raikage de Kumo: armadura de raio e velocidade extrema.",
+    description: "Linhagem dos Raikage de Kumo: armadura de raio, velocidade extrema e força bruta corpo a corpo.",
     passiveIds: [],
-    activeIds: [],
+    // concedidas pela arvore de cla (src/data/clan-trees/index.ts), nao por
+    // requisito automatico — mesmo padrao dos outros clas com arvore propria.
+    activeIds: [
+      "raikage_deslocamento",
+      "raikage_armadura",
+      "raikage_relampago_reto",
+      "raikage_lariat",
+      "raikage_guilhotina",
+      "raikage_corte_horizontal",
+      "raikage_bomba_liger",
+    ],
     hooks: {},
   },
 
@@ -1685,7 +2237,15 @@ export const CLANS: ClanDef[] = [
     name: "Kamizuru",
     description: "Clã das abelhas de Iwa, antigos rivais dos Aburame.",
     passiveIds: [],
-    activeIds: [],
+    // concedidas pela arvore de cla (src/data/clan-trees/index.ts), nao por
+    // requisito automatico — mesmo padrao dos outros clas com arvore propria.
+    activeIds: [
+      "kamizuru_abelha_gigante",
+      "kamizuru_abelha_mel",
+      "kamizuru_bomba_abelha",
+      "kamizuru_mil_ferroes",
+      "kamizuru_colmeia_rocha",
+    ],
     hooks: {},
   },
   {

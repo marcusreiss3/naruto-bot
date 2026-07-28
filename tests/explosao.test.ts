@@ -10,7 +10,11 @@ import { isKekkeiGenkai } from "../src/config/enums.js";
 const IDS = [
   "explosao_defensiva",
   "explosao_cortina_fumaca",
+  "explosao_estilhacos",
+  "explosao_carga_dupla",
   "explosao_impacto",
+  "explosao_reacao_em_cadeia",
+  "explosao_carga_final",
   "explosao_punho_mina",
 ] as const;
 
@@ -49,12 +53,12 @@ describe("Explosão: integridade da arvore", () => {
   });
 });
 
-describe("Explosão: passiva de dano — mesmo nível do Lava", () => {
-  it("raiz + ápice fecham em 2.25x, igual a Lava", () => {
+describe("Explosão: passiva de dano — mesmo nível do Lava e do Cristal", () => {
+  it("raiz + ápice fecham em 2.295x, igual a Lava", () => {
     const mina = getAbility("explosao_punho_mina")!;
     const explosao = passiveMods(["explosao_raiz", "explosao_apice"], mina).damageMult;
     const lava = passiveMods(["lava_raiz", "lava_apice"], getAbility("lava_tecnica_balas")!).damageMult;
-    expect(explosao).toBeCloseTo(2.25, 3);
+    expect(explosao).toBeCloseTo(2.295, 3);
     expect(explosao).toBeCloseTo(lava, 5);
   });
 

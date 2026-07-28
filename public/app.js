@@ -27,7 +27,12 @@ const ELEMENTS = [
   { id: "HOSHIGAKI", name: "Hoshigaki", icon: "🦈", color: "#4a7d8c", clanGate: "hoshigaki" },
   { id: "HOZUKI", name: "Hozuki", icon: "💧", color: "#3a8fbf", clanGate: "hozuki" },
   { id: "KAGUYA", name: "Kaguya", icon: "🦴", color: "#d9d0c1", clanGate: "kaguya" },
+  { id: "YUKI", name: "Yuki", icon: "❄️", color: "#a8d8e8", clanGate: "yuki" },
   { id: "CHINOIKE", name: "Chinoike", icon: "🩸", color: "#8c2f2f", clanGate: "chinoike" },
+  { id: "KAMAITACHI", name: "Kamaitachi", icon: "🌪️", color: "#8fae8f", clanGate: "kamaitachi" },
+  { id: "YAMANAKA", name: "Yamanaka", icon: "🧠", color: "#c9a6d9", clanGate: "yamanaka" },
+  { id: "RAIKAGE", name: "Raikage", icon: "⚡", color: "#f0c419", clanGate: "raikage" },
+  { id: "KAMIZURU", name: "Kamizuru", icon: "🐝", color: "#d9a441", clanGate: "kamizuru" },
 ];
 // Rótulo de atributo pro chip de requisito extra (reqAttribute) no modal —
 // mesmos rótulos de ATTRIBUTE_LABELS em src/config/enums.ts.
@@ -209,19 +214,29 @@ function poolsOfTree(elId) {
   return Object.keys(count).sort((a, b) => count[b] - count[a]);
 }
 
+// Ícone por atributo (TODO: substituir pelos ícones definitivos por atributo;
+// por ora todos usam o mesmo ícone genérico de ninjutsu).
+const POOL_ICON = { ninjutsu: "/assets/icons/header/ninjutsu.png" };
+const poolIcon = (attr) => POOL_ICON[attr] || "/assets/icons/header/ninjutsu.png";
+
 function updateTop(elId) {
   $("charName").textContent = state.char.name;
   $("charLevel").textContent = "Nv. " + state.char.level;
-  // o contador do topo segue a bolsa principal da árvore aberta — é o número
-  // que decide se dá pra comprar o próximo nó dela.
-  const primary = poolsOfTree(elId)[0] || "ninjutsu";
-  const p = state.char.pools[primary];
-  if (!p) return;
-  $("charPoints").textContent = p.left;
-  const t = $("charPointsTotal");
-  if (t) t.textContent = " / " + p.total;
-  const l = $("charPointsLabel");
-  if (l) l.textContent = p.label;
+  // uma caixa por bolsa que a árvore aberta consome (uma só se ela usa um
+  // atributo, várias se mistura — ex.: Hyuuga = Dōjutsu + Taijutsu).
+  const box = $("charPointsBox");
+  box.innerHTML = "";
+  for (const attr of poolsOfTree(elId)) {
+    const p = state.char.pools[attr];
+    if (!p) continue;
+    const div = document.createElement("div");
+    div.className = "points";
+    div.innerHTML =
+      `<span class="pt-ico"><img class="pt-img" src="${poolIcon(attr)}" alt=""></span>` +
+      `<span class="pt-cur">${p.left}</span><span class="pt-total"> / ${p.total}</span>` +
+      `<span class="pt-lbl">${p.label}</span>`;
+    box.appendChild(div);
+  }
 }
 
 // Painel de dossiê (lateral): dados reais do personagem + progresso da árvore ativa.
@@ -300,7 +315,6 @@ async function boot() {
   show("app");
   buildElemBar();
   activeEl = state.char.elements[0] || "FUNDAMENTOS";
-  updateTop(activeEl);
   renderTree(activeEl);
   lastSig = sigOf(state);
   startSync();
@@ -324,8 +338,7 @@ async function pull() {
   state = ns;
   lastSig = g;
   buildElemBar();       // elementos podem ter sido concedidos
-  updateTop(activeEl);
-  renderTree(activeEl); // mantém o elemento aberto, atualiza status/pontos
+  renderTree(activeEl); // mantém o elemento aberto, atualiza status/pontos/topo
 }
 
 function buildElemBar() {
@@ -363,6 +376,7 @@ function renderTree(elId) {
 
   // marca ativo na barra
   document.querySelectorAll(".elem").forEach((d) => d.classList.toggle("active", d.dataset.el === elId));
+  updateTop(elId);
   updateDossier(elId);
 
   // título + variáveis de cor
@@ -539,7 +553,6 @@ async function doBuy() {
       // ressincroniza (estado pode ter mudado)
       state = await fetchState();
       lastSig = sigOf(state);
-      updateTop(activeEl);
       renderTree(activeEl);
       closeModal();
       return;
@@ -550,7 +563,6 @@ async function doBuy() {
     // recarrega o estado autoritativo e re-renderiza
     state = await fetchState();
     lastSig = sigOf(state);
-    updateTop(activeEl);
     renderTree(activeEl);
   } catch {
     toast("Erro de rede.", true);

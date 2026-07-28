@@ -10,7 +10,11 @@ import { isKekkeiGenkai } from "../src/config/enums.js";
 const IDS = [
   "lava_tecnica_balas",
   "lava_solucao_misteriosa",
+  "lava_estilhacos",
+  "lava_nucleo_fluido",
   "lava_rio_rochas",
+  "lava_maremoto_igneo",
+  "lava_forja_interior",
   "lava_monte_huaguo",
 ] as const;
 
@@ -49,23 +53,26 @@ describe("Lava: integridade da arvore", () => {
   });
 });
 
-describe("Lava: passiva de dano — mais forte que Vapor/Calor, mais fraca que Cristal", () => {
+describe("Lava: passiva de dano — mesmo nível do Cristal", () => {
   const balas = getAbility("lava_tecnica_balas")!;
 
-  it("raiz + ápice fecham em 2.25x", () => {
+  it("raiz + ápice fecham em 2.295x", () => {
     const mods = passiveMods(["lava_raiz", "lava_apice"], balas);
-    expect(mods.damageMult).toBeCloseTo(2.25, 3);
+    expect(mods.damageMult).toBeCloseTo(2.295, 3);
   });
 
-  it("2.25x fica entre o piso do Vapor/Calor (2.2x) e o Cristal (2.295x)", () => {
+  it("2.295x é igual ao Vapor/Calor/Explosão e ao Cristal — só o custo total muda", () => {
     const lava = passiveMods(["lava_raiz", "lava_apice"], balas).damageMult;
-    const vapor = passiveMods(["vapor_raiz"], getAbility("vapor_nevoa_qualificada")!).damageMult;
+    const vapor = passiveMods(
+      ["vapor_raiz", "vapor_ebulicao_total"],
+      getAbility("vapor_nevoa_qualificada")!,
+    ).damageMult;
     const cristal = passiveMods(
       ["cristal_raiz", "cristal_faceta"],
       getAbility("shouton_shuriken_cristal")!,
     ).damageMult;
-    expect(lava).toBeGreaterThan(vapor);
-    expect(lava).toBeLessThan(cristal);
+    expect(lava).toBeCloseTo(vapor, 5);
+    expect(lava).toBeCloseTo(cristal, 5);
   });
 
   it("passiva de Lava não afeta jutsu de Fogo", () => {

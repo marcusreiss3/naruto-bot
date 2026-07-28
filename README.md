@@ -163,7 +163,6 @@ tests/           Vitest (lógica pura)
 ## Próximos passos recomendados
 
 - Persistir efeitos/posições por personagem fora de combate (atualmente o estado de combate é persistido em DB e sobrevive a restart).
-- Expandir Yamanaka (Shintenshin) com fluxo completo de controle/resistência (estrutura `controlledById` já existe).
 - Adicionar mais clãs e jutsus (basta editar `src/data/`).
 - Mover combate de cat-mission para um sistema de turnos compartilhado com o combate principal.
 - Trocar SQLite por PostgreSQL: ajuste `provider` em `prisma/schema.prisma` e `DATABASE_URL`.

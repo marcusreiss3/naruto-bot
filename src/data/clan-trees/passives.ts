@@ -34,6 +34,10 @@ export interface ClanPassiveDef {
   rangeShapes?: Shape[];
   // o dano dos jutsus de clã passa direto pela Barreira do alvo
   ignoresShield?: boolean;
+  // ignora parte do BLOQUEIO/APARO do alvo (0.2 = corta 20% da reducao dele)
+  // — mesmo campo que element-trees/passives.ts ja usa pro Vento (Fio de
+  // Navalha); aqui e' a versao de clã (Lâmina Viva, do Kamaitachi).
+  armorPierce?: number;
   // multiplicador contra alvos abaixo de certa fração do HP máximo
   executeBonus?: { hpThreshold: number; mult: number };
   // casas extras de empurrao/puxao dos jutsus de clã
@@ -72,6 +76,21 @@ export interface ClanPassiveDef {
   // qualquer ilusao que o personagem conjure, nao so' a Genjutsu Ketsuryuugan
   // do proprio cla. Ver passiveMods() em services/combat/passives.ts.
   crossCategory?: Category;
+  // multiplica o custo de upkeep por turno do controle mental do Yamanaka
+  // (BALANCE.yamanaka.upkeepPerTurn, cobrado uma vez por turno de quem
+  // estiver controlando pelo menos 1 corpo — 0.8 = -20%). So' faz sentido em
+  // quem possui nos Yamanaka. Ver processTurnStart em combat-engine.ts.
+  mindControlUpkeepMult?: number;
+  // bonus fixo de Genjutsu EFETIVO so' pra disputa de controle mental
+  // (yamanakaResistChance, combat-math.ts) — ajuda tanto quando o dono esta
+  // CONTROLANDO (mais dificil pra vitima resistir) quanto quando esta SENDO
+  // controlado (mais facil de resistir de volta). Ver processTurnStart.
+  mindControlGenjutsuBonus?: number;
+  // +N corpos simultaneos ALEM do mindTransferMax da propria ability — so'
+  // importa pra abilities com mindTransfer (Clones de Transferencia de
+  // Mente, Yamanaka). Ver establishControl(), chamado a partir de resolveHit
+  // em combat-engine.ts.
+  mindTransferMaxBonus?: number;
 }
 
 export const CLAN_PASSIVES: ClanPassiveDef[] = [
@@ -242,7 +261,9 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
     nodeId: "hatake_apice",
     clanId: "hatake",
     crossCategory: "KENJUTSU",
-    damageMult: 1.3,
+    damageMult: 1.15, // rebalanceado: arvore do Hatake e' barata (15 PN); ver
+    // "Custo total vs dano" na skill jutsu-authoring — nao pode dar dano de
+    // clã caro (Akimichi/Kaguya, 38-49 PN) por preço de clã barato.
     executeBonus: { hpThreshold: 0.3, mult: 1.25 },
   },
 
@@ -364,6 +385,35 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
     rangeShapes: ["SINGLE_TARGET", "LINE"],
   },
 
+  // ---------------------------------------------------------------- YUKI
+  // Terceiro clã de Kirigakure. Mesmo nível de dano do Hoshigaki (raiz +15%,
+  // sem multiplicador extra no ápice) — 34 PN de custo total, dano médio,
+  // não o mais forte do jogo. O ápice e' puramente controle (mais chance de
+  // Defesa Reduzida + Lentidão mais longa), coerente com a identidade de
+  // "distração + precisão" do clã, em vez de mais um multiplicador de dano.
+  {
+    nodeId: "yuki_raiz",
+    clanId: "yuki",
+    damageMult: 1.15,
+    costMult: 0.9,
+  },
+  {
+    nodeId: "yuki_presenca",
+    clanId: "yuki",
+    effectChanceBonus: { DEFENSE_DOWN: 0.15 },
+  },
+  {
+    nodeId: "yuki_reflexos",
+    clanId: "yuki",
+    ninjutsuDodgeBonus: 0.08,
+  },
+  {
+    nodeId: "yuki_apice",
+    clanId: "yuki",
+    effectChanceBonus: { DEFENSE_DOWN: 0.1 },
+    effectDurationBonus: { effectId: "SLOW", bonus: 1 },
+  },
+
   // ------------------------------------------------------------ CHINOIKE
   // Primeiro clã de Kumogakure. Identidade dupla: Ketsuryuugan (doujutsu de
   // sangue, especialista em Genjutsu que causa dano real) e Suiton explosivo
@@ -398,9 +448,111 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
   {
     nodeId: "chinoike_apice",
     clanId: "chinoike",
-    damageMult: 1.3,
+    damageMult: 1.15, // rebalanceado: arvore do Chinoike e' barata (29 PN); ver
+    // "Custo total vs dano" na skill jutsu-authoring.
     damageMultScalingAttribute: "genjutsu",
     executeBonus: { hpThreshold: 0.3, mult: 1.25 },
+  },
+
+  // ------------------------------------------------------------ KAMAITACHI
+  // Clã do vento de Suna. Mesmo nível de dano do Hoshigaki/Yuki (raiz +15%,
+  // sem multiplicador extra no ápice) — 30 PN de custo total, dano médio. O
+  // ápice e' controle (alcance + chance de Sangramento), coerente com a
+  // identidade de precisão do Vento, em vez de mais um multiplicador de dano.
+  {
+    nodeId: "kamaitachi_raiz",
+    clanId: "kamaitachi",
+    damageMult: 1.15,
+    costMult: 0.9,
+  },
+  {
+    nodeId: "kamaitachi_corte_profundo",
+    clanId: "kamaitachi",
+    effectDurationBonus: { effectId: "BLEED", bonus: 1 },
+  },
+  {
+    nodeId: "kamaitachi_lamina_viva",
+    clanId: "kamaitachi",
+    armorPierce: 0.2,
+  },
+  {
+    nodeId: "kamaitachi_apice",
+    clanId: "kamaitachi",
+    rangeBonus: 1,
+    rangeShapes: ["LINE"],
+    effectChanceBonus: { BLEED: 0.1 },
+  },
+
+  // ------------------------------------------------------------ YAMANAKA
+  // Clã não tem damageMult NENHUM — todas as 4 abilities do clã sao
+  // baseDamage: 0 (controle/buff puro, sem dano de graca). O poder do clã
+  // mora inteiro nos campos novos de controle mental (mindControlUpkeepMult/
+  // mindControlGenjutsuBonus/mindTransferMaxBonus, ver ClanPassiveDef acima),
+  // consumidos so' em processTurnStart/resolveHit (combat-engine.ts) — nao em
+  // passiveMods() feito pros outros clas. costMult continua na raiz, igual
+  // todo mundo. Ápice combina o bonus de disputa com +1 corpo simultâneo pros
+  // Clones — a arvore fecha em 27 PN (perto do Hozuki, 27), coerente com "sem
+  // dano bruto nenhum" na tabela de "Custo total vs dano" da skill
+  // jutsu-authoring.
+  {
+    nodeId: "yamanaka_raiz",
+    clanId: "yamanaka",
+    costMult: 0.9,
+    effectDurationBonus: { effectId: "CONFUSION", bonus: 1 },
+  },
+  {
+    nodeId: "yamanaka_dominio_mental",
+    clanId: "yamanaka",
+    mindControlUpkeepMult: 0.8,
+  },
+  {
+    nodeId: "yamanaka_elo_telepatico",
+    clanId: "yamanaka",
+    effectDurationBonus: { effectId: "HASTE", bonus: 1 },
+  },
+  {
+    nodeId: "yamanaka_apice",
+    clanId: "yamanaka",
+    mindControlGenjutsuBonus: 6,
+    mindTransferMaxBonus: 1,
+  },
+
+  // -------------------------------------------------------------- RAIKAGE
+  // Clã de dano bruto corpo a corpo (raio + taijutsu), mesmo nível de dano de
+  // raiz que Hoshigaki/Hozuki/Yuki/Kamaitachi (+15%, sem multiplicador extra
+  // no ápice) — 35 PN de custo total, dano alto pro preço. O ápice é
+  // execução (bate mais forte em quem já está no chão), coerente com a
+  // identidade de finalizador físico do clã, em vez de mais um multiplicador
+  // de dano bruto empilhado em cima da raiz.
+  {
+    nodeId: "raikage_raiz",
+    clanId: "raikage",
+    damageMult: 1.15,
+    costMult: 0.9,
+  },
+  {
+    nodeId: "raikage_apice",
+    clanId: "raikage",
+    executeBonus: { hpThreshold: 0.3, mult: 1.25 },
+  },
+
+  // ------------------------------------------------------------- KAMIZURU
+  // Se baseia no Aburame (pedido explícito): mesma raiz (custo -10%, +15pp de
+  // Dreno de Chakra) — reusa quase literalmente o texto/numeros do Aburame,
+  // já que os dois clãs "são" a mesma coisa em espírito (enxame de chakra).
+  // Ápice tematicamente distinto (Imobilizar em vez de Veneno na chance
+  // extra, já que ROOT é o fio condutor do ramo Enxame do próprio clã).
+  {
+    nodeId: "kamizuru_raiz",
+    clanId: "kamizuru",
+    costMult: 0.9,
+    effectChanceBonus: { CHAKRA_DRAIN: 0.15 },
+  },
+  {
+    nodeId: "kamizuru_apice",
+    clanId: "kamizuru",
+    effectChanceBonus: { ROOT: 0.15 },
+    effectDurationBonus: { effectId: "POISON", bonus: 1 },
   },
 ];
 

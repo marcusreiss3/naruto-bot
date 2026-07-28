@@ -208,9 +208,13 @@ export const PASSIVES: PassiveDef[] = [
   // ------------------------------------------------- CRISTAL (kekkei genkai)
   // KEKKEI GENKAI: fecha em ~2.30x em vez dos ~2.015x dos cinco basicos. E' de
   // proposito — linhagem sanguinea bate mais forte. O delta e' modesto (+14%)
-  // para o Cristal nao invalidar as outras arvores: a vantagem real dele esta
-  // no KIT (controle por Cristalizado, indefensavel, Prisma), nao no numero.
-  // O teste dos ~2x usa uma faixa separada para kekkei genkai (2.2 a 2.5).
+  // sobre os basicos, para KG nao invalidar as outras arvores. Vapor, Calor,
+  // Lava e Explosao foram todas realinhadas pro MESMO 2.295x (pedido
+  // explicito do usuario) — o Cristal ja nao e' mais o unico no teto da
+  // faixa; a vantagem dele sobre as outras 4 KG agora e' custar mais (62 PN
+  // contra 52) e o KIT (controle por Cristalizado, indefensavel, Prisma), nao
+  // o numero de dano. O teste dos ~2x usa uma faixa separada para kekkei
+  // genkai (2.2 a 2.5).
   {
     nodeId: "cristal_raiz",
     element: "CRISTAL",
@@ -243,54 +247,124 @@ export const PASSIVES: PassiveDef[] = [
   },
 
   // --------------------------------------------------- VAPOR (kekkei genkai)
-  // KEKKEI GENKAI tambem, mas o kit ainda e' so 3 jutsus (sem ramo, sem apice
-  // S ainda) — entao o multiplicador todo mora numa unica passiva raiz, em vez
-  // de raiz+apice como o Cristal. Fechado abaixo do Cristal (2.295x) de
-  // proposito: menos tecnicas = curva um degrau atras, ainda dentro da faixa
-  // de kekkei genkai (2.2 a 2.5) testada em tests/passives.test.ts. Quando
-  // Vapor ganhar mais nos (e' so o kit inicial), da pra dividir isso em
-  // raiz + passiva de apice, igual o Cristal.
+  // Arvore expandida: agora no MESMO nivel do Cristal (2.295x = 1.35 * 1.70),
+  // em vez do multiplicador todo morar numa raiz so. As tres passivas do meio
+  // sao utilidade pura (duracao/custo/perfuracao de guarda), nao dano.
   {
     nodeId: "vapor_raiz",
     element: "VAPOR",
-    damageMult: 2.2, // piso da faixa de KG — Cristal fecha em 2.295x
+    damageMult: 1.35,
+  },
+  {
+    nodeId: "vapor_condensacao",
+    element: "VAPOR",
+    effectDurationBonus: { effectId: "CORROSION", bonus: 1 },
+  },
+  {
+    nodeId: "vapor_pressurizacao",
+    element: "VAPOR",
+    costMult: 0.85,
+    costShapes: ["MELEE"],
+  },
+  {
+    nodeId: "vapor_instinto_termal",
+    element: "VAPOR",
+    armorPierce: 0.2,
+  },
+  {
+    nodeId: "vapor_ebulicao_total",
+    element: "VAPOR",
+    damageMult: 1.7, // 1.35 * 1.70 = 2.295, identico ao Cristal
   },
 
   // ---------------------------------------------------- CALOR (kekkei genkai)
-  // Mesmo nivel do Vapor: kit inicial de 3 jutsus, entao a curva toda mora
-  // numa unica passiva raiz (2.2x, o piso da faixa de KG).
+  // Mesmo formato do Vapor: raiz + apice fecham 2.295x, as tres do meio sao
+  // utilidade.
   {
     nodeId: "calor_raiz",
     element: "CALOR",
-    damageMult: 2.2,
+    damageMult: 1.35,
+  },
+  {
+    nodeId: "calor_ressecamento",
+    element: "CALOR",
+    effectDurationBonus: { effectId: "DEHYDRATION", bonus: 1 },
+  },
+  {
+    nodeId: "calor_ondas_termicas",
+    element: "CALOR",
+    costMult: 0.85,
+    costShapes: ["RADIUS"],
+  },
+  {
+    nodeId: "calor_pele_rachada",
+    element: "CALOR",
+    armorPierce: 0.2,
+  },
+  {
+    nodeId: "calor_combustao_interna",
+    element: "CALOR",
+    damageMult: 1.7, // 1.35 * 1.70 = 2.295, identico ao Cristal
   },
 
   // ----------------------------------------------------- LAVA (kekkei genkai)
-  // Pedido explicito: um pouco mais forte que Vapor/Calor (2.2x), mais fraco
-  // que Cristal (2.295x). Kit de 4 jutsus ja da espaco pra raiz+apice, entao
-  // fecha 2.25x = 1.5 * 1.5 — bem no meio das duas faixas.
+  // Pedido explicito do usuario: Lava/Explosao/Vapor/Calor no MESMO nivel do
+  // Cristal agora (2.295x = 1.35 * 1.70), custando um pouco menos (52 PN
+  // contra 62). As tres passivas do meio sao utilidade.
   {
     nodeId: "lava_raiz",
     element: "LAVA",
-    damageMult: 1.5,
+    damageMult: 1.35,
+  },
+  {
+    nodeId: "lava_calor_residual",
+    element: "LAVA",
+    effectDurationBonus: { effectId: "MAGMA", bonus: 1 },
+  },
+  {
+    nodeId: "lava_crosta",
+    element: "LAVA",
+    costMult: 0.85,
+    costShapes: ["LINE"],
+  },
+  {
+    nodeId: "lava_pele_basaltica",
+    element: "LAVA",
+    armorPierce: 0.2,
   },
   {
     nodeId: "lava_apice",
     element: "LAVA",
-    damageMult: 1.5, // 1.5 * 1.5 = 2.25
+    damageMult: 1.7, // 1.35 * 1.70 = 2.295, identico ao Cristal
   },
 
   // ------------------------------------------------- EXPLOSAO (kekkei genkai)
-  // Mesmo nivel do Lava: 2.25x = 1.5 * 1.5.
+  // Mesmo formato do Lava: 2.295x = 1.35 * 1.70.
   {
     nodeId: "explosao_raiz",
     element: "EXPLOSAO",
-    damageMult: 1.5,
+    damageMult: 1.35,
+  },
+  {
+    nodeId: "explosao_polvora",
+    element: "EXPLOSAO",
+    effectChanceBonus: { MINADO: 0.15 },
+  },
+  {
+    nodeId: "explosao_fragmentacao",
+    element: "EXPLOSAO",
+    costMult: 0.85,
+    costShapes: ["RADIUS"],
+  },
+  {
+    nodeId: "explosao_blindagem",
+    element: "EXPLOSAO",
+    ignoresShield: true,
   },
   {
     nodeId: "explosao_apice",
     element: "EXPLOSAO",
-    damageMult: 1.5, // 1.5 * 1.5 = 2.25
+    damageMult: 1.7, // 1.35 * 1.70 = 2.295, identico ao Cristal
   },
 ];
 

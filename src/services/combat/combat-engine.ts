@@ -13,6 +13,7 @@ import {
   resolveAreaCells,
   cellDistance,
   isPhysicalCategory,
+  yamanakaResistChance,
 } from "./combat-math.js";
 import {
   applyBurnStacks,
@@ -654,6 +655,18 @@ export function previewAbilityArea(
   };
 }
 
+// jogador: le jutsus ao vivo do personagem (snapshot pode estar
+// desatualizado). NPC: usa o snapshot (jutsuIdsJson). Exportada porque o
+// autocomplete de /jutsu (jutsu.ts) precisa da mesma logica pro corpo que o
+// jogador estiver de fato controlando, nao so' pro proprio personagem.
+export async function ownedJutsuIds(p: SessionFull["participants"][number]): Promise<string[]> {
+  if (!p.isNpc && p.charId) {
+    const rows = await prisma.characterJutsu.findMany({ where: { charId: p.charId } });
+    return rows.map((r) => r.jutsuId);
+  }
+  return JSON.parse(p.jutsuIdsJson) as string[];
+}
+
 export async function useAbility(
   s: SessionFull,
   actorId: string,
@@ -668,14 +681,7 @@ export async function useAbility(
   const ability = getAbility(abilityId);
   if (!ability) return fail("Habilidade desconhecida.");
 
-  // jogador: lê jutsus ao vivo do personagem (snapshot pode estar desatualizado). NPC: usa snapshot.
-  let owned: string[];
-  if (!actor.isNpc && actor.charId) {
-    const rows = await prisma.characterJutsu.findMany({ where: { charId: actor.charId } });
-    owned = rows.map((r) => r.jutsuId);
-  } else {
-    owned = JSON.parse(actor.jutsuIdsJson) as string[];
-  }
+  const owned = await ownedJutsuIds(actor);
   if (!owned.includes(abilityId)) return fail("Habilidade não desbloqueada.");
 
   // economia de acao
@@ -815,23 +821,52 @@ export async function useAbility(
     }
   }
 
-  // Efeitos de habilidades SELF sao buffs do proprio usuario. Efeitos de
+  // Efeitos de habilidades SELF sao buffs do proprio usuario — ou do time
+  // inteiro, se teamBuff (rede telepatica do Yamanaka): sem alcance, so'
+  // limitada a teamBuffMax pessoas no total, contando o proprio ator, e
+  // escolhendo as mais proximas dele entre os aliados vivos. Efeitos de
   // ataque continuam sendo aplicados apenas quando o golpe causa dano.
   if (ability.shape === "SELF" && ability.effects) {
-    for (const ae of ability.effects) {
-      if (ae.chance !== undefined && !chance(ae.chance)) continue;
-      await applyEffect(
-        actor.id,
-        ae.effectId,
-        ae.stacks ?? 1,
-        ae.duration ?? defaultDurationFor(ae.effectId),
-        {
-          replaceGroup: ae.replaceGroup,
-          onExpire: ae.onExpire,
-          empoweredScope: resolveEmpoweredScope(ae.empoweredScope, ability),
-        },
-      );
-      logs.push(`⚡ ${actor.name} recebeu efeito **${effectLabel(ae.effectId)}**.`);
+    const recipients = ability.teamBuff
+      ? [
+          actor,
+          ...s.participants
+            .filter((p) => p.id !== actor.id && p.teamId === actor.teamId && p.hpCurrent > 0)
+            .sort((a, b) => cellDistance(actor.cell, a.cell) - cellDistance(actor.cell, b.cell)),
+        ].slice(0, ability.teamBuffMax ?? 1)
+      : [actor];
+    for (const recipient of recipients) {
+      for (const ae of ability.effects) {
+        if (ae.chance !== undefined && !chance(ae.chance)) continue;
+        await applyEffect(
+          recipient.id,
+          ae.effectId,
+          ae.stacks ?? 1,
+          ae.duration ?? defaultDurationFor(ae.effectId),
+          {
+            replaceGroup: ae.replaceGroup,
+            onExpire: ae.onExpire,
+            empoweredScope: resolveEmpoweredScope(ae.empoweredScope, ability),
+          },
+        );
+        logs.push(`⚡ ${recipient.name} recebeu efeito **${effectLabel(ae.effectId)}**.`);
+      }
+    }
+  }
+
+  // zona que prende inimigos proximos (ex: Domo de Iceberg) — libera sozinha
+  // se a Barreira do ator quebrar antes da duracao normal acabar, ver
+  // consumeShield() em resolveHit().
+  if (ability.trapField) {
+    const { effectId: trapEffect, radius, duration } = ability.trapField;
+    const enemiesNear = s.participants.filter(
+      (p) => p.hpCurrent > 0 && p.teamId !== actor.teamId && cellDistance(actor.cell, p.cell) <= radius,
+    );
+    for (const enemy of enemiesNear) {
+      await applyEffect(enemy.id, trapEffect, 1, duration, {});
+      await setFlag(enemy.id, "trappedBy", actor.id);
+      await setFlag(enemy.id, "trappedByEffect", trapEffect);
+      logs.push(`🥶 ${enemy.name} ficou preso perto de ${actor.name}!`);
     }
   }
 
@@ -864,9 +899,14 @@ export async function useAbility(
     await saveTerrain(s, next);
   }
 
-  // dano: monta hits
+  // dano: monta hits. `!== undefined` (nao truthy) de proposito: baseDamage:0
+  // e' "nasceu sem dano, so' efeito/captura" (Vinculo de Sombra do Nara,
+  // Shintenshin do Yamanaka) — precisa passar por resolveHit() pra reacao
+  // (esquiva) valer, mesmo sem causar dano nenhum. Ver effectsLanded() em
+  // effects.ts, que ja' trata esse caso; so' a montagem do hit aqui estava
+  // usando `&&`, que descarta 0 por ser falsy.
   const hits: AbilityHit[] = [];
-  if (ability.baseDamage && effectiveTarget) {
+  if (ability.baseDamage !== undefined && effectiveTarget) {
     const singleShape = ability.shape === "MELEE" || ability.shape === "SINGLE_TARGET";
     let targets: SessionFull["participants"];
     if (ability.chainWetTargets) {
@@ -901,6 +941,11 @@ export async function useAbility(
     // nascido escopado (so' fisico, so' do mesmo clã) — ver empoweredDamageMult.
     const empoweredMult = empoweredDamageMult(actor.effects, ability);
     const heightBonus = onHeight(actor);
+    // Yamanaka: pilotando um corpo emprestado (Shintenshin), todo golpe sai
+    // com 1/3 a menos — nao domina o corpo 100%. Vale enquanto o controle
+    // durar, nao so' no golpe que capturou (actor.controlledById fica setado
+    // pra sessao inteira, ver establishControl()).
+    const pilotedMult = actor.controlledById ? BALANCE.yamanaka.pilotedDamageMult : 1;
     for (const t of targets) {
       // dano condicional (ex: Fio d'Agua so vale contra alvo Encharcado) precisa
       // do estado DESTE alvo, entao recalcula por alvo em vez de uma vez so.
@@ -911,7 +956,7 @@ export async function useAbility(
           : 1;
       const raw = computeDamage(ability, {
         attrValue: getAttr(actor, ability.scalingAttribute ?? "ninjutsu"),
-        scenarioDmgMult: (scenarioMod ?? 1) * perTarget.damageMult * executeMult * empoweredMult,
+        scenarioDmgMult: (scenarioMod ?? 1) * perTarget.damageMult * executeMult * empoweredMult * pilotedMult,
         burnTaiMult: burnMult,
         weakenMult,
         heightBonus,
@@ -925,8 +970,7 @@ export async function useAbility(
   if (isPhysicalCategory(ability.category)) {
     const extra = bleedExtraOnPhysical(actor.effects);
     if (extra > 0) {
-      const hp = Math.max(0, actor.hpCurrent - extra);
-      await prisma.combatParticipant.update({ where: { id: actor.id }, data: { hpCurrent: hp } });
+      const hp = await applyDamage(s.id, actor, extra, logs);
       logs.push(`🩸 ${actor.name} forçou o corte e perdeu ${extra} HP (HP ${hp}/${actor.hpMax}).`);
       if (hp <= 0) logs.push(`☠️ ${actor.name} foi derrotado!`);
     }
@@ -1053,7 +1097,7 @@ export async function resolveHit(
         logs.push(`${target.name} tentou esquivar (${Math.round(dc * 100)}%) e o golpe acertou.`);
       }
     }
-  } else if ((reaction === "BLOCK" || reaction === "PARRY") && !ability.unblockable) {
+  } else if ((reaction === "BLOCK" || reaction === "PARRY") && !ability.unblockable && !ability.unguardable) {
     const reactAb = opts.reactionAbilityId ? getAbility(opts.reactionAbilityId) : undefined;
     if (reactAb) await payReaction(target, reactAb);
     // Explosao Defensiva (Explosao): apara um projetil (BUKIJUTSU) e devolve
@@ -1067,8 +1111,7 @@ export async function resolveHit(
       damage = 0;
       logs.push(`💥 ${target.name} defletiu o projétil de volta!`);
       if (reflected > 0 && attacker && attacker.hpCurrent > 0) {
-        const hpAtk = Math.max(0, attacker.hpCurrent - reflected);
-        await prisma.combatParticipant.update({ where: { id: attacker.id }, data: { hpCurrent: hpAtk } });
+        const hpAtk = await applyDamage(sessionId, attacker, reflected, logs);
         logs.push(
           `🗡️ O projétil voltou em ${attacker.name} e causou ${reflected} de dano (HP ${hpAtk}/${attacker.hpMax}).`,
         );
@@ -1102,6 +1145,19 @@ export async function resolveHit(
   // Bloqueio/Barreira".
   const landed = effectsLanded(damage, ability.baseDamage, dodged);
 
+  // Yamanaka: Shintenshin (ou os Clones) acertou — toma o corpo em vez de
+  // causar dano. So dispara em cima de esquiva de verdade (landed cobre
+  // dodged=false); bloqueio/aparo ja nao valem contra ela (unguardable).
+  if (landed && ability.mindTransfer && attacker) {
+    // Domínio Mental (Yamanaka, ápice) pode somar +1 corpo simultâneo alem
+    // do teto da propria ability — ver ClanPassiveDef.mindTransferMaxBonus.
+    const maxSimultaneous = (ability.mindTransferMax ?? 1) + (atkMods?.mindTransferMaxBonus ?? 0);
+    await establishControl(sessionId, attacker.id, target.id, logs, {
+      maxSimultaneous,
+      turnsLeft: ability.mindTransferTurns,
+    });
+  }
+
   // limpa flag de undodgeable do atacante (consumido)
   if (attacker?.flags.nextUndodgeable) await setFlag(attacker.id, "nextUndodgeable", false);
   // Tecnica de Clonagem (Fundamentos): o bonus de esquiva so vale pro
@@ -1119,11 +1175,7 @@ export async function resolveHit(
       damage = damageTaken;
     }
     if (reflected > 0 && attacker && attacker.hpCurrent > 0) {
-      const hpAtk = Math.max(0, attacker.hpCurrent - reflected);
-      await prisma.combatParticipant.update({
-        where: { id: attacker.id },
-        data: { hpCurrent: hpAtk },
-      });
+      const hpAtk = await applyDamage(sessionId, attacker, reflected, logs);
       logs.push(
         `✨ A luz voltou em ${attacker.name} e causou ${reflected} de dano (HP ${hpAtk}/${attacker.hpMax}).`,
       );
@@ -1140,12 +1192,25 @@ export async function resolveHit(
         await consumeShield(target.id, absorbed);
         logs.push(`🛡️ A Barreira de ${target.name} absorveu ${absorbed} de dano.`);
         damage = damageToHp;
+        // Barreira zerou: libera quem estava preso por causa dela (ex: Domo
+        // de Iceberg do Yuki — ver ability.trapField em useAbility()).
+        if (pool - absorbed <= 0) {
+          const trapped = s.participants.filter((p) => p.flags.trappedBy === target.id);
+          for (const p of trapped) {
+            const trapEffect = p.flags.trappedByEffect as string | undefined;
+            if (trapEffect) {
+              await prisma.effectInstance.deleteMany({ where: { participantId: p.id, effectId: trapEffect } });
+            }
+            await setFlag(p.id, "trappedBy", null);
+            await setFlag(p.id, "trappedByEffect", null);
+            logs.push(`❄️ A Barreira de ${target.name} quebrou — ${p.name} não está mais preso.`);
+          }
+        }
       }
     }
   }
 
-  const newHp = Math.max(0, target.hpCurrent - damage);
-  await prisma.combatParticipant.update({ where: { id: target.id }, data: { hpCurrent: newHp } });
+  const newHp = await applyDamage(sessionId, target, damage, logs);
   if (damage > 0) logs.push(`💥 ${target.name} recebeu ${damage} de dano (HP ${newHp}/${target.hpMax}).`);
 
   // efeitos on-hit — as passivas de fogo do ATACANTE mudam a queimadura
@@ -1191,11 +1256,12 @@ export async function resolveHit(
         logs.push(`🌋🔒 A lava endureceu sobre ${target.name}: **preso** (Imobilização).`);
       }
       if (r.explosion) {
-        hpAfterEffects = Math.max(0, hpAfterEffects - r.explosion);
-        await prisma.combatParticipant.update({
-          where: { id: target.id },
-          data: { hpCurrent: hpAfterEffects },
-        });
+        hpAfterEffects = await applyDamage(
+          sessionId,
+          { id: target.id, name: target.name, hpCurrent: hpAfterEffects, hpMax: target.hpMax, controlledById: target.controlledById },
+          r.explosion,
+          logs,
+        );
       }
     }
   }
@@ -1230,11 +1296,12 @@ export async function resolveHit(
         `🔥💨 O vento cruzou as chamas e incendiou ${target.name}${r.explosion ? ` (EXPLOSÃO ${r.explosion} dano!)` : ""}.`,
       );
       if (r.explosion) {
-        hpAfterEffects = Math.max(0, hpAfterEffects - r.explosion);
-        await prisma.combatParticipant.update({
-          where: { id: target.id },
-          data: { hpCurrent: hpAfterEffects },
-        });
+        hpAfterEffects = await applyDamage(
+          sessionId,
+          { id: target.id, name: target.name, hpCurrent: hpAfterEffects, hpMax: target.hpMax, controlledById: target.controlledById },
+          r.explosion,
+          logs,
+        );
       }
     }
   }
@@ -1252,11 +1319,13 @@ export async function resolveHit(
       1,
       summonOnHit.duration ?? defaultDurationFor(summonOnHit.effectId),
     );
+    await applyDamage(
+      sessionId,
+      { id: target.id, name: target.name, hpCurrent: hpAfterEffects, hpMax: target.hpMax, controlledById: target.controlledById },
+      hpAfterEffects,
+      logs,
+    );
     hpAfterEffects = 0;
-    await prisma.combatParticipant.update({
-      where: { id: target.id },
-      data: { hpCurrent: 0 },
-    });
     logs.push(`⚡ ${target.name} se desfez e aplicou **${effectLabel(summonOnHit.effectId)}** em ${attacker.name}.`);
   }
 
@@ -1288,9 +1357,12 @@ export async function resolveHit(
     // impacto contra parede/obstaculo (passiva Vacuo Cortante, do Vento)
     const impact = impactDamage(res, hasImpactPassive(attacker, ability));
     if (impact > 0) {
-      const hp = Math.max(0, hpAfterEffects - impact);
-      await prisma.combatParticipant.update({ where: { id: target.id }, data: { hpCurrent: hp } });
-      hpAfterEffects = hp;
+      hpAfterEffects = await applyDamage(
+        sessionId,
+        { id: target.id, name: target.name, hpCurrent: hpAfterEffects, hpMax: target.hpMax, controlledById: target.controlledById },
+        impact,
+        logs,
+      );
       logs.push(`🧱 ${target.name} bateu com força e sofreu ${impact} de dano de impacto.`);
     }
   }
@@ -1305,11 +1377,7 @@ export async function resolveHit(
       hasteContactDamage(target.effects) +
       (physicalHit ? characterPassiveMods(ownedNodes(target)).meleeCounterDamage : 0);
     if (shock > 0) {
-      const attackerHp = Math.max(0, attacker.hpCurrent - shock);
-      await prisma.combatParticipant.update({
-        where: { id: attacker.id },
-        data: { hpCurrent: attackerHp },
-      });
+      const attackerHp = await applyDamage(sessionId, attacker, shock, logs);
       logs.push(`⚡ A armadura de ${target.name} feriu ${attacker.name} por ${shock} de dano.`);
       if (attackerHp <= 0) {
         logs.push(`☠️ ${attacker.name} foi derrotado!`);
@@ -1334,6 +1402,11 @@ export async function resolveHit(
     logs.push(`☠️ ${target.name} foi derrotado!`);
     // invocacao que morre pode estourar (clone d'agua molha a area)
     if (target.flags.isSummon) await triggerSummonDeath(s, target, logs);
+    // Yamanaka: corpo controlado morreu — nao fica "controlado" por um cadaver.
+    if (target.controlledById) {
+      logs.push(`🧠 O corpo controlado morreu — a mente do controlador foi expelida de volta.`);
+      await releaseControl(sessionId, target.controlledById, target.id);
+    }
   }
 
   return logs;
@@ -1587,6 +1660,10 @@ async function processTurnStart(sessionId: string, participantId: string, logs: 
 
   // tick de efeitos (dano por turno + decremento de duracao)
   let hp = p.hpCurrent;
+  // soma o dano de efeito-por-turno + terreno pra espelhar no corpo original
+  // do Yamanaka, se este participante estiver sendo controlado (ver o final
+  // da funcao, apos o write combinado de hp/chakra).
+  let dotLoss = 0;
   const remaining: EffectState[] = [];
   const snapshot: EffectState[] = [];
   let corrosaoStacks = 0;
@@ -1596,6 +1673,7 @@ async function processTurnStart(sessionId: string, participantId: string, logs: 
     const res = tickEffect({ effectId: e.effectId as any, stacks: e.stacks, duration: e.duration });
     if (res.damage > 0) {
       hp = Math.max(0, hp - res.damage);
+      dotLoss += res.damage;
       logs.push(`☠️ ${p.name} sofreu ${res.damage} de **${effectLabel(e.effectId)}**.`);
     }
     if (res.expired) {
@@ -1640,6 +1718,7 @@ async function processTurnStart(sessionId: string, participantId: string, logs: 
     const burn = terrainTickDamage(patches, p.cell, session.round);
     if (burn > 0) {
       hp = Math.max(0, hp - burn);
+      dotLoss += burn;
       logs.push(`🔥 ${p.name} está em chamas e sofreu ${burn} de dano.`);
     }
     // e' isso que faz o rastro d'agua valer a pena: quem pisa nele fica exposto
@@ -1694,14 +1773,74 @@ async function processTurnStart(sessionId: string, participantId: string, logs: 
       logs.push(`🩸 ${p.name} ficou sem chakra e o Ketsuryuugan se desativou.`);
     }
   }
-  // upkeep Yamanaka (controle)
-  if (flags.controllingId) {
-    if (chakra >= BALANCE.yamanaka.upkeepPerTurn) {
-      chakra -= BALANCE.yamanaka.upkeepPerTurn;
+  // upkeep Yamanaka (controle) — drena chakra por turno enquanto controlar
+  // pelo menos 1 corpo (Shintenshin classico ou os Clones, ate 3 ao mesmo
+  // tempo — controllingIds e' sempre array).
+  const controllingIds = Array.isArray(flags.controllingIds) ? (flags.controllingIds as string[]) : [];
+  if (controllingIds.length > 0) {
+    // Domínio Mental (Yamanaka) pode baratear o upkeep — ver ClanPassiveDef.
+    const upkeepMult = characterPassiveMods(
+      Array.isArray(flags.nodes) ? (flags.nodes as string[]) : [],
+    ).mindControlUpkeepMult;
+    const upkeepCost = Math.round(BALANCE.yamanaka.upkeepPerTurn * upkeepMult);
+    if (chakra >= upkeepCost) {
+      chakra -= upkeepCost;
+      // mantem o corpo original imovel enquanto durar o controle (STUN normal
+      // teria duracao curta e destravaria sozinho; refresca todo turno).
+      await applyEffect(p.id, "STUN", 1, defaultDurationFor("STUN"));
     } else {
-      logs.push(`🧠 ${p.name} perdeu o controle do corpo (sem chakra).`);
-      await releaseControl(sessionId, p.id);
-      flags.controllingId = undefined;
+      logs.push(`🧠 ${p.name} perdeu o controle de todos os corpos (sem chakra pra manter).`);
+      await releaseAllControl(sessionId, p.id);
+      flags.controllingIds = undefined;
+    }
+  }
+
+  // resistencia/expiracao Yamanaka: o corpo CONTROLADO resolve isso no
+  // proprio turno dele (continua na turnOrder mesmo pilotado).
+  if (p.controlledById) {
+    const turnsLeft = flags.mindControlTurnsLeft as number | undefined;
+    if (turnsLeft !== undefined) {
+      // Clones de Transferencia de Mente: duracao fixa (sem disputa) — o
+      // controle vale por exatamente 1 turno e libera sozinho no proximo.
+      if (turnsLeft <= 0) {
+        logs.push(`🧠 O controle mental sobre ${p.name} acabou (durou só 1 turno) — a mente original retomou o corpo.`);
+        await releaseControl(sessionId, p.controlledById, p.id);
+      } else {
+        flags.mindControlTurnsLeft = turnsLeft - 1;
+      }
+    } else {
+      // Shintenshin classico: disputa por Genjutsu todo turno.
+      const controller = await prisma.combatParticipant.findUnique({ where: { id: p.controlledById } });
+      if (controller && controller.hpCurrent > 0) {
+        const controllerFlags = parseFlags(controller.flagsJson);
+        // Domínio Mental (Yamanaka, ápice) soma Genjutsu efetivo so' pra essa
+        // disputa — ajuda quem tiver o no', seja controlando ou resistindo.
+        const victimGenjutsu =
+          getAttr(
+            { isNpc: p.isNpc, npcTemplate: p.npcTemplate, flags } as SessionFull["participants"][number],
+            "genjutsu",
+          ) +
+          characterPassiveMods(Array.isArray(flags.nodes) ? (flags.nodes as string[]) : []).mindControlGenjutsuBonus;
+        const casterGenjutsu =
+          getAttr(
+            { isNpc: controller.isNpc, npcTemplate: controller.npcTemplate, flags: controllerFlags } as SessionFull["participants"][number],
+            "genjutsu",
+          ) +
+          characterPassiveMods(
+            Array.isArray(controllerFlags.nodes) ? (controllerFlags.nodes as string[]) : [],
+          ).mindControlGenjutsuBonus;
+        const resistChance = yamanakaResistChance(victimGenjutsu, casterGenjutsu);
+        if (chance(resistChance)) {
+          logs.push(
+            `🧠 ${p.name} resistiu ao controle mental e expulsou ${controller.name} de seu corpo! (${Math.round(resistChance * 100)}% de chance)`,
+          );
+          await releaseControl(sessionId, controller.id, p.id);
+        } else {
+          logs.push(
+            `🧠 ${p.name} tentou resistir ao controle mental, mas falhou. (${Math.round(resistChance * 100)}% de chance)`,
+          );
+        }
+      }
     }
   }
 
@@ -1734,9 +1873,16 @@ async function processTurnStart(sessionId: string, participantId: string, logs: 
       flagsJson: JSON.stringify(flags),
     },
   });
+  // Yamanaka: dano de efeito-por-turno/terreno tambem espelha pro corpo
+  // original de quem estiver pilotando este participante.
+  if (dotLoss > 0) await mirrorControlledDamage(sessionId, p.controlledById, dotLoss, p.name, logs);
 
   if (hp <= 0) {
     logs.push(`☠️ ${p.name} foi derrotado!`);
+    if (p.controlledById) {
+      logs.push(`🧠 O corpo controlado morreu — a mente do controlador foi expelida de volta.`);
+      await releaseControl(sessionId, p.controlledById, p.id);
+    }
     return true;
   }
 
@@ -1747,16 +1893,120 @@ async function processTurnStart(sessionId: string, participantId: string, logs: 
   return false;
 }
 
-async function releaseControl(sessionId: string, controllerId: string): Promise<void> {
-  const controlled = await prisma.combatParticipant.findFirst({
-    where: { sessionId, controlledById: controllerId },
+// Yamanaka: acerto de Shintenshin (ou dos Clones) vira controle de corpo.
+// So' concede se o alvo ainda nao estiver ocupado por outra mente (nao
+// empilha) e se o atacante nao tiver estourado o teto de corpos simultaneos
+// (maxSimultaneous — 1 pro Shintenshin classico, ate' 3 pros Clones).
+async function establishControl(
+  sessionId: string,
+  attackerId: string,
+  targetId: string,
+  logs: string[],
+  opts?: { maxSimultaneous?: number; turnsLeft?: number },
+): Promise<void> {
+  const target = await prisma.combatParticipant.findUnique({ where: { id: targetId } });
+  if (!target || target.controlledById) {
+    logs.push("🧠 A mente do alvo já está ocupada — a transferência falhou.");
+    return;
+  }
+  const attacker = await prisma.combatParticipant.findUnique({ where: { id: attackerId } });
+  if (!attacker) return;
+  const flags = parseFlags(attacker.flagsJson);
+  const controllingIds = Array.isArray(flags.controllingIds) ? (flags.controllingIds as string[]) : [];
+  const max = opts?.maxSimultaneous ?? 1;
+  if (controllingIds.length >= max) {
+    logs.push(
+      `🧠 ${attacker.name} já está controlando o máximo de corpos ao mesmo tempo (${max}) — a transferência falhou.`,
+    );
+    return;
+  }
+  await prisma.combatParticipant.update({ where: { id: targetId }, data: { controlledById: attackerId } });
+  await setFlag(attackerId, "controllingIds", [...controllingIds, targetId]);
+  if (opts?.turnsLeft !== undefined) await setFlag(targetId, "mindControlTurnsLeft", opts.turnsLeft);
+  await applyEffect(attackerId, "STUN", 1, defaultDurationFor("STUN"));
+  logs.push(
+    `🧠 A mente do atacante tomou o corpo do alvo! O corpo original fica imóvel e vulnerável enquanto durar o controle.`,
+  );
+}
+
+// Sempre que o corpo CONTROLADO perde HP de verdade, o mesmo tanto sai do
+// corpo ORIGINAL de quem o pilota (a mente ainda esta la, exposta). So' dano
+// espelha — cura/regen nao. Se o CONTROLADOR morrer disso, forca o release
+// (o corpo emprestado nao fica "controlado" por um cadaver).
+async function mirrorControlledDamage(
+  sessionId: string,
+  controlledById: string | null | undefined,
+  delta: number,
+  bodyName: string,
+  logs: string[],
+): Promise<void> {
+  if (!controlledById || delta <= 0) return;
+  const controller = await prisma.combatParticipant.findUnique({ where: { id: controlledById } });
+  if (!controller || controller.hpCurrent <= 0) return;
+  const hp = Math.max(0, controller.hpCurrent - delta);
+  await prisma.combatParticipant.update({ where: { id: controller.id }, data: { hpCurrent: hp } });
+  logs.push(
+    `🧠 O corpo original de ${controller.name} também sofreu ${delta} de dano (espelhado de ${bodyName}) (HP ${hp}/${controller.hpMax}).`,
+  );
+  if (hp <= 0) {
+    logs.push(`☠️ ${controller.name} foi derrotado (a mente ficou exposta longe do próprio corpo)!`);
+    await releaseAllControl(sessionId, controller.id);
+  }
+}
+
+// Ponto unico de desconto de HP no motor (ver ~10 call sites antigos que
+// faziam prisma.combatParticipant.update({ data: { hpCurrent } }) direto).
+// Cuida do clamp E do espelhamento Yamanaka num lugar so'.
+async function applyDamage(
+  sessionId: string,
+  participant: { id: string; name: string; hpCurrent: number; hpMax: number; controlledById?: string | null },
+  delta: number,
+  logs: string[],
+): Promise<number> {
+  const newHp = Math.max(0, participant.hpCurrent - delta);
+  await prisma.combatParticipant.update({ where: { id: participant.id }, data: { hpCurrent: newHp } });
+  if (delta > 0) await mirrorControlledDamage(sessionId, participant.controlledById, delta, participant.name, logs);
+  return newHp;
+}
+
+// Libera UM corpo controlado especifico. So' limpa o STUN artificial do
+// controlador quando esse era o ULTIMO corpo que ele controlava — os Clones
+// de Transferencia de Mente permitem controlar ate' 3 ao mesmo tempo, entao
+// perder um nao deve libertar o corpo original enquanto os outros seguem presos.
+async function releaseControl(sessionId: string, controllerId: string, targetId: string): Promise<void> {
+  await prisma.combatParticipant.updateMany({
+    where: { id: targetId, controlledById: controllerId },
+    data: { controlledById: null },
   });
-  if (controlled) {
-    await prisma.combatParticipant.update({
-      where: { id: controlled.id },
+  await setFlag(targetId, "mindControlTurnsLeft", undefined);
+  const controller = await prisma.combatParticipant.findUnique({ where: { id: controllerId } });
+  if (!controller) return;
+  const flags = parseFlags(controller.flagsJson);
+  const remaining = (Array.isArray(flags.controllingIds) ? (flags.controllingIds as string[]) : []).filter(
+    (id) => id !== targetId,
+  );
+  await setFlag(controllerId, "controllingIds", remaining.length > 0 ? remaining : undefined);
+  if (remaining.length === 0) {
+    await prisma.effectInstance.deleteMany({ where: { participantId: controllerId, effectId: "STUN" } });
+  }
+}
+
+// Libera TODOS os corpos que o controlador estiver controlando de uma vez
+// (ficou sem chakra pro upkeep, ou o proprio controlador morreu).
+async function releaseAllControl(sessionId: string, controllerId: string): Promise<void> {
+  const controller = await prisma.combatParticipant.findUnique({ where: { id: controllerId } });
+  if (!controller) return;
+  const flags = parseFlags(controller.flagsJson);
+  const ids = Array.isArray(flags.controllingIds) ? (flags.controllingIds as string[]) : [];
+  for (const targetId of ids) {
+    await prisma.combatParticipant.updateMany({
+      where: { id: targetId, controlledById: controllerId },
       data: { controlledById: null },
     });
+    await setFlag(targetId, "mindControlTurnsLeft", undefined);
   }
+  await setFlag(controllerId, "controllingIds", undefined);
+  await prisma.effectInstance.deleteMany({ where: { participantId: controllerId, effectId: "STUN" } });
 }
 
 // ---------------- helpers de estado ----------------

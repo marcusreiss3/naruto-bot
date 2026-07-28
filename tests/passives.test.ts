@@ -262,6 +262,8 @@ describe("passivas: Raio", () => {
       hpRegenPerTurn: 0,
       chakraRegenPerTurn: 0,
       meleeCounterDamage: 0,
+      mindControlUpkeepMult: 1,
+      mindControlGenjutsuBonus: 0,
     });
   });
 });

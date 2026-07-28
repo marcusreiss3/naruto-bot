@@ -12,7 +12,16 @@ import {
 import { BALANCE } from "../src/config/balance.js";
 import { isKekkeiGenkai } from "../src/config/enums.js";
 
-const IDS = ["vapor_nevoa_qualificada", "vapor_punho_propulsao", "vapor_chute_propulsao"] as const;
+const IDS = [
+  "vapor_nevoa_qualificada",
+  "vapor_punho_propulsao",
+  "vapor_agulhas",
+  "vapor_camara",
+  "vapor_chute_propulsao",
+  "vapor_nevoa_densa",
+  "vapor_manto_vapor",
+  "vapor_erupcao_absoluta",
+] as const;
 
 const ef = (stacks: number, duration = 3): EffectState =>
   ({ effectId: "CORROSION", stacks, duration }) as EffectState;
@@ -33,9 +42,14 @@ describe("Vapor: integridade da arvore", () => {
     }
   });
 
-  it("Chute em Propulsão exige o nó de Punho em Propulsão (versão aprimorada)", () => {
+  it("Chute em Propulsão exige o nó de Câmara de Vapor (versão aprimorada)", () => {
     const chute = allNodes().find((n) => n.id === "vapor_chute")!;
-    expect(chute.requires).toEqual(["vapor_punho"]);
+    expect(chute.requires).toEqual(["vapor_camara"]);
+  });
+
+  it("Erupção Absoluta (S) exige o ápice comprado antes", () => {
+    const erupcao = allNodes().find((n) => n.id === "vapor_erupcao_absoluta")!;
+    expect(erupcao.requires).toEqual(["vapor_ebulicao_total"]);
   });
 
   it("VAPOR e' kekkei genkai", () => {
@@ -55,11 +69,18 @@ describe("Vapor: integridade da arvore", () => {
 describe("Vapor: passiva de dano", () => {
   const nevoa = getAbility("vapor_nevoa_qualificada")!;
 
-  it("Ponto de Ebulição fecha em 2.2x — dentro da faixa de KG, mas abaixo do Cristal (2.295x)", () => {
-    const mods = passiveMods(["vapor_raiz"], nevoa);
-    expect(mods.damageMult).toBeCloseTo(2.2, 3);
-    expect(mods.damageMult).toBeGreaterThanOrEqual(2.2);
-    expect(mods.damageMult).toBeLessThan(2.295);
+  it("Ponto de Ebulição (raiz) sozinha dá só +35%", () => {
+    expect(passiveMods(["vapor_raiz"], nevoa).damageMult).toBeCloseTo(1.35, 3);
+  });
+
+  it("raiz + Ebulição Total (ápice) fecham em 2.295x — mesmo nível do Cristal", () => {
+    const mods = passiveMods(["vapor_raiz", "vapor_ebulicao_total"], nevoa);
+    expect(mods.damageMult).toBeCloseTo(2.295, 3);
+    const cristal = passiveMods(
+      ["cristal_raiz", "cristal_faceta"],
+      getAbility("shouton_shuriken_cristal")!,
+    ).damageMult;
+    expect(mods.damageMult).toBeCloseTo(cristal, 5);
   });
 
   it("passiva de Vapor não afeta jutsu de Fogo", () => {

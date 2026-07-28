@@ -12,8 +12,10 @@ import {
   getActiveSession,
   numberSameNames,
   displayName,
+  ownedJutsuIds,
   type SessionFull,
 } from "../services/combat/combat-engine.js";
+import { resolveActingParticipantId } from "../services/combat/combat-math.js";
 import { usar } from "./combate.js";
 
 // subcomando -> categoria de habilidade. Tem que bater EXATAMENTE com
@@ -86,10 +88,22 @@ export const jutsu: Command = {
     }
 
     // ----- habilidade: jutsus possuídos, filtrados pela categoria do subcomando -----
+    // Le do participante ACTING (o proprio, ou o corpo que estiver pilotando
+    // via Shintenshin) — nao direto do personagem do usuario, senao quem
+    // roubou um corpo (Yamanaka) nunca veria os jutsus certos no autocomplete.
     const cat = CAT_BY_SUB[sub];
     const guildId = interaction.guildId ?? "global";
     const char = await getOrCreateCharacter(interaction.user.id, guildId, interaction.user.username);
-    const ownedIds = char.jutsus.map((j) => j.jutsuId);
+    const session = await getActiveSession(interaction.channelId);
+    let ownedIds: string[];
+    if (session) {
+      const own = session.participants.find((p) => p.charId === char.id) ?? null;
+      const actingId = own ? resolveActingParticipantId(own, session.participants) : null;
+      const acting = actingId ? session.participants.find((p) => p.id === actingId) : undefined;
+      ownedIds = acting ? await ownedJutsuIds(acting) : [];
+    } else {
+      ownedIds = char.jutsus.map((j) => j.jutsuId); // fora de combate: personagem proprio
+    }
     const choices = ALL_ABILITIES.filter((a) => ownedIds.includes(a.id) && (!cat || a.category === cat))
       .filter((a) => a.name.toLowerCase().includes(focused) || a.id.includes(focused))
       .slice(0, 25)
@@ -107,5 +121,8 @@ async function getMyParticipant(
     select: { id: true },
   });
   if (!char) return null;
-  return session.participants.find((p) => p.charId === char.id) ?? null;
+  const own = session.participants.find((p) => p.charId === char.id) ?? null;
+  if (!own) return null;
+  const actingId = resolveActingParticipantId(own, session.participants);
+  return actingId ? (session.participants.find((p) => p.id === actingId) ?? null) : null;
 }
