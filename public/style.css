@@ -222,6 +222,10 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
   box-shadow:0 0 12px rgba(255,122,24,.5);}
 .meter-el .meter-fill{box-shadow:0 0 12px currentColor;}
 .meter-cap{font-size:11px;color:var(--dim);font-weight:600;letter-spacing:.3px;font-variant-numeric:tabular-nums;}
+/* uma barra por atributo que a arvore consome: respiro maior ENTRE as barras
+   do que entre label/barra/legenda da mesma, senao viram um bloco so'. */
+#dsPools{gap:15px;}
+.pool-row{display:flex;flex-direction:column;gap:9px;}
 
 /* ===== Palco / árvore ===== */
 .stage{flex:1;overflow:auto;padding:14px 0 22px;position:relative;isolation:isolate;}
@@ -344,8 +348,10 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
   box-shadow:0 28px 84px rgba(0,0,0,.66);animation:rise .2s cubic-bezier(.2,.8,.3,1.1);}
 .modal-card::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;pointer-events:none;
   background:linear-gradient(90deg,transparent,var(--orange),transparent);box-shadow:0 0 14px rgba(255,122,24,.5);}
-.modal-icon{font-size:50px;margin-bottom:4px;filter:drop-shadow(0 3px 6px rgba(0,0,0,.5));}
-.modal-icon .modal-img{width:88px;height:88px;object-fit:cover;border-radius:16px;
+.modal-icon{font-size:64px;margin-bottom:8px;filter:drop-shadow(0 3px 6px rgba(0,0,0,.5));}
+/* a arte do jutsu e' o que identifica o no' de relance: vale ocupar quase toda
+   a largura util do card (394px - 52px de padding = 342px). */
+.modal-icon .modal-img{width:168px;height:168px;max-width:100%;object-fit:cover;border-radius:18px;
   border:2px solid rgba(255,122,24,.45);box-shadow:0 6px 18px rgba(0,0,0,.5),0 0 20px rgba(255,122,24,.18);}
 .modal-rank{display:inline-block;font-family:var(--hud);font-weight:700;font-size:12px;letter-spacing:1.4px;
   text-transform:uppercase;color:#fff;background:linear-gradient(180deg,var(--orange),var(--orange-deep));

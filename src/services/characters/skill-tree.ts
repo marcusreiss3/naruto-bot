@@ -1,10 +1,15 @@
 // Árvore de habilidades de elemento: estado + compra.
 //
-// ECONOMIA: o orçamento da árvore é o VALOR DO ATRIBUTO NINJUTSU. Você sobe
-// ninjutsu no /atributos e ganha "pontos de ninjutsu" para gastar aqui.
-//   disponivel = ninjutsu - (soma dos custos dos nos ja comprados)
-// Comprar NÃO reduz o atributo ninjutsu (ele continua escalando dano); apenas
-// consome orçamento. Subiu ninjutsu no bot → mais orçamento na árvore.
+// ECONOMIA: cada ATRIBUTO tem a própria bolsa de pontos. Todo nó declara de
+// qual atributo ele sai (`node.pool`), e o orçamento daquele pool é o VALOR
+// daquele atributo:
+//   disponivel[attr] = attr - (soma dos custos dos nos comprados com pool=attr)
+// Ou seja: um jutsu de soco (pool taijutsu) é pago com Taijutsu, um de espada
+// com Kenjutsu, um de selo com Fūinjutsu — nunca tudo com Ninjutsu. Gastar
+// numa árvore de clã de Taijutsu não consome o Ninjutsu que banca a árvore
+// elemental: são bolsas independentes.
+// Comprar NÃO reduz o atributo (ele continua escalando dano); apenas consome
+// o orçamento daquele pool. Subiu o atributo no bot → mais orçamento nele.
 //
 // REGRA DE OURO: nada vindo do cliente é confiável. buyNode revalida TUDO
 // contra o banco dentro de uma transação. O front só manda o nodeId.
@@ -85,26 +90,32 @@ function combatOf(node: SkillNodeDef): NodeCombat | undefined {
   };
 }
 
+export type PoolMap = Partial<Record<Attribute, number>>;
+
 export interface CharSnapshot {
   charId: string;
   name: string;
   level: number;
-  ninjutsu: number; // orçamento total (valor do atributo)
-  spent: number; // soma dos custos dos nós já comprados
-  points: number; // disponível = ninjutsu - spent
+  // gasto e disponível POR ATRIBUTO (bolsas independentes).
+  spentByPool: PoolMap; // soma dos custos dos nós comprados, por pool
+  pointsByPool: PoolMap; // disponível = atributo - spentByPool[atributo]
   elements: Element[]; // elementos desbloqueados
   owned: Set<string>; // ids de nó comprados
   clanId: string | null; // cla do personagem (define o primeiro elemento)
-  // valor BRUTO de cada atributo — usado só pelo gate reqAttribute (Hyuuga:
-  // Byakugan pede Dojutsu, o resto pede Taijutsu). Não é orçamento: gastar
-  // pontos na árvore não consome daqui, é só um requisito de nível.
-  attributes: Partial<Record<Attribute, number>>;
+  // valor BRUTO de cada atributo. É o TETO de cada bolsa (orçamento) e também
+  // o que o gate reqPool/reqAttribute compara. Gastar pontos na árvore não
+  // reduz esse valor — só consome o disponível derivado dele.
+  attributes: PoolMap;
 }
 
-// Soma o custo dos nós possuídos.
-function spentOf(owned: Set<string>): number {
-  let s = 0;
-  for (const id of owned) s += getNode(id)?.cost ?? 0;
+// Soma o custo dos nós possuídos, separado por pool.
+function spentOf(owned: Set<string>): PoolMap {
+  const s: PoolMap = {};
+  for (const id of owned) {
+    const node = getNode(id);
+    if (!node) continue;
+    s[node.pool] = (s[node.pool] ?? 0) + node.cost;
+  }
   return s;
 }
 
@@ -119,19 +130,28 @@ function snapFrom(char: {
   clan: { clanId: string } | null;
 }): CharSnapshot {
   const owned = new Set(char.skillNodes.map((s) => s.nodeId));
-  const ninjutsu = char.attributes?.ninjutsu ?? 1;
-  const spent = spentOf(owned);
+  const attributes: PoolMap = char.attributes ?? {};
+  const spentByPool = spentOf(owned);
+  // disponível de cada pool = valor do atributo - o que já foi gasto nele.
+  // Só entram os atributos que têm valor ou gasto (evita poluir a UI com as
+  // 10 bolsas quando o personagem só usa duas).
+  const pointsByPool: PoolMap = {};
+  for (const attr of new Set([
+    ...(Object.keys(attributes) as Attribute[]),
+    ...(Object.keys(spentByPool) as Attribute[]),
+  ])) {
+    pointsByPool[attr] = Math.max(0, (attributes[attr] ?? 1) - (spentByPool[attr] ?? 0));
+  }
   return {
     charId: char.id,
     name: char.displayName?.trim() || char.name, // nome RP, senao username
     level: char.level,
-    ninjutsu,
-    spent,
-    points: Math.max(0, ninjutsu - spent),
+    spentByPool,
+    pointsByPool,
     elements: char.elements.map((e) => e.element as Element),
     owned,
     clanId: char.clan?.clanId ?? null,
-    attributes: char.attributes ?? {},
+    attributes,
   };
 }
 
@@ -163,15 +183,20 @@ export function lockReason(snap: CharSnapshot, node: SkillNodeDef): string | nul
     }
   }
   if (snap.level < node.reqLevel) return `Requer nível ${node.reqLevel}.`;
+  // gate cruzado (atributo DIFERENTE do pool). Hoje nenhum nó usa, mas o
+  // contrato vale: um jutsu pode exigir um atributo que não é o que o paga.
   if (node.reqAttribute) {
     const have = snap.attributes[node.reqAttribute.attribute] ?? 0;
     if (have < node.reqAttribute.value) {
       return `Requer ${ATTRIBUTE_LABELS[node.reqAttribute.attribute]} ${node.reqAttribute.value}.`;
     }
   }
-  if (snap.ninjutsu < node.reqNinjutsu) return `Requer Ninjutsu ${node.reqNinjutsu}.`;
-  if (snap.points < node.cost) {
-    return `Pontos de Ninjutsu insuficientes (precisa ${node.cost}, restam ${snap.points}).`;
+  // gate e orçamento saem do MESMO atributo (node.pool).
+  const label = ATTRIBUTE_LABELS[node.pool];
+  if ((snap.attributes[node.pool] ?? 1) < node.reqPool) return `Requer ${label} ${node.reqPool}.`;
+  const left = snap.pointsByPool[node.pool] ?? (snap.attributes[node.pool] ?? 1);
+  if (left < node.cost) {
+    return `Pontos de ${label} insuficientes (precisa ${node.cost}, restam ${left}).`;
   }
   return null;
 }
@@ -214,7 +239,8 @@ export function viewFundamentosTree(snap: CharSnapshot): NodeView[] {
 export interface BuyResult {
   ok: boolean;
   error?: string;
-  pointsLeft?: number;
+  pointsLeft?: number; // sobra da bolsa DO POOL do nó comprado
+  pool?: Attribute; // de qual bolsa saiu
   grantedAbilityId?: string;
   grantedElement?: Element; // no ELEMENT: qual elemento saiu no sorteio
 }
@@ -241,7 +267,7 @@ export async function buyNode(
     if (reason) return { ok: false, error: reason };
 
     // grava o nó (unique [charId,nodeId] barra dupla compra). NÃO mexe no
-    // atributo ninjutsu — o custo é "descontado" via soma dos nós possuídos.
+    // atributo — o custo é "descontado" via soma dos nós possuídos daquele pool.
     await tx.characterSkillNode.create({ data: { charId: char.id, nodeId: node.id } });
 
     // JUTSU concede a ability ao personagem (o bot lê CharacterJutsu ao vivo)
@@ -270,6 +296,13 @@ export async function buyNode(
       await tx.characterElement.create({ data: { charId: char.id, element: grantedElement } });
     }
 
-    return { ok: true, pointsLeft: snap.points - node.cost, grantedAbilityId, grantedElement };
+    const leftBefore = snap.pointsByPool[node.pool] ?? (snap.attributes[node.pool] ?? 1);
+    return {
+      ok: true,
+      pointsLeft: leftBefore - node.cost,
+      pool: node.pool,
+      grantedAbilityId,
+      grantedElement,
+    };
   });
 }

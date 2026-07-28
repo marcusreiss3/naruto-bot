@@ -42,16 +42,17 @@ describe("Kaguya: integridade da arvore de cla", () => {
     expect(getAbility("kaguya_camelias")!.scalingAttribute).toBe("kenjutsu");
   });
 
-  it("os cinco de osso pedem Taijutsu de verdade (reqAttribute), como no escalonamento pedido", () => {
+  it("os cinco de osso saem do pool de Taijutsu, como no escalonamento pedido", () => {
     for (const id of IDS.filter((i) => i !== "kaguya_camelias")) {
       const node = allNodes().find((n) => n.id === id)!;
-      expect(node.reqAttribute?.attribute, id).toBe("taijutsu");
+      expect(node.pool, id).toBe("taijutsu");
     }
   });
 
-  it("a Dança das Camélias pede Kenjutsu, não Taijutsu — ela CRIA a espada, mesmo padrão da Lâmina do Hatake", () => {
+  it("a Dança das Camélias sai do pool de Kenjutsu, não de Taijutsu — ela CRIA a espada, mesmo padrão da Lâmina do Hatake", () => {
     const node = allNodes().find((n) => n.id === "kaguya_camelias")!;
-    expect(node.reqAttribute).toEqual({ attribute: "kenjutsu", value: 10 });
+    expect(node.pool).toBe("kenjutsu");
+    expect(node.reqPool).toBe(11);
   });
 
   it("as quatro passivas (raiz, armadura, fio de osso, ápice) têm definição", () => {
@@ -98,7 +99,7 @@ describe("Kaguya: ramificação Ossos x Kenjutsu, convergindo no ápice", () => 
 
   it("Fio de Osso também pede Kenjutsu — multiplica dano de espada, faz sentido exigir espada", () => {
     const fioOsso = allNodes().find((n) => n.id === "kaguya_fio_osso")!;
-    expect(fioOsso.reqAttribute?.attribute).toBe("kenjutsu");
+    expect(fioOsso.pool).toBe("kenjutsu");
   });
 
   it("Ossos Perfeitos (ápice) converge Impulso da Flor + Fio de Osso antes da Dança da Flor", () => {

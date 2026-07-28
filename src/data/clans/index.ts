@@ -98,7 +98,7 @@ export const CLAN_ABILITIES: Ability[] = [
     requirements: { clanId: "hyuuga", manualOnly: true },
     tags: ["hyuuga", "visao", "byakugan"],
     description:
-      "O dōjutsu do clã. Ative e desative a qualquer momento com /combate byakugan: enquanto ligado, dá +10% de chance de esquiva contra qualquer ataque e gasta 5% de chakra por rodada — desliga sozinho se o chakra acabar.",
+      "O dōjutsu do clã. Ative e desative a qualquer momento com /combate byakugan: enquanto ligado, dá +10% de chance de esquiva contra qualquer ataque, gasta 5% de chakra por rodada (desliga sozinho se o chakra acabar) e enxerga através de clones/substituição — corta pela metade o bônus de esquiva de quem tentar escapar de você com esses truques.",
   },
   {
     id: "hyuuga_punho_suave",
@@ -544,6 +544,7 @@ export const CLAN_ABILITIES: Ability[] = [
     actionType: "REACAO",
     reactionKind: "DODGE",
     reactionDodgeBonus: 0.22,
+    isCloneTrick: true,
     range: 0,
     shape: "SELF",
     requirements: { clanId: "aburame", manualOnly: true },

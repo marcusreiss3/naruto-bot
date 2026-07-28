@@ -1022,8 +1022,14 @@ export async function resolveHit(
         attackerHeight: attacker ? onHeight(attacker) : false,
         reactionBonus:
           (target.flags.reactionBuff ? 0.1 : 0) +
-          // Tecnica de Substituicao (Fundamentos): reacao de esquiva com bonus proprio
-          (reactAb?.reactionDodgeBonus ?? 0) +
+          // Tecnica de Substituicao (Fundamentos): reacao de esquiva com bonus proprio.
+          // Byakugan ativo no ATACANTE enxerga atraves de logro/clone (nao de
+          // corpo-de-verdade-virando-outra-coisa, tipo Hidratacao): corta o
+          // bonus pela metade quando a reacao e' isCloneTrick.
+          (reactAb?.reactionDodgeBonus ?? 0) *
+            (reactAb?.isCloneTrick && attacker?.flags.byakuganActive
+              ? BALANCE.byakuganCloneSightMult
+              : 1) +
           hasteDodgeBonus(target.effects) +
           // Byakugan (Hyuuga) ativo: visao de 360 graus ajuda contra QUALQUER
           // ataque, fisico ou ninjutsu — nao entra no `physical ? 0 : ...` como

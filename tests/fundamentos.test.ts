@@ -4,20 +4,24 @@ import { allNodes, getNode } from "../src/data/element-trees/index.js";
 import { FUNDAMENTOS } from "../src/data/element-trees/fundamentals.js";
 import { lockReason, remainingBasicElements, type CharSnapshot } from "../src/services/characters/skill-tree.js";
 import { clanStartingElement } from "../src/data/clans/starting-element.js";
+import { ATTRIBUTES } from "../src/config/enums.js";
 
 const ACADEMY_IDS = ["tecnica_clonagem", "tecnica_substituicao", "tecnica_caminhada_aquatica"] as const;
+
+// orcamento folgado em TODOS os atributos: cada no paga com o seu proprio
+// pool agora, entao um snapshot de teste precisa de saldo em todos eles.
+const RICO = Object.fromEntries(ATTRIBUTES.map((a) => [a, 100]));
 
 const snap = (over: Partial<CharSnapshot> = {}): CharSnapshot => ({
   charId: "c1",
   name: "Teste",
   level: 1,
-  ninjutsu: 100,
-  spent: 0,
-  points: 100,
+  spentByPool: {},
+  pointsByPool: {},
   elements: [],
   owned: new Set(),
   clanId: null,
-  attributes: {},
+  attributes: RICO,
   ...over,
 });
 

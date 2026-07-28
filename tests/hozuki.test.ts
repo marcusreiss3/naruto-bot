@@ -76,8 +76,8 @@ describe("Hozuki: integridade da arvore de cla", () => {
   it("Lâmina Líquida e Corte Sem Peso também pedem Kenjutsu — multiplicam dano de espada, fazem sentido exigir espada", () => {
     const lamina = allNodes().find((n) => n.id === "hozuki_lamina_liquida")!;
     const corte = allNodes().find((n) => n.id === "hozuki_corte_sem_peso")!;
-    expect(lamina.reqAttribute?.attribute).toBe("kenjutsu");
-    expect(corte.reqAttribute?.attribute).toBe("kenjutsu");
+    expect(lamina.pool).toBe("kenjutsu");
+    expect(corte.pool).toBe("kenjutsu");
   });
 
   it("clã Hozuki existe e referencia as quatro habilidades em activeIds", () => {

@@ -2,7 +2,7 @@
 // validada no servidor (skill-tree.buyNode) — o cliente só manda o nodeId.
 import type { FastifyInstance } from "fastify";
 import { ENV } from "../config/env.js";
-import type { Element } from "../config/enums.js";
+import { ATTRIBUTE_LABELS, type Attribute, type Element } from "../config/enums.js";
 import { getSessionDiscordId } from "./auth.js";
 import { ELEMENT_TREES } from "../data/element-trees/index.js";
 import { CLAN_TREES } from "../data/clan-trees/index.js";
@@ -31,9 +31,19 @@ export function registerApi(app: FastifyInstance): void {
       char: {
         name: snap.name,
         level: snap.level,
-        points: snap.points, // pontos de ninjutsu disponíveis
-        ninjutsu: snap.ninjutsu, // orçamento total
-        spent: snap.spent,
+        // uma bolsa por atributo. O cliente descobre QUAIS bolsas importam na
+        // árvore aberta lendo o `pool` de cada nó (vem em NodeView).
+        pools: Object.fromEntries(
+          (Object.keys(ATTRIBUTE_LABELS) as Attribute[]).map((a) => [
+            a,
+            {
+              label: ATTRIBUTE_LABELS[a],
+              total: snap.attributes[a] ?? 1,
+              spent: snap.spentByPool[a] ?? 0,
+              left: snap.pointsByPool[a] ?? (snap.attributes[a] ?? 1),
+            },
+          ]),
+        ),
         elements: [...snap.elements],
         clanId: snap.clanId,
         clanName: snap.clanId ? CLANS.find((c) => c.id === snap.clanId)?.name ?? snap.clanId : null,

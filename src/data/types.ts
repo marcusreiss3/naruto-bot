@@ -82,6 +82,11 @@ export interface Ability {
   // bonus fixo de esquiva (pontos percentuais 0..1) quando usada como reacao
   // DODGE (Tecnica de Substituicao)
   reactionDodgeBonus?: number;
+  // marca reacoes DODGE que sao logro visual/corpo-falso (Substituicao,
+  // Clones de Inseto) — Byakugan ativo no atacante enxerga atraves disso e
+  // corta o reactionDodgeBonus (ver byakuganCloneSightMult em balance.ts).
+  // NAO marcar reacoes que sao o corpo de verdade mudando (ex: Hidratacao).
+  isCloneTrick?: boolean;
   // ignora obstaculos, arvores e fumaca na validacao da linha de visao
   pierceObstacles?: boolean;
   // exige um alvo inicial Encharcado e salta para todos os outros Encharcados

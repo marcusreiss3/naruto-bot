@@ -71,7 +71,7 @@ describe("Hatake: ramificação Matilha x Lâmina, convergindo no ápice", () =>
 
   it("Corte Perfeito (ápice) também pede Kenjutsu — a passiva multiplica dano de espada, faz sentido exigir espada", () => {
     const apice = allNodes().find((n) => n.id === "hatake_apice")!;
-    expect(apice.reqAttribute?.attribute).toBe("kenjutsu");
+    expect(apice.pool).toBe("kenjutsu");
   });
 });
 
@@ -125,9 +125,11 @@ describe("Hatake: Lâmina da Luz Branca — Kenjutsu de verdade, não precisa da
     expect(lamina.requiresPet).toBeUndefined();
   });
 
-  it("o nó de árvore pede o atributo Kenjutsu (reqAttribute), não duplica o reqNinjutsu", () => {
+  it("o nó de árvore é pago com Kenjutsu (pool), sem gate cruzado duplicado", () => {
     const node = allNodes().find((n) => n.id === "hatake_lamina")!;
-    expect(node.reqAttribute).toEqual({ attribute: "kenjutsu", value: 10 });
+    expect(node.pool).toBe("kenjutsu");
+    expect(node.reqPool).toBe(11);
+    expect(node.reqAttribute).toBeUndefined();
   });
 });
 

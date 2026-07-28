@@ -36,8 +36,10 @@ describe("Chinoike: integridade da arvore de cla", () => {
   it("Ketsuryuugan (doujutsu) pede Dōjutsu; Genjutsu Ketsuryuugan pede Genjutsu — dois gates em sequência", () => {
     const doujutsu = allNodes().find((n) => n.id === "chinoike_doujutsu")!;
     const genjutsu = allNodes().find((n) => n.id === "chinoike_genjutsu_ketsuryuugan")!;
-    expect(doujutsu.reqAttribute).toEqual({ attribute: "dojutsu", value: 5 });
-    expect(genjutsu.reqAttribute).toEqual({ attribute: "genjutsu", value: 10 });
+    expect(doujutsu.pool).toBe("dojutsu");
+    expect(doujutsu.reqPool).toBe(5);
+    expect(genjutsu.pool).toBe("genjutsu");
+    expect(genjutsu.reqPool).toBe(11);
   });
 
   it("Ketsuryuugan é toggle (custo 0, sem efeito próprio) — liga/desliga por /combate ketsuryuugan, mesmo padrão do Byakugan", () => {

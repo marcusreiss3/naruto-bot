@@ -96,7 +96,7 @@ describe("Inuzuka: integridade da arvore de cla", () => {
     const cao = allNodes().find((n) => n.id === "inuzuka_cao_ninja")!;
     expect(cao.requires).toEqual([]);
     expect(cao.reqLevel).toBe(1);
-    expect(cao.reqNinjutsu).toBe(1);
+    expect(cao.reqPool).toBe(1);
     const dependentes = allNodes().filter((n) => n.requires.includes("inuzuka_cao_ninja"));
     expect(dependentes).toEqual([]);
   });
@@ -113,32 +113,34 @@ describe("Inuzuka: integridade da arvore de cla", () => {
   });
 });
 
-describe("Inuzuka: 'upando Ninjutsu' é só o reqNinjutsu; só 'upando Taijutsu' leva reqAttribute", () => {
-  it("nós gateados por Ninjutsu não têm reqAttribute (reqNinjutsu já lê o mesmo atributo)", () => {
+describe("Inuzuka: pool por atributo — invocar/fundir paga Ninjutsu, girar/morder paga Taijutsu", () => {
+  it("invocação e transformações saem do pool de Ninjutsu", () => {
     const ninjutsuIds = [
       "inuzuka_cao_ninja",
-      "inuzuka_quatro_patas",
       "inuzuka_clone_besta",
       "inuzuka_lobo_duas_cabecas",
       "inuzuka_lobo_tres_cabecas",
     ] as const;
     for (const id of ninjutsuIds) {
-      const node = allNodes().find((n) => n.id === id)!;
-      expect(node.reqAttribute, id).toBeUndefined();
+      expect(allNodes().find((n) => n.id === id)!.pool, id).toBe("ninjutsu");
     }
   });
 
-  it("nós gateados por Taijutsu têm reqAttribute de Taijutsu de verdade", () => {
+  it("as brocas e a postura animal saem do pool de Taijutsu", () => {
     const taijutsuIds = [
+      "inuzuka_quatro_patas",
       "inuzuka_sobre_presa",
       "inuzuka_presa_sobre_presa",
       "inuzuka_presa_de_lobo",
       "inuzuka_cauda_perseguidora",
     ] as const;
     for (const id of taijutsuIds) {
-      const node = allNodes().find((n) => n.id === id)!;
-      expect(node.reqAttribute?.attribute, id).toBe("taijutsu");
+      expect(allNodes().find((n) => n.id === id)!.pool, id).toBe("taijutsu");
     }
+  });
+
+  it("nenhum nó carrega reqAttribute — o gate cruzado virou o próprio reqPool", () => {
+    for (const n of CLAN_TREES.inuzuka!) expect(n.reqAttribute, n.id).toBeUndefined();
   });
 });
 

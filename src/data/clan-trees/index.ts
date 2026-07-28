@@ -19,8 +19,14 @@ import type { NodeRank, SkillNodeDef } from "../element-trees/index.js";
 const COST: Record<string, number> = { ROOT: 1, PASSIVE: 2, D: 1, C: 3, B: 4, A: 6, S: 10 };
 
 // Fábrica compacta espelhando make() de element-trees/index.ts, trocando
-// `element` por `clanId`.
-function makeClan(clanId: string) {
+// `element` por `clanId` e recebendo o POOL PADRAO do clã.
+//
+// `defaultPool` e' o atributo que banca a espinha do clã — o que aquele clã
+// "e'" na pratica (Hyuuga/Kaguya = taijutsu, Nara/Aburame = ninjutsu,
+// Uzumaki = fuinjutsu...). Nos que fogem disso passam `pool` no ultimo
+// argumento: e' assim que uma tecnica de espada dentro de um clã de soco
+// (ex: Camélias do Kaguya) passa a custar kenjutsu, e nao taijutsu.
+function makeClan(clanId: string, defaultPool: Attribute) {
   const jutsu = (
     id: string,
     name: string,
@@ -31,11 +37,13 @@ function makeClan(clanId: string) {
     row: number,
     requires: string[],
     reqLevel: number,
-    reqNinjutsu: number,
+    reqPool: number,
     desc: string,
-    // gate adicional por atributo bruto (ex: Hyuuga: Byakugan pede Dojutsu,
-    // o resto pede Taijutsu — "desbloqueia upando X"). Omitido = sem gate extra.
+    // gate num atributo DIFERENTE do pool. Depois da migracao pra pools por
+    // atributo nenhum no usa isto (o gate virou o proprio reqPool); fica como
+    // escape hatch pra exigencia cruzada de verdade.
     reqAttribute?: { attribute: Attribute; value: number },
+    pool: Attribute = defaultPool,
   ): SkillNodeDef => ({
     id,
     clanId,
@@ -43,13 +51,14 @@ function makeClan(clanId: string) {
     kind: "JUTSU",
     rank,
     icon,
+    pool,
     cost: COST[rank]!,
     branch,
     col,
     row,
     requires,
     reqLevel,
-    reqNinjutsu,
+    reqPool,
     reqAttribute,
     grantsAbilityId: id,
     desc,
@@ -63,26 +72,25 @@ function makeClan(clanId: string) {
     row: number,
     requires: string[],
     reqLevel: number,
-    reqNinjutsu: number,
+    reqPool: number,
     desc: string,
     root = false,
-    // mesmo gate de jutsu() — usado por passivas que só fazem sentido pra
-    // quem investiu no atributo especifico (ex: passiva de dano de
-    // Kenjutsu pedindo Kenjutsu, não só o orçamento de Ninjutsu).
     reqAttribute?: { attribute: Attribute; value: number },
+    pool: Attribute = defaultPool,
   ): SkillNodeDef => ({
     id,
     clanId,
     name,
     kind: "PASSIVE",
     icon,
+    pool,
     cost: root ? COST.ROOT! : COST.PASSIVE!,
     branch,
     col,
     row,
     requires,
     reqLevel,
-    reqNinjutsu,
+    reqPool,
     reqAttribute,
     desc,
   });
@@ -98,7 +106,7 @@ function makeClan(clanId: string) {
 // (Lírio da Aranha Negra). As duas passivas (raiz/ápice) NÃO dão dano: dão
 // custo menor e imobilização mais confiável/duradoura — a curva de poder do
 // clã é toda em controle, coerente com o material de origem.
-const N = makeClan("nara");
+const N = makeClan("nara", "ninjutsu");
 const NARA: SkillNodeDef[] = [
   N.pass(
     "nara_raiz",
@@ -226,7 +234,7 @@ const NARA: SkillNodeDef[] = [
 // dano bruto, é ATRAVESSAR defesa (perfura Bloqueio/Barreira, ignora escudo)
 // e SELAR chakra (Bloqueio de Ninjutsu) — o mesmo golpe físico dobra como
 // controle, igual no material de origem.
-const H = makeClan("hyuuga");
+const H = makeClan("hyuuga", "taijutsu");
 const HYUUGA: SkillNodeDef[] = [
   H.pass(
     "hyuuga_raiz",
@@ -240,6 +248,10 @@ const HYUUGA: SkillNodeDef[] = [
     1,
     "Passiva sempre ativa: mesmo sem o Byakugan ativado, a visão periférica quase total do clã já ajuda a mirar nos tenketsu certos. Seus jutsus de clã custam 10% menos recurso e têm +10 pontos percentuais de chance de aplicar Bloqueio de Ninjutsu.",
     true,
+    undefined,
+    // a porta de entrada do clã e' o OLHO, nao o punho: raiz e Byakugan saem
+    // de Dojutsu. Do Punho Suave em diante a arvore vira taijutsu puro.
+    "dojutsu",
   ),
   H.jutsu(
     "hyuuga_byakugan",
@@ -251,9 +263,10 @@ const HYUUGA: SkillNodeDef[] = [
     1,
     ["hyuuga_raiz"],
     1,
-    1,
-    "O dōjutsu do clã. Ative e desative a qualquer momento com /combate byakugan: enquanto ligado, dá +10% de chance de esquiva contra qualquer ataque e gasta 5% de chakra por rodada — desliga sozinho se o chakra acabar.",
-    { attribute: "dojutsu", value: 3 },
+    3,
+    "O dōjutsu do clã. Ative e desative a qualquer momento com /combate byakugan: enquanto ligado, dá +10% de chance de esquiva contra qualquer ataque, gasta 5% de chakra por rodada (desliga sozinho se o chakra acabar) e enxerga através de clones/substituição — corta pela metade o bônus de esquiva de quem tentar escapar de você com esses truques.",
+    undefined,
+    "dojutsu",
   ),
   H.jutsu(
     "hyuuga_punho_suave",
@@ -267,7 +280,6 @@ const HYUUGA: SkillNodeDef[] = [
     1,
     4,
     "Estilo de combate básico dos Hyūga: injeta chakra no golpe para ferir órgãos internos e a rede de chakra do adversário, em vez de só o corpo. 40% de chance de bloquear o Ninjutsu do alvo por 1 rodada. Exige o Byakugan ativo.",
-    { attribute: "taijutsu", value: 3 },
   ),
   H.jutsu(
     "hyuuga_palma_vacuo",
@@ -281,7 +293,6 @@ const HYUUGA: SkillNodeDef[] = [
     9,
     9,
     "Usando o Byakugan como mira, identifica os pontos vitais do oponente e dispara uma 'bala de vácuo' comprimida à distância — não pode ser esquivada e empurra o alvo 3 casas para trás antes mesmo dele perceber o que aconteceu. Exige o Byakugan ativo.",
-    { attribute: "taijutsu", value: 9 },
   ),
   H.jutsu(
     "hyuuga_palma_rotativa",
@@ -295,7 +306,6 @@ const HYUUGA: SkillNodeDef[] = [
     10,
     9,
     "Gira rapidamente enquanto libera chakra por todos os tenketsu, criando uma esfera defensiva quase impenetrável. Ganha 24 pontos de Barreira por 3 rodadas e livra você de ficar preso ao chão. Exige o Byakugan ativo.",
-    { attribute: "taijutsu", value: 9 },
   ),
   H.pass(
     "hyuuga_guarda_perpetua",
@@ -319,9 +329,8 @@ const HYUUGA: SkillNodeDef[] = [
     4,
     ["hyuuga_palma_vacuo"],
     12,
-    10,
+    12,
     "Sequência de 64 golpes extremamente rápidos que bloqueiam dezenas de tenketsu de uma vez: 85% de chance de bloquear o Ninjutsu do alvo por 2 rodadas, e 30% de chance de Atordoar por 1 rodada. Exige o Byakugan ativo.",
-    { attribute: "taijutsu", value: 12 },
   ),
   H.jutsu(
     "hyuuga_128_palmas",
@@ -333,9 +342,8 @@ const HYUUGA: SkillNodeDef[] = [
     5,
     ["hyuuga_64_palmas"],
     19,
-    16,
+    19,
     "Versão em dobro de velocidade das 64 Palmas: 80% de chance de bloquear o Ninjutsu do alvo por 2 rodadas e 50% de chance de deixá-lo mais lento por 2 rodadas. Exige o Byakugan ativo.",
-    { attribute: "taijutsu", value: 19 },
   ),
   H.pass(
     "hyuuga_apice",
@@ -347,7 +355,7 @@ const HYUUGA: SkillNodeDef[] = [
     ["hyuuga_128_palmas", "hyuuga_guarda_perpetua"],
     24,
     20,
-    "Passiva: seus golpes de Punho Suave miram direto nos órgãos internos, por cima de qualquer escudo — ignoram a Barreira do alvo e causam +25% de dano em quem estiver abaixo de 30% de vida. O Bloqueio de Ninjutsu que você aplica dura 1 rodada a mais.",
+    "Passiva: todo golpe do seu clã mira direto nos órgãos internos, por cima de qualquer escudo — ignoram a Barreira do alvo e causam +25% de dano em quem estiver abaixo de 30% de vida. O Bloqueio de Ninjutsu que qualquer jutsu de clã aplicar dura 1 rodada a mais.",
   ),
   H.jutsu(
     "hyuuga_leoes_gemeos",
@@ -359,9 +367,8 @@ const HYUUGA: SkillNodeDef[] = [
     7,
     ["hyuuga_apice"],
     30,
-    24,
+    28,
     "Libera uma grande quantidade de chakra pelos punhos, moldado em duas cabeças de leão. Não pode ser esquivado. Ao acertar, destroça por completo os meridianos do alvo: bloqueia o Ninjutsu dele por 3 rodadas e reduz a defesa dele por 2 rodadas. Exige o Byakugan ativo.",
-    { attribute: "taijutsu", value: 28 },
   ),
 ];
 
@@ -375,7 +382,7 @@ const HYUUGA: SkillNodeDef[] = [
 // delas é o nó "Pílula Secreta" (ápice) — mapeia literalmente o "necessita
 // utilizar das pílulas secretas do clã" do pedido original, sem precisar de
 // um sistema de itens/consumíveis novo.
-const K = makeClan("akimichi");
+const K = makeClan("akimichi", "taijutsu");
 const AKIMICHI: SkillNodeDef[] = [
   K.pass(
     "akimichi_raiz",
@@ -402,7 +409,8 @@ const AKIMICHI: SkillNodeDef[] = [
     1,
     4,
     "Incha uma única parte do corpo — geralmente braço ou perna — e usa o peso extra pra golpear com muito mais força. Empurra o alvo 2 casas pra trás.",
-    { attribute: "ninjutsu", value: 3 },
+    undefined,
+    "ninjutsu",
   ),
   K.jutsu(
     "akimichi_baika",
@@ -416,7 +424,8 @@ const AKIMICHI: SkillNodeDef[] = [
     6,
     7,
     "Altera livremente o próprio tamanho e consegue manter a forma por um período extenso — consome muitas calorias, mas o corpo maior absorve muito mais impacto. Ganha 20 pontos de Barreira por 4 rodadas.",
-    { attribute: "ninjutsu", value: 7 },
+    undefined,
+    "ninjutsu",
   ),
   K.jutsu(
     "akimichi_tanque",
@@ -430,7 +439,6 @@ const AKIMICHI: SkillNodeDef[] = [
     10,
     9,
     "Depois da Técnica do Tamanho Múltiplo, dobra os membros e usa chakra pra se impulsionar num rolo poderoso — a força de rotação é capaz de pulverizar o que estiver no caminho. Difícil de manter por muito tempo.",
-    { attribute: "taijutsu", value: 9 },
   ),
   K.jutsu(
     "akimichi_super_baika",
@@ -442,9 +450,10 @@ const AKIMICHI: SkillNodeDef[] = [
     4,
     ["akimichi_tanque"],
     14,
-    11,
+    12,
     "A versão mais poderosa da Técnica do Tamanho Múltiplo: multiplica o corpo pra um tamanho inacreditável. Ganha 32 pontos de Barreira por 4 rodadas.",
-    { attribute: "ninjutsu", value: 12 },
+    undefined,
+    "ninjutsu",
   ),
   K.jutsu(
     "akimichi_mergulho",
@@ -456,9 +465,8 @@ const AKIMICHI: SkillNodeDef[] = [
     5,
     ["akimichi_super_baika"],
     18,
-    14,
+    15,
     "Depois da Técnica do Super Tamanho Múltiplo, pula de grande altura sobre uma área e a devasta com o próprio peso.",
-    { attribute: "taijutsu", value: 15 },
   ),
   K.jutsu(
     "akimichi_bofetada",
@@ -470,9 +478,8 @@ const AKIMICHI: SkillNodeDef[] = [
     6,
     ["akimichi_mergulho"],
     21,
-    16,
+    18,
     "Depois da Técnica do Super Tamanho Múltiplo, desfere um tapa mortal com as duas mãos: a concentração de chakra ativa os músculos e aumenta ainda mais a massa do golpe. Não pode ser esquivada.",
-    { attribute: "taijutsu", value: 18 },
   ),
   K.jutsu(
     "akimichi_apice",
@@ -486,6 +493,8 @@ const AKIMICHI: SkillNodeDef[] = [
     25,
     19,
     "Engole uma das pílulas secretas do clã: por 3 rodadas, +60% de dano nos seus golpes físicos (Taijutsu/Kenjutsu). Quando o efeito passa, o corpo cobra o preço: reduz a defesa por 2 rodadas.",
+    undefined,
+    "ninjutsu",
   ),
   K.jutsu(
     "akimichi_modo_borboleta",
@@ -499,6 +508,8 @@ const AKIMICHI: SkillNodeDef[] = [
     28,
     21,
     "Converte calorias em chakra puro: fazem brotar borboletas de chakra nas costas, multiplicando a força bruta do usuário. Limpa Queimadura, Veneno, Sangramento e Lentidão, e ganha 20 pontos de Barreira por 2 rodadas.",
+    undefined,
+    "ninjutsu",
   ),
   K.jutsu(
     "akimichi_bombardeio",
@@ -527,7 +538,7 @@ const AKIMICHI: SkillNodeDef[] = [
 //     venenosa (canonicamente os insetos de Torune), area e status.
 // O apice converge os dois ramos (requires os dois finalizadores) e nao e'
 // um jutsu novo — so uma passiva, igual o padrao dos outros clas.
-const AB = makeClan("aburame");
+const AB = makeClan("aburame", "ninjutsu");
 const ABURAME: SkillNodeDef[] = [
   AB.pass(
     "aburame_raiz",
@@ -675,7 +686,7 @@ const ABURAME: SkillNodeDef[] = [
 // combo antes de "juntá-las". Da fusão em diante (Lobo de Duas Cabeças ->
 // Ápice -> Cauda Perseguidora) volta a ser tronco reto — não sobrou nome
 // curto o bastante pra abrir outro ramo sem forçar a barra.
-const IZ = makeClan("inuzuka");
+const IZ = makeClan("inuzuka", "taijutsu");
 const INUZUKA: SkillNodeDef[] = [
   IZ.pass(
     "inuzuka_raiz",
@@ -702,6 +713,8 @@ const INUZUKA: SkillNodeDef[] = [
     1,
     1,
     "Todo Inuzuka nasce com seu cão ninja: um companheiro treinado desde filhote — já vem desbloqueado, sem gastar ponto nenhum. Ele entra no mapa com 1/3 da sua vida máxima e ataca sozinho todo turno, como uma invocação comum. Só pode ser chamado uma vez por combate: se ele cair em combate, as técnicas que dependem dele ficam bloqueadas até o fim da luta — mas ele volta saudável na próxima.",
+    undefined,
+    "ninjutsu",
   ),
   IZ.jutsu(
     "inuzuka_quatro_patas",
@@ -728,6 +741,8 @@ const INUZUKA: SkillNodeDef[] = [
     5,
     5,
     "O cão ninja se transforma numa cópia física do usuário: os dois atacam juntos e coordenados. 60% de chance de deixar o alvo Confuso por 2 rodadas, sem conseguir identificar qual dos dois é o verdadeiro. Precisa do cão ninja vivo em campo.",
+    undefined,
+    "ninjutsu",
   ),
   IZ.jutsu(
     "inuzuka_sobre_presa",
@@ -741,7 +756,6 @@ const INUZUKA: SkillNodeDef[] = [
     9,
     8,
     "Gira em altíssima velocidade, virando uma espécie de broca humana: avança em linha reta perfurando tudo no caminho e empurra o alvo 1 casa.",
-    { attribute: "taijutsu", value: 8 },
   ),
   IZ.jutsu(
     "inuzuka_presa_sobre_presa",
@@ -755,7 +769,6 @@ const INUZUKA: SkillNodeDef[] = [
     13,
     11,
     "Versão evoluída do Sobre Presa: usuário e cão giram juntos, multiplicando a potência da broca. Não pode ser esquivado, empurra o alvo 2 casas e tem 30% de chance de Atordoar por 1 rodada. Precisa do cão ninja vivo em campo.",
-    { attribute: "taijutsu", value: 11 },
   ),
   IZ.jutsu(
     "inuzuka_lobo_duas_cabecas",
@@ -769,6 +782,8 @@ const INUZUKA: SkillNodeDef[] = [
     17,
     14,
     "Usuário e cão se fundem num enorme lobo de duas cabeças: por 3 rodadas, +60% de dano nos seus golpes físicos (Taijutsu/Kenjutsu). Precisa do cão ninja vivo em campo.",
+    undefined,
+    "ninjutsu",
   ),
   IZ.jutsu(
     "inuzuka_presa_de_lobo",
@@ -782,7 +797,6 @@ const INUZUKA: SkillNodeDef[] = [
     20,
     17,
     "Depois da fusão em Lobo de Duas Cabeças, reúnem toda a força na super-rotação: perfuram o alvo com velocidade avassaladora numa linha reta. Não pode ser esquivado e empurra o alvo 2 casas. Precisa do cão ninja vivo em campo.",
-    { attribute: "taijutsu", value: 16 },
   ),
   IZ.jutsu(
     "inuzuka_lobo_tres_cabecas",
@@ -796,6 +810,8 @@ const INUZUKA: SkillNodeDef[] = [
     24,
     20,
     "Depois de criar um clone de sombra, o usuário se funde com o clone e o cão ninja num lobo gigante de três cabeças: por 3 rodadas, +60% de dano nos golpes físicos (Taijutsu/Kenjutsu), e ganha 26 pontos de Barreira por 3 rodadas. Garras e presas ficam brutalmente eficientes em ataques diretos. Precisa do cão ninja vivo em campo.",
+    undefined,
+    "ninjutsu",
   ),
   IZ.pass(
     "inuzuka_apice",
@@ -821,7 +837,6 @@ const INUZUKA: SkillNodeDef[] = [
     30,
     25,
     "Ainda fundido no lobo gigante de três cabeças, o usuário se enrola numa bola e rola numa velocidade feroz, como se corresse atrás da própria cauda: a rotação ultra-violenta rasga através de vários inimigos na linha de ataque. Não pode ser esquivado e tem 35% de chance de Atordoar por 1 rodada. Precisa do cão ninja vivo em campo.",
-    { attribute: "taijutsu", value: 24 },
   ),
 ];
 
@@ -833,7 +848,7 @@ const INUZUKA: SkillNodeDef[] = [
 // soma um pouco mais de vida máxima/regeneração em cima da anterior (ver
 // maxHpBonus/hpRegenPerTurn em clan-trees/passives.ts). Tronco reto: com só
 // 5 nós não tem massa crítica pra abrir ramo sem forçar a barra.
-const UZ = makeClan("uzumaki");
+const UZ = makeClan("uzumaki", "fuinjutsu");
 const UZUMAKI: SkillNodeDef[] = [
   UZ.pass(
     "uzumaki_raiz",
@@ -860,6 +875,8 @@ const UZUMAKI: SkillNodeDef[] = [
     4,
     4,
     "Deixa um aliado morder sua pele e sugar um pouco do próprio chakra Uzumaki: em troca, fecha os ferimentos dele. Cura 30 de vida e devolve 15% de chakra — funciona até em ferimentos graves. Só em aliado, não cura o próprio usuário.",
+    undefined,
+    "iryoNinjutsu",
   ),
   UZ.pass(
     "uzumaki_reservas",
@@ -909,7 +926,7 @@ const UZUMAKI: SkillNodeDef[] = [
 // (coluna -1: Cerco -> Elo com a Matilha) e Lâmina (coluna +1: só a
 // Lâmina, tier alto), convergindo no ápice — mesmo padrão do Aburame/
 // Inuzuka. O ápice é o pedido explícito de dano de Kenjutsu.
-const HK = makeClan("hatake");
+const HK = makeClan("hatake", "ninjutsu");
 const HATAKE: SkillNodeDef[] = [
   HK.pass(
     "hatake_raiz",
@@ -962,7 +979,8 @@ const HATAKE: SkillNodeDef[] = [
     14,
     11,
     "Usando a Lâmina de Chakra de Luz Branca, desfere um corte diagonal descendente que deixa um rastro de chakra branco: um golpe rápido demais pra esquivar, que abre um corte profundo.",
-    { attribute: "kenjutsu", value: 10 },
+    undefined,
+    "kenjutsu",
   ),
   HK.pass(
     "hatake_elo_matilha",
@@ -988,7 +1006,8 @@ const HATAKE: SkillNodeDef[] = [
     15,
     "Passiva: o domínio da Lâmina de Luz Branca chega ao ápice. Seus golpes de Kenjutsu causam +30% de dano, e mais 25% em quem estiver abaixo de 30% de vida.",
     false,
-    { attribute: "kenjutsu", value: 13 },
+    undefined,
+    "kenjutsu",
   ),
 ];
 
@@ -1006,7 +1025,7 @@ const HATAKE: SkillNodeDef[] = [
 // não ficar quebrado quando somadas, e pra custar 2 nós em vez de 1.
 // Nós "upando Ninjutsu" NÃO levam reqAttribute — o reqNinjutsu já lê o
 // mesmo atributo (mesma correção do Aburame/Inuzuka).
-const HG = makeClan("hoshigaki");
+const HG = makeClan("hoshigaki", "ninjutsu");
 const HOSHIGAKI: SkillNodeDef[] = [
   HG.pass(
     "hoshigaki_raiz",
@@ -1071,7 +1090,8 @@ const HOSHIGAKI: SkillNodeDef[] = [
     10,
     "Passiva sempre ativa: o clã afia os reflexos pra qualquer lâmina que empunhar, não só a Samehada. Seus golpes de Kenjutsu causam +15% de dano.",
     false,
-    { attribute: "kenjutsu", value: 9 },
+    undefined,
+    "kenjutsu",
   ),
   HG.jutsu(
     "hoshigaki_esfera_selvagem",
@@ -1098,7 +1118,8 @@ const HOSHIGAKI: SkillNodeDef[] = [
     12,
     "Passiva sempre ativa: a mira do clã encontra a brecha certa na guarda do alvo. Seus golpes de Kenjutsu ignoram Barreira e causam mais 15% em quem estiver abaixo de 30% de vida.",
     false,
-    { attribute: "kenjutsu", value: 11 },
+    undefined,
+    "kenjutsu",
   ),
   HG.jutsu(
     "hoshigaki_mil_tubaroes",
@@ -1138,7 +1159,7 @@ const HOSHIGAKI: SkillNodeDef[] = [
 // vez, então a ordem/tier é minha melhor leitura das 4 descrições: Hidratação
 // (defesa reativa, cedo) -> Grande Braço de Água (buff) -> Revólver de
 // Água (ataque à distância) -> Tate Eboshi (finalizador, onda gigante).
-const HZ = makeClan("hozuki");
+const HZ = makeClan("hozuki", "ninjutsu");
 const HOZUKI: SkillNodeDef[] = [
   HZ.pass(
     "hozuki_raiz",
@@ -1204,7 +1225,8 @@ const HOZUKI: SkillNodeDef[] = [
     11,
     "Passiva sempre ativa: a água nas veias infunde a lâmina, mantendo o fio sempre afiado. Seus golpes de Kenjutsu causam +15% de dano.",
     false,
-    { attribute: "kenjutsu", value: 10 },
+    undefined,
+    "kenjutsu",
   ),
   HZ.pass(
     "hozuki_fluidez",
@@ -1230,7 +1252,8 @@ const HOZUKI: SkillNodeDef[] = [
     14,
     "Passiva sempre ativa: o corpo líquido guia a lâmina pelos pontos fracos da guarda. Seus golpes de Kenjutsu ignoram Barreira e causam mais 15% em quem estiver abaixo de 30% de vida.",
     false,
-    { attribute: "kenjutsu", value: 12 },
+    undefined,
+    "kenjutsu",
   ),
   HZ.jutsu(
     "hozuki_tate_eboshi",
@@ -1260,7 +1283,7 @@ const HOZUKI: SkillNodeDef[] = [
 // Lâmina da Luz Branca do Hatake) — pedido original dizia Taijutsu pra
 // todos, mas isso foi antes do atributo Kenjutsu existir/da Camélias virar
 // uma técnica de Kenjutsu de verdade.
-const KG = makeClan("kaguya");
+const KG = makeClan("kaguya", "taijutsu");
 const KAGUYA: SkillNodeDef[] = [
   KG.pass(
     "kaguya_raiz",
@@ -1287,7 +1310,6 @@ const KAGUYA: SkillNodeDef[] = [
     4,
     4,
     "Abre as pontas dos dedos, expondo os ossos endurecidos: atira uma rajada de balas de osso à distância, movimentando as mãos. 55% de chance de causar Sangramento por 2 rodadas.",
-    { attribute: "taijutsu", value: 4 },
   ),
   KG.jutsu(
     "kaguya_salgueiro",
@@ -1301,7 +1323,6 @@ const KAGUYA: SkillNodeDef[] = [
     9,
     8,
     "Ossos saem das palmas, cotovelos, joelhos e ombros ao mesmo tempo, golpeando o alvo de vários ângulos de uma vez: rápido demais e de direções demais pra esquivar. Não pode ser esquivado.",
-    { attribute: "taijutsu", value: 8 },
   ),
   KG.jutsu(
     "kaguya_larico",
@@ -1315,7 +1336,6 @@ const KAGUYA: SkillNodeDef[] = [
     13,
     11,
     "Inúmeros ossos brotam de dentro do próprio corpo de uma vez, formando espetos afiados que dilaceram qualquer um por perto. 75% de chance de causar Sangramento por 3 rodadas em quem estiver na área.",
-    { attribute: "taijutsu", value: 11 },
   ),
   KG.jutsu(
     "kaguya_camelias",
@@ -1329,7 +1349,8 @@ const KAGUYA: SkillNodeDef[] = [
     13,
     11,
     "Modifica o osso do próprio braço numa espada viva e desfere uma sequência de estocadas furiosas, rápidas demais pra contar. 70% de chance de causar Sangramento por 3 rodadas.",
-    { attribute: "kenjutsu", value: 10 },
+    undefined,
+    "kenjutsu",
   ),
   KG.pass(
     "kaguya_armadura_espinhos",
@@ -1355,7 +1376,8 @@ const KAGUYA: SkillNodeDef[] = [
     13,
     "Passiva sempre ativa: a espada viva de osso nunca cega. Seus golpes de Kenjutsu causam +30% de dano e mais 25% em quem estiver abaixo de 30% de vida.",
     false,
-    { attribute: "kenjutsu", value: 13 },
+    undefined,
+    "kenjutsu",
   ),
   KG.jutsu(
     "kaguya_impulso_flor",
@@ -1369,7 +1391,6 @@ const KAGUYA: SkillNodeDef[] = [
     20,
     16,
     "Corre em disparada até o alvo e golpeia com os ossos das próprias costas, empurrando-o 2 casas com o impacto.",
-    { attribute: "taijutsu", value: 16 },
   ),
   KG.pass(
     "kaguya_apice",
@@ -1395,7 +1416,6 @@ const KAGUYA: SkillNodeDef[] = [
     29,
     23,
     "Concentra todo o poder do próprio corpo, projetando os ossos comprimidos em lanças rígidas ao extremo: uma arma de osso incrivelmente destrutiva. Não pode ser esquivada. 85% de chance de causar Sangramento por 3 rodadas.",
-    { attribute: "taijutsu", value: 22 },
   ),
 ];
 
@@ -1408,7 +1428,7 @@ const KAGUYA: SkillNodeDef[] = [
 // Doujutsu Ketsuryuugan pede Dōjutsu (não Genjutsu); só a Genjutsu
 // Ketsuryuugan em si pede Genjutsu — os dois gates do pedido do usuário,
 // em sequência, iguais o Byakugan/Punho Suave do Hyuuga.
-const CI = makeClan("chinoike");
+const CI = makeClan("chinoike", "ninjutsu");
 const CHINOIKE: SkillNodeDef[] = [
   CI.pass(
     "chinoike_raiz",
@@ -1448,7 +1468,8 @@ const CHINOIKE: SkillNodeDef[] = [
     6,
     5,
     "O dōjutsu do clã: olhos avermelhados como sangue, capazes de ler o instante exato em que o corpo do oponente vai se mover. Ative e desative a qualquer momento com /combate ketsuryuugan: enquanto ligado, dá +10% de chance de esquiva contra qualquer ataque e gasta 5% de chakra por rodada — desliga sozinho se o chakra acabar.",
-    { attribute: "dojutsu", value: 5 },
+    undefined,
+    "dojutsu",
   ),
   CI.jutsu(
     "chinoike_bolhas_agua",
@@ -1474,6 +1495,9 @@ const CHINOIKE: SkillNodeDef[] = [
     10,
     9,
     "Passiva sempre ativa: o Ketsuryuugan lê qualquer mente vacilando, não só a da própria vítima do clã. +10 pontos percentuais de chance de causar Confusão e Atordoamento em QUALQUER jutsu de Genjutsu que você usar, não só os do clã.",
+    false,
+    undefined,
+    "dojutsu",
   ),
   CI.pass(
     "chinoike_sangue_fervente",
@@ -1499,7 +1523,8 @@ const CHINOIKE: SkillNodeDef[] = [
     13,
     11,
     "Prende o oponente numa ilusão sangrenta que o próprio corpo dele acredita ser real — a dor é real. 60% de chance de causar Confusão por 2 rodadas. Exige o Ketsuryuugan ativo (/combate ketsuryuugan).",
-    { attribute: "genjutsu", value: 10 },
+    undefined,
+    "genjutsu",
   ),
   CI.pass(
     "chinoike_apice",

@@ -199,12 +199,29 @@ function show(screen) {
   for (const s of ["login", "nochar", "app"]) $(s).classList.toggle("hidden", s !== screen);
 }
 
-function updateTop() {
+// Quais bolsas de atributo a árvore aberta consome, em ordem de peso (a que
+// paga mais nós primeiro). Uma árvore pode misturar: o Hyuuga gasta Dōjutsu
+// nos dois nós de olho e Taijutsu no resto.
+function poolsOfTree(elId) {
+  const nodes = (state && state.trees[elId]) || [];
+  const count = {};
+  for (const n of nodes) if (n.pool) count[n.pool] = (count[n.pool] || 0) + 1;
+  return Object.keys(count).sort((a, b) => count[b] - count[a]);
+}
+
+function updateTop(elId) {
   $("charName").textContent = state.char.name;
   $("charLevel").textContent = "Nv. " + state.char.level;
-  $("charPoints").textContent = state.char.points;
+  // o contador do topo segue a bolsa principal da árvore aberta — é o número
+  // que decide se dá pra comprar o próximo nó dela.
+  const primary = poolsOfTree(elId)[0] || "ninjutsu";
+  const p = state.char.pools[primary];
+  if (!p) return;
+  $("charPoints").textContent = p.left;
   const t = $("charPointsTotal");
-  if (t) t.textContent = " / " + state.char.ninjutsu;
+  if (t) t.textContent = " / " + p.total;
+  const l = $("charPointsLabel");
+  if (l) l.textContent = p.label;
 }
 
 // Painel de dossiê (lateral): dados reais do personagem + progresso da árvore ativa.
@@ -240,10 +257,24 @@ function updateDossier(elId) {
     }
   }
 
-  // pontos de ninjutsu: barra = fração investida
-  const spentPct = c.ninjutsu ? Math.min(100, Math.round((c.spent / c.ninjutsu) * 100)) : 0;
-  $("dsPointsBar").style.width = spentPct + "%";
-  $("dsPointsCap").textContent = `${c.points} livres · ${c.ninjutsu} total`;
+  // uma barra POR bolsa que a árvore aberta consome. Árvore de pool único
+  // (elementos, Nara, Aburame) mostra uma; as mistas (Hyuuga = Taijutsu +
+  // Dōjutsu, Chinoike = 3) mostram uma pra cada, na mesma hierarquia visual —
+  // sem isso o jogador não entende por que um nó está travado.
+  const box = $("dsPools");
+  box.innerHTML = "";
+  for (const attr of poolsOfTree(elId)) {
+    const p = c.pools[attr];
+    if (!p) continue;
+    const spentPct = p.total ? Math.min(100, Math.round((p.spent / p.total) * 100)) : 0;
+    const block = document.createElement("div");
+    block.className = "pool-row";
+    block.innerHTML =
+      `<span class="dossier-label">Pontos de ${p.label}</span>` +
+      `<div class="meter"><div class="meter-fill" style="width:${spentPct}%"></div></div>` +
+      `<span class="meter-cap">${p.left} livres · ${p.total} total</span>`;
+    box.appendChild(block);
+  }
 
   // progresso (domínio) da árvore ativa
   const meta = ELEMENTS.find((e) => e.id === elId);
@@ -255,7 +286,7 @@ function updateDossier(elId) {
   const tb = $("dsTreeBar");
   tb.style.width = pct + "%";
   tb.style.background = meta ? meta.color : "var(--orange)";
-  $("dsTreeCap").textContent = `${owned} / ${total} nós`;
+  $("dsTreeCap").textContent = `${owned} / ${total} habilidades`;
 }
 
 // assinatura do estado p/ detectar mudança sem re-renderizar à toa
@@ -269,7 +300,7 @@ async function boot() {
   show("app");
   buildElemBar();
   activeEl = state.char.elements[0] || "FUNDAMENTOS";
-  updateTop();
+  updateTop(activeEl);
   renderTree(activeEl);
   lastSig = sigOf(state);
   startSync();
@@ -293,7 +324,7 @@ async function pull() {
   state = ns;
   lastSig = g;
   buildElemBar();       // elementos podem ter sido concedidos
-  updateTop();
+  updateTop(activeEl);
   renderTree(activeEl); // mantém o elemento aberto, atualiza status/pontos
 }
 
@@ -453,12 +484,15 @@ function openModal(n) {
     if (c.baseHeal) meta += chip("Cura base", c.baseHeal);
   }
   meta += `<span class="meta-h">Para aprender</span>`;
-  meta += chip("Pontos", n.cost);
+  // o custo sai da bolsa do atributo que paga o nó — deixa explícito QUAL.
+  const poolLabel = (state.char.pools[n.pool] && state.char.pools[n.pool].label) || ATTR_LABEL[n.pool] || n.pool;
+  meta += chip(`Pontos de ${poolLabel}`, n.cost);
   meta += chip("Nível", n.reqLevel);
+  // gate cruzado (atributo diferente do que paga) — hoje nenhum nó usa
   if (n.reqAttribute) {
     meta += chip(ATTR_LABEL[n.reqAttribute.attribute] || n.reqAttribute.attribute, n.reqAttribute.value);
   }
-  meta += chip("Ninjutsu", n.reqNinjutsu);
+  meta += chip(poolLabel, n.reqPool);
   $("mMeta").innerHTML = meta;
 
   const reason = $("mReason");
@@ -505,7 +539,7 @@ async function doBuy() {
       // ressincroniza (estado pode ter mudado)
       state = await fetchState();
       lastSig = sigOf(state);
-      updateTop();
+      updateTop(activeEl);
       renderTree(activeEl);
       closeModal();
       return;
@@ -516,7 +550,7 @@ async function doBuy() {
     // recarrega o estado autoritativo e re-renderiza
     state = await fetchState();
     lastSig = sigOf(state);
-    updateTop();
+    updateTop(activeEl);
     renderTree(activeEl);
   } catch {
     toast("Erro de rede.", true);

@@ -67,10 +67,10 @@
         <span class="who-name" id="charName">—</span>
         <span class="who-lvl" id="charLevel">Nv. —</span>
       </div>
-      <div class="points" title="Pontos de Ninjutsu disponíveis (valor do atributo − já gastos)">
-        <span class="pt-ico"><img class="pt-img" src="/assets/icons/header/ninjutsu.png" alt="Ninjutsu"></span>
+      <div class="points" id="charPointsBox" title="Pontos disponíveis do atributo que paga esta árvore (valor do atributo − já gastos nele)">
+        <span class="pt-ico"><img class="pt-img" src="/assets/icons/header/ninjutsu.png" alt=""></span>
         <span id="charPoints">0</span><span class="pt-total" id="charPointsTotal"></span>
-        <span class="pt-lbl">Ninjutsu</span>
+        <span class="pt-lbl" id="charPointsLabel">Ninjutsu</span>
       </div>
       <button class="toggle-all" id="showAllBtn" title="Mostra todas as árvores (elementos, kekkei genkai e clãs), mesmo as que você não desbloqueou — só pra consulta, não dá pra comprar nó de fora do seu clã/elemento">Ver todas as árvores</button>
       <button class="logout" id="logoutBtn" title="Sair"><span class="x-ico"></span></button>
@@ -98,11 +98,8 @@
           <div class="nature-chips" id="dsNatures"></div>
         </section>
 
-        <section class="dossier-block">
-          <span class="dossier-label">Pontos de ninjutsu</span>
-          <div class="meter"><div class="meter-fill" id="dsPointsBar"></div></div>
-          <span class="meter-cap" id="dsPointsCap">—</span>
-        </section>
+        <!-- uma barra por atributo que a árvore aberta consome (o JS preenche) -->
+        <section class="dossier-block" id="dsPools"></section>
 
         <section class="dossier-block">
           <span class="dossier-label"><span id="dsTreeName">—</span></span>

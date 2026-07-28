@@ -72,6 +72,12 @@ export const BALANCE = {
   // esquiva vale contra QUALQUER ataque (fisico ou ninjutsu) enquanto ativo.
   byakuganUpkeepPerTurn: 5, // % chakra por turno com o Byakugan ativo
   byakuganDodgeBonus: 0.1, // +10 pontos percentuais de esquiva enquanto ativo
+  // Byakugan enxerga atraves de clone/substituicao (nao e' ilusao de otica
+  // pra quem ve o corpo de chakra por baixo): quando o ATACANTE esta com o
+  // Byakugan ativo, corta o reactionDodgeBonus de jutsus marcados
+  // isCloneTrick pela metade (Substituicao, Clones de Inseto). Nao afeta
+  // Hidratacao (Hozuki) — o corpo vira liquido de verdade, nao e' um logro.
+  byakuganCloneSightMult: 0.5,
 
   // Ketsuryuugan (Chinoike): mesmo padrao de toggle do Byakugan — liga/desliga
   // por /combate ketsuryuugan, upkeep por turno, desliga sozinho se faltar

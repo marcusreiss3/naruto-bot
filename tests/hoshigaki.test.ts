@@ -79,16 +79,17 @@ describe("Hoshigaki: integridade da arvore de cla", () => {
     expect(dependentesDeGolpe).toEqual([]);
   });
 
-  it("Fio Afiado e Golpe Certeiro também pedem Kenjutsu — multiplicam dano de espada, fazem sentido exigir espada", () => {
+  it("Fio Afiado e Golpe Certeiro saem do pool de Kenjutsu — multiplicam dano de espada, então são pagos com espada", () => {
     const fio = allNodes().find((n) => n.id === "hoshigaki_fio_afiado")!;
     const golpe = allNodes().find((n) => n.id === "hoshigaki_golpe_certeiro")!;
-    expect(fio.reqAttribute?.attribute).toBe("kenjutsu");
-    expect(golpe.reqAttribute?.attribute).toBe("kenjutsu");
+    expect(fio.pool).toBe("kenjutsu");
+    expect(golpe.pool).toBe("kenjutsu");
   });
 
-  it("nenhum jutsu tem reqAttribute (todos 'upando Ninjutsu' — reqNinjutsu já cobre)", () => {
+  it("os jutsus de suiton saem do pool de Ninjutsu, sem reqAttribute cruzado", () => {
     for (const id of IDS) {
       const node = allNodes().find((n) => n.id === id)!;
+      expect(node.pool, id).toBe("ninjutsu");
       expect(node.reqAttribute, id).toBeUndefined();
     }
   });

@@ -33,6 +33,7 @@ export const FUNDAMENTOS: Ability[] = [
     actionType: "REACAO",
     reactionKind: "DODGE",
     reactionDodgeBonus: 0.2,
+    isCloneTrick: true,
     range: 0,
     shape: "SELF",
     requirements: { manualOnly: true },

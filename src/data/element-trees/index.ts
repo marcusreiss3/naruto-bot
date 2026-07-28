@@ -33,17 +33,27 @@ export interface SkillNodeDef {
   rank?: NodeRank; // só em JUTSU
   icon: string; // emoji exibido na bolinha (fallback)
   img?: string; // caminho opcional de PNG em /assets/icons (tem prioridade sobre icon)
-  cost: number; // custo em pontos (attributePoints)
+  // ORCAMENTO: de qual atributo saem os pontos que pagam este no. Cada
+  // atributo tem a PROPRIA bolsa (ver skill-tree.ts): gastar taijutsu numa
+  // arvore de cla nao consome o ninjutsu que banca a arvore elemental.
+  // Regra de ouro: o pool e' o atributo que a tecnica realmente E' — jutsu
+  // de soco sai de taijutsu, de espada sai de kenjutsu, de selo sai de
+  // fuinjutsu. Nunca "tudo ninjutsu".
+  pool: Attribute;
+  cost: number; // custo em pontos do `pool` deste no
   branch: string; // rótulo do ramo (só visual)
   col: -1 | 0 | 1; // -1 esquerda, 0 tronco, 1 direita
   row: number; // profundidade (linha)
   requires: string[]; // ids de nó pré-requisito (vazio = raiz; exige só o elemento)
   reqLevel: number;
-  reqNinjutsu: number; // orçamento da árvore (compartilhado entre TODAS as árvores)
-  // gate ADICIONAL por valor bruto de atributo (ex: Hyuuga: Byakugan pede
-  // Dojutsu, o resto pede Taijutsu) — "desbloqueia upando X". Independente
-  // do orçamento de pontos: o node ainda custa `cost` pontos de reqNinjutsu,
-  // isso só soma um requisito de nível de atributo específico.
+  // valor MINIMO do atributo `pool` para liberar o no ("desbloqueia upando X").
+  // Antes era reqNinjutsu (sempre lia ninjutsu); agora le o proprio pool, o
+  // que dispensa o reqAttribute duplicado que existia nos nos de Taijutsu/
+  // Kenjutsu/Dojutsu — os valores dos dois foram fundidos (o maior venceu).
+  reqPool: number;
+  // gate ADICIONAL num atributo DIFERENTE do pool. Hoje nenhum no usa (todos
+  // os gates viraram reqPool na migracao), mas o contrato fica: serve pra
+  // um jutsu de espada que tambem exija corpo (kenjutsu + taijutsu), etc.
   reqAttribute?: { attribute: Attribute; value: number };
   grantsAbilityId?: string; // JUTSU: id da ability concedida
   desc: string;
@@ -53,6 +63,9 @@ export interface SkillNodeDef {
 const COST: Record<string, number> = { ROOT: 1, PASSIVE: 2, D: 1, C: 3, B: 4, A: 6, S: 10 };
 
 // Fábricas compactas: element é injetado por seção.
+// Toda arvore ELEMENTAL paga em `ninjutsu` — moldar uma natureza de chakra e'
+// ninjutsu por definicao, entao aqui nao ha' excecao (as excecoes de pool
+// vivem nas arvores de CLA, ver makeClan em clan-trees/index.ts).
 function make(element: Element) {
   const jutsu = (
     id: string,
@@ -64,7 +77,7 @@ function make(element: Element) {
     row: number,
     requires: string[],
     reqLevel: number,
-    reqNinjutsu: number,
+    reqPool: number,
     desc: string,
   ): SkillNodeDef => ({
     id,
@@ -73,13 +86,14 @@ function make(element: Element) {
     kind: "JUTSU",
     rank,
     icon,
+    pool: "ninjutsu",
     cost: COST[rank]!,
     branch,
     col,
     row,
     requires,
     reqLevel,
-    reqNinjutsu,
+    reqPool,
     grantsAbilityId: id,
     desc,
   });
@@ -92,7 +106,7 @@ function make(element: Element) {
     row: number,
     requires: string[],
     reqLevel: number,
-    reqNinjutsu: number,
+    reqPool: number,
     desc: string,
     root = false,
   ): SkillNodeDef => ({
@@ -101,13 +115,14 @@ function make(element: Element) {
     name,
     kind: "PASSIVE",
     icon,
+    pool: "ninjutsu",
     cost: root ? COST.ROOT! : COST.PASSIVE!,
     branch,
     col,
     row,
     requires,
     reqLevel,
-    reqNinjutsu,
+    reqPool,
     desc,
   });
   return { jutsu, pass };
@@ -306,7 +321,106 @@ const NODE_INDEX: Map<string, SkillNodeDef> = new Map(
 );
 
 // Ícones PNG por nó (public/assets/icons/<subpasta>). Ausente = usa o emoji do nó.
+// A subpasta de árvore de clã tem o mesmo nome do clanId (nara/, hyuuga/...),
+// igual as elementais usam o nome do elemento.
 const NODE_ICONS: Record<string, string> = {
+  // ---- clãs ----
+  nara_raiz: "nara/conluio-das-sombras.png",
+  nara_possessao: "nara/tecnica-de-possessao-da-sombra.png",
+  nara_enforcamento: "nara/tecnica-de-enforcamento-pela-sombra.png",
+  nara_costura: "nara/tecnica-da-costura-das-sombras.png",
+  nara_shuriken: "nara/tecnica-de-imitacao-de-shuriken-pela-sombra.png",
+  nara_rede: "nara/rede-de-imitacao-pela-sombra.png",
+  nara_apice: "nara/sombra-absoluta.png",
+  nara_lirio: "nara/lirio-da-aranha-negra.png",
+
+  hyuuga_raiz: "hyuuga/olhos-brancos.png",
+  hyuuga_byakugan: "hyuuga/byakugan.png",
+  hyuuga_punho_suave: "hyuuga/punho-suave.png",
+  hyuuga_palma_vacuo: "hyuuga/oito-trigramas-palma-de-vacuo.png",
+  hyuuga_palma_rotativa: "hyuuga/palma-rotativa.png",
+  hyuuga_guarda_perpetua: "hyuuga/guarda-perpetua.png",
+  hyuuga_64_palmas: "hyuuga/oito-trigramas-64-palmas.png",
+  hyuuga_128_palmas: "hyuuga/oito-trigramas-128-palmas.png",
+  hyuuga_apice: "hyuuga/rede-de-tenketsu.png",
+  hyuuga_leoes_gemeos: "hyuuga/punhos-dos-leoes-gemeos.png",
+
+  aburame_raiz: "aburame/colonia-ancestral.png",
+  aburame_clone_inseto: "aburame/tecnica-dos-clones-de-inseto.png",
+  aburame_casulo: "aburame/casulo-de-insetos.png",
+  aburame_esfera: "aburame/esfera-de-insetos.png",
+  aburame_nuvem_veneno: "aburame/tecnica-da-nuvem-de-veneno.png",
+  aburame_parede: "aburame/parede-de-insetos.png",
+  aburame_jarro_veneno: "aburame/tecnica-do-jarro-de-veneno.png",
+  aburame_mordida: "aburame/inseto-parasita-gigante-mordida-de-inseto.png",
+  aburame_apice: "aburame/colmeia-completa.png",
+
+  inuzuka_raiz: "inuzuka/vinculo-de-matilha.png",
+  inuzuka_cao_ninja: "inuzuka/cao-ninja.png",
+  inuzuka_quatro_patas: "inuzuka/tecnica-das-quatro-patas.png",
+  inuzuka_clone_besta: "inuzuka/clone-da-besta-humana.png",
+  inuzuka_sobre_presa: "inuzuka/sobre-presa.png",
+  inuzuka_presa_sobre_presa: "inuzuka/presa-sobre-presa.png",
+  inuzuka_lobo_duas_cabecas: "inuzuka/lobo-de-duas-cabecas.png",
+  inuzuka_presa_de_lobo: "inuzuka/presa-de-lobo-sobre-presa.png",
+  inuzuka_lobo_tres_cabecas: "inuzuka/lobo-de-tres-cabecas.png",
+  inuzuka_apice: "inuzuka/instinto-de-cacador.png",
+  inuzuka_cauda_perseguidora: "inuzuka/cauda-perseguidora.png",
+
+  uzumaki_raiz: "uzumaki/vitalidade-do-redemoinho.png",
+  uzumaki_regeneracao: "uzumaki/regeneracao-de-vigor.png",
+  uzumaki_reservas: "uzumaki/reservas-do-redemoinho.png",
+  uzumaki_correntes: "uzumaki/correntes-de-selamento-adamantinas.png",
+  uzumaki_apice: "uzumaki/selo-do-redemoinho.png",
+
+  hatake_raiz: "hatake/vinculo-com-a-matilha.png",
+  hatake_caes_ninja: "hatake/tecnica-de-invocacao-cao-ninja.png",
+  hatake_cerco_matilha: "hatake/cerco-da-matilha.png",
+  hatake_lamina: "hatake/lamina-da-luz-branca.png",
+  hatake_elo_matilha: "hatake/elo-com-a-matilha.png",
+  hatake_apice: "hatake/corte-perfeito.png",
+
+  hoshigaki_raiz: "hoshigaki/sangue-de-tubarao.png",
+  hoshigaki_bomba_tubarao: "hoshigaki/tecnica-da-bomba-do-tubarao-de-agua.png",
+  hoshigaki_cinco_tubaroes: "hoshigaki/tecnica-dos-cinco-tubaroes-famintos.png",
+  hoshigaki_fome_voraz: "hoshigaki/fome-voraz.png",
+  hoshigaki_fio_afiado: "hoshigaki/fio-afiado.png",
+  hoshigaki_esfera_selvagem: "hoshigaki/tecnica-da-esfera-selvagem-do-tubarao-de-agua.png",
+  hoshigaki_golpe_certeiro: "hoshigaki/golpe-certeiro.png",
+  hoshigaki_mil_tubaroes: "hoshigaki/tecnica-dos-mil-tubaroes-de-alimentacao.png",
+  hoshigaki_grande_bomba: "hoshigaki/tecnica-da-grande-bomba-do-tubarao-de-agua.png",
+
+  hozuki_raiz: "hozuki/corpo-liquido.png",
+  hozuki_hidratacao: "hozuki/hidratacao.png",
+  hozuki_braco_agua: "hozuki/grande-braco-de-agua.png",
+  hozuki_revolver_agua: "hozuki/revolver-de-agua.png",
+  hozuki_lamina_liquida: "hozuki/lamina-liquida.png",
+  hozuki_fluidez: "hozuki/fluidez.png",
+  hozuki_corte_sem_peso: "hozuki/corte-sem-peso.png",
+  hozuki_tate_eboshi: "hozuki/tate-eboshi.png",
+
+  kaguya_raiz: "kaguya/esqueleto-vivo.png",
+  kaguya_dez_dedos: "kaguya/tecnica-dos-dez-dedos-perfuradores.png",
+  kaguya_salgueiro: "kaguya/tecnica-da-danca-do-salgueiro.png",
+  kaguya_larico: "kaguya/tecnica-da-danca-do-larico.png",
+  kaguya_camelias: "kaguya/tecnica-da-danca-das-camelias.png",
+  kaguya_armadura_espinhos: "kaguya/armadura-de-espinhos.png",
+  kaguya_fio_osso: "kaguya/fio-de-osso.png",
+  kaguya_impulso_flor: "kaguya/tecnica-do-impulso-da-flor.png",
+  kaguya_apice: "kaguya/ossos-perfeitos.png",
+  kaguya_danca_flor: "kaguya/tecnica-da-danca-da-flor.png",
+
+  chinoike_raiz: "chinoike/sangue-vivo.png",
+  chinoike_chuva_granizo: "chinoike/tecnica-chuva-de-granizo.png",
+  chinoike_doujutsu: "chinoike/ketsuryuugan.png",
+  chinoike_bolhas_agua: "chinoike/tecnica-das-bolhas-de-agua.png",
+  chinoike_olhos_sangue: "chinoike/olhos-de-sangue.png",
+  chinoike_sangue_fervente: "chinoike/sangue-fervente.png",
+  chinoike_genjutsu_ketsuryuugan: "chinoike/genjutsu-ketsuryuugan.png",
+  chinoike_apice: "chinoike/sangue-desperto.png",
+  chinoike_dragao_sangue: "chinoike/tecnica-da-ascensao-do-dragao-de-sangue.png",
+
+  // ---- elementos ----
   fogo_raiz: "fogo/chama-interior.png",
   fogo_grande_bola: "fogo/grande-bola-de-fogo.png",
   fogo_flor_fenix: "fogo/flor-de-fogo-fenix.png",

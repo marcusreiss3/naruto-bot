@@ -110,15 +110,19 @@ describe("Aburame: ramificação Kikaichu x Rinkaichu (insetos venenosos em ramo
   });
 });
 
-describe("Aburame: 'desbloqueia upando Ninjutsu' é só o reqNinjutsu (sem reqAttribute duplicado)", () => {
-  it("nenhum nó tem reqAttribute — reqAttribute é só pra gate num atributo DIFERENTE do Ninjutsu (ex: Hyuuga/Taijutsu). Aqui o próprio reqNinjutsu já lê o atributo Ninjutsu, então repetir via reqAttribute mostraria 'Ninjutsu' duas vezes no modal.", () => {
+describe("Aburame: a árvore inteira paga com Ninjutsu (kikaichū é chakra, não corpo)", () => {
+  it("todo nó sai do pool de Ninjutsu — o clã não tem ramo físico nem de lâmina", () => {
+    for (const n of CLAN_TREES.aburame!) expect(n.pool, n.id).toBe("ninjutsu");
+  });
+
+  it("nenhum nó tem reqAttribute — o gate já é o próprio reqPool, que lê Ninjutsu", () => {
     for (const n of CLAN_TREES.aburame!) expect(n.reqAttribute, n.id).toBeUndefined();
   });
 
-  it("reqNinjutsu sobe a cada nó do tronco/ramos, sem regredir", () => {
+  it("reqPool sobe a cada nó do tronco/ramos, sem regredir", () => {
     for (const id of IDS) {
       const node = allNodes().find((n) => n.id === id)!;
-      expect(node.reqNinjutsu, id).toBeGreaterThan(0);
+      expect(node.reqPool, id).toBeGreaterThan(0);
     }
   });
 });

@@ -5,6 +5,7 @@ import { CLAN_TREES } from "../src/data/clan-trees/index.js";
 import { CLAN_PASSIVES } from "../src/data/clan-trees/passives.js";
 import { passiveMods } from "../src/services/combat/passives.js";
 import { lockReason, type CharSnapshot } from "../src/services/characters/skill-tree.js";
+import { ATTRIBUTES } from "../src/config/enums.js";
 import { empoweredDamageMult, parseEffectData, type EffectState } from "../src/services/combat/effects.js";
 import { BALANCE } from "../src/config/balance.js";
 
@@ -30,17 +31,20 @@ const TAIJUTSU_GATED = ["akimichi_tanque", "akimichi_mergulho", "akimichi_bofeta
 // nó "Pílula Secreta" (agora um jutsu, não mais passiva)
 const PILL_GATED = ["akimichi_modo_borboleta", "akimichi_bombardeio"] as const;
 
+// orcamento folgado em TODOS os atributos: cada no paga com o seu proprio
+// pool agora, entao um snapshot de teste precisa de saldo em todos eles.
+const RICO = Object.fromEntries(ATTRIBUTES.map((a) => [a, 100]));
+
 const snap = (over: Partial<CharSnapshot> = {}): CharSnapshot => ({
   charId: "c1",
   name: "Teste",
   level: 50,
-  ninjutsu: 100,
-  spent: 0,
-  points: 100,
+  spentByPool: {},
+  pointsByPool: {},
   elements: [],
   owned: new Set(),
   clanId: "akimichi",
-  attributes: {},
+  attributes: RICO,
   ...over,
 });
 
@@ -113,29 +117,30 @@ describe("Akimichi: integridade da arvore de cla", () => {
   });
 });
 
-describe("Akimichi: reqAttribute — 'crescer' pede Ninjutsu, 'bater' pede Taijutsu, depois da pílula não pede nada", () => {
-  it("nós de crescer pedem Ninjutsu", () => {
+describe("Akimichi: pool por atributo — 'crescer' paga Ninjutsu, 'bater' paga Taijutsu", () => {
+  it("nós de crescer saem do pool de Ninjutsu", () => {
     for (const id of NINJUTSU_GATED) {
-      const node = allNodes().find((n) => n.id === id)!;
-      expect(node.reqAttribute?.attribute, id).toBe("ninjutsu");
+      expect(allNodes().find((n) => n.id === id)!.pool, id).toBe("ninjutsu");
     }
   });
 
-  it("nós de bater pedem Taijutsu", () => {
+  it("nós de bater saem do pool de Taijutsu", () => {
     for (const id of TAIJUTSU_GATED) {
-      const node = allNodes().find((n) => n.id === id)!;
-      expect(node.reqAttribute?.attribute, id).toBe("taijutsu");
+      expect(allNodes().find((n) => n.id === id)!.pool, id).toBe("taijutsu");
     }
   });
 
-  it("Pílula Secreta e o que vem depois dela não têm reqAttribute — o gate é a própria árvore (prereq)", () => {
-    for (const id of [...PILL_GATED, "akimichi_apice"]) {
-      const node = allNodes().find((n) => n.id === id)!;
-      expect(node.reqAttribute, id).toBeUndefined();
-    }
+  it("Pílula Secreta e Modo Borboleta saem de Ninjutsu; o Bombardeio (golpe físico), de Taijutsu", () => {
+    expect(allNodes().find((n) => n.id === "akimichi_apice")!.pool).toBe("ninjutsu");
+    expect(allNodes().find((n) => n.id === PILL_GATED[0])!.pool).toBe("ninjutsu");
+    expect(allNodes().find((n) => n.id === PILL_GATED[1])!.pool).toBe("taijutsu");
   });
 
-  it("lockReason bloqueia Bofetada por Taijutsu insuficiente mesmo com nível/ninjutsu de sobra", () => {
+  it("nenhum nó carrega reqAttribute — o gate cruzado virou o próprio reqPool", () => {
+    for (const n of CLAN_TREES.akimichi!) expect(n.reqAttribute, n.id).toBeUndefined();
+  });
+
+  it("lockReason bloqueia Bofetada por Taijutsu insuficiente mesmo com o resto de sobra", () => {
     const node = allNodes().find((n) => n.id === "akimichi_bofetada")!;
     const owned = new Set([
       "akimichi_raiz",

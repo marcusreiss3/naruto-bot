@@ -5,6 +5,7 @@ import { CLAN_TREES } from "../src/data/clan-trees/index.js";
 import { CLAN_PASSIVES } from "../src/data/clan-trees/passives.js";
 import { passiveMods, characterPassiveMods } from "../src/services/combat/passives.js";
 import { lockReason, type CharSnapshot } from "../src/services/characters/skill-tree.js";
+import { ATTRIBUTES } from "../src/config/enums.js";
 
 const IDS = [
   "hyuuga_byakugan",
@@ -16,17 +17,20 @@ const IDS = [
   "hyuuga_leoes_gemeos",
 ] as const;
 
+// orcamento folgado em TODOS os atributos: cada no paga com o seu proprio
+// pool agora, entao um snapshot de teste precisa de saldo em todos eles.
+const RICO = Object.fromEntries(ATTRIBUTES.map((a) => [a, 100]));
+
 const snap = (over: Partial<CharSnapshot> = {}): CharSnapshot => ({
   charId: "c1",
   name: "Teste",
   level: 50,
-  ninjutsu: 100,
-  spent: 0,
-  points: 100,
+  spentByPool: {},
+  pointsByPool: {},
   elements: [],
   owned: new Set(),
   clanId: "hyuuga",
-  attributes: {},
+  attributes: RICO,
   ...over,
 });
 
@@ -126,36 +130,40 @@ describe("Hyuuga: integridade da arvore de cla", () => {
   });
 });
 
-describe("Hyuuga: reqAttribute — 'desbloqueia upando X' (Dojutsu/Taijutsu)", () => {
-  it("Byakugan pede Dojutsu; o resto pede Taijutsu", () => {
-    const byakugan = allNodes().find((n) => n.id === "hyuuga_byakugan")!;
-    expect(byakugan.reqAttribute).toEqual({ attribute: "dojutsu", value: 3 });
-
-    for (const id of IDS.filter((i) => i !== "hyuuga_byakugan")) {
-      const node = allNodes().find((n) => n.id === id)!;
-      expect(node.reqAttribute?.attribute, id).toBe("taijutsu");
+describe("Hyuuga: pool por atributo — o olho paga com Dōjutsu, o punho com Taijutsu", () => {
+  it("raiz e Byakugan saem do pool de Dōjutsu", () => {
+    for (const id of ["hyuuga_raiz", "hyuuga_byakugan"]) {
+      expect(allNodes().find((n) => n.id === id)!.pool, id).toBe("dojutsu");
     }
   });
 
-  it("lockReason bloqueia por Dojutsu insuficiente mesmo com nível/ninjutsu/pontos de sobra", () => {
-    const node = allNodes().find((n) => n.id === "hyuuga_byakugan")!;
-    const semDojutsu = snap({ owned: new Set(["hyuuga_raiz"]), attributes: { dojutsu: 2 } });
-    expect(lockReason(semDojutsu, node)).toMatch(/Dōjutsu/);
-
-    const comDojutsu = snap({ owned: new Set(["hyuuga_raiz"]), attributes: { dojutsu: 3 } });
-    expect(lockReason(comDojutsu, node)).toBeNull();
+  it("do Punho Suave em diante a árvore sai do pool de Taijutsu", () => {
+    for (const id of IDS.filter((i) => i !== "hyuuga_byakugan")) {
+      expect(allNodes().find((n) => n.id === id)!.pool, id).toBe("taijutsu");
+    }
   });
 
-  it("lockReason bloqueia por Taijutsu insuficiente", () => {
+  it("nenhum nó carrega reqAttribute — o gate cruzado virou o próprio reqPool", () => {
+    for (const n of CLAN_TREES.hyuuga!) expect(n.reqAttribute, n.id).toBeUndefined();
+  });
+
+  it("lockReason bloqueia o Byakugan por Dōjutsu insuficiente, mesmo com o resto de sobra", () => {
+    const node = allNodes().find((n) => n.id === "hyuuga_byakugan")!;
+    const owned = new Set(["hyuuga_raiz"]);
+    expect(lockReason(snap({ owned, attributes: { dojutsu: 2 } }), node)).toMatch(/Dōjutsu/);
+    expect(lockReason(snap({ owned, attributes: { dojutsu: 3 } }), node)).toBeNull();
+  });
+
+  it("lockReason bloqueia Punho Suave por Taijutsu insuficiente", () => {
     const node = allNodes().find((n) => n.id === "hyuuga_punho_suave")!;
     const owned = new Set(["hyuuga_raiz", "hyuuga_byakugan"]);
-    expect(lockReason(snap({ owned, attributes: { taijutsu: 2 } }), node)).toMatch(/Taijutsu/);
-    expect(lockReason(snap({ owned, attributes: { taijutsu: 3 } }), node)).toBeNull();
+    expect(lockReason(snap({ owned, attributes: { taijutsu: 3 } }), node)).toMatch(/Taijutsu/);
+    expect(lockReason(snap({ owned, attributes: { taijutsu: 4 } }), node)).toBeNull();
   });
 
-  it("nó sem reqAttribute (ex: raiz) não é afetado pelo gate", () => {
+  it("a raiz custa 1 de Dōjutsu — passa mesmo com o personagem sem nada investido", () => {
     const raiz = allNodes().find((n) => n.id === "hyuuga_raiz")!;
-    expect(raiz.reqAttribute).toBeUndefined();
+    expect(raiz.cost).toBe(1);
     expect(lockReason(snap({ attributes: {} }), raiz)).toBeNull();
   });
 });
