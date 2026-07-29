@@ -13,6 +13,7 @@
 // abilities que serão escritas quando o roster real existir.
 // ============================================================================
 import type { Attribute, Element } from "../../config/enums.js";
+import type { CharacterCondition } from "../../services/characters/mangekyo.js";
 import { FUNDAMENTOS } from "./fundamentals.js";
 import { CLAN_TREES } from "../clan-trees/index.js";
 
@@ -33,6 +34,8 @@ export interface SkillNodeDef {
   rank?: NodeRank; // só em JUTSU
   icon: string; // emoji exibido na bolinha (fallback)
   img?: string; // caminho opcional de PNG em /assets/icons (tem prioridade sobre icon)
+  // Mantém a recompensa narrativa em segredo até o personagem comprar o nó.
+  concealUntilOwned?: boolean;
   // ORCAMENTO: de qual atributo saem os pontos que pagam este no. Cada
   // atributo tem a PROPRIA bolsa (ver skill-tree.ts): gastar taijutsu numa
   // arvore de cla nao consome o ninjutsu que banca a arvore elemental.
@@ -55,6 +58,9 @@ export interface SkillNodeDef {
   // os gates viraram reqPool na migracao), mas o contrato fica: serve pra
   // um jutsu de espada que tambem exija corpo (kenjutsu + taijutsu), etc.
   reqAttribute?: { attribute: Attribute; value: number };
+  // Condição narrativa/controlada pelo sistema. O primeiro uso é TRAUMA para
+  // o Mangekyō; a forma de concedê-la será definida em etapa própria.
+  requiresCondition?: CharacterCondition;
   grantsAbilityId?: string; // JUTSU: id da ability concedida
   desc: string;
 }
@@ -247,7 +253,7 @@ const CRISTAL: SkillNodeDef[] = [
 
 // ----------------------------------------------------------------- VAPOR (KG)
 // Kekkei genkai: nao e' sorteado, so entra via /admin, igual Cristal. Arvore
-// expandida (13 nos) pra ficar no MESMO nivel do Cristal — raiz (1,35x) +
+// Arvore com os 3 jutsus oficiais de Vapor — raiz (1,35x) +
 // ápice (1,50x) = 2,025x, idêntico — custando um pouco menos (52 PN contra
 // 62 do Cristal). As passivas de dano vem so das duas (raiz+apice); as
 // outras tres sao utilidade pura, espalhadas pela arvore (nao mais tudo
@@ -257,16 +263,11 @@ const VAPOR: SkillNodeDef[] = [
   VP.pass("vapor_raiz", "Ponto de Ebulição", "♨️", "Raiz", 0, 0, [], 1, 1, "Passiva sempre ativa: todos os seus jutsus de Vapor causam +35% de dano.", true),
   VP.jutsu("vapor_nevoa", "Névoa Qualificada", "☁️", "C", "Névoa", 0, 1, ["vapor_raiz"], 1, 4, "Cria uma nuvem de névoa extremamente corrosiva e a libera pela boca. Derrete o que atinge, cravando Corrosão em todos os alvos na área."),
   VP.jutsu("vapor_punho", "Punho em Propulsão", "👊", "B", "Propulsão", 0, 2, ["vapor_nevoa"], 9, 9, "Usa o estilo de Ebulição para se propulsionar num soco à queima-roupa, misturando ninjutsu com taijutsu. O vapor residual do impacto pode cravar Corrosão."),
-  VP.jutsu("vapor_agulhas", "Agulhas de Vapor Comprimido", "💉", "B", "Névoa", 1, 2, ["vapor_nevoa"], 8, 8, "Dispara agulhas de vapor pressurizado em linha reta. Ao furar a pele, cravam Corrosão."),
-  VP.pass("vapor_condensacao", "Condensação", "💧", "Névoa", 1, 3, ["vapor_agulhas"], 13, 11, "Passiva: a Corrosão que você aplica dura 1 rodada a mais."),
-  VP.jutsu("vapor_camara", "Câmara de Vapor", "🫧", "B", "Propulsão", 0, 3, ["vapor_punho"], 11, 10, "Envolve o alvo numa bolha de vapor fervente que o prende no lugar por um instante enquanto crava Corrosão."),
-  VP.jutsu("vapor_chute", "Chute em Propulsão", "🦵", "A", "Propulsão", 0, 4, ["vapor_camara"], 16, 15, "Versão aprimorada do Punho em Propulsão: mais velocidade e poder de impacto usando a força das pernas junto da propulsão do estilo Ebulição. Crava Corrosão com força total."),
+  VP.pass("vapor_condensacao", "Condensação", "💧", "Névoa", 1, 3, ["vapor_nevoa"], 13, 11, "Passiva: a Corrosão que você aplica dura 1 rodada a mais."),
+  VP.jutsu("vapor_chute", "Chute em Propulsão", "🦵", "A", "Propulsão", 0, 4, ["vapor_punho"], 16, 15, "Versão aprimorada do Punho em Propulsão: mais velocidade e poder de impacto usando a força das pernas junto da propulsão do estilo Ebulição. Crava Corrosão com força total."),
   VP.pass("vapor_pressurizacao", "Pressurização", "🌡️", "Propulsão", -1, 4, ["vapor_punho"], 14, 12, "Passiva: seus golpes corpo a corpo de Vapor custam 15% menos chakra."),
-  VP.jutsu("vapor_nevoa_densa", "Névoa Densa", "🌫️", "A", "Névoa", 0, 5, ["vapor_chute"], 22, 18, "Solta uma nuvem espessa de vapor corrosivo numa área ampla. Crava Corrosão em todos os atingidos."),
   VP.pass("vapor_instinto_termal", "Instinto Térmico", "🔥", "Propulsão", -1, 6, ["vapor_pressurizacao"], 20, 16, "Passiva: seus golpes de Vapor perfuram 20% da redução de quem bloqueia ou apara."),
-  VP.jutsu("vapor_manto_vapor", "Manto de Vapor", "💨", "A", "Ápice", 0, 6, ["vapor_nevoa_densa"], 26, 20, "Envolve o próprio corpo numa camada de vapor propulsor por 3 rodadas: fica mais rápido, esquiva mais e eletriza — quer dizer, escalda — quem encostar em você."),
-  VP.pass("vapor_ebulicao_total", "Ebulição Total", "♨️", "Ápice", 0, 7, ["vapor_manto_vapor"], 30, 22, "Passiva: seus jutsus de Vapor causam +50% de dano."),
-  VP.jutsu("vapor_erupcao_absoluta", "Erupção Absoluta", "🌋", "S", "Ápice", 0, 8, ["vapor_ebulicao_total"], 38, 28, "Libera uma erupção de vapor supercondensado numa área enorme, cravando Corrosão profunda em todos os atingidos. Gasta quase todo o chakra."),
+  VP.pass("vapor_ebulicao_total", "Ebulição Total", "♨️", "Ápice", 0, 7, ["vapor_chute"], 30, 22, "Passiva: seus jutsus de Vapor causam +50% de dano."),
 ];
 
 // ----------------------------------------------------------------- CALOR (KG)
@@ -280,16 +281,11 @@ const CALOR: SkillNodeDef[] = [
   CL.pass("calor_raiz", "Ebulição Corporal", "🔥", "Raiz", 0, 0, [], 1, 1, "Passiva sempre ativa: todos os seus jutsus de Calor causam +35% de dano.", true),
   CL.jutsu("calor_disparo", "Disparo das Bolas de Calor", "🔴", "C", "Calor", 0, 1, ["calor_raiz"], 1, 4, "Dispara quatro esferas de calor extremo contra a área do oponente. Quem é atingido desidrata e fica fraco."),
   CL.jutsu("calor_esfera", "Esfera de Calor", "🟠", "B", "Calor", 0, 2, ["calor_disparo"], 9, 9, "Uma única esfera de calor que suga a água do corpo do alvo ao acertar, evaporando qualquer Encharcado nele e deixando-o desidratado e fraco."),
-  CL.jutsu("calor_rajada", "Rajada de Calor Seco", "🌡️", "B", "Calor", 1, 2, ["calor_disparo"], 8, 8, "Dispara uma rajada de ar escaldante em linha reta que resseca o alvo à distância, deixando-o desidratado."),
-  CL.pass("calor_ressecamento", "Ressecamento", "🏜️", "Calor", 1, 3, ["calor_rajada"], 13, 11, "Passiva: a Desidratação que você aplica dura 1 rodada a mais."),
-  CL.jutsu("calor_vapor_corporal", "Vapor Corporal", "😰", "B", "Miragem", 0, 3, ["calor_esfera"], 11, 10, "Sufoca o alvo num bolsão de ar quente que sobe do próprio corpo dele: fica desidratado e visivelmente mais lento."),
-  CL.jutsu("calor_assassinato", "Assassinato de Calor Extremo", "☀️", "A", "Miragem", 0, 4, ["calor_vapor_corporal"], 16, 15, "Envolve a área ao redor do alvo num calor imenso, causando queimaduras graves em todos que estiverem perto."),
+  CL.pass("calor_ressecamento", "Ressecamento", "🏜️", "Calor", 1, 3, ["calor_disparo"], 13, 11, "Passiva: a Desidratação que você aplica dura 1 rodada a mais."),
+  CL.jutsu("calor_assassinato", "Assassinato de Calor Extremo", "☀️", "A", "Miragem", 0, 4, ["calor_esfera"], 16, 15, "Envolve a área ao redor do alvo num calor imenso, causando queimaduras graves em todos que estiverem perto."),
   CL.pass("calor_ondas_termicas", "Ondas Térmicas", "🌫️", "Calor", -1, 4, ["calor_esfera"], 14, 12, "Passiva: seus jutsus de Calor em área custam 15% menos chakra."),
-  CL.jutsu("calor_miragem", "Miragem Abrasadora", "🏝️", "A", "Miragem", 0, 5, ["calor_assassinato"], 22, 18, "Distorce o ar ao redor do alvo com calor abrasador numa área ampla, desidratando todos os atingidos."),
   CL.pass("calor_pele_rachada", "Pele Rachada", "🏔️", "Calor", -1, 6, ["calor_ondas_termicas"], 20, 16, "Passiva: seus jutsus de Calor perfuram 20% da redução de quem bloqueia ou apara."),
-  CL.jutsu("calor_nucleo_ardente", "Núcleo Ardente", "🔆", "A", "Ápice", 0, 6, ["calor_miragem"], 26, 20, "Acelera o próprio metabolismo até a fervura por 3 rodadas: fica mais rápido, esquiva mais e queima quem encostar em você."),
-  CL.pass("calor_combustao_interna", "Combustão Interna", "🔥", "Ápice", 0, 7, ["calor_nucleo_ardente"], 30, 22, "Passiva: seus jutsus de Calor causam +50% de dano."),
-  CL.jutsu("calor_sol_interior", "Sol Interior", "☀️", "S", "Ápice", 0, 8, ["calor_combustao_interna"], 38, 28, "Concentra um calor próximo do núcleo de uma estrela numa área enorme, queimando e desidratando profundamente todos os atingidos. Gasta quase todo o chakra."),
+  CL.pass("calor_combustao_interna", "Combustão Interna", "🔥", "Ápice", 0, 7, ["calor_assassinato"], 30, 22, "Passiva: seus jutsus de Calor causam +50% de dano."),
 ];
 
 // ----------------------------------------------------------------- LAVA (KG)
@@ -305,16 +301,12 @@ const LV = make("LAVA");
 const LAVA: SkillNodeDef[] = [
   LV.pass("lava_raiz", "Núcleo Magmático", "🌋", "Raiz", 0, 0, [], 1, 1, "Passiva sempre ativa: todos os seus jutsus de Lava causam +35% de dano.", true),
   LV.jutsu("lava_balas", "Técnica das Balas de Lava", "🔴", "C", "Lava", 0, 1, ["lava_raiz"], 1, 4, "Dispara vários resquícios de lava em sequência contra o alvo, cravando Magma a cada acerto."),
-  LV.jutsu("lava_solucao", "Solução Misteriosa", "🌋", "B", "Lava", 0, 2, ["lava_balas"], 9, 9, "Libera um grande arco de lava pela boca, que desaba de cima para baixo sobre a área do alvo, cravando Magma em todos atingidos."),
-  LV.jutsu("lava_estilhacos", "Estilhaços de Basalto", "🪨", "B", "Lava", 1, 2, ["lava_balas"], 8, 8, "Dispara fragmentos de basalto fundido em linha reta, cravando Magma no alvo."),
-  LV.pass("lava_calor_residual", "Calor Residual", "♨️", "Lava", 1, 3, ["lava_estilhacos"], 13, 11, "Passiva: o Magma que você aplica dura 1 rodada a mais."),
-  LV.jutsu("lava_nucleo_fluido", "Núcleo Fluido", "🔴", "B", "Vulcão", 0, 3, ["lava_solucao"], 11, 10, "Injeta um núcleo de lava líquida sob a pele do alvo: crava Magma e o deixa visivelmente mais lento."),
-  LV.jutsu("lava_rio", "Rio de Rochas Flamejantes", "🪨", "A", "Vulcão", 0, 4, ["lava_nucleo_fluido"], 16, 15, "Expele um rio de lava que se solidifica em múltiplos pedregulhos disparados com força tremenda, empurrando o alvo e cravando Magma."),
+  LV.jutsu("lava_solucao", "Técnica da Cobertura de Lava", "🌋", "B", "Lava", 0, 2, ["lava_balas"], 9, 9, "Libera um grande arco de lava pela boca, que desaba de cima para baixo sobre a área do alvo, cravando Magma em todos atingidos."),
+  LV.pass("lava_calor_residual", "Calor Residual", "♨️", "Lava", 1, 3, ["lava_balas"], 13, 11, "Passiva: o Magma que você aplica dura 1 rodada a mais."),
+  LV.jutsu("lava_rio", "Rio de Rochas Flamejantes", "🪨", "A", "Vulcão", 0, 4, ["lava_solucao"], 16, 15, "Expele um rio de lava que se solidifica em múltiplos pedregulhos disparados com força tremenda, empurrando o alvo e cravando Magma."),
   LV.pass("lava_crosta", "Crosta Endurecida", "🧱", "Lava", -1, 4, ["lava_solucao"], 14, 12, "Passiva: seus jutsus de Lava em linha reta custam 15% menos chakra."),
-  LV.jutsu("lava_maremoto_igneo", "Maremoto Ígneo", "🌊", "A", "Vulcão", 0, 5, ["lava_rio"], 22, 18, "Libera uma onda de lava incandescente numa área ampla, cravando Magma em todos os atingidos."),
   LV.pass("lava_pele_basaltica", "Pele Basáltica", "🪨", "Lava", -1, 6, ["lava_crosta"], 20, 16, "Passiva: seus jutsus de Lava perfuram 20% da redução de quem bloqueia ou apara."),
-  LV.jutsu("lava_forja_interior", "Forja Interior", "🔥", "A", "Ápice", 0, 6, ["lava_maremoto_igneo"], 26, 20, "Funde o próprio corpo com magma por 3 rodadas: fica mais rápido, esquiva mais e queima quem encostar em você."),
-  LV.pass("lava_apice", "Coração do Vulcão", "🔥", "Ápice", 0, 7, ["lava_forja_interior"], 30, 22, "Passiva: seus jutsus de Lava causam +50% de dano."),
+  LV.pass("lava_apice", "Coração do Vulcão", "🔥", "Ápice", 0, 7, ["lava_rio"], 30, 22, "Passiva: seus jutsus de Lava causam +50% de dano."),
   LV.jutsu("lava_huaguo", "Monte Huaguo", "🌺", "S", "Ápice", 0, 8, ["lava_apice"], 38, 28, "Cria um pequeno vulcão que explode violentamente, espalhando rocha derretida em todas as direções como uma flor gigante — o bastante para endurecer na hora qualquer Magma já acumulado no alvo."),
 ];
 
@@ -329,18 +321,14 @@ const LAVA: SkillNodeDef[] = [
 const EX = make("EXPLOSAO");
 const EXPLOSAO: SkillNodeDef[] = [
   EX.pass("explosao_raiz", "Núcleo Detonante", "💣", "Raiz", 0, 0, [], 1, 1, "Passiva sempre ativa: todos os seus jutsus de Explosão causam +35% de dano.", true),
-  EX.jutsu("explosao_defensiva", "Explosão Defensiva", "🖐️", "C", "Explosão", 0, 1, ["explosao_raiz"], 1, 4, "Cria uma pequena explosão na palma da mão para se defender. Contra um projétil como uma kunai, apara e redireciona o golpe de volta contra quem o arremessou; contra qualquer outro ataque, funciona como um aparo comum."),
-  EX.jutsu("explosao_cortina", "Explosão: Cortina de Fumaça", "💨", "B", "Explosão", 0, 2, ["explosao_defensiva"], 9, 9, "Produz uma cortina de fumaça, como uma bomba de fumaça, obstruindo a visão inimiga e ocultando seus movimentos."),
-  EX.jutsu("explosao_estilhacos", "Explosão: Estilhaços Detonantes", "💥", "B", "Explosão", 1, 2, ["explosao_defensiva"], 8, 8, "Arremessa cacos detonantes em linha reta que explodem ao contato, plantando uma carga de Minado no alvo."),
-  EX.pass("explosao_polvora", "Pólvora Refinada", "⚫", "Explosão", 1, 3, ["explosao_estilhacos"], 13, 11, "Passiva: seus jutsus de Explosão têm 15 pontos percentuais a mais de chance de plantar Minado."),
-  EX.jutsu("explosao_carga_dupla", "Explosão: Carga Dupla", "🧨", "B", "Onda de Choque", 0, 3, ["explosao_cortina"], 11, 10, "Planta duas pequenas cargas explosivas no alvo de uma vez, cravando Minado."),
-  EX.jutsu("explosao_impacto", "Explosão: Impacto", "👊", "A", "Onda de Choque", 0, 4, ["explosao_carga_dupla"], 16, 15, "Desfere um soco no solo e libera chakra explosivo numa onda de choque, lançando detritos que ferem os oponentes na área e os deixam sem equilíbrio."),
+  EX.jutsu("explosao_defensiva", "Técnica da Explosão Defensiva", "🖐️", "C", "Explosão", 0, 1, ["explosao_raiz"], 1, 4, "Cria uma pequena explosão na palma da mão para se defender. Contra um projétil como uma kunai, apara e redireciona o golpe de volta contra quem o arremessou; contra qualquer outro ataque, funciona como um aparo comum."),
+  EX.jutsu("explosao_cortina", "Técnica da Explosão: Cortina de Fumaça", "💨", "B", "Explosão", 0, 2, ["explosao_defensiva"], 9, 9, "Produz uma cortina de fumaça, como uma bomba de fumaça, obstruindo a visão inimiga e ocultando seus movimentos."),
+  EX.pass("explosao_polvora", "Pólvora Refinada", "⚫", "Explosão", 1, 3, ["explosao_defensiva"], 13, 11, "Passiva: seus jutsus de Explosão têm 15 pontos percentuais a mais de chance de plantar Minado."),
+  EX.jutsu("explosao_impacto", "Técnica da Explosão: Impacto", "👊", "A", "Onda de Choque", 0, 4, ["explosao_cortina"], 16, 15, "Desfere um soco no solo e libera chakra explosivo numa onda de choque, lançando detritos que ferem os oponentes na área e os deixam sem equilíbrio."),
   EX.pass("explosao_fragmentacao", "Fragmentação", "💢", "Explosão", -1, 4, ["explosao_cortina"], 14, 12, "Passiva: seus jutsus de Explosão em área custam 15% menos chakra."),
-  EX.jutsu("explosao_reacao_em_cadeia", "Explosão: Reação em Cadeia", "⛓️‍💥", "A", "Onda de Choque", 0, 5, ["explosao_impacto"], 22, 18, "Detona uma sequência de cargas numa área ampla, cravando Minado em todos os atingidos."),
   EX.pass("explosao_blindagem", "Blindagem Explosiva", "🛡️", "Explosão", -1, 6, ["explosao_fragmentacao"], 20, 16, "Passiva: o dano dos seus jutsus de Explosão ignora a Barreira do alvo."),
-  EX.jutsu("explosao_carga_final", "Explosão: Carga Final", "⚡", "A", "Ápice", 0, 6, ["explosao_reacao_em_cadeia"], 26, 20, "Detona uma carga junto ao próprio corpo para se impulsionar por 3 rodadas: fica mais rápido, esquiva mais e estilhaça quem encostar em você."),
-  EX.pass("explosao_apice", "Estilo Explosão Pleno", "🔥", "Ápice", 0, 7, ["explosao_carga_final"], 30, 22, "Passiva: seus jutsus de Explosão causam +50% de dano."),
-  EX.jutsu("explosao_mina", "Punho de Mina Terrestre", "⛏️", "S", "Ápice", 0, 8, ["explosao_apice"], 38, 28, "Usa o Estilo Explosão para plantar uma carga no ponto de contato físico. O golpe inicial já dói, mas duas rodadas depois uma explosão enorme detona no local."),
+  EX.pass("explosao_apice", "Estilo Explosão Pleno", "🔥", "Ápice", 0, 7, ["explosao_impacto"], 30, 22, "Passiva: seus jutsus de Explosão causam +50% de dano."),
+  EX.jutsu("explosao_mina", "Técnica do Punho de Mina Terrestre", "⛏️", "S", "Ápice", 0, 8, ["explosao_apice"], 38, 28, "Usa o Estilo Explosão para plantar uma carga no ponto de contato físico. O golpe inicial já dói, mas duas rodadas depois uma explosão enorme detona no local."),
 ];
 
 export const ELEMENT_TREES: Record<Element, SkillNodeDef[]> = {
@@ -370,7 +358,73 @@ const NODE_INDEX: Map<string, SkillNodeDef> = new Map(
 // A subpasta de árvore de clã tem o mesmo nome do clanId (nara/, hyuuga/...),
 // igual as elementais usam o nome do elemento.
 const NODE_ICONS: Record<string, string> = {
+  // ---- Vapor (Ebulição) ----
+  vapor_raiz: "vapor/ponto-de-ebulicao.png",
+  vapor_nevoa: "vapor/nevoa-qualificada.png",
+  vapor_punho: "vapor/punho-em-propulsao.png",
+  vapor_condensacao: "vapor/condensacao.png",
+  vapor_chute: "vapor/chute-em-propulsao.png",
+  vapor_pressurizacao: "vapor/pressurizacao.png",
+  vapor_instinto_termal: "vapor/instinto-termico.png",
+  vapor_ebulicao_total: "vapor/ebulicao-total.png",
+
+  // ---- Cristal (Shōton) ----
+  cristal_raiz: "cristal/estrutura-cristalina.png",
+  cristal_shuriken: "cristal/shuriken-de-cristal.png",
+  cristal_espinhos: "cristal/espinhos-crescentes.png",
+  cristal_estilhaco: "cristal/faceta-cortante.png",
+  cristal_prisao: "cristal/prisao-cristal-jade.png",
+  cristal_clone: "cristal/clone-cristal-jade.png",
+  cristal_barragem: "cristal/barragem-cristais-jade.png",
+  cristal_rede: "cristal/rede-cristalina.png",
+  cristal_danca: "cristal/danca-shuriken-hexagonal.png",
+  cristal_shuriken_gigante: "cristal/shuriken-gigante-hexagonal.png",
+  cristal_dragao: "cristal/dragao-cadente-cristal.png",
+  cristal_refracao: "cristal/refracao.png",
+  cristal_fio_luz: "cristal/fio-de-luz.png",
+  cristal_faceta: "cristal/faceta-perfeita.png",
+  cristal_oito_paredes: "cristal/oito-paredes-cristal-jade.png",
+
+  // ---- Calor (Shakuton) ----
+  calor_raiz: "calor/ebulicao-corporal.png",
+  calor_disparo: "calor/disparo-bolas-calor.png",
+  calor_esfera: "calor/esfera-calor.png",
+  calor_ressecamento: "calor/ressecamento.png",
+  calor_assassinato: "calor/assassinato-calor-extremo.png",
+  calor_ondas_termicas: "calor/ondas-termicas.png",
+  calor_pele_rachada: "calor/pele-rachada.png",
+  calor_combustao_interna: "calor/combustao-interna.png",
+
+  // ---- Lava (Yōton) ----
+  lava_raiz: "lava/nucleo-magmatico.png",
+  lava_balas: "lava/balas-de-lava.png",
+  lava_solucao: "lava/cobertura-de-lava.png",
+  lava_calor_residual: "lava/calor-residual.png",
+  lava_rio: "lava/rio-de-rochas-flamejantes.png",
+  lava_crosta: "lava/crosta-endurecida.png",
+  lava_pele_basaltica: "lava/pele-basaltica.png",
+  lava_apice: "lava/coracao-do-vulcao.png",
+  lava_huaguo: "lava/monte-huaguo.png",
+
+  // ---- Explosão (Bakuton) ----
+  explosao_raiz: "explosao/nucleo-detonante.png",
+  explosao_defensiva: "explosao/explosao-defensiva.png",
+  explosao_cortina: "explosao/cortina-de-fumaca.png",
+  explosao_polvora: "explosao/polvora-refinada.png",
+  explosao_impacto: "explosao/explosao-impacto.png",
+  explosao_fragmentacao: "explosao/fragmentacao.png",
+  explosao_blindagem: "explosao/blindagem-explosiva.png",
+  explosao_apice: "explosao/estilo-explosao-pleno.png",
+  explosao_mina: "explosao/punho-de-mina-terrestre.png",
+
   // ---- clãs ----
+  uchiha_sharingan_1_tomoe: "uchiha/sharingan-1-tomoe.png",
+  uchiha_controle_ocular: "uchiha/controle-ocular.png",
+  uchiha_sharingan_2_tomoe: "uchiha/sharingan-2-tomoe.png",
+  uchiha_economia_visual: "uchiha/economia-visual.png",
+  uchiha_sharingan_3_tomoe: "uchiha/sharingan-3-tomoe.png",
+  uchiha_mangekyo_sharingan: "uchiha/mangekyo-sharingan.png",
+
   nara_raiz: "nara/conluio-das-sombras.png",
   nara_possessao: "nara/tecnica-de-possessao-da-sombra.png",
   nara_enforcamento: "nara/tecnica-de-enforcamento-pela-sombra.png",
@@ -390,6 +444,16 @@ const NODE_ICONS: Record<string, string> = {
   hyuuga_128_palmas: "hyuuga/oito-trigramas-128-palmas.png",
   hyuuga_apice: "hyuuga/rede-de-tenketsu.png",
   hyuuga_leoes_gemeos: "hyuuga/punhos-dos-leoes-gemeos.png",
+
+  yuki_raiz: "yuki/sangue-de-gelo.png",
+  yuki_agulhas: "yuki/agulhas-de-gelo.png",
+  yuki_espelho: "yuki/espelho-demoniaco-de-gelo-fino.png",
+  yuki_domo: "yuki/domo-de-iceberg.png",
+  yuki_presenca: "yuki/presenca-silenciosa.png",
+  yuki_reflexos: "yuki/reflexos-gelidos.png",
+  yuki_chuva_agulhas: "yuki/chuva-de-agulhas-geladas.png",
+  yuki_apice: "yuki/dominio-do-espelho-de-gelo.png",
+  yuki_agulhas_mil: "yuki/mil-agulhas-voadoras.png",
 
   aburame_raiz: "aburame/colonia-ancestral.png",
   aburame_clone_inseto: "aburame/tecnica-dos-clones-de-inseto.png",

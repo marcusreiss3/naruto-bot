@@ -28,6 +28,16 @@ import { getAbility, getClan } from "../../data/index.js";
 import { FUNDAMENTOS } from "../../data/element-trees/fundamentals.js";
 import { clanStartingElement, CLAN_STARTING_ELEMENT } from "../../data/clans/starting-element.js";
 import { buildMechanicsSummary, buildVisualDescription } from "./skill-description.js";
+import { abilityIdFromSharinganCopyNode } from "../combat/sharingan.js";
+import {
+  conditionFromNodeId,
+  mangekyoVariantFromNodeId,
+  mangekyoVariantNodeId,
+  MANGEKYO_VARIANT_LABEL,
+  rollMangekyoVariant,
+  type CharacterCondition,
+  type MangekyoVariant,
+} from "./mangekyo.js";
 
 // Icone do elemento (footer). So basicos — kekkei genkai nunca e primeiro
 // elemento. Usado pra pintar o no "Primeiro Elemento" com o elemento do cla.
@@ -145,6 +155,9 @@ export interface CharSnapshot {
   pointsByPool: PoolMap; // disponível = atributo - spentByPool[atributo]
   elements: Element[]; // elementos desbloqueados
   owned: Set<string>; // ids de nó comprados
+  copiedJutsuIds?: string[]; // arsenal permanente aprendido pelo Sharingan
+  conditions?: Set<CharacterCondition>;
+  mangekyoVariant?: MangekyoVariant;
   clanId: string | null; // cla do personagem (define o primeiro elemento)
   // valor BRUTO de cada atributo. É o TETO de cada bolsa (orçamento) e também
   // o que o gate reqPool/reqAttribute compara. Gastar pontos na árvore não
@@ -174,6 +187,17 @@ function snapFrom(char: {
   clan: { clanId: string } | null;
 }): CharSnapshot {
   const owned = new Set(char.skillNodes.map((s) => s.nodeId));
+  const copiedJutsuIds = char.skillNodes
+    .map((s) => abilityIdFromSharinganCopyNode(s.nodeId))
+    .filter((id): id is string => Boolean(id));
+  const conditions = new Set(
+    char.skillNodes
+      .map((s) => conditionFromNodeId(s.nodeId))
+      .filter((condition): condition is CharacterCondition => Boolean(condition)),
+  );
+  const mangekyoVariant = char.skillNodes
+    .map((s) => mangekyoVariantFromNodeId(s.nodeId))
+    .find((variant): variant is MangekyoVariant => Boolean(variant));
   const attributes: PoolMap = char.attributes ?? {};
   const spentByPool = spentOf(owned);
   // disponível de cada pool = valor do atributo - o que já foi gasto nele.
@@ -194,6 +218,9 @@ function snapFrom(char: {
     pointsByPool,
     elements: char.elements.map((e) => e.element as Element),
     owned,
+    copiedJutsuIds,
+    conditions,
+    mangekyoVariant,
     clanId: char.clan?.clanId ?? null,
     attributes,
   };
@@ -206,7 +233,22 @@ export async function loadSnapshot(discordId: string, guildId: string): Promise<
     include: { attributes: true, elements: true, skillNodes: true, clan: true },
   });
   if (!char) return null;
-  return snapFrom(char);
+  const snap = snapFrom(char);
+
+  // Personagens que compraram o Mangekyō antes de as variações serem
+  // persistidas recebem uma única variação aqui. O upsert torna a migração
+  // idempotente e evita que um refresh troque o olho já recebido.
+  if (snap.owned.has("uchiha_mangekyo_sharingan") && !snap.mangekyoVariant) {
+    const variant = rollMangekyoVariant();
+    await prisma.characterSkillNode.upsert({
+      where: { charId_nodeId: { charId: char.id, nodeId: mangekyoVariantNodeId(variant) } },
+      create: { charId: char.id, nodeId: mangekyoVariantNodeId(variant) },
+      update: {},
+    });
+    snap.mangekyoVariant = variant;
+  }
+
+  return snap;
 }
 
 // Motivo pelo qual um nó NÃO pode ser comprado agora (null = pode).
@@ -219,6 +261,9 @@ export function lockReason(snap: CharSnapshot, node: SkillNodeDef): string | nul
   }
   if (node.clanId && snap.clanId !== node.clanId) {
     return `Requer o clã ${getClan(node.clanId)?.name ?? node.clanId}.`;
+  }
+  if (node.requiresCondition && !snap.conditions?.has(node.requiresCondition)) {
+    return `Requer condição: ${node.requiresCondition === "TRAUMA" ? "Trauma" : node.requiresCondition}.`;
   }
   for (const req of node.requires) {
     if (!snap.owned.has(req)) {
@@ -273,10 +318,11 @@ export function viewClanTree(snap: CharSnapshot, clanId: string): NodeView[] {
     if (snap.owned.has(node.id)) {
       return { ...node, combat, visualDescription, mechanics, effectiveReqPool: effectiveRequired, status: "OWNED" };
     }
+    const visibleNode = node.concealUntilOwned ? { ...node, img: undefined, icon: "?" } : node;
     const reason = lockReason(snap, node);
     return reason
-      ? { ...node, combat, visualDescription, mechanics, effectiveReqPool: effectiveRequired, status: "LOCKED", reason }
-      : { ...node, combat, visualDescription, mechanics, effectiveReqPool: effectiveRequired, status: "BUYABLE" };
+      ? { ...visibleNode, combat, visualDescription, mechanics, effectiveReqPool: effectiveRequired, status: "LOCKED", reason }
+      : { ...visibleNode, combat, visualDescription, mechanics, effectiveReqPool: effectiveRequired, status: "BUYABLE" };
   });
 }
 
@@ -313,6 +359,7 @@ export interface BuyResult {
   pool?: Attribute; // de qual bolsa saiu
   grantedAbilityId?: string;
   grantedElement?: Element; // no ELEMENT: qual elemento saiu no sorteio
+  grantedMangekyoVariant?: string;
 }
 
 // COMPRA AUTORITATIVA. Revalida contra o banco dentro da transação para evitar
@@ -354,6 +401,14 @@ export async function buyNode(
       grantedAbilityId = node.grantsAbilityId;
     }
 
+    let grantedMangekyoVariant: MangekyoVariant | undefined;
+    if (node.id === "uchiha_mangekyo_sharingan") {
+      grantedMangekyoVariant = rollMangekyoVariant();
+      await tx.characterSkillNode.create({
+        data: { charId: char.id, nodeId: mangekyoVariantNodeId(grantedMangekyoVariant) },
+      });
+    }
+
     // ELEMENT (Arvore de Ninjutsu): o PRIMEIRO elemento (funda_elemento_1) vem
     // do cla (starting-element.ts). Os demais (2..5) sao sorteados entre os
     // basicos que o personagem ainda nao tem. Kekkei genkai fica fora (so /admin).
@@ -373,6 +428,7 @@ export async function buyNode(
       pool: node.pool,
       grantedAbilityId,
       grantedElement,
+      grantedMangekyoVariant: grantedMangekyoVariant ? MANGEKYO_VARIANT_LABEL[grantedMangekyoVariant] : undefined,
     };
   });
 }

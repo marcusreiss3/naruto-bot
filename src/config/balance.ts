@@ -88,6 +88,14 @@ export const BALANCE = {
   ketsuryuuganUpkeepPerTurn: 5, // % chakra por turno com o Ketsuryuugan ativo
   ketsuryuuganDodgeBonus: 0.1, // +10 pontos percentuais de esquiva enquanto ativo
 
+  // Sharingan (Uchiha): bônus e manutenção crescem com os tomoe. O terceiro
+  // também habilita a cópia temporária, tratada em combat/sharingan.ts.
+  sharingan: {
+    1: { upkeepPerTurn: 3, dodgeBonus: 0.05 },
+    2: { upkeepPerTurn: 5, dodgeBonus: 0.1 },
+    3: { upkeepPerTurn: 7, dodgeBonus: 0.15 },
+  } as Record<1 | 2 | 3, { upkeepPerTurn: number; dodgeBonus: number }>,
+
   // ---- Maestria: multiplicador de custo por recurso ----
   masteryCostMultiplier: {
     BASICO: 1.0,

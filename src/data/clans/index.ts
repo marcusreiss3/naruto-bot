@@ -1,62 +1,87 @@
 import type { Ability, ClanDef } from "../types.js";
 
-// ============================================================================
-// PLACEHOLDER - ESTAS HABILIDADES SERAO APAGADAS
-// ============================================================================
-// Sharingan, Shintenshin e Juuken existem so para exercitar o sistema.
-// Nao entram no projeto final e nao serao substituidas em lugar: somem.
-// Mesma regra dos jutsus em ../jutsus/. Ver CLAUDE.md.
-//
-// => Nao invista em balanceamento fino daqui sem pedido.
-// => Nao trate estes ids como contrato estavel.
-// ============================================================================
-
 // Abilities de cla (categoria CLA). Hooks identificados por string p/ a engine.
 export const CLAN_ABILITIES: Ability[] = [
   // ---- Uchiha ----
   {
-    id: "uchiha_sharingan1",
-    name: "Sharingan (Nivel 1)",
-    category: "CLA",
+    id: "uchiha_sharingan_1_tomoe",
+    name: "Sharingan: Primeiro Tomoe",
+    category: "DOJUTSU",
     tier: 1,
     resource: "chakra",
-    cost: 5,
+    cost: 0,
     actionType: "BONUS",
     range: 0,
     shape: "SELF",
-    requirements: { clanId: "uchiha" },
-    tags: ["cla", "uchiha", "buff", "esquiva"],
-    description: "Ativa o Sharingan: bonus em esquiva/reacao por leitura de movimentos.",
+    requirements: { clanId: "uchiha", manualOnly: true },
+    tags: ["cla", "uchiha", "doujutsu", "buff", "esquiva"],
+    toggleRules: {
+      command: "/combate sharingan tomoe:1",
+      dodgeBonus: 0.05,
+      upkeepPerTurn: 3,
+      disablesWithoutResource: true,
+    },
+    description:
+      "Desperta o primeiro tomoe do Sharingan. Enquanto estiver ativo, concede +5% de esquiva e consome 3% de chakra por turno.",
   },
   {
-    id: "uchiha_genjutsu_sharingan",
-    name: "Genjutsu: Sharingan",
-    category: "CLA",
+    id: "uchiha_sharingan_2_tomoe",
+    name: "Sharingan: Segundo Tomoe",
+    category: "DOJUTSU",
     tier: 2,
     resource: "chakra",
-    cost: 22,
-    actionType: "COMUM",
-    range: 3,
-    shape: "SINGLE_TARGET",
-    scalingAttribute: "genjutsu",
-    effects: [{ effectId: "STUN", duration: 1 }, { effectId: "DEFENSE_DOWN", duration: 2 }],
-    requirements: { clanId: "uchiha", attributes: { genjutsu: 8 } },
-    tags: ["cla", "uchiha", "genjutsu"],
-    description: "Debuff mental curto via Sharingan.",
-  },
-  {
-    id: "uchiha_sharingan2",
-    name: "Sharingan (Nivel 2)",
-    category: "CLA",
-    tier: 3,
-    resource: "chakra",
-    cost: 8,
+    cost: 0,
     actionType: "BONUS",
     range: 0,
     shape: "SELF",
-    requirements: { clanId: "uchiha", level: 20, attributes: { ninjutsu: 15 } },
-    tags: ["cla", "uchiha", "buff"],
-    description: "Sharingan avancado: melhora reacao e reduz custo de genjutsu.",
+    requirements: { clanId: "uchiha", manualOnly: true },
+    tags: ["cla", "uchiha", "doujutsu", "buff", "esquiva"],
+    toggleRules: {
+      command: "/combate sharingan tomoe:2",
+      dodgeBonus: 0.1,
+      upkeepPerTurn: 5,
+      disablesWithoutResource: true,
+    },
+    description:
+      "Evolui o Sharingan para dois tomoe. Enquanto estiver ativo, concede +10% de esquiva e consome 5% de chakra por turno.",
+  },
+  {
+    id: "uchiha_sharingan_3_tomoe",
+    name: "Sharingan: Terceiro Tomoe",
+    category: "DOJUTSU",
+    tier: 3,
+    resource: "chakra",
+    cost: 0,
+    actionType: "BONUS",
+    range: 0,
+    shape: "SELF",
+    requirements: { clanId: "uchiha", manualOnly: true },
+    tags: ["cla", "uchiha", "doujutsu", "buff", "esquiva", "copia"],
+    toggleRules: {
+      command: "/combate sharingan tomoe:3",
+      dodgeBonus: 0.15,
+      upkeepPerTurn: 7,
+      disablesWithoutResource: true,
+    },
+    visualDescription:
+      "O terceiro tomoe acompanha os movimentos do adversário e grava permanentemente no arsenal as técnicas elementais que consegue copiar.",
+    description:
+      "Completa o Sharingan de três tomoe. Enquanto estiver ativo, concede +15% de esquiva, consome 7% de chakra por turno e aprende permanentemente cada Ninjutsu elemental elegível observado em combate. Não copia técnicas exclusivas de clã, Gelo ou Madeira; exige afinidade com o elemento, além do nível e Ninjutsu mínimos da técnica.",
+  },
+  {
+    id: "uchiha_mangekyo_sharingan",
+    name: "Mangekyō Sharingan",
+    category: "DOJUTSU",
+    tier: 4,
+    resource: "chakra",
+    cost: 0,
+    actionType: "BONUS",
+    range: 0,
+    shape: "SELF",
+    requirements: { clanId: "uchiha", manualOnly: true },
+    tags: ["cla", "uchiha", "doujutsu", "mangekyo"],
+    description:
+      "O Mangekyō desperta após um Trauma e manifesta uma variação única: Itachi, Sasuke, Shisui, Obito ou Madara. Seus caminhos exclusivos serão adicionados futuramente.",
   },
 
   // ---- Yamanaka ----
@@ -173,7 +198,7 @@ export const CLAN_ABILITIES: Ability[] = [
   {
     id: "hyuuga_byakugan",
     name: "Byakugan",
-    category: "NINJUTSU",
+    category: "DOJUTSU",
     tier: 1,
     resource: "chakra",
     // custo 0: nunca e' "usada" via /jutsu — e' ligada/desligada com
@@ -1509,7 +1534,7 @@ export const CLAN_ABILITIES: Ability[] = [
   {
     id: "chinoike_doujutsu",
     name: "Ketsuryuugan",
-    category: "NINJUTSU",
+    category: "DOJUTSU",
     tier: 1,
     // custo 0: nunca e' "usada" via /jutsu — e' ligada/desligada com
     // /combate ketsuryuugan (mesmo padrao do Byakugan/Caminhada Aquatica),
@@ -1951,7 +1976,12 @@ export const CLANS: ClanDef[] = [
     name: "Uchiha",
     description: "Clã do Sharingan: leitura de movimentos, genjutsu e fogo.",
     passiveIds: [],
-    activeIds: ["uchiha_sharingan1", "uchiha_genjutsu_sharingan", "uchiha_sharingan2"],
+    activeIds: [
+      "uchiha_sharingan_1_tomoe",
+      "uchiha_sharingan_2_tomoe",
+      "uchiha_sharingan_3_tomoe",
+      "uchiha_mangekyo_sharingan",
+    ],
     hooks: { onAttacked: "uchiha_read" },
   },
   {

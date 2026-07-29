@@ -54,8 +54,8 @@ describe("Hyuuga: integridade da arvore de cla", () => {
     }
   });
 
-  it("Byakugan é NINJUTSU (chakra/visão); o resto é TAIJUTSU (físico) — nenhum é CLA genérico", () => {
-    expect(getAbility("hyuuga_byakugan")!.category).toBe("NINJUTSU");
+  it("Byakugan é DOJUTSU; o resto é TAIJUTSU (físico) — nenhum é CLA genérico", () => {
+    expect(getAbility("hyuuga_byakugan")!.category).toBe("DOJUTSU");
     for (const id of IDS.filter((i) => i !== "hyuuga_byakugan")) {
       expect(getAbility(id)!.category, id).toBe("TAIJUTSU");
     }

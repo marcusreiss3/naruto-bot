@@ -44,6 +44,7 @@ describe("Chinoike: integridade da arvore de cla", () => {
 
   it("Ketsuryuugan é toggle (custo 0, sem efeito próprio) — liga/desliga por /combate ketsuryuugan, mesmo padrão do Byakugan", () => {
     const doujutsu = getAbility("chinoike_doujutsu")!;
+    expect(doujutsu.category).toBe("DOJUTSU");
     expect(doujutsu.cost).toBe(0);
     expect(doujutsu.effects ?? []).toEqual([]);
     expect(doujutsu.description).toMatch(/\/combate ketsuryuugan/);

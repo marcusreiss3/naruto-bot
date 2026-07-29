@@ -110,6 +110,12 @@ export function buildMechanicsSummary(ability: Ability): string {
   if (ability.clearsTerrain) parts.push(`Remove terreno de ${terrainName(ability.clearsTerrain)}.`);
   if (ability.oncePerCombat) parts.push("Pode ser usada somente uma vez por combate.");
   if (ability.requiresStorm) parts.push("Exige uma tempestade ativa no campo.");
+  if (ability.id === "uchiha_sharingan_3_tomoe") {
+    parts.push("Aprende permanentemente cada Ninjutsu elemental elegível observado em combate.");
+    parts.push("Não copia técnicas exclusivas de clã.");
+    parts.push("Não copia Gelo nem Madeira.");
+    parts.push("A cópia exige afinidade com o elemento, além do nível e Ninjutsu mínimos da técnica.");
+  }
   if (ability.requiresPet) parts.push("Exige a invocação do usuário viva no campo.");
   if (ability.requiresActiveDoujutsu) parts.push(`Exige ${ability.requiresActiveDoujutsu.label} ativo.`);
   if (ability.pierceObstacles) parts.push("Atravessa obstáculos e não precisa de linha de visão livre.");

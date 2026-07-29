@@ -6,8 +6,10 @@ import { ATTRIBUTE_LABELS, type Attribute, type Element } from "../config/enums.
 import { getSessionDiscordId } from "./auth.js";
 import { ELEMENT_TREES } from "../data/element-trees/index.js";
 import { CLAN_TREES } from "../data/clan-trees/index.js";
-import { CLANS } from "../data/index.js";
+import { CLANS, getAbility } from "../data/index.js";
 import { loadSnapshot, viewTree, viewFundamentosTree, viewClanTree, buyNode } from "../services/characters/skill-tree.js";
+import { buildMechanicsSummary, buildVisualDescription } from "../services/characters/skill-description.js";
+import { MANGEKYO_VARIANT_LABEL } from "../services/characters/mangekyo.js";
 
 export function registerApi(app: FastifyInstance): void {
   // Estado completo: personagem + as 5 árvores com o status de cada nó.
@@ -47,7 +49,28 @@ export function registerApi(app: FastifyInstance): void {
         elements: [...snap.elements],
         clanId: snap.clanId,
         clanName: snap.clanId ? CLANS.find((c) => c.id === snap.clanId)?.name ?? snap.clanId : null,
+        mangekyoVariant: snap.mangekyoVariant ? MANGEKYO_VARIANT_LABEL[snap.mangekyoVariant] : null,
       },
+      copiedJutsus: snap.clanId === "uchiha"
+        ? (snap.copiedJutsuIds ?? []).flatMap((id) => {
+            const ability = getAbility(id);
+            if (!ability) return [];
+            return [{
+              id: ability.id,
+              name: ability.name,
+              tier: ability.tier,
+              category: ability.category,
+              element: ability.element,
+              resource: ability.resource,
+              cost: ability.cost,
+              actionType: ability.actionType,
+              range: ability.range,
+              shape: ability.shape,
+              description: buildVisualDescription(ability.description, ability.visualDescription),
+              mechanics: buildMechanicsSummary(ability),
+            }];
+          })
+        : [],
       trees,
     });
   });

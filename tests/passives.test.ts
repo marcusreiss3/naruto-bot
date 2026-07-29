@@ -262,6 +262,7 @@ describe("passivas: Raio", () => {
       chakraRegenPerTurn: 0,
       meleeCounterDamage: 0,
       mindControlUpkeepMult: 1,
+      sharinganUpkeepMult: 1,
       mindControlNinjutsuBonus: 0,
     });
   });

@@ -17,6 +17,7 @@ import { continueFestivalPrepMessage } from "./services/missions/festival-prep.j
 import { continueNinkenTrackingMessage } from "./services/missions/ninken-tracking.js";
 import { continueMarketMediationMessage } from "./services/missions/market-mediation.js";
 import { continueDummySubstitutionMessage } from "./services/missions/dummy-substitution.js";
+
 import { continueWaspNestsMessage } from "./services/missions/wasp-nests.js";
 import { continueIchirakuDeliveryMessage } from "./services/missions/ichiraku-delivery.js";
 import { continueCleanWaterMessage } from "./services/missions/clean-water.js";

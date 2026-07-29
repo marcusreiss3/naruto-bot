@@ -150,7 +150,7 @@ describe("Nara: passivas — controle, não dano", () => {
   it("passiva de outro clã (sem def) não faz nada num jutsu de clã", () => {
     // nós de outros clãs (ex: Uchiha) nao tem entrada em CLAN_PASSIVES —
     // devem ser ignorados silenciosamente, nao quebrar o calculo.
-    expect(passiveMods(["uchiha_sharingan1"], possessao)).toEqual(passiveMods([], possessao));
+    expect(passiveMods(["uchiha_sharingan_1_tomoe"], possessao)).toEqual(passiveMods([], possessao));
   });
 });
 

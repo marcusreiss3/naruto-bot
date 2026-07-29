@@ -22,6 +22,11 @@ import {
   buildMechanicsSummary,
   buildVisualDescription,
 } from "../src/services/characters/skill-description.js";
+import {
+  MANGEKYO_VARIANT_LABEL,
+  mangekyoVariantNodeId,
+  rollMangekyoVariant,
+} from "../src/services/characters/mangekyo.js";
 
 const BASIC_ELEMENTS: Element[] = ELEMENTS.filter((e) => !isKekkeiGenkai(e));
 const FIRST_ELEMENT_NODE_ID = "funda_elemento_1";
@@ -34,12 +39,14 @@ const ELEMENT_ICON: Partial<Record<Element, string>> = {
 };
 
 // ---- personagem fictício, só em memória (reinicia ao reiniciar o processo) ----
-const DEMO_CLAN_ID = "hozuki";
+const DEMO_CLAN_ID = "uchiha";
 const attributes: Partial<Record<Attribute, number>> = Object.fromEntries(
-  ATTRIBUTES.map((a) => [a, 12]),
+  ATTRIBUTES.map((a) => [a, 60]),
 );
 const elements: Element[] = ["FOGO", "AGUA", "VENTO", "TERRA", "RAIO"];
 const owned = new Set<string>(["funda_elemento_1", "funda_disciplina_chakra"].filter((id) => getNode(id)));
+const conditions = new Set<string>(["TRAUMA"]);
+let mangekyoVariant: string | null = null;
 
 type PoolMap = Partial<Record<Attribute, number>>;
 
@@ -60,12 +67,13 @@ function snapshot() {
     pointsByPool[attr] = Math.max(0, (attributes[attr] ?? 1) - (spentByPool[attr] ?? 0));
   }
   return {
-    name: "Demo Hozuki",
-    level: 30,
+    name: "Demo Uchiha",
+    level: 60,
     spentByPool,
     pointsByPool,
     elements,
     owned,
+    conditions,
     clanId: DEMO_CLAN_ID as string | null,
     attributes,
   };
@@ -110,6 +118,9 @@ function lockReason(snap: ReturnType<typeof snapshot>, node: SkillNodeDef): stri
   if (snap.owned.has(node.id)) return "Já adquirido.";
   if (node.element && !snap.elements.includes(node.element)) return `Requer o elemento ${node.element}.`;
   if (node.clanId && snap.clanId !== node.clanId) return `Requer o clã ${getClan(node.clanId)?.name ?? node.clanId}.`;
+  if (node.requiresCondition && !snap.conditions.has(node.requiresCondition)) {
+    return `Requer condição: ${node.requiresCondition === "TRAUMA" ? "Trauma" : node.requiresCondition}.`;
+  }
   for (const req of node.requires) {
     if (!snap.owned.has(req)) {
       const parent = getNode(req);
@@ -143,10 +154,11 @@ function viewNodes(snap: ReturnType<typeof snapshot>, nodes: SkillNodeDef[]) {
     if (snap.owned.has(node.id)) {
       return { ...node, combat, visualDescription, mechanics, effectiveReqPool: effectiveRequired, status: "OWNED" as const };
     }
+    const visibleNode = node.concealUntilOwned ? { ...node, img: undefined, icon: "?" } : node;
     const reason = lockReason(snap, node);
     return reason
-      ? { ...node, combat, visualDescription, mechanics, effectiveReqPool: effectiveRequired, status: "LOCKED" as const, reason }
-      : { ...node, combat, visualDescription, mechanics, effectiveReqPool: effectiveRequired, status: "BUYABLE" as const };
+      ? { ...visibleNode, combat, visualDescription, mechanics, effectiveReqPool: effectiveRequired, status: "LOCKED" as const, reason }
+      : { ...visibleNode, combat, visualDescription, mechanics, effectiveReqPool: effectiveRequired, status: "BUYABLE" as const };
   });
 }
 
@@ -180,7 +192,9 @@ function buildState() {
       elements: [...snap.elements],
       clanId: snap.clanId,
       clanName: snap.clanId ? CLANS.find((c) => c.id === snap.clanId)?.name ?? snap.clanId : null,
+      mangekyoVariant,
     },
+    copiedJutsus: [],
     trees,
   };
 }
@@ -199,6 +213,13 @@ async function main() {
     const reason = lockReason(snap, node);
     if (reason) return reply.send({ ok: false, error: reason });
     owned.add(node.id);
+    let grantedMangekyoVariant: string | undefined;
+    if (node.id === "uchiha_mangekyo_sharingan") {
+      const variant = rollMangekyoVariant();
+      mangekyoVariant = MANGEKYO_VARIANT_LABEL[variant];
+      owned.add(mangekyoVariantNodeId(variant));
+      grantedMangekyoVariant = mangekyoVariant;
+    }
     let grantedElement: Element | undefined;
     if (node.kind === "ELEMENT") {
       const pool = BASIC_ELEMENTS.filter((e) => !elements.includes(e));
@@ -207,7 +228,7 @@ async function main() {
         elements.push(grantedElement);
       }
     }
-    return reply.send({ ok: true, grantedElement });
+    return reply.send({ ok: true, grantedElement, grantedMangekyoVariant });
   });
 
   app.post("/auth/logout", async (_req, reply) => reply.send({ ok: true }));

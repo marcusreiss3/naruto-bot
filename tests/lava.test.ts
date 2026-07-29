@@ -10,11 +10,7 @@ import { isKekkeiGenkai } from "../src/config/enums.js";
 const IDS = [
   "lava_tecnica_balas",
   "lava_solucao_misteriosa",
-  "lava_estilhacos",
-  "lava_nucleo_fluido",
   "lava_rio_rochas",
-  "lava_maremoto_igneo",
-  "lava_forja_interior",
   "lava_monte_huaguo",
 ] as const;
 

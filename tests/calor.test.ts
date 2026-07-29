@@ -11,12 +11,7 @@ import { isKekkeiGenkai } from "../src/config/enums.js";
 const IDS = [
   "calor_disparo_bolas",
   "calor_esfera",
-  "calor_rajada",
-  "calor_vapor_corporal",
   "calor_assassinato_extremo",
-  "calor_miragem",
-  "calor_nucleo_ardente",
-  "calor_sol_interior",
 ] as const;
 
 describe("Calor: integridade da arvore", () => {

@@ -1,7 +1,8 @@
 import { prisma } from "../../db/client.js";
 import { BALANCE } from "../../config/balance.js";
-import { effectLabel, type Attribute, type EffectId } from "../../config/enums.js";
+import { effectLabel, type Attribute, type EffectId, type Element } from "../../config/enums.js";
 import { getAbility, getScenarioById, getNpc } from "../../data/index.js";
+import { allNodes } from "../../data/element-trees/index.js";
 import type { Ability, AppliedEffect, ScenarioDef } from "../../data/types.js";
 import { allCells, neighbors, parseCell, radiusCells, toCell } from "../../utils/grid.js";
 import { pick, randInt, chance } from "../../utils/random.js";
@@ -72,6 +73,12 @@ import { fleeCheck } from "./flee.js";
 import { characterPassiveMods, passiveMods, receivedEffectDurationReduction } from "./passives.js";
 import { resolvePush, impactDamage } from "./push.js";
 import { clampInfiniteHp } from "./training-dummy.js";
+import {
+  isSharinganCopyable,
+  sharinganCopyRequirementError,
+  sharinganCopyNodeId,
+  type SharinganTomoe,
+} from "./sharingan.js";
 
 type ParticipantRow = Awaited<ReturnType<typeof prisma.combatParticipant.findFirstOrThrow>>;
 
@@ -153,6 +160,7 @@ export interface StartPlayer {
   jutsuIds: string[];
   attrs?: Record<string, number>;
   nodes?: string[];
+  elements?: Element[];
 }
 
 export interface StartNpc {
@@ -207,7 +215,12 @@ export async function startCombat(opts: {
         chakra: p.chakra,
         energia: p.energia,
         jutsuIdsJson: JSON.stringify(p.jutsuIds),
-        flagsJson: JSON.stringify({ level: p.level, attrs: p.attrs, nodes: p.nodes ?? [] }),
+        flagsJson: JSON.stringify({
+          level: p.level,
+          attrs: p.attrs,
+          nodes: p.nodes ?? [],
+          elements: p.elements ?? [],
+        }),
       },
     });
     participantIds.push(cp.id);
@@ -666,12 +679,95 @@ export function previewAbilityArea(
 // desatualizado). NPC: usa o snapshot (jutsuIdsJson). Exportada porque o
 // autocomplete de /jutsu (jutsu.ts) precisa da mesma logica pro corpo que o
 // jogador estiver de fato controlando, nao so' pro proprio personagem.
-export async function ownedJutsuIds(p: SessionFull["participants"][number]): Promise<string[]> {
+async function learnedJutsuIds(p: SessionFull["participants"][number]): Promise<string[]> {
   if (!p.isNpc && p.charId) {
     const rows = await prisma.characterJutsu.findMany({ where: { charId: p.charId } });
     return rows.map((r) => r.jutsuId);
   }
   return JSON.parse(p.jutsuIdsJson) as string[];
+}
+
+export async function ownedJutsuIds(p: SessionFull["participants"][number]): Promise<string[]> {
+  const learned = await learnedJutsuIds(p);
+  const copied = p.flags.sharinganTomoe === 3 ? p.flags.sharinganCopiedAbilityId : undefined;
+  return typeof copied === "string" && !learned.includes(copied) ? [...learned, copied] : learned;
+}
+
+function sharinganTomoe(flags: Record<string, unknown>): SharinganTomoe | null {
+  const value = flags.sharinganTomoe;
+  return value === 1 || value === 2 || value === 3 ? value : null;
+}
+
+function sharinganDodgeBonus(flags: Record<string, unknown>): number {
+  const tomoe = sharinganTomoe(flags);
+  return tomoe ? BALANCE.sharingan[tomoe].dodgeBonus : 0;
+}
+
+async function offerSharinganCopy(
+  s: SessionFull,
+  userId: string,
+  ability: Ability,
+  logs: string[],
+): Promise<void> {
+  if (!isSharinganCopyable(ability)) return;
+  for (const observer of s.participants) {
+    if (observer.id === userId || observer.hpCurrent <= 0 || observer.flags.sharinganTomoe !== 3) continue;
+    const attrs = (observer.flags.attrs as Record<string, number> | undefined) ?? {};
+    let elements = Array.isArray(observer.flags.elements) ? (observer.flags.elements as Element[]) : [];
+    if (elements.length === 0 && observer.charId) {
+      const rows = await prisma.characterElement.findMany({
+        where: { charId: observer.charId },
+        select: { element: true },
+      });
+      elements = rows.map((row) => row.element as Element);
+    }
+    const node = allNodes().find((candidate) => candidate.grantsAbilityId === ability.id);
+    const error = sharinganCopyRequirementError(
+      ability,
+      {
+        level: Number(observer.flags.level ?? 1),
+        ninjutsu: attrs.ninjutsu ?? 1,
+        elements,
+      },
+      node ? { level: node.reqLevel, ninjutsu: node.pool === "ninjutsu" ? node.reqPool : undefined } : {},
+    );
+    if (error) {
+      logs.push(`👁️ ${observer.name} observou **${ability.name}**, mas não conseguiu copiá-la: ${error}`);
+      continue;
+    }
+
+    if (!observer.isNpc && observer.charId) {
+      const alreadyKnown = await prisma.characterJutsu.findUnique({
+        where: { charId_jutsuId: { charId: observer.charId, jutsuId: ability.id } },
+      });
+      if (alreadyKnown) continue;
+      await prisma.$transaction([
+        prisma.characterJutsu.upsert({
+          where: { charId_jutsuId: { charId: observer.charId, jutsuId: ability.id } },
+          create: { charId: observer.charId, jutsuId: ability.id },
+          update: {},
+        }),
+        prisma.characterSkillNode.upsert({
+          where: {
+            charId_nodeId: {
+              charId: observer.charId,
+              nodeId: sharinganCopyNodeId(ability.id),
+            },
+          },
+          create: {
+            charId: observer.charId,
+            nodeId: sharinganCopyNodeId(ability.id),
+          },
+          update: {},
+        }),
+      ]);
+      logs.push(`👁️ ${observer.name} copiou **${ability.name}** permanentemente para o Arsenal do Sharingan.`);
+      continue;
+    }
+
+    await setFlag(observer.id, "sharinganCopiedAbilityId", ability.id);
+    logs.push(`👁️ ${observer.name} memorizou **${ability.name}** com o Sharingan de três tomoe.`);
+  }
 }
 
 export async function useAbility(
@@ -688,8 +784,37 @@ export async function useAbility(
   const ability = getAbility(abilityId);
   if (!ability) return fail("Habilidade desconhecida.");
 
-  const owned = await ownedJutsuIds(actor);
-  if (!owned.includes(abilityId)) return fail("Habilidade não desbloqueada.");
+  const learned = await learnedJutsuIds(actor);
+  const isCopied =
+    !learned.includes(abilityId) &&
+    actor.flags.sharinganTomoe === 3 &&
+    actor.flags.sharinganCopiedAbilityId === abilityId;
+  if (!learned.includes(abilityId) && !isCopied) return fail("Habilidade não desbloqueada.");
+  if (isCopied) {
+    const attrs = (actor.flags.attrs as Record<string, number> | undefined) ?? {};
+    let elements = Array.isArray(actor.flags.elements) ? (actor.flags.elements as Element[]) : [];
+    // Combates antigos/de missão podem não ter o snapshot de elementos nas
+    // flags. Nesse caso, lê as afinidades atuais do personagem.
+    if (elements.length === 0 && actor.charId) {
+      const rows = await prisma.characterElement.findMany({
+        where: { charId: actor.charId },
+        select: { element: true },
+      });
+      elements = rows.map((row) => row.element as Element);
+    }
+    const error = sharinganCopyRequirementError(ability, {
+      level: Number(actor.flags.level ?? 1),
+      ninjutsu: attrs.ninjutsu ?? 1,
+      elements,
+    }, (() => {
+      const node = allNodes().find((candidate) => candidate.grantsAbilityId === ability.id);
+      return node ? { level: node.reqLevel, ninjutsu: node.pool === "ninjutsu" ? node.reqPool : undefined } : {};
+    })());
+    if (error) return fail(error);
+  }
+  if (ability.toggleRules) {
+    return fail(`Esta técnica é contínua. Use ${ability.toggleRules.command} para ativar ou desativar.`);
+  }
 
   // economia de acao
   if (ability.actionType === "COMUM" && actor.actedCommon) return fail("Ação comum já usada.");
@@ -744,6 +869,7 @@ export async function useAbility(
     return fail(`${ability.name} so pode ser usado uma vez por combate.`);
   }
   if (
+    !isCopied &&
     ability.requiresStorm &&
     !ownedNodes(actor).includes("raio_nuvens") &&
     !hasActiveKind(s.terrain, "FIRE", s.round)
@@ -780,7 +906,9 @@ export async function useAbility(
   await deductResource(actor.id, ability.resource, cost);
   await markAction(actor.id, ability.actionType);
   if (ability.oncePerCombat) await setFlag(actor.id, "usedOnceAbility", ability.id);
+  if (isCopied) await setFlag(actor.id, "sharinganCopiedAbilityId", undefined);
   logs.push(`✨ ${actor.name} usou **${ability.name}** (-${cost}% ${ability.resource}).`);
+  await offerSharinganCopy(s, actor.id, ability, logs);
 
   // cura / cleanse / buff
   if (ability.baseHeal || ability.cleanses || ability.restoreResource) {
@@ -1101,6 +1229,8 @@ export async function resolveHit(
           // Ketsuryuugan (Chinoike) ativo: mesmo raciocinio do Byakugan — le
           // o instante do golpe, vale contra qualquer ataque.
           (target.flags.ketsuryuuganActive ? BALANCE.ketsuryuuganDodgeBonus : 0) +
+          // Sharingan: o bônus cresce de acordo com o estágio ativo.
+          sharinganDodgeBonus(target.flags) +
           (physical ? 0 : defenseMods.ninjutsuDodgeBonus) -
           // cada acumulo de cristal trava mais um pouco o corpo do alvo
           crystalDodgePenalty(target.effects),
@@ -1640,6 +1770,15 @@ export async function endTurn(sessionId: string): Promise<EndTurnResult> {
   if (!s) return { logs: [], nextActiveId: null, newRound: false };
   const logs: string[] = [];
 
+  // A técnica memorizada pelo Sharingan só fica disponível até o fim do
+  // próximo turno do observador. Se não for usada, a leitura se perde.
+  const endingId = s.turnOrder[s.activeIndex];
+  const ending = endingId ? s.participants.find((p) => p.id === endingId) : undefined;
+  if (ending?.flags.sharinganCopiedAbilityId) {
+    await setFlag(ending.id, "sharinganCopiedAbilityId", undefined);
+    logs.push(`👁️ ${ending.name} perdeu a oportunidade de reproduzir a técnica memorizada.`);
+  }
+
   let idx = s.activeIndex;
   let newRound = false;
   let round = s.round;
@@ -1799,6 +1938,21 @@ async function processTurnStart(sessionId: string, participantId: string, logs: 
     } else {
       flags.ketsuryuuganActive = false;
       logs.push(`🩸 ${p.name} ficou sem chakra e o Ketsuryuugan se desativou.`);
+    }
+  }
+  // upkeep Sharingan (Uchiha): um único estágio pode ficar ativo por vez.
+  const activeTomoe = sharinganTomoe(flags);
+  if (activeTomoe) {
+    const upkeepMult = characterPassiveMods(
+      Array.isArray(flags.nodes) ? (flags.nodes as string[]) : [],
+    ).sharinganUpkeepMult;
+    const upkeep = Math.max(1, Math.round(BALANCE.sharingan[activeTomoe].upkeepPerTurn * upkeepMult));
+    if (chakra >= upkeep) {
+      chakra -= upkeep;
+    } else {
+      flags.sharinganTomoe = undefined;
+      flags.sharinganCopiedAbilityId = undefined;
+      logs.push(`👁️ ${p.name} ficou sem chakra e o Sharingan se desativou.`);
     }
   }
   // upkeep Yamanaka (controle) — drena chakra por turno enquanto controlar

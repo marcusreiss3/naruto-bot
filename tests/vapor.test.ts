@@ -15,12 +15,7 @@ import { isKekkeiGenkai } from "../src/config/enums.js";
 const IDS = [
   "vapor_nevoa_qualificada",
   "vapor_punho_propulsao",
-  "vapor_agulhas",
-  "vapor_camara",
   "vapor_chute_propulsao",
-  "vapor_nevoa_densa",
-  "vapor_manto_vapor",
-  "vapor_erupcao_absoluta",
 ] as const;
 
 const ef = (stacks: number, duration = 3): EffectState =>
@@ -42,14 +37,9 @@ describe("Vapor: integridade da arvore", () => {
     }
   });
 
-  it("Chute em Propulsão exige o nó de Câmara de Vapor (versão aprimorada)", () => {
+  it("Chute em Propulsão exige o nó de Punho em Propulsão (versão aprimorada)", () => {
     const chute = allNodes().find((n) => n.id === "vapor_chute")!;
-    expect(chute.requires).toEqual(["vapor_camara"]);
-  });
-
-  it("Erupção Absoluta (S) exige o ápice comprado antes", () => {
-    const erupcao = allNodes().find((n) => n.id === "vapor_erupcao_absoluta")!;
-    expect(erupcao.requires).toEqual(["vapor_ebulicao_total"]);
+    expect(chute.requires).toEqual(["vapor_punho"]);
   });
 
   it("VAPOR e' kekkei genkai", () => {
@@ -63,6 +53,14 @@ describe("Vapor: integridade da arvore", () => {
       .filter((n) => !PASSIVES.some((p) => p.nodeId === n.id))
       .map((n) => n.id);
     expect(semDef).toEqual([]);
+  });
+
+  it("todos os nós usam ícones próprios de Vapor", () => {
+    const nodes = allNodes().filter((n) => n.element === "VAPOR");
+    expect(nodes).toHaveLength(8);
+    for (const node of nodes) {
+      expect(node.img, node.id).toMatch(/^\/assets\/icons\/vapor\/[a-z-]+\.png$/);
+    }
   });
 });
 

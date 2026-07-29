@@ -10,11 +10,7 @@ import { isKekkeiGenkai } from "../src/config/enums.js";
 const IDS = [
   "explosao_defensiva",
   "explosao_cortina_fumaca",
-  "explosao_estilhacos",
-  "explosao_carga_dupla",
   "explosao_impacto",
-  "explosao_reacao_em_cadeia",
-  "explosao_carga_final",
   "explosao_punho_mina",
 ] as const;
 

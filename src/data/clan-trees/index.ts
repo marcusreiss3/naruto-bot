@@ -98,6 +98,94 @@ function makeClan(clanId: string, defaultPool: Attribute) {
   return { jutsu, pass };
 }
 
+// -------------------------------------------------------------- UCHIHA
+// Árvore curta e exclusivamente ocular: cada nó substitui o estágio anterior
+// quando ativado. O custo da árvore é pago no pool de Dōjutsu; o custo de
+// manutenção em combate é chakra por turno.
+const UC = makeClan("uchiha", "dojutsu");
+const UCHIHA: SkillNodeDef[] = [
+  UC.jutsu(
+    "uchiha_sharingan_1_tomoe",
+    "Sharingan: Primeiro Tomoe",
+    "🔴",
+    "C",
+    "Sharingan",
+    0,
+    0,
+    [],
+    1,
+    1,
+    "Ativa o Sharingan de um tomoe. Concede +5% de esquiva e consome 3% de chakra por turno enquanto estiver ativo.",
+  ),
+  UC.pass(
+    "uchiha_controle_ocular",
+    "Controle Ocular",
+    "👁️",
+    "Sharingan",
+    0,
+    1,
+    ["uchiha_sharingan_1_tomoe"],
+    5,
+    4,
+    "Passiva: o controle do fluxo de chakra nos olhos reduz em 15% o custo de manutenção do Sharingan.",
+  ),
+  UC.jutsu(
+    "uchiha_sharingan_2_tomoe",
+    "Sharingan: Segundo Tomoe",
+    "🔴",
+    "B",
+    "Sharingan",
+    0,
+    2,
+    ["uchiha_controle_ocular"],
+    10,
+    8,
+    "Ativa o Sharingan de dois tomoe. Concede +10% de esquiva e consome 5% de chakra por turno enquanto estiver ativo.",
+  ),
+  UC.pass(
+    "uchiha_economia_visual",
+    "Economia Visual",
+    "🩸",
+    "Sharingan",
+    0,
+    3,
+    ["uchiha_sharingan_2_tomoe"],
+    15,
+    11,
+    "Passiva: a adaptação ao Sharingan reduz em mais 15% o custo de manutenção. O bônus acumula com Controle Ocular.",
+  ),
+  UC.jutsu(
+    "uchiha_sharingan_3_tomoe",
+    "Sharingan: Terceiro Tomoe",
+    "🔴",
+    "A",
+    "Sharingan",
+    0,
+    4,
+    ["uchiha_economia_visual"],
+    20,
+    15,
+    "Ativa o Sharingan de três tomoe. Concede +15% de esquiva, consome 7% de chakra por turno e aprende permanentemente cada Ninjutsu elemental elegível observado. Não copia técnicas exclusivas de clã, gelo ou madeira; exige afinidade, nível e Ninjutsu mínimos.",
+  ),
+  {
+    ...UC.jutsu(
+      "uchiha_mangekyo_sharingan",
+      "Mangekyō Sharingan",
+      "👁️",
+      "S",
+      "Mangekyō",
+      0,
+      5,
+      ["uchiha_sharingan_3_tomoe"],
+      45,
+      32,
+      "O despertar do Mangekyō exige Trauma. Ao comprar este único nó, você recebe aleatoriamente uma das variações: Itachi, Sasuke, Shisui, Obito ou Madara. Os caminhos exclusivos de cada variação serão desbloqueados futuramente.",
+    ),
+    requiresCondition: "TRAUMA",
+    concealUntilOwned: true,
+  },
+];
+
 // ---------------------------------------------------------------- NARA
 // Clã das sombras: controle, não dano em rajada. O tronco sobe pela técnica
 // assinatura (Possessão da Sombra) e se ramifica em dois acabamentos —
@@ -2206,6 +2294,7 @@ const SENJU: SkillNodeDef[] = [
 ];
 
 export const CLAN_TREES: Record<string, SkillNodeDef[]> = {
+  uchiha: UCHIHA,
   nara: NARA,
   hyuuga: HYUUGA,
   akimichi: AKIMICHI,

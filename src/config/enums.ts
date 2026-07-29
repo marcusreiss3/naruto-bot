@@ -79,6 +79,7 @@ export const CATEGORIES = [
   // katana nao e' projetil; um kunai arremessado e'.
   "BUKIJUTSU",
   "KENJUTSU",
+  "DOJUTSU",
   "CLA",
 ] as const;
 export type Category = (typeof CATEGORIES)[number];

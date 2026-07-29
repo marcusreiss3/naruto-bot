@@ -108,6 +108,7 @@
         <span class="hud-corner tl"></span><span class="hud-corner tr"></span>
         <span class="hud-corner bl"></span><span class="hud-corner br"></span>
         <div class="tree-title" id="treeTitle">Fogo</div>
+        <button id="copyArsenalBtn" class="copy-arsenal-btn hidden" type="button">👁 Arsenal copiado</button>
         <div class="canvas-wrap" id="canvasWrap">
           <svg id="edges" class="edges"></svg>
           <div id="nodes" class="nodes"></div>
@@ -135,9 +136,22 @@
     </div>
   </div>
 
+  <div id="copyArsenalModal" class="modal hidden">
+    <div class="modal-card copy-arsenal-card">
+      <div class="modal-icon">👁️</div>
+      <div class="modal-rank">SHARINGAN</div>
+      <h2>Arsenal copiado</h2>
+      <p class="modal-desc">Ninjutsus elementais aprendidos permanentemente ao serem observados com o terceiro tomoe.</p>
+      <div id="copyArsenalList" class="copy-arsenal-list"></div>
+      <div class="modal-actions">
+        <button class="btn-ghost" id="copyArsenalClose">Fechar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast -->
   <div id="toast" class="toast hidden"></div>
 
-  <script src="/app.js"></script>
+  <script src="/app.js?v=yuki-icons-1"></script>
 </body>
 </html>

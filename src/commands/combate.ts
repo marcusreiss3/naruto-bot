@@ -25,6 +25,7 @@ import {
 import { catMissionStep, renderCatMission, spawnCat, type CatState, type CatMissionData } from "../services/missions/cat.js";
 import { cellDistance, resolveActingParticipantId } from "../services/combat/combat-math.js";
 import { BALANCE } from "../config/balance.js";
+import type { Element } from "../config/enums.js";
 import { getOrCreateCharacter, attrsFromRow } from "../services/characters/character-service.js";
 import {
   startCombat,
@@ -119,6 +120,22 @@ export const combate: Command = {
         .setDescription("Ativa/desativa o Ketsuryuugan (ação bônus, clã Chinoike)"),
     )
     .addSubcommand((s) =>
+      s
+        .setName("sharingan")
+        .setDescription("Ativa/desativa um estágio do Sharingan (ação bônus, clã Uchiha)")
+        .addIntegerOption((o) =>
+          o
+            .setName("tomoe")
+            .setDescription("Estágio do Sharingan que deseja ativar")
+            .setRequired(true)
+            .addChoices(
+              { name: "Primeiro Tomoe", value: 1 },
+              { name: "Segundo Tomoe", value: 2 },
+              { name: "Terceiro Tomoe", value: 3 },
+            ),
+        ),
+    )
+    .addSubcommand((s) =>
       s.setName("fugir").setDescription("Tenta fugir do combate (ação comum, gasta energia)"),
     ),
   async execute(interaction: ChatInputCommandInteraction) {
@@ -136,6 +153,8 @@ export const combate: Command = {
         return byakugan(interaction);
       case "ketsuryuugan":
         return ketsuryuugan(interaction);
+      case "sharingan":
+        return sharingan(interaction);
       case "fugir":
         return fugir(interaction);
     }
@@ -236,6 +255,7 @@ async function iniciar(interaction: ChatInputCommandInteraction): Promise<void> 
       jutsuIds: char.jutsus.map((j) => j.jutsuId),
       attrs: attrsFromRow(char.attributes!),
       nodes: char.skillNodes.map((n) => n.nodeId),
+      elements: char.elements.map((e) => e.element as Element),
     });
   }
 
@@ -253,7 +273,14 @@ async function iniciar(interaction: ChatInputCommandInteraction): Promise<void> 
     if (!p) continue;
     await prisma.combatParticipant.update({
       where: { id: p.id },
-      data: { flagsJson: JSON.stringify({ level: players[i]!.level, attrs: players[i]!.attrs, nodes: players[i]!.nodes }) },
+      data: {
+        flagsJson: JSON.stringify({
+          level: players[i]!.level,
+          attrs: players[i]!.attrs,
+          nodes: players[i]!.nodes,
+          elements: players[i]!.elements,
+        }),
+      },
     });
   }
 
@@ -935,5 +962,50 @@ async function ketsuryuugan(interaction: ChatInputCommandInteraction): Promise<v
     flags.ketsuryuuganActive
       ? `🩸 **${me.name}** ativou o Ketsuryuugan (+${Math.round(BALANCE.ketsuryuuganDodgeBonus * 100)}% de esquiva contra qualquer ataque; gasta ${BALANCE.ketsuryuuganUpkeepPerTurn}% chakra/turno).`
       : `🩸 **${me.name}** desativou o Ketsuryuugan.`,
+  );
+}
+
+async function sharingan(interaction: ChatInputCommandInteraction): Promise<void> {
+  const { session, me } = await getMyParticipant(interaction);
+  if (!session || !me) {
+    await interaction.reply({ content: "❌ Você não está em combate aqui.", ephemeral: true });
+    return;
+  }
+  if (me.actedBonus) {
+    await interaction.reply({ content: "❌ Ação bônus já usada.", ephemeral: true });
+    return;
+  }
+
+  const tomoe = interaction.options.getInteger("tomoe", true) as 1 | 2 | 3;
+  const abilityId = `uchiha_sharingan_${tomoe}_tomoe`;
+  if (!me.isNpc && me.charId) {
+    const has = await prisma.characterJutsu.findFirst({
+      where: { charId: me.charId, jutsuId: abilityId },
+    });
+    if (!has) {
+      await interaction.reply({
+        content: `❌ Você não desbloqueou o Sharingan de ${tomoe} tomoe.`,
+        ephemeral: true,
+      });
+      return;
+    }
+  }
+
+  const flags = me.flags;
+  const disabling = flags.sharinganTomoe === tomoe;
+  flags.sharinganTomoe = disabling ? undefined : tomoe;
+  flags.sharinganCopiedAbilityId = undefined;
+  await prisma.combatParticipant.update({
+    where: { id: me.id },
+    data: { flagsJson: JSON.stringify(flags), actedBonus: true },
+  });
+
+  if (disabling) {
+    await interaction.reply(`👁️ **${me.name}** desativou o Sharingan.`);
+    return;
+  }
+  const rules = BALANCE.sharingan[tomoe];
+  await interaction.reply(
+    `🔴 **${me.name}** ativou o Sharingan de ${tomoe} tomoe (+${Math.round(rules.dodgeBonus * 100)}% de esquiva; gasta ${rules.upkeepPerTurn}% de chakra por turno${tomoe === 3 ? "; copia permanentemente Ninjutsus elementais elegíveis observados" : ""}).`,
   );
 }

@@ -200,6 +200,7 @@ export interface CharacterPassiveMods {
   // upkeepPerTurn) — 1 = neutro, 0.8 = -20%. Ver processTurnStart em
   // combat-engine.ts.
   mindControlUpkeepMult: number;
+  sharinganUpkeepMult: number;
   // bonus fixo de Ninjutsu EFETIVO so' pra disputa de controle mental
   // (yamanakaResistChance) — ver processTurnStart em combat-engine.ts.
   mindControlNinjutsuBonus: number;
@@ -218,6 +219,7 @@ export function characterPassiveMods(ownedNodeIds: string[]): CharacterPassiveMo
   let chakraRegenPerTurn = 0;
   let meleeCounterDamage = 0;
   let mindControlUpkeepMult = 1;
+  let sharinganUpkeepMult = 1;
   let mindControlNinjutsuBonus = 0;
   for (const nodeId of owned) {
     const p: (Partial<PassiveDef> & Partial<ClanPassiveDef>) | undefined =
@@ -230,6 +232,7 @@ export function characterPassiveMods(ownedNodeIds: string[]): CharacterPassiveMo
     chakraRegenPerTurn += p.chakraRegenPerTurn ?? 0;
     meleeCounterDamage += p.meleeCounterDamage ?? 0;
     mindControlUpkeepMult *= p.mindControlUpkeepMult ?? 1;
+    sharinganUpkeepMult *= p.sharinganUpkeepMult ?? 1;
     mindControlNinjutsuBonus += p.mindControlNinjutsuBonus ?? 0;
   }
   return {
@@ -240,6 +243,7 @@ export function characterPassiveMods(ownedNodeIds: string[]): CharacterPassiveMo
     chakraRegenPerTurn,
     meleeCounterDamage,
     mindControlUpkeepMult,
+    sharinganUpkeepMult,
     mindControlNinjutsuBonus,
   };
 }

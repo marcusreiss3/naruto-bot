@@ -92,6 +92,9 @@ export interface ClanPassiveDef {
   // estiver controlando pelo menos 1 corpo — 0.8 = -20%). So' faz sentido em
   // quem possui nos Yamanaka. Ver processTurnStart em combat-engine.ts.
   mindControlUpkeepMult?: number;
+  // multiplica o upkeep de chakra do Sharingan ativo (0.85 = -15%).
+  // As duas passivas Uchiha acumulam multiplicativamente.
+  sharinganUpkeepMult?: number;
   // bonus fixo de Ninjutsu EFETIVO so' pra disputa de controle mental
   // (yamanakaResistChance, combat-math.ts) — ajuda tanto quando o dono esta
   // CONTROLANDO (mais dificil pra vitima resistir) quanto quando esta SENDO
@@ -105,6 +108,18 @@ export interface ClanPassiveDef {
 }
 
 export const CLAN_PASSIVES: ClanPassiveDef[] = [
+  // -------------------------------------------------------------- UCHIHA
+  {
+    nodeId: "uchiha_controle_ocular",
+    clanId: "uchiha",
+    sharinganUpkeepMult: 0.85,
+  },
+  {
+    nodeId: "uchiha_economia_visual",
+    clanId: "uchiha",
+    sharinganUpkeepMult: 0.85,
+  },
+
   // ---------------------------------------------------------------- NARA
   // Nara não ganha dano de graça como os elementos — o clã é controle, não
   // rajada. A raiz corta custo (o clã é lendário em precisão de chakra); o

@@ -19,6 +19,7 @@ const ELEMENTS = [
   // Árvores de clã (gate por clanId em vez de elemento — ver clanGate abaixo).
   // Ordem por vila, mesmo agrupamento de src/data/clans/index.ts.
   // ---- Konoha ----
+  { id: "UCHIHA", name: "Uchiha", icon: "🔴", color: "#b83232", clanGate: "uchiha" },
   { id: "NARA", name: "Nara", icon: "🌑", color: "#5c5c7a", clanGate: "nara" },
   { id: "SENJU", name: "Senju", icon: "🌳", color: "#4f8a55", clanGate: "senju" },
   { id: "HYUUGA", name: "Hyuuga", icon: "👁️", color: "#c9d6e3", clanGate: "hyuuga" },
@@ -42,10 +43,55 @@ const ELEMENTS = [
   { id: "KAMIZURU", name: "Kamizuru", icon: "🐝", color: "#d9a441", clanGate: "kamizuru" },
 ];
 
+// Compatibilidade para árvores que acabaram de ganhar arte enquanto o servidor
+// de demonstração ainda está com o módulo antigo carregado em memória.
+const NODE_IMAGE_FALLBACKS = {
+  calor_raiz: "/assets/icons/calor/ebulicao-corporal.png",
+  calor_disparo: "/assets/icons/calor/disparo-bolas-calor.png",
+  calor_esfera: "/assets/icons/calor/esfera-calor.png",
+  calor_ressecamento: "/assets/icons/calor/ressecamento.png",
+  calor_assassinato: "/assets/icons/calor/assassinato-calor-extremo.png",
+  calor_ondas_termicas: "/assets/icons/calor/ondas-termicas.png",
+  calor_pele_rachada: "/assets/icons/calor/pele-rachada.png",
+  calor_combustao_interna: "/assets/icons/calor/combustao-interna.png",
+  lava_raiz: "/assets/icons/lava/nucleo-magmatico.png",
+  lava_balas: "/assets/icons/lava/balas-de-lava.png",
+  lava_solucao: "/assets/icons/lava/cobertura-de-lava.png",
+  lava_calor_residual: "/assets/icons/lava/calor-residual.png",
+  lava_rio: "/assets/icons/lava/rio-de-rochas-flamejantes.png",
+  lava_crosta: "/assets/icons/lava/crosta-endurecida.png",
+  lava_pele_basaltica: "/assets/icons/lava/pele-basaltica.png",
+  lava_apice: "/assets/icons/lava/coracao-do-vulcao.png",
+  lava_huaguo: "/assets/icons/lava/monte-huaguo.png",
+  explosao_raiz: "/assets/icons/explosao/nucleo-detonante.png",
+  explosao_defensiva: "/assets/icons/explosao/explosao-defensiva.png",
+  explosao_cortina: "/assets/icons/explosao/cortina-de-fumaca.png",
+  explosao_polvora: "/assets/icons/explosao/polvora-refinada.png",
+  explosao_impacto: "/assets/icons/explosao/explosao-impacto.png",
+  explosao_fragmentacao: "/assets/icons/explosao/fragmentacao.png",
+  explosao_blindagem: "/assets/icons/explosao/blindagem-explosiva.png",
+  explosao_apice: "/assets/icons/explosao/estilo-explosao-pleno.png",
+  explosao_mina: "/assets/icons/explosao/punho-de-mina-terrestre.png",
+  yuki_raiz: "/assets/icons/yuki/sangue-de-gelo.png",
+  yuki_agulhas: "/assets/icons/yuki/agulhas-de-gelo.png",
+  yuki_espelho: "/assets/icons/yuki/espelho-demoniaco-de-gelo-fino.png",
+  yuki_domo: "/assets/icons/yuki/domo-de-iceberg.png",
+  yuki_presenca: "/assets/icons/yuki/presenca-silenciosa.png",
+  yuki_reflexos: "/assets/icons/yuki/reflexos-gelidos.png",
+  yuki_chuva_agulhas: "/assets/icons/yuki/chuva-de-agulhas-geladas.png",
+  yuki_apice: "/assets/icons/yuki/dominio-do-espelho-de-gelo.png",
+  yuki_agulhas_mil: "/assets/icons/yuki/mil-agulhas-voadoras.png",
+};
+
+function nodeImage(node) {
+  return node.img || NODE_IMAGE_FALLBACKS[node.id];
+}
+
 // Símbolos dos clãs na seleção inferior. Mantidos fora dos metadados de cada
 // árvore para que árvores sem arquivo continuem usando seu ícone de reserva.
 const CLAN_FOOTER_ICONS = {
   // ---- Konoha ----
+  uchiha: "/assets/icons/uchiha/sharingan-3-tomoe.png",
   nara: "/assets/icons/footer/Nara_Symbol.png",
   senju: "/assets/icons/footer/Senju_Symbol.png",
   hyuuga: "/assets/icons/footer/Hyuga_symbol.png",
@@ -412,6 +458,7 @@ function renderTree(elId) {
   const meta = ELEMENTS.find((e) => e.id === elId);
   const nodes = state.trees[elId] || [];
   const ownedIds = new Set(nodes.filter((n) => n.status === "OWNED").map((n) => n.id));
+  $("copyArsenalBtn").classList.toggle("hidden", elId !== "UCHIHA");
 
   // marca ativo na barra
   document.querySelectorAll(".elem").forEach((d) => d.classList.toggle("active", d.dataset.el === elId));
@@ -477,8 +524,9 @@ function renderTree(elId) {
     div.setAttribute("role", "button");
     div.setAttribute("aria-label", `${n.name}${n.rank ? " (rank " + n.rank + ")" : ""}`);
     const badge = n.rank ? `<span class="badge r-${n.rank}">${n.rank}</span>` : "";
-    const face = n.img
-      ? `<img class="emoji-img" src="${n.img}" alt="" loading="lazy">`
+    const image = nodeImage(n);
+    const face = image
+      ? `<img class="emoji-img" src="${image}" alt="" loading="lazy">`
       : `<span class="emoji">${n.icon}</span>`;
     div.innerHTML = `${face}${badge}<span class="lbl">${n.name}</span>`;
     div.onclick = () => openModal(n);
@@ -487,10 +535,34 @@ function renderTree(elId) {
   }
 }
 
+function openCopyArsenal() {
+  const list = $("copyArsenalList");
+  const copied = state.copiedJutsus || [];
+  if (!copied.length) {
+    list.innerHTML = '<div class="copy-arsenal-empty">Nenhuma técnica copiada ainda. Ative o Sharingan de três tomoe e observe um Ninjutsu elemental elegível em combate.</div>';
+  } else {
+    list.innerHTML = copied.map((j) => {
+      const category = CAT_LABEL[j.category] || j.category;
+      const resource = RES_LABEL[j.resource] || j.resource;
+      return `<article class="copy-arsenal-item">
+        <h3>${j.name}</h3>
+        <div class="copy-arsenal-tags"><span>${category}</span><span>${j.element || "Sem elemento"}</span><span>${resource}: ${j.cost}%</span></div>
+        <p>${j.description || ""}</p>
+        ${j.mechanics ? `<p><b>Efeitos:</b> ${j.mechanics}</p>` : ""}
+      </article>`;
+    }).join("");
+  }
+  $("copyArsenalModal").classList.remove("hidden");
+}
+
+function closeCopyArsenal() {
+  $("copyArsenalModal").classList.add("hidden");
+}
+
 // 1 casa do grid ≈ 1,5 m (escala tática usada só p/ exibir alcance no site).
 const METERS_PER_CELL = 1.5;
 const CAT_LABEL = { NINJUTSU: "Ninjutsu", TAIJUTSU: "Taijutsu", BUKIJUTSU: "Bukijutsu",
-  KENJUTSU: "Kenjutsu", IRYO_NINJUTSU: "Ninjutsu Médico", GENJUTSU: "Genjutsu", CLA: "Técnica de Clã" };
+  KENJUTSU: "Kenjutsu", DOJUTSU: "Dojutsu", IRYO_NINJUTSU: "Ninjutsu Médico", GENJUTSU: "Genjutsu", CLA: "Técnica de Clã" };
 const ACT_LABEL = { COMUM: "Ação comum", BONUS: "Ação bônus", REACAO: "Reação" };
 const RES_LABEL = { chakra: "Chakra", energia: "Energia" };
 
@@ -514,15 +586,20 @@ function areaText(c) {
 function openModal(n) {
   modalNode = n;
   const mIcon = $("mIcon");
-  mIcon.innerHTML = n.img
-    ? `<img class="modal-img" src="${n.img}" alt="">`
+  const image = nodeImage(n);
+  mIcon.innerHTML = image
+    ? `<img class="modal-img" src="${image}" alt="">`
     : n.icon;
   $("mName").textContent = n.name;
   const narrative = n.kind === "JUTSU"
     ? escHtml(n.visualDescription || "Uma técnica ninja executada com precisão.")
     : highlightEffects(n.desc);
+  const mangekyoVariant = n.id === "uchiha_mangekyo_sharingan" && state.char.mangekyoVariant
+    ? `<span class="mechanics-title">Variação recebida</span><span class="mechanics-text"><b>${escHtml(state.char.mangekyoVariant)}</b></span>`
+    : "";
   $("mDesc").innerHTML =
     narrative +
+    mangekyoVariant +
     (n.mechanics
       ? `<span class="mechanics-title">Efeitos e regras</span><span class="mechanics-text">${highlightEffects(n.mechanics)}</span>`
       : "");
@@ -604,7 +681,7 @@ async function doBuy() {
       return;
     }
     const elName = out.grantedElement && ELEMENTS.find((e) => e.id === out.grantedElement)?.name;
-    toast(elName ? `Elemento sorteado: ${elName}! 🎴` : `Desbloqueado: ${modalNode.name}!`);
+    toast(out.grantedMangekyoVariant ? `${out.grantedMangekyoVariant} despertou! 👁️` : (elName ? `Elemento sorteado: ${elName}! 🎴` : `Desbloqueado: ${modalNode.name}!`));
     closeModal();
     // recarrega o estado autoritativo e re-renderiza
     state = await fetchState();
@@ -629,6 +706,9 @@ function toast(msg, err) {
 $("mCancel").onclick = closeModal;
 $("mBuy").onclick = doBuy;
 $("modal").onclick = (e) => { if (e.target.id === "modal") closeModal(); };
+$("copyArsenalBtn").onclick = openCopyArsenal;
+$("copyArsenalClose").onclick = closeCopyArsenal;
+$("copyArsenalModal").onclick = (e) => { if (e.target.id === "copyArsenalModal") closeCopyArsenal(); };
 $("logoutBtn").onclick = async () => {
   await fetch("/auth/logout", { method: "POST", credentials: "same-origin" });
   location.reload();

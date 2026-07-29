@@ -408,6 +408,18 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
 .modal-reason{background:rgba(226,59,46,.12);border:1px solid rgba(226,59,46,.4);color:#ffb3aa;
   padding:10px 13px;border-radius:11px;font-size:12.5px;margin-bottom:16px;line-height:1.4;}
 .modal-actions{display:flex;gap:10px;justify-content:center;}
+.copy-arsenal-btn{position:absolute;z-index:8;right:24px;top:22px;border:1px solid rgba(224,62,62,.65);
+  border-radius:999px;padding:10px 16px;background:rgba(66,10,15,.88);color:#ffd9d9;
+  font-family:var(--hud);font-weight:700;letter-spacing:.5px;cursor:pointer;box-shadow:0 0 20px rgba(190,35,48,.25);}
+.copy-arsenal-btn:hover{background:rgba(104,16,24,.95);border-color:#ef5b62;}
+.copy-arsenal-card{max-width:620px;max-height:min(760px,88vh);overflow:auto;}
+.copy-arsenal-list{display:grid;gap:10px;margin:16px 0 22px;text-align:left;}
+.copy-arsenal-empty{padding:22px;border:1px dashed var(--line);border-radius:10px;text-align:center;color:var(--ink-soft);}
+.copy-arsenal-item{padding:13px 15px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.035);}
+.copy-arsenal-item h3{margin:0 0 6px;font-family:var(--hud);font-size:15px;color:var(--ink);}
+.copy-arsenal-tags{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:7px;}
+.copy-arsenal-tags span{padding:3px 7px;border-radius:999px;background:rgba(224,62,62,.13);color:#ffaaa9;font-size:11px;}
+.copy-arsenal-item p{margin:0;color:var(--ink-soft);font-size:12px;line-height:1.55;}
 .btn-buy{background:linear-gradient(180deg,var(--orange2),var(--orange-deep));color:#160a02;border:none;
   padding:12px 28px;font-family:var(--hud);font-weight:700;cursor:pointer;font-size:15px;letter-spacing:1px;
   text-transform:uppercase;
