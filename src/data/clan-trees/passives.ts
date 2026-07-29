@@ -6,7 +6,7 @@
 // Ao criar uma passiva nova: se ela precisar de um modificador que ainda nao
 // existe aqui, o campo tem que nascer aqui E ser consumido em
 // services/combat/passives.ts — campo sem consumo é passiva morta.
-import type { Attribute, Category, EffectId, Shape } from "../../config/enums.js";
+import type { Attribute, Category, EffectId, Element, Shape } from "../../config/enums.js";
 
 export interface ClanPassiveDef {
   nodeId: string;
@@ -25,8 +25,13 @@ export interface ClanPassiveDef {
   // multiplica o custo de recurso dos jutsus de clã (0.85 = -15%)
   costMult?: number;
   costShapes?: Shape[];
+  // multiplica a cura produzida por tecnicas medicas cobertas pela passiva.
+  healMult?: number;
+  // bonus adicional de cura quando o alvo ja esta gravemente ferido.
+  criticalHealBonus?: { hpThreshold: number; mult: number };
   // chance extra de aplicar efeitos especificos (0.15 = +15 pontos percentuais)
   effectChanceBonus?: Partial<Record<EffectId, number>>;
+  effectStacksBonus?: Partial<Record<EffectId, number>>;
   // estende a duracao de um efeito aplicado pelos jutsus de clã
   effectDurationBonus?: { effectId: EffectId; bonus: number };
   // casas extras de alcance
@@ -55,6 +60,8 @@ export interface ClanPassiveDef {
   // de tickar dano, ticka cura. Nao e' um EffectId (nao aparece em
   // status/efeitos do alvo, e' passiva pura, sempre ativa).
   hpRegenPerTurn?: number;
+  // reduz, em rodadas, efeitos negativos específicos recebidos pelo dono.
+  receivedEffectDurationReduction?: Partial<Record<EffectId, number>>;
   // restaura X pontos percentuais de chakra no INICIO do proprio turno do
   // dono, todo turno (mesmo tick de hpRegenPerTurn, so' que no pool de
   // chakra em vez de vida — capado em 100). So' faz sentido pra dono cujo
@@ -76,16 +83,20 @@ export interface ClanPassiveDef {
   // qualquer ilusao que o personagem conjure, nao so' a Genjutsu Ketsuryuugan
   // do proprio cla. Ver passiveMods() em services/combat/passives.ts.
   crossCategory?: Category;
+  // abre o alcance para qualquer tecnica do elemento indicado.
+  crossElement?: Element;
+  // restringe a passiva a tecnicas especificas, mesmo fora do proprio cla.
+  abilityIds?: string[];
   // multiplica o custo de upkeep por turno do controle mental do Yamanaka
   // (BALANCE.yamanaka.upkeepPerTurn, cobrado uma vez por turno de quem
   // estiver controlando pelo menos 1 corpo — 0.8 = -20%). So' faz sentido em
   // quem possui nos Yamanaka. Ver processTurnStart em combat-engine.ts.
   mindControlUpkeepMult?: number;
-  // bonus fixo de Genjutsu EFETIVO so' pra disputa de controle mental
+  // bonus fixo de Ninjutsu EFETIVO so' pra disputa de controle mental
   // (yamanakaResistChance, combat-math.ts) — ajuda tanto quando o dono esta
   // CONTROLANDO (mais dificil pra vitima resistir) quanto quando esta SENDO
   // controlado (mais facil de resistir de volta). Ver processTurnStart.
-  mindControlGenjutsuBonus?: number;
+  mindControlNinjutsuBonus?: number;
   // +N corpos simultaneos ALEM do mindTransferMax da propria ability — so'
   // importa pra abilities com mindTransfer (Clones de Transferencia de
   // Mente, Yamanaka). Ver establishControl(), chamado a partir de resolveHit
@@ -487,7 +498,7 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
   // Clã não tem damageMult NENHUM — todas as 4 abilities do clã sao
   // baseDamage: 0 (controle/buff puro, sem dano de graca). O poder do clã
   // mora inteiro nos campos novos de controle mental (mindControlUpkeepMult/
-  // mindControlGenjutsuBonus/mindTransferMaxBonus, ver ClanPassiveDef acima),
+  // mindControlNinjutsuBonus/mindTransferMaxBonus, ver ClanPassiveDef acima),
   // consumidos so' em processTurnStart/resolveHit (combat-engine.ts) — nao em
   // passiveMods() feito pros outros clas. costMult continua na raiz, igual
   // todo mundo. Ápice combina o bonus de disputa com +1 corpo simultâneo pros
@@ -513,7 +524,7 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
   {
     nodeId: "yamanaka_apice",
     clanId: "yamanaka",
-    mindControlGenjutsuBonus: 6,
+    mindControlNinjutsuBonus: 6,
     mindTransferMaxBonus: 1,
   },
 
@@ -554,6 +565,21 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
     effectChanceBonus: { ROOT: 0.15 },
     effectDurationBonus: { effectId: "POISON", bonus: 1 },
   },
+
+  // ---------------------------------------------------------------- SENJU
+  { nodeId: "senju_vitalidade", clanId: "senju", maxHpBonus: 0.08, hpRegenPerTurn: 3 },
+  { nodeId: "senju_controle_chakra", clanId: "senju", crossCategory: "NINJUTSU", costMult: 0.92 },
+  { nodeId: "senju_heranca", clanId: "senju", chakraRegenPerTurn: 3 },
+  { nodeId: "senju_dominio_suiton", clanId: "senju", crossElement: "AGUA", damageMult: 1.1 },
+  { nodeId: "senju_dragao_mare", clanId: "senju", abilityIds: ["suiton_suiryuudan"], damageMult: 1.15, rangeBonus: 1 },
+  { nodeId: "senju_muralha", clanId: "senju", abilityIds: ["suiton_suijinheki"], costMult: 0.9, effectStacksBonus: { SHIELD: 12 } },
+  { nodeId: "senju_cachoeira", clanId: "senju", abilityIds: ["suiton_cachoeira"], damageMult: 1.15, rangeBonus: 1, pushBonus: 1 },
+  { nodeId: "senju_chuva", clanId: "senju", abilityIds: ["suiton_choro_celestial"], damageMult: 1.15, costMult: 0.9, effectDurationBonus: { effectId: "WET", bonus: 1 } },
+  { nodeId: "senju_diagnostico", clanId: "senju", crossCategory: "IRYO_NINJUTSU", costMult: 0.9 },
+  { nodeId: "senju_cirurgia", clanId: "senju", crossCategory: "IRYO_NINJUTSU", criticalHealBonus: { hpThreshold: 0.35, mult: 1.25 } },
+  { nodeId: "senju_imunidade", clanId: "senju", receivedEffectDurationReduction: { POISON: 1, STUN: 1 } },
+  { nodeId: "senju_regenerativo", clanId: "senju", crossCategory: "IRYO_NINJUTSU", healMult: 1.15 },
+  { nodeId: "senju_especialista", clanId: "senju", crossCategory: "IRYO_NINJUTSU", healMult: 1.15, costMult: 0.9 },
 ];
 
 const CLAN_PASSIVE_INDEX: Map<string, ClanPassiveDef> = new Map(CLAN_PASSIVES.map((p) => [p.nodeId, p]));

@@ -794,6 +794,7 @@ function starterFrom(char: Awaited<ReturnType<typeof getOrCreateCharacter>>): St
   return {
     charId: char.id,
     name: char.name,
+    level: char.level,
     hpCurrent: char.hpCurrent,
     hpMax: char.hpMax,
     chakra: char.resources?.chakra ?? 100,

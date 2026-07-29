@@ -102,6 +102,17 @@ describe("Nara: família de imitação — sem dano, usa SHADOW_BOUND", () => {
       expect(computeDamage(ab, { attrValue: 200 }), id).toBe(0); // nem atributo alto gera dano
     }
   });
+
+  it("Possessão e Rede sempre ativam o Vínculo ao acertar e não podem ser bloqueadas ou aparadas", () => {
+    for (const id of ["nara_possessao", "nara_rede"] as const) {
+      const ability = getAbility(id)!;
+      const shadow = ability.effects!.find((effect) => effect.effectId === "SHADOW_BOUND")!;
+      expect(shadow.chance, id).toBeUndefined();
+      expect(ability.unguardable, id).toBe(true);
+      expect(ability.undodgeable, id).not.toBe(true);
+      expect(ability.unblockable, id).not.toBe(true);
+    }
+  });
 });
 
 describe("Nara: passivas — controle, não dano", () => {

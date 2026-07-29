@@ -13,6 +13,7 @@ import {
   resolveAreaCells,
   cellDistance,
   isPhysicalCategory,
+  canYamanakaInvade,
   yamanakaResistChance,
 } from "./combat-math.js";
 import {
@@ -68,7 +69,7 @@ import {
   type TerrainPatch,
 } from "./terrain.js";
 import { fleeCheck } from "./flee.js";
-import { characterPassiveMods, passiveMods } from "./passives.js";
+import { characterPassiveMods, passiveMods, receivedEffectDurationReduction } from "./passives.js";
 import { resolvePush, impactDamage } from "./push.js";
 import { clampInfiniteHp } from "./training-dummy.js";
 
@@ -144,6 +145,7 @@ function mapSession(s: any): SessionFull {
 export interface StartPlayer {
   charId: string;
   name: string;
+  level: number;
   hpCurrent: number;
   hpMax: number;
   chakra: number;
@@ -205,7 +207,7 @@ export async function startCombat(opts: {
         chakra: p.chakra,
         energia: p.energia,
         jutsuIdsJson: JSON.stringify(p.jutsuIds),
-        flagsJson: JSON.stringify({ attrs: p.attrs, nodes: p.nodes ?? [] }),
+        flagsJson: JSON.stringify({ level: p.level, attrs: p.attrs, nodes: p.nodes ?? [] }),
       },
     });
     participantIds.push(cp.id);
@@ -229,6 +231,11 @@ export async function startCombat(opts: {
         chakra: 100,
         energia: 100,
         jutsuIdsJson: JSON.stringify(tpl.abilityIds),
+        flagsJson: JSON.stringify({
+          level: tpl.level ?? Math.max(1, ...Object.values(tpl.attributes)),
+          attrs: tpl.attributes,
+          nodes: [],
+        }),
       },
     });
     participantIds.push(cp.id);
@@ -787,7 +794,18 @@ export async function useAbility(
       logs.push(`🧼 Efeitos removidos de ${healTarget.name}: ${ability.cleanses.join(", ")}.`);
     }
     if (ability.baseHeal) {
-      const heal = computeHeal(ability, getAttr(actor, "iryoNinjutsu"), healMultiplier(healTarget.effects));
+      let passiveHealMult = mods.healMult;
+      if (
+        mods.criticalHealBonus &&
+        healTarget.hpCurrent / Math.max(1, healTarget.hpMax) <= mods.criticalHealBonus.hpThreshold
+      ) {
+        passiveHealMult *= mods.criticalHealBonus.mult;
+      }
+      const heal = computeHeal(
+        ability,
+        getAttr(actor, "iryoNinjutsu"),
+        healMultiplier(healTarget.effects) * passiveHealMult,
+      );
       const newHp = Math.min(healTarget.hpMax, healTarget.hpCurrent + heal);
       await prisma.combatParticipant.update({
         where: { id: healTarget.id },
@@ -841,8 +859,8 @@ export async function useAbility(
         await applyEffect(
           recipient.id,
           ae.effectId,
-          ae.stacks ?? 1,
-          ae.duration ?? defaultDurationFor(ae.effectId),
+          (ae.stacks ?? 1) + (mods.effectStacksBonus[ae.effectId] ?? 0),
+          (ae.duration ?? defaultDurationFor(ae.effectId)) + (mods.effectDurationBonus[ae.effectId] ?? 0),
           {
             replaceGroup: ae.replaceGroup,
             onExpire: ae.onExpire,
@@ -1233,7 +1251,8 @@ export async function resolveHit(
       const bonus = atkMods?.effectDurationBonus[ae.effectId] ?? 0;
       // Faceta Cortante (Cristal) crava um acumulo a mais por acerto
       const extraStacks =
-        ae.effectId === "CRYSTALLIZED" ? (atkMods?.extraCrystalStacks ?? 0) : 0;
+        (ae.effectId === "CRYSTALLIZED" ? (atkMods?.extraCrystalStacks ?? 0) : 0) +
+        (atkMods?.effectStacksBonus[ae.effectId] ?? 0);
       const r = await applyEffect(
         target.id,
         ae.effectId,
@@ -1477,7 +1496,16 @@ export async function applyEffect(
   const replaceGroup = opts?.replaceGroup;
   const onExpire = opts?.onExpire;
   const empoweredScope = opts?.empoweredScope;
-  const dur = clampDuration(effectId as EffectId, duration);
+  const participant = await prisma.combatParticipant.findUnique({
+    where: { id: participantId },
+    select: { flagsJson: true },
+  });
+  const participantFlags = parseFlags(participant?.flagsJson ?? "{}");
+  const reduction = receivedEffectDurationReduction(
+    Array.isArray(participantFlags.nodes) ? participantFlags.nodes as string[] : [],
+    effectId as EffectId,
+  );
+  const dur = clampDuration(effectId as EffectId, Math.max(1, duration - reduction));
 
   // cristal: acumula ate SELAR. Mesma forma da queimadura, payoff invertido —
   // em vez de explodir em dano, o casulo fecha e trava o alvo (Atordoar+Imobilizar).
@@ -1813,23 +1841,23 @@ async function processTurnStart(sessionId: string, participantId: string, logs: 
       const controller = await prisma.combatParticipant.findUnique({ where: { id: p.controlledById } });
       if (controller && controller.hpCurrent > 0) {
         const controllerFlags = parseFlags(controller.flagsJson);
-        // Domínio Mental (Yamanaka, ápice) soma Genjutsu efetivo so' pra essa
+        // Domínio Mental (Yamanaka, ápice) soma Ninjutsu efetivo so' pra essa
         // disputa — ajuda quem tiver o no', seja controlando ou resistindo.
-        const victimGenjutsu =
+        const victimNinjutsu =
           getAttr(
             { isNpc: p.isNpc, npcTemplate: p.npcTemplate, flags } as SessionFull["participants"][number],
-            "genjutsu",
+            "ninjutsu",
           ) +
-          characterPassiveMods(Array.isArray(flags.nodes) ? (flags.nodes as string[]) : []).mindControlGenjutsuBonus;
-        const casterGenjutsu =
+          characterPassiveMods(Array.isArray(flags.nodes) ? (flags.nodes as string[]) : []).mindControlNinjutsuBonus;
+        const casterNinjutsu =
           getAttr(
             { isNpc: controller.isNpc, npcTemplate: controller.npcTemplate, flags: controllerFlags } as SessionFull["participants"][number],
-            "genjutsu",
+            "ninjutsu",
           ) +
           characterPassiveMods(
             Array.isArray(controllerFlags.nodes) ? (controllerFlags.nodes as string[]) : [],
-          ).mindControlGenjutsuBonus;
-        const resistChance = yamanakaResistChance(victimGenjutsu, casterGenjutsu);
+          ).mindControlNinjutsuBonus;
+        const resistChance = yamanakaResistChance(victimNinjutsu, casterNinjutsu);
         if (chance(resistChance)) {
           logs.push(
             `🧠 ${p.name} resistiu ao controle mental e expulsou ${controller.name} de seu corpo! (${Math.round(resistChance * 100)}% de chance)`,
@@ -1912,6 +1940,15 @@ async function establishControl(
   const attacker = await prisma.combatParticipant.findUnique({ where: { id: attackerId } });
   if (!attacker) return;
   const flags = parseFlags(attacker.flagsJson);
+  const targetFlags = parseFlags(target.flagsJson);
+  const attackerLevel = Number(flags.level ?? 1);
+  const targetLevel = Number(targetFlags.level ?? 1);
+  if (!canYamanakaInvade(attackerLevel, targetLevel)) {
+    logs.push(
+      `🧠 A mente de ${target.name} é forte demais para ser invadida: está ${targetLevel - attackerLevel} níveis acima do controlador.`,
+    );
+    return;
+  }
   const controllingIds = Array.isArray(flags.controllingIds) ? (flags.controllingIds as string[]) : [];
   const max = opts?.maxSimultaneous ?? 1;
   if (controllingIds.length >= max) {

@@ -56,12 +56,12 @@ describe("Lava: integridade da arvore", () => {
 describe("Lava: passiva de dano — mesmo nível do Cristal", () => {
   const balas = getAbility("lava_tecnica_balas")!;
 
-  it("raiz + ápice fecham em 2.295x", () => {
+  it("raiz + ápice fecham em 2.025x", () => {
     const mods = passiveMods(["lava_raiz", "lava_apice"], balas);
-    expect(mods.damageMult).toBeCloseTo(2.295, 3);
+    expect(mods.damageMult).toBeCloseTo(2.025, 3);
   });
 
-  it("2.295x é igual ao Vapor/Calor/Explosão e ao Cristal — só o custo total muda", () => {
+  it("2.025x é igual ao Vapor/Calor/Explosão e ao Cristal — só o custo total muda", () => {
     const lava = passiveMods(["lava_raiz", "lava_apice"], balas).damageMult;
     const vapor = passiveMods(
       ["vapor_raiz", "vapor_ebulicao_total"],

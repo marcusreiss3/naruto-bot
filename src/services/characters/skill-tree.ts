@@ -27,6 +27,7 @@ import { CLAN_TREES } from "../../data/clan-trees/index.js";
 import { getAbility, getClan } from "../../data/index.js";
 import { FUNDAMENTOS } from "../../data/element-trees/fundamentals.js";
 import { clanStartingElement, CLAN_STARTING_ELEMENT } from "../../data/clans/starting-element.js";
+import { buildMechanicsSummary, buildVisualDescription } from "./skill-description.js";
 
 // Icone do elemento (footer). So basicos — kekkei genkai nunca e primeiro
 // elemento. Usado pra pintar o no "Primeiro Elemento" com o elemento do cla.
@@ -69,8 +70,38 @@ export interface NodeCombat {
 
 export interface NodeView extends SkillNodeDef {
   status: NodeStatus;
+  effectiveReqPool: number;
+  visualDescription?: string;
+  mechanics?: string;
   reason?: string; // se LOCKED: por quê
   combat?: NodeCombat; // presente só em nós JUTSU
+}
+
+// Soma o custo deste no e de todos os ancestrais obrigatorios que usam a
+// mesma bolsa. Ancestrais compartilhados entram uma unica vez.
+export function mandatorySamePoolCost(node: SkillNodeDef): number {
+  const visited = new Set<string>();
+
+  function visit(current: SkillNodeDef): void {
+    if (visited.has(current.id)) return;
+    visited.add(current.id);
+    for (const requiredId of current.requires) {
+      const required = getNode(requiredId);
+      if (required) visit(required);
+    }
+  }
+
+  visit(node);
+  let total = 0;
+  for (const nodeId of visited) {
+    const required = getNode(nodeId);
+    if (required?.pool === node.pool) total += required.cost;
+  }
+  return total;
+}
+
+export function effectiveReqPool(node: SkillNodeDef): number {
+  return Math.max(node.reqPool, mandatorySamePoolCost(node));
 }
 
 // Extrai o perfil de combate da ability concedida por um no JUTSU.
@@ -88,6 +119,19 @@ function combatOf(node: SkillNodeDef): NodeCombat | undefined {
     baseDamage: ab.baseDamage,
     baseHeal: ab.baseHeal,
   };
+}
+
+function mechanicsOf(node: SkillNodeDef): string | undefined {
+  if (node.kind !== "JUTSU" || !node.grantsAbilityId) return undefined;
+  const ability = getAbility(node.grantsAbilityId);
+  if (!ability) return undefined;
+  return buildMechanicsSummary(ability) || undefined;
+}
+
+function visualDescriptionOf(node: SkillNodeDef): string | undefined {
+  if (node.kind !== "JUTSU" || !node.grantsAbilityId) return undefined;
+  const ability = getAbility(node.grantsAbilityId);
+  return buildVisualDescription(node.desc, ability?.visualDescription);
 }
 
 export type PoolMap = Partial<Record<Attribute, number>>;
@@ -193,7 +237,8 @@ export function lockReason(snap: CharSnapshot, node: SkillNodeDef): string | nul
   }
   // gate e orçamento saem do MESMO atributo (node.pool).
   const label = ATTRIBUTE_LABELS[node.pool];
-  if ((snap.attributes[node.pool] ?? 1) < node.reqPool) return `Requer ${label} ${node.reqPool}.`;
+  const requiredPool = effectiveReqPool(node);
+  if ((snap.attributes[node.pool] ?? 1) < requiredPool) return `Requer ${label} ${requiredPool}.`;
   const left = snap.pointsByPool[node.pool] ?? (snap.attributes[node.pool] ?? 1);
   if (left < node.cost) {
     return `Pontos de ${label} insuficientes (precisa ${node.cost}, restam ${left}).`;
@@ -205,9 +250,16 @@ export function lockReason(snap: CharSnapshot, node: SkillNodeDef): string | nul
 export function viewTree(snap: CharSnapshot, element: Element): NodeView[] {
   return ELEMENT_TREES[element].map((node) => {
     const combat = combatOf(node);
-    if (snap.owned.has(node.id)) return { ...node, combat, status: "OWNED" };
+    const mechanics = mechanicsOf(node);
+    const visualDescription = visualDescriptionOf(node);
+    const effectiveRequired = effectiveReqPool(node);
+    if (snap.owned.has(node.id)) {
+      return { ...node, combat, visualDescription, mechanics, effectiveReqPool: effectiveRequired, status: "OWNED" };
+    }
     const reason = lockReason(snap, node);
-    return reason ? { ...node, combat, status: "LOCKED", reason } : { ...node, combat, status: "BUYABLE" };
+    return reason
+      ? { ...node, combat, visualDescription, mechanics, effectiveReqPool: effectiveRequired, status: "LOCKED", reason }
+      : { ...node, combat, visualDescription, mechanics, effectiveReqPool: effectiveRequired, status: "BUYABLE" };
   });
 }
 
@@ -215,9 +267,16 @@ export function viewTree(snap: CharSnapshot, element: Element): NodeView[] {
 export function viewClanTree(snap: CharSnapshot, clanId: string): NodeView[] {
   return (CLAN_TREES[clanId] ?? []).map((node) => {
     const combat = combatOf(node);
-    if (snap.owned.has(node.id)) return { ...node, combat, status: "OWNED" };
+    const mechanics = mechanicsOf(node);
+    const visualDescription = visualDescriptionOf(node);
+    const effectiveRequired = effectiveReqPool(node);
+    if (snap.owned.has(node.id)) {
+      return { ...node, combat, visualDescription, mechanics, effectiveReqPool: effectiveRequired, status: "OWNED" };
+    }
     const reason = lockReason(snap, node);
-    return reason ? { ...node, combat, status: "LOCKED", reason } : { ...node, combat, status: "BUYABLE" };
+    return reason
+      ? { ...node, combat, visualDescription, mechanics, effectiveReqPool: effectiveRequired, status: "LOCKED", reason }
+      : { ...node, combat, visualDescription, mechanics, effectiveReqPool: effectiveRequired, status: "BUYABLE" };
   });
 }
 
@@ -229,10 +288,21 @@ export function viewFundamentosTree(snap: CharSnapshot): NodeView[] {
   return FUNDAMENTOS.map((node) => {
     const img =
       node.id === FIRST_ELEMENT_NODE_ID && clanElement ? ELEMENT_ICON[clanElement] ?? node.img : node.img;
-    const withIcon = { ...node, img, combat: combatOf(node) };
-    if (snap.owned.has(node.id)) return { ...withIcon, status: "OWNED" };
+    const withIcon = {
+      ...node,
+      img,
+      combat: combatOf(node),
+      visualDescription: visualDescriptionOf(node),
+      mechanics: mechanicsOf(node),
+    };
+    const effectiveRequired = effectiveReqPool(node);
+    if (snap.owned.has(node.id)) {
+      return { ...withIcon, effectiveReqPool: effectiveRequired, status: "OWNED" };
+    }
     const reason = lockReason(snap, node);
-    return reason ? { ...withIcon, status: "LOCKED", reason } : { ...withIcon, status: "BUYABLE" };
+    return reason
+      ? { ...withIcon, effectiveReqPool: effectiveRequired, status: "LOCKED", reason }
+      : { ...withIcon, effectiveReqPool: effectiveRequired, status: "BUYABLE" };
   });
 }
 

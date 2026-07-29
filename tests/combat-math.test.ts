@@ -1,10 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { ATTRIBUTES, type Attribute } from "../src/config/enums.js";
-import { resolveAreaCells, dodgeChance } from "../src/services/combat/combat-math.js";
+import { computeDamage, resolveAreaCells, dodgeChance } from "../src/services/combat/combat-math.js";
 import { BALANCE } from "../src/config/balance.js";
 import type { Ability } from "../src/data/types.js";
 import { meetsRequirements } from "../src/services/characters/requirements.js";
-import { getAbility } from "../src/data/index.js";
+import { ALL_ABILITIES, getAbility } from "../src/data/index.js";
 import { allNodes } from "../src/data/element-trees/index.js";
 import { getScenarioById } from "../src/data/scenarios/index.js";
 
@@ -94,5 +94,31 @@ describe("integridade de dados", () => {
   it("desarme: ken_desarme aplica efeito DISARM", () => {
     const ab = getAbility("ken_desarme")!;
     expect(ab.effects?.some((e) => e.effectId === "DISARM")).toBe(true);
+  });
+});
+
+describe("escala uniforme de dano", () => {
+  it("Genjutsu nao soma atributo ao dano, como as demais disciplinas", () => {
+    const ab = getAbility("chinoike_genjutsu_ketsuryuugan")!;
+    expect(BALANCE.genjutsuScaling).toBe(0);
+    expect(ab.baseDamage).toBe(29);
+    expect(computeDamage(ab, { attrValue: 1 })).toBe(29);
+    expect(computeDamage(ab, { attrValue: 50 })).toBe(29);
+  });
+
+  it("toda ability sem reacao usa o nome amigavel Inevitavel", () => {
+    for (const ab of ALL_ABILITIES.filter((ability) => ability.unblockable)) {
+      expect(ab.description, ab.id).toMatch(/Inevitável/i);
+    }
+  });
+
+  it("todo no de arvore sem reacao usa o nome amigavel Inevitavel", () => {
+    const nodes = allNodes().filter((node) => {
+      const ability = node.grantsAbilityId ? getAbility(node.grantsAbilityId) : undefined;
+      return ability?.unblockable;
+    });
+    for (const node of nodes) {
+      expect(node.desc, node.id).toMatch(/Inevitável/i);
+    }
   });
 });

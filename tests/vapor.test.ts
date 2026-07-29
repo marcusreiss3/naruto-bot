@@ -73,9 +73,9 @@ describe("Vapor: passiva de dano", () => {
     expect(passiveMods(["vapor_raiz"], nevoa).damageMult).toBeCloseTo(1.35, 3);
   });
 
-  it("raiz + Ebulição Total (ápice) fecham em 2.295x — mesmo nível do Cristal", () => {
+  it("raiz + Ebulição Total (ápice) fecham em 2.025x — mesmo nível do Cristal", () => {
     const mods = passiveMods(["vapor_raiz", "vapor_ebulicao_total"], nevoa);
-    expect(mods.damageMult).toBeCloseTo(2.295, 3);
+    expect(mods.damageMult).toBeCloseTo(2.025, 3);
     const cristal = passiveMods(
       ["cristal_raiz", "cristal_faceta"],
       getAbility("shouton_shuriken_cristal")!,

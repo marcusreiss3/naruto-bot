@@ -347,6 +347,7 @@ async function startPatrolCombat(
   const { players, attrsById } = await gatherPartyPlayers(channel, guildId, {
     charId: char.id,
     name: char.name,
+    level: char.level,
     hpCurrent: char.hpCurrent,
     hpMax: char.hpMax,
     chakra: char.resources?.chakra ?? 100,

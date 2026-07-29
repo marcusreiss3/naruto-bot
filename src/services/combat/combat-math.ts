@@ -147,12 +147,16 @@ export function cellDistance(a: string, b: string): number {
 
 // Chance do dono do corpo RESISTIR e expulsar a mente intrusa, avaliada uma
 // vez por rodada no proprio turno do corpo controlado (ver processTurnStart
-// em combat-engine.ts). Simetrica em torno de 50%: Genjutsu da vitima maior
+// em combat-engine.ts). Simetrica em torno de 50%: Ninjutsu da vitima maior
 // que o do controlador ajuda a vitima; menor, atrapalha. Clampada em
-// [5%, 95%] pra nunca ser garantida nem impossivel.
-export function yamanakaResistChance(victimGenjutsu: number, casterGenjutsu: number): number {
-  const raw = 0.5 + (victimGenjutsu - casterGenjutsu) * BALANCE.yamanaka.resistBasePerGenjutsuDiff;
-  return Math.max(0.05, Math.min(0.95, raw));
+// [10%, 90%] pra nunca ser garantida nem impossivel.
+export function yamanakaResistChance(victimNinjutsu: number, casterNinjutsu: number): number {
+  const raw = 0.5 + (victimNinjutsu - casterNinjutsu) * BALANCE.yamanaka.resistBasePerNinjutsuDiff;
+  return Math.max(BALANCE.yamanaka.resistMinChance, Math.min(BALANCE.yamanaka.resistMaxChance, raw));
+}
+
+export function canYamanakaInvade(casterLevel: number, targetLevel: number): boolean {
+  return targetLevel - casterLevel <= BALANCE.yamanaka.maxUpwardLevelGap;
 }
 
 // Por qual CombatParticipant o dono do personagem age agora: o proprio

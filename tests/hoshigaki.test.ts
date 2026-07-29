@@ -104,13 +104,14 @@ describe("Hoshigaki: integridade da arvore de cla", () => {
 describe("Hoshigaki: Grande Bomba do Tubarão de Água — absorve chakra, finalizador", () => {
   const bomba = getAbility("hoshigaki_grande_bomba")!;
 
-  it("não pode ser esquivada e drena chakra do alvo", () => {
-    expect(bomba.undodgeable).toBe(true);
+  it("ignora Bloqueio e Aparo, mas pode ser esquivada e drena chakra do alvo", () => {
+    expect(bomba.unguardable).toBe(true);
+    expect(bomba.undodgeable).toBeFalsy();
     expect(bomba.effects!.some((e) => e.effectId === "CHAKRA_DRAIN")).toBe(true);
   });
 
-  it("a descrição usa a frase exata do glossário ('não pode ser esquivado'), pro tooltip disparar", () => {
-    expect(bomba.description).toMatch(/não pode ser esquivado/i);
+  it("a descrição usa a frase do glossário para ignorar defesa", () => {
+    expect(bomba.description).toMatch(/ignora bloqueio e aparo/i);
   });
 
   it("é o jutsu mais forte do clã (maior baseDamage)", () => {

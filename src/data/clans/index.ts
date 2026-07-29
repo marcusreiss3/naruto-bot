@@ -79,11 +79,13 @@ export const CLAN_ABILITIES: Ability[] = [
     baseDamage: 0,
     range: 4,
     shape: "SINGLE_TARGET",
-    scalingAttribute: "genjutsu",
+    scalingAttribute: "ninjutsu",
     unguardable: true,
     mindTransfer: true,
-    requirements: { clanId: "yamanaka", attributes: { genjutsu: 10 }, manualOnly: true },
+    requirements: { clanId: "yamanaka", attributes: { ninjutsu: 10 }, manualOnly: true },
     tags: ["cla", "yamanaka", "controle", "corpo", "mental"],
+    visualDescription:
+      "A consciência do usuário abandona o próprio corpo como um fluxo invisível e invade a mente do alvo.",
     description:
       "Projeta a consciência para o corpo do alvo, assumindo o controle — só dá pra esquivar, bloqueio e aparo não adiantam contra um ataque mental. Enquanto durar, seu corpo original fica imóvel e vulnerável, e todo dano que o corpo tomado sofrer também atinge o seu. Gasta muito chakra, e mais um pouco a cada turno pra manter o controle; o dono do corpo tenta expulsar sua mente a cada rodada.",
   },
@@ -104,40 +106,41 @@ export const CLAN_ABILITIES: Ability[] = [
     baseDamage: 0,
     range: 4,
     shape: "SINGLE_TARGET",
-    scalingAttribute: "genjutsu",
+    scalingAttribute: "ninjutsu",
     effects: [{ effectId: "CONFUSION", duration: 1 }],
-    requirements: { clanId: "yamanaka", attributes: { genjutsu: 6 }, manualOnly: true },
-    tags: ["cla", "yamanaka", "genjutsu", "confusao", "mental"],
+    requirements: { clanId: "yamanaka", attributes: { ninjutsu: 6 }, manualOnly: true },
+    tags: ["cla", "yamanaka", "ninjutsu", "confusao", "mental"],
     description:
       "Interfere na mente do alvo — se ele não esquivar, perde a noção de aliados e inimigos por um turno: o próximo ataque dele mira alguém aleatório, não importa quem ele escolher.",
   },
   // Versao multi-alvo da Transferencia de Mente: mindTransferMax controla quantos corpos
   // simultaneos essa ability pode tomar (establishControl rejeita alem do
   // teto), mindTransferTurns fixa uma duracao (sem disputa de Genjutsu —
-  // libera sozinho, ver processTurnStart). undodgeable + unguardable juntos:
-  // nenhuma reacao impede (o golpe "curva" pra achar a mente, nao da pra
-  // esquivar nem bloquear).
+  // libera sozinho, ver processTurnStart). Inevitavel: nenhuma reacao impede
+  // a tecnica, pois os clones encontram as mentes visadas.
   {
     id: "yamanaka_clones_shintenshin",
     name: "Técnicas dos Clones de Transferência de Mente",
     category: "NINJUTSU",
     tier: 3,
     resource: "chakra",
-    cost: 70,
+    cost: 80,
     actionType: "COMUM",
     baseDamage: 0,
     range: 6,
     shape: "RADIUS",
-    scalingAttribute: "genjutsu",
-    unguardable: true,
-    undodgeable: true,
+    scalingAttribute: "ninjutsu",
+    unblockable: true,
+    oncePerCombat: true,
     mindTransfer: true,
     mindTransferMax: 3,
     mindTransferTurns: 1,
-    requirements: { clanId: "yamanaka", level: 25, attributes: { genjutsu: 20 }, manualOnly: true },
+    requirements: { clanId: "yamanaka", level: 25, attributes: { ninjutsu: 20 }, manualOnly: true },
     tags: ["cla", "yamanaka", "controle", "corpo", "mental", "area"],
+    visualDescription:
+      "Replicas da consciencia atravessam o campo em silencio e invadem as mentes inimigas, enquanto o corpo do usuario permanece vulneravel onde esta.",
     description:
-      "Divide a consciência em vários alvos ao mesmo tempo (até 3), tomando o controle total de cada corpo — impossível de esquivar ou bloquear. Diferente da Técnica de Transferência de Mente, não dá pra resistir: o controle dura exatamente 1 turno por corpo e se desfaz sozinho depois. Enquanto durar, seu corpo original fica imóvel e vulnerável.",
+      "Divide a consciência em vários alvos ao mesmo tempo (até 3), tomando o controle total de cada corpo. É Inevitável — diferente da Técnica de Transferência de Mente, não dá pra resistir: o controle dura exatamente 1 turno por corpo e se desfaz sozinho depois. Enquanto durar, seu corpo original fica imóvel e vulnerável.",
   },
   // Buff SELF que atinge o time inteiro (teamBuff, ver bloco SELF em
   // useAbility, combat-engine.ts) em vez de so' o ator. Reusa HASTE pronto —
@@ -182,6 +185,15 @@ export const CLAN_ABILITIES: Ability[] = [
     shape: "SELF",
     requirements: { clanId: "hyuuga", manualOnly: true },
     tags: ["hyuuga", "visao", "byakugan"],
+    toggleRules: {
+      command: "/combate byakugan",
+      dodgeBonus: 0.1,
+      upkeepPerTurn: 5,
+      disablesWithoutResource: true,
+      cloneDodgeReduction: 0.5,
+    },
+    visualDescription:
+      "Veias saltam ao redor dos olhos enquanto sua visao se expande pelo campo. Fluxos de chakra, movimentos sutis e falsos corpos ganham uma nitidez sobrenatural.",
     description:
       "O dōjutsu do clã. Ative e desative a qualquer momento com /combate byakugan: enquanto ligado, dá +10% de chance de esquiva contra qualquer ataque, gasta 5% de chakra por rodada (desliga sozinho se o chakra acabar) e enxerga através de clones/substituição — corta pela metade o bônus de esquiva de quem tentar escapar de você com esses truques.",
   },
@@ -216,7 +228,7 @@ export const CLAN_ABILITIES: Ability[] = [
     scalingAttribute: "taijutsu",
     range: 4,
     shape: "SINGLE_TARGET",
-    undodgeable: true,
+    unguardable: true,
     push: 3,
     requiresActiveDoujutsu: { flag: "byakuganActive", label: "Byakugan" },
     requirements: { clanId: "hyuuga", manualOnly: true },
@@ -333,7 +345,8 @@ export const CLAN_ABILITIES: Ability[] = [
     baseDamage: 0,
     range: 5,
     shape: "LINE",
-    effects: [{ effectId: "SHADOW_BOUND", duration: 2, chance: 0.65 }],
+    effects: [{ effectId: "SHADOW_BOUND", duration: 2 }],
+    unguardable: true,
     requirements: { clanId: "nara", manualOnly: true },
     tags: ["nara", "sombra", "controle"],
     description:
@@ -405,14 +418,17 @@ export const CLAN_ABILITIES: Ability[] = [
     category: "NINJUTSU",
     tier: 3,
     resource: "chakra",
-    cost: 38,
+    cost: 46,
     actionType: "COMUM",
     baseDamage: 0,
     range: 6,
     shape: "RADIUS",
-    effects: [{ effectId: "SHADOW_BOUND", duration: 3, chance: 0.85 }],
+    effects: [{ effectId: "SHADOW_BOUND", duration: 3 }],
+    unguardable: true,
     requirements: { clanId: "nara", manualOnly: true },
     tags: ["nara", "sombra", "area", "controle"],
+    visualDescription:
+      "Filamentos de sombra deslizam pelo chao e se entrelacam ao redor dos adversarios, como uma rede viva que fecha o campo.",
     description:
       "Divide a sombra em vários filamentos que se espalham pelo chão, prendendo todos os inimigos numa área em Vínculo de Sombra ao mesmo tempo.",
   },
@@ -546,7 +562,7 @@ export const CLAN_ABILITIES: Ability[] = [
     requirements: { clanId: "akimichi", manualOnly: true },
     tags: ["akimichi", "gigante", "impacto"],
     description:
-      "Depois da Técnica do Super Tamanho Múltiplo, desfere um tapa mortal com as duas mãos: a concentração de chakra ativa os músculos e aumenta ainda mais a massa do golpe. Não pode ser esquivada.",
+      "Depois da Técnica do Super Tamanho Múltiplo, desfere um tapa mortal com as duas mãos: a concentração de chakra ativa os músculos e aumenta ainda mais a massa do golpe. Ignora Bloqueio e Aparo.",
   },
   {
     // id = "akimichi_apice" pra bater com o grantsAbilityId padrao do no
@@ -603,11 +619,11 @@ export const CLAN_ABILITIES: Ability[] = [
     scalingAttribute: "taijutsu",
     range: 1,
     shape: "MELEE",
-    undodgeable: true,
+    unguardable: true,
     requirements: { clanId: "akimichi", manualOnly: true },
     tags: ["akimichi", "borboleta", "apice", "finalizador"],
     description:
-      "Depois do Modo Borboleta, concentra todo o poder acumulado num único golpe de taijutsu devastador. Não pode ser esquivado.",
+      "Depois do Modo Borboleta, concentra todo o poder acumulado num único golpe de taijutsu devastador. Ignora Bloqueio e Aparo.",
   },
 
   // ---- Aburame ----
@@ -1064,7 +1080,7 @@ export const CLAN_ABILITIES: Ability[] = [
     element: "AGUA",
     tier: 1,
     resource: "chakra",
-    cost: 20,
+    cost: 24,
     actionType: "COMUM",
     baseDamage: 24,
     scalingAttribute: "ninjutsu",
@@ -1146,12 +1162,12 @@ export const CLAN_ABILITIES: Ability[] = [
     scalingAttribute: "ninjutsu",
     range: 4,
     shape: "LINE",
-    undodgeable: true,
+    unguardable: true,
     effects: [{ effectId: "CHAKRA_DRAIN", duration: 3, chance: 0.9 }],
     requirements: { clanId: "hoshigaki", manualOnly: true },
     tags: ["hoshigaki", "suiton", "tubarao", "dreno", "finalizador"],
     description:
-      "Cria um tubarão gigantesco fora da água e o arremessa com as duas mãos: não pode ser esquivado, e absorve o chakra da técnica do adversário, crescendo ainda mais no impacto — sugando 10% de chakra por turno por 3 rodadas.",
+      "Cria um tubarão gigantesco fora da água e o arremessa com as duas mãos: ignora Bloqueio e Aparo, absorvendo o chakra da técnica do adversário e crescendo ainda mais no impacto — sugando 10% de chakra por turno por 3 rodadas.",
   },
 
   // ---- Hozuki ----
@@ -1203,7 +1219,7 @@ export const CLAN_ABILITIES: Ability[] = [
     element: "AGUA",
     tier: 2,
     resource: "chakra",
-    cost: 28,
+    cost: 24,
     actionType: "COMUM",
     baseDamage: 20,
     scalingAttribute: "ninjutsu",
@@ -1223,19 +1239,19 @@ export const CLAN_ABILITIES: Ability[] = [
     element: "AGUA",
     tier: 3,
     resource: "chakra",
-    cost: 46,
+    cost: 34,
     actionType: "COMUM",
     baseDamage: 26,
     scalingAttribute: "ninjutsu",
     range: 5,
     shape: "RADIUS",
-    undodgeable: true,
+    unguardable: true,
     push: 3,
     effects: [{ effectId: "SLOW", duration: 2, chance: 0.75 }],
     requirements: { clanId: "hozuki", manualOnly: true },
     tags: ["hozuki", "suiton", "area", "finalizador"],
     description:
-      "Forma uma onda gigante em formato de peixe demoníaco: capaz de lutar contra adversários muito maiores, arrasando a área. Não pode ser esquivada, empurra 3 casas quem for atingido e tem 75% de chance de deixar mais lento por 2 rodadas.",
+      "Forma uma onda gigante em formato de peixe demoníaco: capaz de lutar contra adversários muito maiores, arrasando a área. Ignora Bloqueio e Aparo, empurra 3 casas quem for atingido e tem 75% de chance de deixar mais lento por 2 rodadas.",
   },
 
   // ---- Kaguya ----
@@ -1345,12 +1361,12 @@ export const CLAN_ABILITIES: Ability[] = [
     scalingAttribute: "taijutsu",
     range: 3,
     shape: "SINGLE_TARGET",
-    undodgeable: true,
+    unguardable: true,
     effects: [{ effectId: "BLEED", duration: 3, chance: 0.85 }],
     requirements: { clanId: "kaguya", manualOnly: true },
     tags: ["kaguya", "osso", "finalizador"],
     description:
-      "Concentra todo o poder do próprio corpo, projetando os ossos comprimidos em lanças rígidas ao extremo: uma arma de osso incrivelmente destrutiva. Não pode ser esquivada. 85% de chance de causar Sangramento por 3 rodadas.",
+      "Concentra todo o poder do próprio corpo, projetando os ossos comprimidos em lanças rígidas ao extremo: uma arma de osso incrivelmente destrutiva. Ignora Bloqueio e Aparo. 85% de chance de causar Sangramento por 3 rodadas.",
   },
 
   // ---- Yuki ----
@@ -1505,6 +1521,14 @@ export const CLAN_ABILITIES: Ability[] = [
     shape: "SELF",
     requirements: { clanId: "chinoike", manualOnly: true },
     tags: ["chinoike", "doujutsu", "ketsuryuugan"],
+    toggleRules: {
+      command: "/combate ketsuryuugan",
+      dodgeBonus: 0.1,
+      upkeepPerTurn: 5,
+      disablesWithoutResource: true,
+    },
+    visualDescription:
+      "Olhos vermelhos como sangue despertam e acompanham cada tensao muscular e cada fluxo de chakra ao redor do usuario.",
     description:
       "O dōjutsu do clã: olhos avermelhados como sangue, capazes de ler o instante exato em que o corpo do oponente vai se mover. Ative e desative a qualquer momento com /combate ketsuryuugan: enquanto ligado, dá +10% de chance de esquiva contra qualquer ataque e gasta 5% de chakra por rodada — desliga sozinho se o chakra acabar.",
   },
@@ -1535,7 +1559,9 @@ export const CLAN_ABILITIES: Ability[] = [
     resource: "chakra",
     cost: 30,
     actionType: "COMUM",
-    baseDamage: 28,
+    // Dano inteiro na ability, como nas demais disciplinas. Antes era 28 +
+    // Genjutsu por causa de genjutsuScaling=1.
+    baseDamage: 29,
     scalingAttribute: "genjutsu",
     range: 4,
     shape: "SINGLE_TARGET",
@@ -1544,7 +1570,7 @@ export const CLAN_ABILITIES: Ability[] = [
     requirements: { clanId: "chinoike", manualOnly: true },
     tags: ["chinoike", "genjutsu", "doujutsu"],
     description:
-      "Prende o oponente numa ilusão sangrenta que o próprio corpo dele acredita ser real — a dor é real. 60% de chance de causar Confusão por 2 rodadas. Exige o Ketsuryuugan ativo (/combate ketsuryuugan).",
+      "Prende o oponente numa ilusão sangrenta que o próprio corpo dele acredita ser real — a dor é real. Tem 60% de chance de causar Confusão por 2 rodadas e exige o Ketsuryuugan ativo (/combate ketsuryuugan).",
   },
   {
     id: "chinoike_dragao_sangue",
@@ -1552,7 +1578,7 @@ export const CLAN_ABILITIES: Ability[] = [
     category: "NINJUTSU",
     tier: 3,
     resource: "chakra",
-    cost: 48,
+    cost: 38,
     actionType: "COMUM",
     baseDamage: 30,
     scalingAttribute: "ninjutsu",
@@ -1644,7 +1670,7 @@ export const CLAN_ABILITIES: Ability[] = [
     resource: "chakra",
     cost: 74,
     actionType: "COMUM",
-    baseDamage: 46,
+    baseDamage: 42,
     scalingAttribute: "ninjutsu",
     range: 6,
     shape: "LINE",
@@ -1653,7 +1679,7 @@ export const CLAN_ABILITIES: Ability[] = [
     requirements: { clanId: "kamaitachi", manualOnly: true },
     tags: ["kamaitachi", "vento", "linha", "finalizador"],
     description:
-      "O leque provoca um vendaval poderoso que corta através de tudo o que toca — bloqueio, aparo ou desvio não fazem diferença.",
+      "O leque provoca um vendaval poderoso e Inevitável que corta através de tudo o que toca.",
   },
 
   // ---- Raikage ----
@@ -1667,6 +1693,7 @@ export const CLAN_ABILITIES: Ability[] = [
     id: "raikage_deslocamento",
     name: "Deslocamento Instantâneo do Estilo Raio",
     category: "NINJUTSU",
+    element: "RAIO",
     tier: 1,
     resource: "chakra",
     cost: 12,
@@ -1684,6 +1711,7 @@ export const CLAN_ABILITIES: Ability[] = [
     id: "raikage_armadura",
     name: "Armadura de Raio",
     category: "NINJUTSU",
+    element: "RAIO",
     tier: 2,
     resource: "chakra",
     cost: 22,
@@ -1703,6 +1731,7 @@ export const CLAN_ABILITIES: Ability[] = [
     id: "raikage_relampago_reto",
     name: "Relâmpago Reto",
     category: "TAIJUTSU",
+    element: "RAIO",
     tier: 2,
     resource: "energia",
     cost: 26,
@@ -1757,6 +1786,7 @@ export const CLAN_ABILITIES: Ability[] = [
     id: "raikage_corte_horizontal",
     name: "Corte Horizontal de Relâmpago Violento",
     category: "TAIJUTSU",
+    element: "RAIO",
     tier: 3,
     resource: "energia",
     cost: 38,
@@ -1790,7 +1820,7 @@ export const CLAN_ABILITIES: Ability[] = [
     requirements: { clanId: "raikage", manualOnly: true },
     tags: ["cla", "raikage", "corpo-a-corpo", "finalizador", "forca"],
     description:
-      "Agarra o oponente, levanta-o no ar e usa força extrema pra esmagá-lo de cabeça contra o chão — impossível de esquivar, bloquear ou aparar.",
+      "Agarra o oponente, levanta-o no ar e usa força extrema pra esmagá-lo de cabeça contra o chão. O golpe é Inevitável.",
   },
 
   // ---- Kamizuru ----
@@ -1895,6 +1925,26 @@ export const CLAN_ABILITIES: Ability[] = [
   },
 ];
 
+CLAN_ABILITIES.push({
+  id: "senju_ondas_cortantes",
+  name: "Ondas de Águas Cortantes",
+  category: "NINJUTSU",
+  element: "AGUA",
+  tier: 3,
+  resource: "chakra",
+  cost: 48,
+  actionType: "COMUM",
+  baseDamage: 34,
+  scalingAttribute: "ninjutsu",
+  range: 5,
+  shape: "CONE",
+  effects: [{ effectId: "BLEED", duration: 2, chance: 0.7 }],
+  requirements: { clanId: "senju", level: 28, attributes: { ninjutsu: 20 }, manualOnly: true },
+  tags: ["senju", "agua", "suiton", "area", "corte"],
+  visualDescription: "O usuário lança sucessivas lâminas largas de água, que se abrem em leque e atravessam o campo.",
+  description: "Dispara ondas cortantes de água contra vários inimigos.",
+});
+
 export const CLANS: ClanDef[] = [
   {
     id: "uchiha",
@@ -1967,7 +2017,7 @@ export const CLANS: ClanDef[] = [
     name: "Senju",
     description: "Clã da Floresta, fundador de Konoha: vitalidade imensa e forte afinidade com a água.",
     passiveIds: [],
-    activeIds: [],
+    activeIds: ["senju_ondas_cortantes"],
     hooks: {},
   },
   {

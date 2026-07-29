@@ -17,23 +17,57 @@ const ELEMENTS = [
   { id: "LAVA", name: "Lava", icon: "", img: "/assets/icons/footer/lava.png", color: "#b23a1f" },
   { id: "EXPLOSAO", name: "Explosão", icon: "", img: "/assets/icons/footer/explosao.png", color: "#c9a227" },
   // Árvores de clã (gate por clanId em vez de elemento — ver clanGate abaixo).
+  // Ordem por vila, mesmo agrupamento de src/data/clans/index.ts.
+  // ---- Konoha ----
   { id: "NARA", name: "Nara", icon: "🌑", color: "#5c5c7a", clanGate: "nara" },
+  { id: "SENJU", name: "Senju", icon: "🌳", color: "#4f8a55", clanGate: "senju" },
   { id: "HYUUGA", name: "Hyuuga", icon: "👁️", color: "#c9d6e3", clanGate: "hyuuga" },
   { id: "AKIMICHI", name: "Akimichi", icon: "🍖", color: "#d98e3a", clanGate: "akimichi" },
   { id: "ABURAME", name: "Aburame", icon: "🪲", color: "#6f7a35", clanGate: "aburame" },
   { id: "INUZUKA", name: "Inuzuka", icon: "🐕", color: "#a8562e", clanGate: "inuzuka" },
   { id: "UZUMAKI", name: "Uzumaki", icon: "🌀", color: "#c8482f", clanGate: "uzumaki" },
   { id: "HATAKE", name: "Hatake", icon: "⚔️", color: "#a8a8b0", clanGate: "hatake" },
+  { id: "YAMANAKA", name: "Yamanaka", icon: "🧠", color: "#c9a6d9", clanGate: "yamanaka" },
+  // ---- Suna ----
+  { id: "KAMAITACHI", name: "Kamaitachi", icon: "🌪️", color: "#8fae8f", clanGate: "kamaitachi" },
+  // ---- Kiri ----
   { id: "HOSHIGAKI", name: "Hoshigaki", icon: "🦈", color: "#4a7d8c", clanGate: "hoshigaki" },
   { id: "HOZUKI", name: "Hozuki", icon: "💧", color: "#3a8fbf", clanGate: "hozuki" },
   { id: "KAGUYA", name: "Kaguya", icon: "🦴", color: "#d9d0c1", clanGate: "kaguya" },
   { id: "YUKI", name: "Yuki", icon: "❄️", color: "#a8d8e8", clanGate: "yuki" },
+  // ---- Kumo ----
   { id: "CHINOIKE", name: "Chinoike", icon: "🩸", color: "#8c2f2f", clanGate: "chinoike" },
-  { id: "KAMAITACHI", name: "Kamaitachi", icon: "🌪️", color: "#8fae8f", clanGate: "kamaitachi" },
-  { id: "YAMANAKA", name: "Yamanaka", icon: "🧠", color: "#c9a6d9", clanGate: "yamanaka" },
   { id: "RAIKAGE", name: "Raikage", icon: "⚡", color: "#f0c419", clanGate: "raikage" },
+  // ---- Iwa ----
   { id: "KAMIZURU", name: "Kamizuru", icon: "🐝", color: "#d9a441", clanGate: "kamizuru" },
 ];
+
+// Símbolos dos clãs na seleção inferior. Mantidos fora dos metadados de cada
+// árvore para que árvores sem arquivo continuem usando seu ícone de reserva.
+const CLAN_FOOTER_ICONS = {
+  // ---- Konoha ----
+  nara: "/assets/icons/footer/Nara_Symbol.png",
+  senju: "/assets/icons/footer/Senju_Symbol.png",
+  hyuuga: "/assets/icons/footer/Hyuga_symbol.png",
+  akimichi: "/assets/icons/footer/Akimichi_Symbol.png",
+  aburame: "/assets/icons/footer/Aburame_Symbol.png",
+  inuzuka: "/assets/icons/footer/Inuzuka_Symbol.png",
+  uzumaki: "/assets/icons/footer/Uzumaki_Symbol.png",
+  hatake: "/assets/icons/footer/Hatake_Symbol.png",
+  yamanaka: "/assets/icons/footer/Yamanaka_Symbol.png",
+  // ---- Suna ----
+  kamaitachi: "/assets/icons/footer/Kamaitachi_Symbol.png",
+  // ---- Kiri ----
+  hoshigaki: "/assets/icons/footer/Hoshigaki_Symbol.png",
+  hozuki: "/assets/icons/footer/Hozuki_Symbol.png",
+  kaguya: "/assets/icons/footer/Kaguya_Symbol.png",
+  yuki: "/assets/icons/footer/Yuki_Symbol.png",
+  // ---- Kumo ----
+  chinoike: "/assets/icons/footer/Chinoike_Symbol.png",
+  raikage: "/assets/icons/footer/Raikage_Symbol.png",
+  // ---- Iwa ----
+  kamizuru: "/assets/icons/footer/Kamiuru_Symbol.png",
+};
 // Rótulo de atributo pro chip de requisito extra (reqAttribute) no modal —
 // mesmos rótulos de ATTRIBUTE_LABELS em src/config/enums.ts.
 const ATTR_LABEL = {
@@ -67,6 +101,7 @@ const ELEMENT_BG = {
 // A descrição vem do servidor como texto puro; o realce é feito aqui por regex,
 // então basta escrever o nome do efeito na desc que ele vira link explicativo.
 const GLOSSARY = [
+  { re: "Inevitável", tip: "Inevitável: este ataque ignora todas as reações defensivas do alvo — Esquiva, Bloqueio e Aparo." },
   { re: "Queimadura(?:s)?", tip: "Queimadura: o alvo perde 8 de vida por turno e causa menos dano físico a cada acúmulo. Ao juntar 5 acúmulos, explode por 40 de dano e zera." },
   { re: "Sangramento", tip: "Sangramento: o alvo perde 5 de vida por turno, recebe metade da cura e ainda perde 6 de vida sempre que usa um golpe físico." },
   { re: "Veneno", tip: "Veneno: o alvo perde vida por turno, e a perda cresce a cada acúmulo (até um teto de rodadas)." },
@@ -75,15 +110,18 @@ const GLOSSARY = [
   { re: "Atordoamento|Atordoarem|Atordoar|atordoados|atordoado|Atordoam|Atordoa", tip: "Atordoamento: o alvo não pode agir nem se mover no turno. Perde a vez." },
   { re: "Encharcando|Encharcad[oa]s|Encharcad[oa]", tip: "Encharcado: o alvo está molhado. Toma dano extra de jutsus de Raio e serve de condutor para acertos em cadeia." },
   { re: "Barreira", tip: "Barreira: escudo que absorve parte do dano recebido antes de descontar da sua vida." },
-  { re: "preso(?:s)? ao chão", tip: "Preso ao chão: o alvo não consegue sair do lugar. Ainda pode atacar." },
+  { re: "Imobilização|preso(?:s)? ao chão", tip: "Imobilização: o alvo não consegue sair do lugar. Ainda pode atacar." },
   { re: "mais lento(?:s)?|Lentidão", tip: "Lentidão: o movimento do alvo cai pela metade." },
-  { re: "reduzindo a defesa|reduz a defesa", tip: "Defesa reduzida: o alvo perde 15% de chance de esquivar dos ataques." },
+  { re: "Defesa reduzida|reduzindo a defesa|reduz a defesa", tip: "Defesa reduzida: o alvo perde 15% de chance de esquivar dos ataques." },
   { re: "não pode(?:m)? ser esquivad[oa](?:s)?", tip: "Não pode ser esquivado: ignora a reação de esquiva do alvo. O ataque sempre acerta." },
+  { re: "Ignora Bloqueio e Aparo", tip: "Sem guarda: o alvo ainda pode tentar Esquivar, mas não pode reagir com Bloqueio nem Aparo." },
   { re: "bloque\\w* o Ninjutsu|Bloqueio de Ninjutsu", tip: "Bloqueio de Ninjutsu: o alvo não consegue usar jutsu de categoria Ninjutsu enquanto durar. Não drena chakra (isso seria Dreno de Chakra, outro efeito) — só tranca esse tipo de técnica." },
-  { re: "não consegue fugir|sem poder fugir|não conseguem fugir", tip: "Fuga bloqueada: o alvo não pode usar a ação de fugir do combate enquanto o efeito durar." },
-  { re: "perde 10% de chakra por turno|perder 10% de chakra por turno", tip: "Dreno de Chakra: o alvo perde chakra a cada turno enquanto durar." },
+  { re: "Fuga bloqueada|não consegue fugir|sem poder fugir|não conseguem fugir", tip: "Fuga bloqueada: o alvo não pode usar a ação de fugir do combate enquanto o efeito durar." },
+  { re: "Dreno de Chakra|perde 10% de chakra por turno|perder 10% de chakra por turno", tip: "Dreno de Chakra: o alvo perde chakra a cada turno enquanto durar." },
   { re: "Confuso|Confusão", tip: "Confusão: enquanto durar, o alvo confuso ataca alguém aleatório entre todos os vivos em vez de escolher — pode até acertar o próprio time." },
-  { re: "Acelerado", tip: "Acelerado: mais movimento, esquiva e chance de fuga; quem acertar você corpo a corpo no período leva dano de contra-ataque." },
+  { re: "Aceleração|Acelerado", tip: "Aceleração: mais movimento, esquiva e chance de fuga; quem acertar você corpo a corpo no período leva dano de contra-ataque." },
+  { re: "Desarme", tip: "Desarme: o alvo derruba a arma equipada e precisa recuperá-la antes de voltar a usá-la." },
+  { re: "Sobrecarga", tip: "Sobrecarga: aumenta temporariamente o dano causado. Algumas técnicas cobram um efeito negativo quando ela termina." },
   // ---- exclusivo do clã Nara ----
   { re: "Vínculo de Sombra", tip: "Vínculo de Sombra: sem dano, mas o alvo não pode se mover nem reagir (Esquivar/Bloquear/Aparar) enquanto durar — o corpo dele copia o do usuário. Só uma Esquiva bem-sucedida ANTES do vínculo prender evita o efeito." },
   // ---- kekkei genkai: Cristal ----
@@ -356,8 +394,9 @@ function buildElemBar() {
     div.className = "elem" + (!unlocked ? " locked" : "");
     div.style.setProperty("--ec", e.color);
     div.style.setProperty("--ecg", glow(e.color));
-    const eface = e.img
-      ? `<img class="e-img" src="${e.img}" alt="" loading="lazy">`
+    const iconImage = e.img || (e.clanGate ? CLAN_FOOTER_ICONS[e.clanGate] : undefined);
+    const eface = iconImage
+      ? `<img class="e-img" src="${iconImage}" alt="" loading="lazy">`
       : e.icon;
     div.innerHTML = `<div class="e-ico">${eface}</div><div class="e-name">${e.name}</div>`;
     div.onclick = () => {
@@ -479,7 +518,14 @@ function openModal(n) {
     ? `<img class="modal-img" src="${n.img}" alt="">`
     : n.icon;
   $("mName").textContent = n.name;
-  $("mDesc").innerHTML = highlightEffects(n.desc);
+  const narrative = n.kind === "JUTSU"
+    ? escHtml(n.visualDescription || "Uma técnica ninja executada com precisão.")
+    : highlightEffects(n.desc);
+  $("mDesc").innerHTML =
+    narrative +
+    (n.mechanics
+      ? `<span class="mechanics-title">Efeitos e regras</span><span class="mechanics-text">${highlightEffects(n.mechanics)}</span>`
+      : "");
   const rank = $("mRank");
   const kindLabel = n.kind === "ELEMENT" ? "Sorteio de Elemento" : "";
   if (n.rank) { rank.textContent = "Rank " + n.rank; rank.classList.remove("hidden"); }
@@ -506,7 +552,7 @@ function openModal(n) {
   if (n.reqAttribute) {
     meta += chip(ATTR_LABEL[n.reqAttribute.attribute] || n.reqAttribute.attribute, n.reqAttribute.value);
   }
-  meta += chip(poolLabel, n.reqPool);
+  meta += chip(poolLabel, n.effectiveReqPool ?? n.reqPool);
   $("mMeta").innerHTML = meta;
 
   const reason = $("mReason");

@@ -347,6 +347,23 @@ export const ELEMENTAL: Ability[] = [
       "Dragao de agua em linha reta: empurra o alvo e o deixa Encharcado. E o ataque principal do elemento.",
   },
   {
+    id: "suiton_suijinheki",
+    name: "Técnica da Muralha de Água",
+    category: "NINJUTSU",
+    element: "AGUA",
+    tier: 2,
+    resource: "chakra",
+    cost: 25,
+    actionType: "COMUM",
+    range: 0,
+    shape: "SELF",
+    effects: [{ effectId: "SHIELD", stacks: 20, duration: 3 }],
+    requirements: { element: "AGUA", manualOnly: true },
+    tags: ["agua", "defesa", "barreira"],
+    visualDescription: "Uma corrente circular sobe ao redor do usuário e se fecha como uma muralha móvel de água.",
+    description: "Ergue uma Barreira de água ao redor do usuário.",
+  },
+  {
     id: "suiton_cachoeira",
     name: "Grande Cachoeira Explosiva",
     category: "NINJUTSU",
@@ -428,12 +445,12 @@ export const ELEMENTAL: Ability[] = [
     scalingAttribute: "ninjutsu",
     range: 4,
     shape: "CONE",
-    unblockable: true, // passa por cima da guarda
+    unguardable: true, // ignora Bloqueio e Aparo; Esquiva continua valendo
     effects: [{ effectId: "BLEED", duration: 3 }],
     requirements: { element: "VENTO", manualOnly: true },
     tags: ["vento", "area", "anti-defesa"],
     description:
-      "Onda cortante que passa por cima da defesa: o alvo nao consegue reduzir o dano bloqueando. Causa Sangramento.",
+      "Onda cortante que atravessa guardas e aparos. Causa Sangramento.",
   },
   {
     id: "fuuton_grande_destruicao",
@@ -553,13 +570,12 @@ export const ELEMENTAL: Ability[] = [
     scalingAttribute: "ninjutsu",
     range: 6,
     shape: "CONE",
-    undodgeable: true,
     unblockable: true,
     effects: [{ effectId: "BLEED", stacks: 2, duration: 4 }],
     requirements: { element: "VENTO", manualOnly: true },
     tags: ["vento", "area", "apice", "preciso"],
     description:
-      "Dispara varias ondas de vacuo seguidas: atingem varios alvos e nao podem ser esquivadas nem bloqueadas. Gasta muito chakra.",
+      "Dispara varias ondas de vacuo seguidas e atinge varios alvos. É Inevitável. Gasta muito chakra.",
   },
 
   // ---------------- TERRA ----------------
@@ -594,7 +610,7 @@ export const ELEMENTAL: Ability[] = [
     element: "TERRA",
     tier: 1,
     resource: "chakra",
-    cost: 16,
+    cost: 20,
     actionType: "COMUM",
     baseDamage: 22,
     scalingAttribute: "ninjutsu",
@@ -891,11 +907,11 @@ export const ELEMENTAL: Ability[] = [
     range: 1,
     shape: "MELEE",
     effects: [{ effectId: "STUN", duration: 1 }],
-    unblockable: true,
+    unguardable: true,
     requirements: { element: "RAIO", manualOnly: true },
     tags: ["raio", "corpo-a-corpo", "indefensavel", "alto-dano"],
     description:
-      "Toca o alvo e conduz um relâmpago através do próprio corpo. É indefensável, causa alto dano e Atordoa.",
+      "Toca o alvo e conduz um relâmpago através do próprio corpo. Ignora Bloqueio e Aparo, causa alto dano e Atordoa.",
   },
   {
     id: "raiton_kirin",
@@ -917,7 +933,7 @@ export const ELEMENTAL: Ability[] = [
     requirements: { element: "RAIO", manualOnly: true },
     tags: ["raio", "apice", "area", "indefensavel", "tempestade"],
     description:
-      "Guia um relâmpago natural das nuvens numa área enorme. É indefensável, mas exige chamas ativas no campo ou Nuvens de Tempestade e só pode ser usado uma vez por combate.",
+      "Guia um relâmpago natural das nuvens numa área enorme. É Inevitável, exige chamas ativas no campo ou Nuvens de Tempestade e só pode ser usado uma vez por combate.",
   },
 
   // ---------------- CRISTAL (Shouton) — KEKKEI GENKAI ----------------
@@ -1067,7 +1083,7 @@ export const ELEMENTAL: Ability[] = [
     requirements: { element: "CRISTAL", manualOnly: true },
     tags: ["cristal", "linha", "indefensavel", "corte"],
     description:
-      "Forma uma shuriken imensa com o desenho de um floco de neve e a arremessa. Passa por qualquer guarda e corta tudo na linha.",
+      "Forma uma shuriken imensa com o desenho de um floco de neve e a arremessa. É Inevitável e corta tudo na linha.",
   },
   {
     id: "shouton_dragao_cadente",

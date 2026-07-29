@@ -45,22 +45,23 @@ describe("Kamaitachi: integridade da arvore de cla", () => {
     expect(allNodes().filter((n) => n.kind === "PASSIVE" && n.clanId === "kamaitachi").length).toBe(4);
   });
 
-  it("árvore é reta (col 0), sem ramificação — só 4 técnicas foram pedidas", () => {
-    const order = [
-      "kamaitachi_raiz",
-      "kamaitachi_foice",
-      "kamaitachi_grande_foice",
-      "kamaitachi_corte_profundo",
-      "kamaitachi_rede",
-      "kamaitachi_lamina_viva",
-      "kamaitachi_apice",
-      "kamaitachi_decapitacao",
-    ];
-    for (let i = 1; i < order.length; i++) {
-      const node = allNodes().find((n) => n.id === order[i])!;
-      expect(node.requires, order[i]).toEqual([order[i - 1]]);
-      expect(node.col, order[i]).toBe(0);
-    }
+  it("ramifica após Grande Foice e converge no ápice", () => {
+    const corte = allNodes().find((n) => n.id === "kamaitachi_corte_profundo")!;
+    const rede = allNodes().find((n) => n.id === "kamaitachi_rede")!;
+    const lamina = allNodes().find((n) => n.id === "kamaitachi_lamina_viva")!;
+    const apice = allNodes().find((n) => n.id === "kamaitachi_apice")!;
+
+    expect(corte.requires).toEqual(["kamaitachi_grande_foice"]);
+    expect(corte.col).toBe(-1);
+    expect(rede.requires).toEqual(["kamaitachi_corte_profundo"]);
+    expect(rede.col).toBe(-1);
+
+    expect(lamina.requires).toEqual(["kamaitachi_grande_foice"]);
+    expect(lamina.col).toBe(1);
+    expect(new Set(apice.requires)).toEqual(
+      new Set(["kamaitachi_rede", "kamaitachi_lamina_viva"]),
+    );
+    expect(apice.col).toBe(0);
   });
 
   it("todos os nós saem do pool de Ninjutsu, sem reqAttribute cruzado", () => {
@@ -70,9 +71,9 @@ describe("Kamaitachi: integridade da arvore de cla", () => {
     }
   });
 
-  it("custo total fecha em 30 pontos — entre o Chinoike (29) e o Hoshigaki/Yuki (34)", () => {
+  it("custo total fecha em 26 pontos para uma arvore curta e antecipada", () => {
     const total = CLAN_TREES.kamaitachi!.reduce((a, n) => a + n.cost, 0);
-    expect(total).toBe(30);
+    expect(total).toBe(26);
   });
 
   it("clã Kamaitachi existe e referencia as quatro habilidades em activeIds", () => {
@@ -95,6 +96,9 @@ describe("Kamaitachi: Dança da Decapitação Rápida — finalizador que ignora
   it("exige só o tronco principal (o ápice)", () => {
     const node = allNodes().find((n) => n.id === "kamaitachi_decapitacao")!;
     expect(node.requires).toEqual(["kamaitachi_apice"]);
+    expect(node.reqLevel).toBe(26);
+    expect(node.cost).toBe(6);
+    expect(decap.baseDamage).toBe(42);
   });
 });
 

@@ -228,6 +228,7 @@ async function iniciar(interaction: ChatInputCommandInteraction): Promise<void> 
     players.push({
       charId: char.id,
       name: char.name,
+      level: char.level,
       hpCurrent: char.hpCurrent,
       hpMax: char.hpMax,
       chakra: char.resources!.chakra,
@@ -252,7 +253,7 @@ async function iniciar(interaction: ChatInputCommandInteraction): Promise<void> 
     if (!p) continue;
     await prisma.combatParticipant.update({
       where: { id: p.id },
-      data: { flagsJson: JSON.stringify({ attrs: players[i]!.attrs, nodes: players[i]!.nodes }) },
+      data: { flagsJson: JSON.stringify({ level: players[i]!.level, attrs: players[i]!.attrs, nodes: players[i]!.nodes }) },
     });
   }
 

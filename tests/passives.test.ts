@@ -50,10 +50,9 @@ describe("passivas: integridade do registro", () => {
       porElemento.set(p.element, (porElemento.get(p.element) ?? 1) * mult);
     }
     for (const [element, mult] of porElemento) {
-      // Kekkei genkai bate mais forte de proposito: linhagem sanguinea. A faixa
-      // e' separada e ESTREITA — o delta sobre os basicos e' ~+14%, o bastante
-      // para sentir sem transformar KG em escolha obrigatoria.
-      const [min, max] = isKekkeiGenkai(element as Element) ? [2.2, 2.5] : [1.8, 2.2];
+      // Kekkei genkai fecha perto de 2.025x. O teto bruto fica controlado;
+      // sua vantagem adicional vem dos efeitos e utilidades exclusivos.
+      const [min, max] = isKekkeiGenkai(element as Element) ? [2, 2.1] : [1.8, 2.2];
       expect(mult, `${element} está em ${mult.toFixed(2)}x`).toBeGreaterThanOrEqual(min);
       expect(mult, `${element} está em ${mult.toFixed(2)}x`).toBeLessThanOrEqual(max);
     }
@@ -263,7 +262,7 @@ describe("passivas: Raio", () => {
       chakraRegenPerTurn: 0,
       meleeCounterDamage: 0,
       mindControlUpkeepMult: 1,
-      mindControlGenjutsuBonus: 0,
+      mindControlNinjutsuBonus: 0,
     });
   });
 });

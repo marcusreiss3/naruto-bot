@@ -88,6 +88,7 @@ interface BanditTurnOpts {
   guildId: string;
   charId: string;
   charName: string;
+  charLevel: number;
   hpCurrent: number;
   hpMax: number;
   chakra: number;
@@ -106,6 +107,7 @@ export async function triggerBanditForest(
   char: {
     id: string;
     name: string;
+    level: number;
     hpCurrent: number;
     hpMax: number;
     resources?: { chakra: number; energia: number } | null;
@@ -128,6 +130,7 @@ export async function triggerBanditForest(
     guildId: interaction.guildId ?? "global",
     charId: char.id,
     charName: char.name,
+    charLevel: char.level,
     hpCurrent: char.hpCurrent,
     hpMax: char.hpMax,
     chakra: char.resources?.chakra ?? 100,
@@ -165,6 +168,7 @@ export async function runBanditMessage(message: Message): Promise<void> {
     guildId,
     charId: char.id,
     charName: char.name,
+    charLevel: char.level,
     hpCurrent: char.hpCurrent,
     hpMax: char.hpMax,
     chakra: char.resources!.chakra,
@@ -237,6 +241,7 @@ async function runBanditTurn(o: BanditTurnOpts): Promise<void> {
     const { players, attrsById } = await gatherPartyPlayers(o.channel, guildId, {
       charId: o.charId,
       name: o.charName,
+      level: o.charLevel,
       hpCurrent: o.hpCurrent,
       hpMax: o.hpMax,
       chakra: o.chakra,

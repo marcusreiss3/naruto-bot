@@ -465,6 +465,7 @@ async function startWaspCombat(
   const { players, attrsById } = gatherSoloPlayer({
     charId: char.id,
     name: char.name,
+    level: char.level,
     hpCurrent: char.hpCurrent,
     hpMax: char.hpMax,
     chakra: char.resources?.chakra ?? 100,

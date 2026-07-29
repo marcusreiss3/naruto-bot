@@ -136,7 +136,7 @@ export const SUPPORT: Ability[] = [
     tags: ["pombo", "fisico"],
     unblockable: true,
     undodgeable: true,
-    description: "Uma bicada rapida que causa exatamente 1 de dano.",
+    description: "Uma bicada Inevitável que causa exatamente 1 de dano.",
   },
   // >> DE NPC - CONTEUDO REAL, NAO APAGAR (usada pelo enxame de missao)
   {

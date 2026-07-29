@@ -59,9 +59,9 @@ describe("Calor: passiva de dano", () => {
     expect(calor).toBeCloseTo(1.35, 3);
   });
 
-  it("raiz + Combustão Interna (ápice) fecham em 2.295x — mesmo nível do Cristal", () => {
+  it("raiz + Combustão Interna (ápice) fecham em 2.025x — mesmo nível do Cristal", () => {
     const mods = passiveMods(["calor_raiz", "calor_combustao_interna"], disparo);
-    expect(mods.damageMult).toBeCloseTo(2.295, 3);
+    expect(mods.damageMult).toBeCloseTo(2.025, 3);
   });
 
   it("passiva de Calor não afeta jutsu de Fogo", () => {

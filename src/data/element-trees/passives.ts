@@ -206,15 +206,9 @@ export const PASSIVES: PassiveDef[] = [
   },
 
   // ------------------------------------------------- CRISTAL (kekkei genkai)
-  // KEKKEI GENKAI: fecha em ~2.30x em vez dos ~2.015x dos cinco basicos. E' de
-  // proposito — linhagem sanguinea bate mais forte. O delta e' modesto (+14%)
-  // sobre os basicos, para KG nao invalidar as outras arvores. Vapor, Calor,
-  // Lava e Explosao foram todas realinhadas pro MESMO 2.295x (pedido
-  // explicito do usuario) — o Cristal ja nao e' mais o unico no teto da
-  // faixa; a vantagem dele sobre as outras 4 KG agora e' custar mais (62 PN
-  // contra 52) e o KIT (controle por Cristalizado, indefensavel, Prisma), nao
-  // o numero de dano. O teste dos ~2x usa uma faixa separada para kekkei
-  // genkai (2.2 a 2.5).
+  // KEKKEI GENKAI: raiz 1.35x + ápice 1.50x fecham em 2.025x.
+  // Vapor, Calor, Lava e Explosão usam o mesmo teto. A vantagem adicional
+  // vem do kit exclusivo de efeitos, controle e utilidade de cada linhagem.
   {
     nodeId: "cristal_raiz",
     element: "CRISTAL",
@@ -223,7 +217,7 @@ export const PASSIVES: PassiveDef[] = [
   {
     nodeId: "cristal_faceta",
     element: "CRISTAL",
-    damageMult: 1.7, // 1.35 * 1.70 = 2.295
+    damageMult: 1.5, // 1.35 * 1.50 = 2.025
   },
   {
     // Faceta Cortante: cada acerto crava um cristal a mais, entao o casulo
@@ -247,7 +241,7 @@ export const PASSIVES: PassiveDef[] = [
   },
 
   // --------------------------------------------------- VAPOR (kekkei genkai)
-  // Arvore expandida: agora no MESMO nivel do Cristal (2.295x = 1.35 * 1.70),
+  // Árvore expandida: mesmo teto do Cristal (2.025x = 1.35 * 1.50),
   // em vez do multiplicador todo morar numa raiz so. As tres passivas do meio
   // sao utilidade pura (duracao/custo/perfuracao de guarda), nao dano.
   {
@@ -274,11 +268,11 @@ export const PASSIVES: PassiveDef[] = [
   {
     nodeId: "vapor_ebulicao_total",
     element: "VAPOR",
-    damageMult: 1.7, // 1.35 * 1.70 = 2.295, identico ao Cristal
+    damageMult: 1.5, // 1.35 * 1.50 = 2.025, idêntico ao Cristal
   },
 
   // ---------------------------------------------------- CALOR (kekkei genkai)
-  // Mesmo formato do Vapor: raiz + apice fecham 2.295x, as tres do meio sao
+  // Mesmo formato do Vapor: raiz + ápice fecham 2.025x, as três do meio são
   // utilidade.
   {
     nodeId: "calor_raiz",
@@ -304,12 +298,12 @@ export const PASSIVES: PassiveDef[] = [
   {
     nodeId: "calor_combustao_interna",
     element: "CALOR",
-    damageMult: 1.7, // 1.35 * 1.70 = 2.295, identico ao Cristal
+    damageMult: 1.5, // 1.35 * 1.50 = 2.025, idêntico ao Cristal
   },
 
   // ----------------------------------------------------- LAVA (kekkei genkai)
   // Pedido explicito do usuario: Lava/Explosao/Vapor/Calor no MESMO nivel do
-  // Cristal agora (2.295x = 1.35 * 1.70), custando um pouco menos (52 PN
+  // Cristal agora (2.025x = 1.35 * 1.50), custando um pouco menos (52 PN
   // contra 62). As tres passivas do meio sao utilidade.
   {
     nodeId: "lava_raiz",
@@ -335,11 +329,11 @@ export const PASSIVES: PassiveDef[] = [
   {
     nodeId: "lava_apice",
     element: "LAVA",
-    damageMult: 1.7, // 1.35 * 1.70 = 2.295, identico ao Cristal
+    damageMult: 1.5, // 1.35 * 1.50 = 2.025, idêntico ao Cristal
   },
 
   // ------------------------------------------------- EXPLOSAO (kekkei genkai)
-  // Mesmo formato do Lava: 2.295x = 1.35 * 1.70.
+  // Mesmo formato do Lava: 2.025x = 1.35 * 1.50.
   {
     nodeId: "explosao_raiz",
     element: "EXPLOSAO",
@@ -364,7 +358,7 @@ export const PASSIVES: PassiveDef[] = [
   {
     nodeId: "explosao_apice",
     element: "EXPLOSAO",
-    damageMult: 1.7, // 1.35 * 1.70 = 2.295, identico ao Cristal
+    damageMult: 1.5, // 1.35 * 1.50 = 2.025, idêntico ao Cristal
   },
 ];
 

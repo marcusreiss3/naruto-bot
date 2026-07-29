@@ -72,9 +72,9 @@ describe("Cristal: passivas", () => {
   const nodes = ["cristal_raiz", "cristal_faceta", "cristal_estilhaco", "cristal_rede"];
   const shuriken = getAbility("shouton_shuriken_cristal")!;
 
-  it("raiz e Faceta Perfeita fecham ~2.30x — acima dos 2.015x dos basicos", () => {
+  it("raiz e Faceta Perfeita fecham em 2.025x", () => {
     const mods = passiveMods(["cristal_raiz", "cristal_faceta"], shuriken);
-    expect(mods.damageMult).toBeCloseTo(2.295, 3);
+    expect(mods.damageMult).toBeCloseTo(2.025, 3);
     expect(mods.damageMult).toBeGreaterThan(2.015);
   });
 

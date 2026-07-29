@@ -2,7 +2,12 @@ import { describe, expect, it } from "vitest";
 import { getAbility } from "../src/data/index.js";
 import { allNodes, getNode } from "../src/data/element-trees/index.js";
 import { FUNDAMENTOS } from "../src/data/element-trees/fundamentals.js";
-import { lockReason, remainingBasicElements, type CharSnapshot } from "../src/services/characters/skill-tree.js";
+import {
+  effectiveReqPool,
+  lockReason,
+  remainingBasicElements,
+  type CharSnapshot,
+} from "../src/services/characters/skill-tree.js";
 import { clanStartingElement } from "../src/data/clans/starting-element.js";
 import { ATTRIBUTES } from "../src/config/enums.js";
 
@@ -68,6 +73,24 @@ describe("Fundamentos: integridade da arvore", () => {
     for (const id of ["funda_elemento_2", "funda_elemento_3", "funda_elemento_4", "funda_elemento_5"]) {
       expect(getNode(id)!.cost, id).toBe(10);
     }
+  });
+});
+
+describe("Fundamentos: requisito efetivo", () => {
+  it("inclui todo o custo obrigatorio do caminho no mesmo pool", () => {
+    expect(effectiveReqPool(getNode("funda_clonagem")!)).toBe(2);
+    expect(effectiveReqPool(getNode("funda_elemento_1")!)).toBe(6);
+    expect(effectiveReqPool(getNode("funda_elemento_5")!)).toBe(46);
+  });
+
+  it("lockReason informa o requisito efetivo, nao o reqPool editorial menor", () => {
+    const node = getNode("funda_elemento_5")!;
+    const pobre = snap({
+      owned: new Set(node.requires),
+      attributes: { ...RICO, ninjutsu: 45 },
+      pointsByPool: { ninjutsu: 10 },
+    });
+    expect(lockReason(pobre, node)).toMatch(/Ninjutsu 46/);
   });
 });
 

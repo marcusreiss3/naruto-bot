@@ -52,6 +52,26 @@ describe("Raikage: integridade da arvore de cla", () => {
     }
   });
 
+  it("só as quatro técnicas claramente elétricas também recebem o elemento Raio", () => {
+    const eletricas = [
+      "raikage_deslocamento",
+      "raikage_armadura",
+      "raikage_relampago_reto",
+      "raikage_corte_horizontal",
+    ];
+    const fisicas = ["raikage_lariat", "raikage_guilhotina", "raikage_bomba_liger"];
+
+    for (const id of eletricas) expect(getAbility(id)!.element, id).toBe("RAIO");
+    for (const id of fisicas) expect(getAbility(id)!.element, id).toBeUndefined();
+  });
+
+  it("passivas elementais de Raio afetam golpes elétricos, mas não os físicos", () => {
+    const reto = getAbility("raikage_relampago_reto")!;
+    const lariat = getAbility("raikage_lariat")!;
+    expect(passiveMods(["raio_raiz"], reto).damageMult).toBeCloseTo(1.15);
+    expect(passiveMods(["raio_raiz"], lariat).damageMult).toBe(1);
+  });
+
   it("pool padrão é Taijutsu, com override pra Ninjutsu só no Deslocamento e na Armadura", () => {
     for (const n of CLAN_TREES.raikage!) {
       if (n.id === "raikage_deslocamento" || n.id === "raikage_armadura") {

@@ -18,6 +18,10 @@ import { CLAN_TREES } from "../src/data/clan-trees/index.js";
 import { FUNDAMENTOS } from "../src/data/element-trees/fundamentals.js";
 import { CLAN_STARTING_ELEMENT } from "../src/data/clans/starting-element.js";
 import { getAbility, getClan, CLANS } from "../src/data/index.js";
+import {
+  buildMechanicsSummary,
+  buildVisualDescription,
+} from "../src/services/characters/skill-description.js";
 
 const BASIC_ELEMENTS: Element[] = ELEMENTS.filter((e) => !isKekkeiGenkai(e));
 const FIRST_ELEMENT_NODE_ID = "funda_elemento_1";
@@ -30,7 +34,7 @@ const ELEMENT_ICON: Partial<Record<Element, string>> = {
 };
 
 // ---- personagem fictício, só em memória (reinicia ao reiniciar o processo) ----
-const DEMO_CLAN_ID = "uzumaki";
+const DEMO_CLAN_ID = "hozuki";
 const attributes: Partial<Record<Attribute, number>> = Object.fromEntries(
   ATTRIBUTES.map((a) => [a, 12]),
 );
@@ -56,7 +60,7 @@ function snapshot() {
     pointsByPool[attr] = Math.max(0, (attributes[attr] ?? 1) - (spentByPool[attr] ?? 0));
   }
   return {
-    name: "Demo Uzumaki",
+    name: "Demo Hozuki",
     level: 30,
     spentByPool,
     pointsByPool,
@@ -83,6 +87,25 @@ function combatOf(node: SkillNodeDef) {
   };
 }
 
+function effectiveReqPool(node: SkillNodeDef): number {
+  const visited = new Set<string>();
+  const visit = (current: SkillNodeDef): void => {
+    if (visited.has(current.id)) return;
+    visited.add(current.id);
+    for (const requiredId of current.requires) {
+      const required = getNode(requiredId);
+      if (required) visit(required);
+    }
+  };
+  visit(node);
+  let mandatoryCost = 0;
+  for (const nodeId of visited) {
+    const required = getNode(nodeId);
+    if (required?.pool === node.pool) mandatoryCost += required.cost;
+  }
+  return Math.max(node.reqPool, mandatoryCost);
+}
+
 function lockReason(snap: ReturnType<typeof snapshot>, node: SkillNodeDef): string | null {
   if (snap.owned.has(node.id)) return "Já adquirido.";
   if (node.element && !snap.elements.includes(node.element)) return `Requer o elemento ${node.element}.`;
@@ -101,7 +124,8 @@ function lockReason(snap: ReturnType<typeof snapshot>, node: SkillNodeDef): stri
     }
   }
   const label = ATTRIBUTE_LABELS[node.pool];
-  if ((snap.attributes[node.pool] ?? 1) < node.reqPool) return `Requer ${label} ${node.reqPool}.`;
+  const requiredPool = effectiveReqPool(node);
+  if ((snap.attributes[node.pool] ?? 1) < requiredPool) return `Requer ${label} ${requiredPool}.`;
   const left = snap.pointsByPool[node.pool] ?? (snap.attributes[node.pool] ?? 1);
   if (left < node.cost) return `Pontos de ${label} insuficientes (precisa ${node.cost}, restam ${left}).`;
   return null;
@@ -110,11 +134,19 @@ function lockReason(snap: ReturnType<typeof snapshot>, node: SkillNodeDef): stri
 function viewNodes(snap: ReturnType<typeof snapshot>, nodes: SkillNodeDef[]) {
   return nodes.map((node) => {
     const combat = combatOf(node);
-    if (snap.owned.has(node.id)) return { ...node, combat, status: "OWNED" as const };
+    const ability = node.grantsAbilityId ? getAbility(node.grantsAbilityId) : undefined;
+    const mechanics = ability ? buildMechanicsSummary(ability) || undefined : undefined;
+    const visualDescription = node.kind === "JUTSU"
+      ? buildVisualDescription(node.desc, ability?.visualDescription)
+      : undefined;
+    const effectiveRequired = effectiveReqPool(node);
+    if (snap.owned.has(node.id)) {
+      return { ...node, combat, visualDescription, mechanics, effectiveReqPool: effectiveRequired, status: "OWNED" as const };
+    }
     const reason = lockReason(snap, node);
     return reason
-      ? { ...node, combat, status: "LOCKED" as const, reason }
-      : { ...node, combat, status: "BUYABLE" as const };
+      ? { ...node, combat, visualDescription, mechanics, effectiveReqPool: effectiveRequired, status: "LOCKED" as const, reason }
+      : { ...node, combat, visualDescription, mechanics, effectiveReqPool: effectiveRequired, status: "BUYABLE" as const };
   });
 }
 

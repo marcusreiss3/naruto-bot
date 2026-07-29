@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { getAbility, getClan } from "../src/data/index.js";
-import { yamanakaResistChance, resolveActingParticipantId } from "../src/services/combat/combat-math.js";
+import { canYamanakaInvade, yamanakaResistChance, resolveActingParticipantId } from "../src/services/combat/combat-math.js";
 import { allNodes } from "../src/data/element-trees/index.js";
 import { CLAN_TREES } from "../src/data/clan-trees/index.js";
 import { CLAN_PASSIVES } from "../src/data/clan-trees/passives.js";
 import { passiveMods, characterPassiveMods } from "../src/services/combat/passives.js";
+import { buildMechanicsSummary } from "../src/services/characters/skill-description.js";
 
 const TREE_ABILITY_IDS = [
   "yamanaka_destruicao_mente",
@@ -33,8 +34,9 @@ describe("Yamanaka: Técnica de Transferência de Mente — dados da habilidade"
     expect(ab.undodgeable).toBeFalsy();
   });
 
-  it("exige o clã Yamanaka e Genjutsu mínimo", () => {
-    expect(ab.requirements).toMatchObject({ clanId: "yamanaka", attributes: { genjutsu: 10 } });
+  it("exige o clã Yamanaka e Ninjutsu mínimo", () => {
+    expect(ab.requirements).toMatchObject({ clanId: "yamanaka", attributes: { ninjutsu: 10 } });
+    expect(ab.scalingAttribute).toBe("ninjutsu");
   });
 
   it("clã Yamanaka referencia a habilidade em activeIds", () => {
@@ -107,9 +109,11 @@ describe("Yamanaka: Técnicas dos Clones de Transferência de Mente — dados da
     expect(ab.baseDamage).toBe(0);
   });
 
-  it("unguardable E undodgeable — nenhuma reação impede (diferente da Transferência de Mente, que só é unguardable)", () => {
-    expect(ab.unguardable).toBe(true);
-    expect(ab.undodgeable).toBe(true);
+  it("é Inevitável — nenhuma reação impede (diferente da Transferência de Mente, que só ignora Bloqueio e Aparo)", () => {
+    expect(ab.unblockable).toBe(true);
+    expect(ab.oncePerCombat).toBe(true);
+    expect(ab.unguardable).toBeFalsy();
+    expect(ab.undodgeable).toBeFalsy();
     expect(ab.mindTransfer).toBe(true);
   });
 
@@ -118,11 +122,11 @@ describe("Yamanaka: Técnicas dos Clones de Transferência de Mente — dados da
     expect(ab.mindTransferTurns).toBe(1);
   });
 
-  it("é mais cara e exige mais Genjutsu que a Técnica de Transferência de Mente clássica", () => {
+  it("é mais cara e exige mais Ninjutsu que a Técnica de Transferência de Mente clássica", () => {
     const transferencia = getAbility("yamanaka_shintenshin")!;
     expect(ab.cost).toBeGreaterThan(transferencia.cost);
-    expect(ab.requirements?.attributes?.genjutsu ?? 0).toBeGreaterThan(
-      transferencia.requirements?.attributes?.genjutsu ?? 0,
+    expect(ab.requirements?.attributes?.ninjutsu ?? 0).toBeGreaterThan(
+      transferencia.requirements?.attributes?.ninjutsu ?? 0,
     );
   });
 
@@ -133,21 +137,33 @@ describe("Yamanaka: Técnicas dos Clones de Transferência de Mente — dados da
 });
 
 describe("yamanakaResistChance (fórmula pura da disputa por recuperação)", () => {
-  it("50% quando o Genjutsu dos dois é igual", () => {
+  it("50% quando o Ninjutsu dos dois é igual", () => {
     expect(yamanakaResistChance(10, 10)).toBeCloseTo(0.5);
   });
 
-  it("sobe quando a VÍTIMA (dono do corpo) tem mais Genjutsu que o controlador", () => {
-    expect(yamanakaResistChance(20, 10)).toBeGreaterThan(0.5);
+  it("cada ponto de Ninjutsu da vítima acima do controlador soma 3 pontos percentuais", () => {
+    expect(yamanakaResistChance(15, 10)).toBeCloseTo(0.65);
   });
 
-  it("desce quando o CONTROLADOR tem mais Genjutsu que a vítima", () => {
-    expect(yamanakaResistChance(5, 20)).toBeLessThan(0.5);
+  it("cada ponto de Ninjutsu do controlador acima da vítima subtrai 3 pontos percentuais", () => {
+    expect(yamanakaResistChance(10, 15)).toBeCloseTo(0.35);
   });
 
-  it("nunca sai da faixa [5%, 95%], mesmo com diferença enorme", () => {
-    expect(yamanakaResistChance(100, 0)).toBeLessThanOrEqual(0.95);
-    expect(yamanakaResistChance(0, 100)).toBeGreaterThanOrEqual(0.05);
+  it("nunca sai da faixa [10%, 90%], mesmo com diferença enorme", () => {
+    expect(yamanakaResistChance(100, 0)).toBe(0.9);
+    expect(yamanakaResistChance(0, 100)).toBe(0.1);
+  });
+});
+
+describe("limite de nível da invasão mental Yamanaka", () => {
+  it("impede somente alvos 10 ou mais níveis acima", () => {
+    expect(canYamanakaInvade(10, 19)).toBe(true);
+    expect(canYamanakaInvade(10, 20)).toBe(false);
+  });
+
+  it("não impede controlar alvos do mesmo nível ou mais fracos", () => {
+    expect(canYamanakaInvade(20, 20)).toBe(true);
+    expect(canYamanakaInvade(20, 1)).toBe(true);
   });
 });
 
@@ -286,10 +302,18 @@ describe("Yamanaka: passivas — nenhum damageMult (clã de controle puro, não 
     expect(passiveMods(["yamanaka_elo_telepatico"], transmissao).effectDurationBonus.HASTE).toBe(1);
   });
 
-  it("Domínio da Mente (ápice) soma +6 de Genjutsu efetivo na disputa e +1 corpo simultâneo nos Clones", () => {
-    expect(characterPassiveMods(["yamanaka_apice"]).mindControlGenjutsuBonus).toBe(6);
+  it("Domínio da Mente (ápice) soma +6 de Ninjutsu efetivo na disputa e +1 corpo simultâneo nos Clones", () => {
+    expect(characterPassiveMods(["yamanaka_apice"]).mindControlNinjutsuBonus).toBe(6);
     const clones = getAbility("yamanaka_clones_shintenshin")!;
     expect(passiveMods(["yamanaka_apice"], clones).mindTransferMaxBonus).toBe(1);
+  });
+
+  it("Efeitos e regras explica manutenção, teste de Ninjutsu e limite de nível", () => {
+    const rules = buildMechanicsSummary(getAbility("yamanaka_shintenshin")!);
+    expect(rules).toContain("10% de chakra por rodada");
+    expect(rules).toContain("3 pontos percentuais");
+    expect(rules).toContain("entre 10% e 90%");
+    expect(rules).toContain("10 ou mais níveis acima");
   });
 
   it("nenhuma passiva de Yamanaka afeta jutsu de outro clã", () => {

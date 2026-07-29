@@ -9,6 +9,7 @@ import { characterPassiveMods } from "../combat/passives.js";
 export interface StarterChar {
   charId: string;
   name: string;
+  level: number;
   hpCurrent: number;
   hpMax: number;
   chakra: number;
@@ -27,6 +28,7 @@ export function gatherSoloPlayer(
     players: [{
       charId: starter.charId,
       name: starter.name,
+      level: starter.level,
       hpCurrent: starter.hpCurrent,
       hpMax: starter.hpMax,
       chakra: starter.chakra,
@@ -46,6 +48,7 @@ export async function gatherPartyPlayers(
     {
       charId: starter.charId,
       name: starter.name,
+      level: starter.level,
       hpCurrent: starter.hpCurrent,
       hpMax: starter.hpMax,
       chakra: starter.chakra,
@@ -75,6 +78,7 @@ export async function gatherPartyPlayers(
     players.push({
       charId: uc.id,
       name: uc.name,
+      level: uc.level,
       hpCurrent: uc.hpCurrent,
       hpMax: uc.hpMax,
       chakra: uc.resources.chakra,
@@ -105,7 +109,13 @@ export async function cacheAttrs(
       });
       await prisma.combatParticipant.update({
         where: { id: p.id },
-        data: { flagsJson: JSON.stringify({ attrs: a, nodes: nodes.map((n) => n.nodeId) }) },
+        data: {
+          flagsJson: JSON.stringify({
+            ...p.flags,
+            attrs: a,
+            nodes: nodes.map((n) => n.nodeId),
+          }),
+        },
       });
       priorities.set(
         p.id,

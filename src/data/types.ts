@@ -73,6 +73,18 @@ export interface Ability {
   requirements?: AbilityRequirements;
   tags: string[];
   description: string;
+  // Texto exclusivamente narrativo para o modal. Quando ausente, a descrição
+  // antiga é filtrada para separar ambientação das regras.
+  visualDescription?: string;
+  // Técnica contínua ligada/desligada por comando. Estes dados também
+  // alimentam a apresentação uniforme na árvore.
+  toggleRules?: {
+    command: string;
+    dodgeBonus: number;
+    upkeepPerTurn: number;
+    disablesWithoutResource?: boolean;
+    cloneDodgeReduction?: number;
+  };
   // flags especiais
   unblockable?: boolean;
   undodgeable?: boolean;
@@ -283,6 +295,7 @@ export interface MissionDef {
 export interface NpcTemplate {
   id: string;
   name: string;
+  level?: number;
   hpMax: number;
   attributes: Partial<Record<Attribute, number>>;
   abilityIds: string[];

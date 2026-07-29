@@ -52,4 +52,11 @@ describe("arvore de Raio", () => {
     expect(kirin.unblockable).toBe(true);
     expect(kirin.shape).toBe("RADIUS");
   });
+
+  it("Para-Raios ignora Bloqueio e Aparo, mas ainda pode ser esquivado", () => {
+    const pararaios = getAbility("raiton_pararaios")!;
+    expect(pararaios.unguardable).toBe(true);
+    expect(pararaios.unblockable).toBeFalsy();
+    expect(pararaios.undodgeable).toBeFalsy();
+  });
 });

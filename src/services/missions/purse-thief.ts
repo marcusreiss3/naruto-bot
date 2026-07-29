@@ -356,6 +356,7 @@ async function startThiefCombat(
   const { players, attrsById } = gatherSoloPlayer({
     charId: o.char.id,
     name: o.char.name,
+    level: o.char.level,
     hpCurrent: o.char.hpCurrent,
     hpMax: o.char.hpMax,
     chakra: o.char.resources?.chakra ?? 100,

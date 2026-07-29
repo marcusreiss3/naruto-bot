@@ -100,8 +100,9 @@ describe("Hozuki: Hidratação — reação que anula golpe físico", () => {
 describe("Hozuki: Tate Eboshi — finalizador, onda gigante em área", () => {
   const eboshi = getAbility("hozuki_tate_eboshi")!;
 
-  it("não pode ser esquivada e é o jutsu mais forte do clã", () => {
-    expect(eboshi.undodgeable).toBe(true);
+  it("ignora Bloqueio e Aparo, mas pode ser esquivada e é o jutsu mais forte do clã", () => {
+    expect(eboshi.unguardable).toBe(true);
+    expect(eboshi.undodgeable).toBeFalsy();
     for (const id of IDS.filter((i) => i !== "hozuki_tate_eboshi")) {
       expect(eboshi.baseDamage!).toBeGreaterThan(getAbility(id)!.baseDamage ?? 0);
     }

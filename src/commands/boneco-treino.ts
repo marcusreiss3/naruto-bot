@@ -51,6 +51,7 @@ export const bonecoTreino: Command = {
       players.push({
         charId: char.id,
         name: char.name,
+        level: char.level,
         hpCurrent: char.hpCurrent,
         hpMax: char.hpMax,
         chakra: char.resources!.chakra,

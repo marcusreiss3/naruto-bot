@@ -12,6 +12,8 @@ import { hasEffect, type EffectState } from "./effects.js";
 
 export interface PassiveMods {
   damageMult: number;
+  healMult: number;
+  criticalHealBonus: { hpThreshold: number; mult: number } | null;
   costMult: number;
   pushBonus: number;
   extraBurnStacks: number;
@@ -26,6 +28,7 @@ export interface PassiveMods {
   terrainDurationBonus: number;
   ignoresShield: boolean;
   effectChanceBonus: Partial<Record<EffectId, number>>;
+  effectStacksBonus: Partial<Record<EffectId, number>>;
   executeBonus: { hpThreshold: number; mult: number } | null;
   extraCrystalStacks: number;
   // +N corpos simultaneos alem do mindTransferMax da propria ability — so'
@@ -36,6 +39,8 @@ export interface PassiveMods {
 
 export const NEUTRAL_MODS: PassiveMods = {
   damageMult: 1,
+  healMult: 1,
+  criticalHealBonus: null,
   costMult: 1,
   pushBonus: 0,
   extraBurnStacks: 0,
@@ -50,6 +55,7 @@ export const NEUTRAL_MODS: PassiveMods = {
   terrainDurationBonus: 0,
   ignoresShield: false,
   effectChanceBonus: {},
+  effectStacksBonus: {},
   executeBonus: null,
   extraCrystalStacks: 0,
   mindTransferMaxBonus: 0,
@@ -67,6 +73,7 @@ export function passiveMods(
     terrainOnHit: [],
     effectDurationBonus: {},
     effectChanceBonus: {},
+    effectStacksBonus: {},
   };
   // habilidades de arvore de cla (ex: Nara) nao tem `element` — leem a
   // passiva de clã em vez da passiva elemental. O gate e' `requirements.clanId`,
@@ -94,13 +101,16 @@ export function passiveMods(
     // ESCAPE HATCH: passiva com crossCategory ignora os dois gates abaixo e
     // vale pra qualquer ability da categoria declarada.
     const crossMatch = p.crossCategory !== undefined && p.crossCategory === ability.category;
+    const crossElementMatch = p.crossElement !== undefined && p.crossElement === ability.element;
+    const abilityMatch = p.abilityIds?.includes(ability.id) ?? false;
     // passiva elemental (p.element) bate se a ability tiver ESSE elemento —
     // nao importa se ela tambem tem clanId.
     const elementMatch = p.element !== undefined && ability.element === p.element;
     // passiva de clã (p.clanId) bate se a ability for do MESMO clã — nao
     // importa se ela tambem tem elemento.
     const clanMatch = p.clanId !== undefined && clanId !== undefined && p.clanId === clanId;
-    if (!crossMatch && !elementMatch && !clanMatch) continue;
+    if (!crossMatch && !crossElementMatch && !abilityMatch && !elementMatch && !clanMatch) continue;
+    if (p.abilityIds && !abilityMatch) continue;
 
     // ESCOPO do pacote de dano (damageMult + ignoresShield + executeBonus).
     // Duas travas independentes, as duas opcionais:
@@ -119,6 +129,8 @@ export function passiveMods(
     const scaleScopeOk = !p.damageMultScalingAttribute || ability.scalingAttribute === p.damageMultScalingAttribute;
     const scopeOk = categoryScopeOk && scaleScopeOk;
     if (p.damageMult && scopeOk) mods.damageMult *= p.damageMult;
+    if (p.healMult) mods.healMult *= p.healMult;
+    if (p.criticalHealBonus) mods.criticalHealBonus = p.criticalHealBonus;
     if (p.costMult) {
       const shapeOk = !p.costShapes || p.costShapes.includes(ability.shape);
       if (shapeOk) mods.costMult *= p.costMult;
@@ -136,6 +148,11 @@ export function passiveMods(
     if (p.effectChanceBonus) {
       for (const [effectId, bonus] of Object.entries(p.effectChanceBonus) as [EffectId, number][]) {
         mods.effectChanceBonus[effectId] = (mods.effectChanceBonus[effectId] ?? 0) + bonus;
+      }
+    }
+    if (p.effectStacksBonus) {
+      for (const [effectId, bonus] of Object.entries(p.effectStacksBonus) as [EffectId, number][]) {
+        mods.effectStacksBonus[effectId] = (mods.effectStacksBonus[effectId] ?? 0) + bonus;
       }
     }
     if (p.executeBonus && scopeOk) mods.executeBonus = p.executeBonus;
@@ -183,9 +200,9 @@ export interface CharacterPassiveMods {
   // upkeepPerTurn) — 1 = neutro, 0.8 = -20%. Ver processTurnStart em
   // combat-engine.ts.
   mindControlUpkeepMult: number;
-  // bonus fixo de Genjutsu EFETIVO so' pra disputa de controle mental
+  // bonus fixo de Ninjutsu EFETIVO so' pra disputa de controle mental
   // (yamanakaResistChance) — ver processTurnStart em combat-engine.ts.
-  mindControlGenjutsuBonus: number;
+  mindControlNinjutsuBonus: number;
 }
 
 // Modificadores que pertencem ao personagem, e nao a um jutsu especifico.
@@ -201,7 +218,7 @@ export function characterPassiveMods(ownedNodeIds: string[]): CharacterPassiveMo
   let chakraRegenPerTurn = 0;
   let meleeCounterDamage = 0;
   let mindControlUpkeepMult = 1;
-  let mindControlGenjutsuBonus = 0;
+  let mindControlNinjutsuBonus = 0;
   for (const nodeId of owned) {
     const p: (Partial<PassiveDef> & Partial<ClanPassiveDef>) | undefined =
       getPassive(nodeId) ?? getClanPassive(nodeId);
@@ -213,7 +230,7 @@ export function characterPassiveMods(ownedNodeIds: string[]): CharacterPassiveMo
     chakraRegenPerTurn += p.chakraRegenPerTurn ?? 0;
     meleeCounterDamage += p.meleeCounterDamage ?? 0;
     mindControlUpkeepMult *= p.mindControlUpkeepMult ?? 1;
-    mindControlGenjutsuBonus += p.mindControlGenjutsuBonus ?? 0;
+    mindControlNinjutsuBonus += p.mindControlNinjutsuBonus ?? 0;
   }
   return {
     ninjutsuDodgeBonus,
@@ -223,6 +240,17 @@ export function characterPassiveMods(ownedNodeIds: string[]): CharacterPassiveMo
     chakraRegenPerTurn,
     meleeCounterDamage,
     mindControlUpkeepMult,
-    mindControlGenjutsuBonus,
+    mindControlNinjutsuBonus,
   };
+}
+
+export function receivedEffectDurationReduction(ownedNodeIds: string[], effectId: EffectId): number {
+  let total = 0;
+  for (const nodeId of new Set(ownedNodeIds)) {
+    const passive = (getPassive(nodeId) ?? getClanPassive(nodeId)) as
+      | (Partial<PassiveDef> & Partial<ClanPassiveDef>)
+      | undefined;
+    total += passive?.receivedEffectDurationReduction?.[effectId] ?? 0;
+  }
+  return total;
 }

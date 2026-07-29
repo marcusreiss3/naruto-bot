@@ -32,7 +32,9 @@ export const BALANCE = {
   iryoNinjutsuScaling: 0,
   taijutsuScaling: 0,
   bukijutsuScaling: 0,
-  genjutsuScaling: 1.0,
+  // Genjutsu segue a mesma regra das demais disciplinas: o atributo compra
+  // progresso e melhora duracao/disputas, mas nao soma dano bruto.
+  genjutsuScaling: 0,
   fuinjutsuScaling: 0,
   kugutsuScaling: 0,
   senjutsuScaling: 0,
@@ -228,9 +230,12 @@ export const BALANCE = {
   yamanaka: {
     upkeepPerTurn: 10, // % chakra por turno mantendo o controle
     // ponto percentual de chance de o dono do corpo resistir, por ponto de
-    // diferenca de Genjutsu (vitima - controlador) — ver yamanakaResistChance
+    // diferenca de Ninjutsu (vitima - controlador) — ver yamanakaResistChance
     // em combat-math.ts. Simetrico em torno de 50%.
-    resistBasePerGenjutsuDiff: 0.05,
+    resistBasePerNinjutsuDiff: 0.03,
+    resistMinChance: 0.1,
+    resistMaxChance: 0.9,
+    maxUpwardLevelGap: 9,
     // dano do controlador ATRAVES do corpo emprestado: nao domina o corpo
     // 100%, entao todo golpe sai com 1/3 a menos enquanto durar o controle.
     pilotedDamageMult: 0.67,

@@ -54,11 +54,11 @@ describe("Explosão: integridade da arvore", () => {
 });
 
 describe("Explosão: passiva de dano — mesmo nível do Lava e do Cristal", () => {
-  it("raiz + ápice fecham em 2.295x, igual a Lava", () => {
+  it("raiz + ápice fecham em 2.025x, igual a Lava", () => {
     const mina = getAbility("explosao_punho_mina")!;
     const explosao = passiveMods(["explosao_raiz", "explosao_apice"], mina).damageMult;
     const lava = passiveMods(["lava_raiz", "lava_apice"], getAbility("lava_tecnica_balas")!).damageMult;
-    expect(explosao).toBeCloseTo(2.295, 3);
+    expect(explosao).toBeCloseTo(2.025, 3);
     expect(explosao).toBeCloseTo(lava, 5);
   });
 

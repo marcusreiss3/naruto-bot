@@ -116,8 +116,9 @@ describe("Kaguya: ramificação Ossos x Kenjutsu, convergindo no ápice", () => 
 describe("Kaguya: Dança da Flor — finalizador, arma de osso incrivelmente destrutiva", () => {
   const flor = getAbility("kaguya_danca_flor")!;
 
-  it("não pode ser esquivada e é o jutsu mais forte do clã", () => {
-    expect(flor.undodgeable).toBe(true);
+  it("ignora Bloqueio e Aparo, mas pode ser esquivada e é o jutsu mais forte do clã", () => {
+    expect(flor.unguardable).toBe(true);
+    expect(flor.undodgeable).toBeFalsy();
     for (const id of IDS.filter((i) => i !== "kaguya_danca_flor")) {
       expect(flor.baseDamage!).toBeGreaterThan(getAbility(id)!.baseDamage ?? 0);
     }
