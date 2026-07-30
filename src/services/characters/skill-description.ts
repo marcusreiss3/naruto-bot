@@ -1,6 +1,7 @@
 import type { EffectId, TerrainKind } from "../../config/enums.js";
 import { BALANCE } from "../../config/balance.js";
 import type { Ability, AppliedEffect } from "../../data/types.js";
+import { getItem } from "../../data/items.js";
 import { defaultDurationFor } from "../combat/effects.js";
 
 const EFFECT_NAMES: Record<EffectId, string> = {
@@ -78,6 +79,12 @@ function terrainName(kind: TerrainKind): string {
 export function buildMechanicsSummary(ability: Ability): string {
   const parts: string[] = [];
 
+  if (ability.actionType === "REACAO" && ability.reactionKind === "BLOCK") {
+    parts.push("Reação de Bloqueio.");
+  } else if (ability.actionType === "REACAO" && ability.reactionKind === "PARRY") {
+    parts.push("Reação de Aparo.");
+  }
+
   if (ability.unblockable) parts.push("É Inevitável.");
   else {
     if (ability.undodgeable) parts.push("Não pode ser esquivado.");
@@ -109,7 +116,11 @@ export function buildMechanicsSummary(ability: Ability): string {
   }
   if (ability.clearsTerrain) parts.push(`Remove terreno de ${terrainName(ability.clearsTerrain)}.`);
   if (ability.oncePerCombat) parts.push("Pode ser usada somente uma vez por combate.");
-  if (ability.requiresStorm) parts.push("Exige uma tempestade ativa no campo.");
+  if (ability.requiresStorm) {
+    parts.push(
+      "Exige ao menos uma área de chamas ainda ativa no campo para formar a tempestade, ou a passiva Nuvens de Tempestade.",
+    );
+  }
   if (ability.id === "uchiha_sharingan_3_tomoe") {
     parts.push("Aprende permanentemente cada Ninjutsu elemental elegível observado em combate.");
     parts.push("Não copia técnicas exclusivas de clã.");
@@ -171,6 +182,19 @@ export function buildMechanicsSummary(ability: Ability): string {
     parts.push(`Como reação, concede +${Math.round(ability.reactionDodgeBonus * 100)}% de chance de Esquiva.`);
   }
   if (ability.reflectsProjectiles) parts.push("Ao Aparar um projétil, devolve o golpe ao atacante.");
+
+  const itemPhrase = (entries: NonNullable<Ability["requiredItems"]>): string =>
+    entries
+      .map((requirement) => `${requirement.amount}x ${getItem(requirement.itemId)?.name ?? requirement.itemId}`)
+      .join(entries.length > 1 ? " e " : "");
+  const consumedItems = (ability.requiredItems ?? []).filter((entry) => entry.consume);
+  const retainedItems = (ability.requiredItems ?? []).filter((entry) => !entry.consume);
+  if (consumedItems.length) parts.push(`Consome ${itemPhrase(consumedItems)}.`);
+  if (retainedItems.length) parts.push(`Exige ${itemPhrase(retainedItems)}.`);
+  if (ability.equippedItemIds?.length) {
+    const names = ability.equippedItemIds.map((id) => getItem(id)?.name ?? id);
+    parts.push(`Exige ${names.join(" ou ")} equipada.`);
+  }
 
   if (ability.toggleRules) {
     const rules = ability.toggleRules;

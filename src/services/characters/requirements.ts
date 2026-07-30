@@ -20,5 +20,14 @@ export function meetsRequirements(ability: Ability, ctx: RequirementContext): bo
       if (ctx.attrs[k as Attribute] < (v ?? 0)) return false;
     }
   }
+  if (req.anyAttribute) {
+    const alternatives = Object.entries(req.anyAttribute);
+    if (
+      alternatives.length > 0 &&
+      !alternatives.some(([k, v]) => ctx.attrs[k as Attribute] >= (v ?? 0))
+    ) {
+      return false;
+    }
+  }
   return true;
 }

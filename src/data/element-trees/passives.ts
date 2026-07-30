@@ -95,9 +95,8 @@ export const PASSIVES: PassiveDef[] = [
   },
 
   // ---------------------------------------------------------------- AGUA
-  // Agua nao ganha dano de graca como Fogo: ganha por MONTAR A JOGADA. Contra
-  // alvo seco bate fraco (1.15x); contra Encharcado chega a 2.01x — a mesma
-  // faixa do Fogo, so que condicionada ao setup. Ver o teste do ~2.0x.
+  // Maré Condutora dá força estável à Água; Fio d'Água recompensa o preparo.
+  // Com a build completa: 1.4375x no seco e 2.15625x contra Encharcado.
   {
     nodeId: "agua_raiz",
     element: "AGUA",
@@ -112,12 +111,13 @@ export const PASSIVES: PassiveDef[] = [
   {
     nodeId: "agua_condutora",
     element: "AGUA",
+    damageMult: 1.25,
     effectDurationBonus: { effectId: "WET", bonus: 1 },
   },
   {
     nodeId: "agua_fio",
     element: "AGUA",
-    damageMultVsEffect: { effectId: "WET", mult: 1.75 }, // 1.15 * 1.75 = 2.01
+    damageMultVsEffect: { effectId: "WET", mult: 1.5 }, // com raiz e Maré Condutora: 1.15 * 1.25 * 1.5
   },
 
   // ---------------------------------------------------------------- VENTO

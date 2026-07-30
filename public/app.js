@@ -5,6 +5,7 @@
 // pré-requisito) — por isso sempre aparece desbloqueada, ver buildElemBar.
 const ELEMENTS = [
   { id: "FUNDAMENTOS", name: "Ninjutsu", icon: "", img: "/assets/icons/footer/ninjutsu.png", color: "#8a8a8a" },
+  { id: "BUKIJUTSU", name: "Bukijutsu", icon: "", img: "/assets/icons/footer/bukijutsu.png", color: "#b7a27a" },
   { id: "FOGO", name: "Fogo", icon: "", img: "/assets/icons/footer/katon.png", color: "#e2492d" },
   { id: "AGUA", name: "Água", icon: "", img: "/assets/icons/footer/suiton.png", color: "#2b7fd4" },
   { id: "VENTO", name: "Vento", icon: "", img: "/assets/icons/footer/futon.png", color: "#2fa36b" },
@@ -72,6 +73,7 @@ const NODE_IMAGE_FALLBACKS = {
   explosao_blindagem: "/assets/icons/explosao/blindagem-explosiva.png",
   explosao_apice: "/assets/icons/explosao/estilo-explosao-pleno.png",
   explosao_mina: "/assets/icons/explosao/punho-de-mina-terrestre.png",
+  agua_muralha: "/assets/icons/agua/muralha-de-agua.png",
   yuki_raiz: "/assets/icons/yuki/sangue-de-gelo.png",
   yuki_agulhas: "/assets/icons/yuki/agulhas-de-gelo.png",
   yuki_espelho: "/assets/icons/yuki/espelho-demoniaco-de-gelo-fino.png",
@@ -83,8 +85,15 @@ const NODE_IMAGE_FALLBACKS = {
   yuki_agulhas_mil: "/assets/icons/yuki/mil-agulhas-voadoras.png",
 };
 
+const ICON_ASSET_VERSION = "20260730-c";
+
+function versionedIcon(path) {
+  if (!path || !path.startsWith("/assets/icons/")) return path;
+  return `${path}${path.includes("?") ? "&" : "?"}v=${ICON_ASSET_VERSION}`;
+}
+
 function nodeImage(node) {
-  return node.img || NODE_IMAGE_FALLBACKS[node.id];
+  return versionedIcon(node.img || NODE_IMAGE_FALLBACKS[node.id]);
 }
 
 // Símbolos dos clãs na seleção inferior. Mantidos fora dos metadados de cada
@@ -137,6 +146,7 @@ let showAllTrees = false;
 // Imagem de fundo por elemento (public/assets/bg). Ausente = sem imagem, só o gradiente.
 const ELEMENT_BG = {
   FUNDAMENTOS: "url('/assets/bg/ninjutsu.webp')",
+  BUKIJUTSU: "url('/assets/bg/ninjutsu.webp')",
   FOGO: "url('/assets/bg/fogo.webp')",
   AGUA: "url('/assets/bg/agua.webp')",
   VENTO: "url('/assets/bg/vento.webp')",
@@ -148,13 +158,14 @@ const ELEMENT_BG = {
 // então basta escrever o nome do efeito na desc que ele vira link explicativo.
 const GLOSSARY = [
   { re: "Inevitável", tip: "Inevitável: este ataque ignora todas as reações defensivas do alvo — Esquiva, Bloqueio e Aparo." },
-  { re: "Queimadura(?:s)?", tip: "Queimadura: o alvo perde 8 de vida por turno e causa menos dano físico a cada acúmulo. Ao juntar 5 acúmulos, explode por 40 de dano e zera." },
+  { re: "Queimadura(?:s)?", tip: "Queimadura: causa 8 de dano por rodada e reduz em 5% o dano de Taijutsu por acúmulo. Ao juntar 5 acúmulos, causa 40 de dano e os acúmulos são removidos." },
   { re: "Sangramento", tip: "Sangramento: o alvo perde 5 de vida por turno, recebe metade da cura e ainda perde 6 de vida sempre que usa um golpe físico." },
-  { re: "Veneno", tip: "Veneno: o alvo perde vida por turno, e a perda cresce a cada acúmulo (até um teto de rodadas)." },
+  { re: "Veneno", tip: "Veneno: causa 2 de dano por rodada, mais 1 por acúmulo adicional. Sua duração não pode passar de 5 rodadas." },
   // ATENCAO: alternativas da MAIS LONGA para a mais curta — a regex casa a primeira
   // que servir, entao "Atordoa" antes de "atordoado" cortaria a palavra no meio.
   { re: "Atordoamento|Atordoarem|Atordoar|atordoados|atordoado|Atordoam|Atordoa", tip: "Atordoamento: o alvo não pode agir nem se mover no turno. Perde a vez." },
-  { re: "Encharcando|Encharcad[oa]s|Encharcad[oa]", tip: "Encharcado: o alvo está molhado. Toma dano extra de jutsus de Raio e serve de condutor para acertos em cadeia." },
+  { re: "Encharcando|Encharcad[oa]s|Encharcad[oa]", tip: "Encharcado: o alvo está molhado. Com Nuvens de Tempestade, jutsus de Raio causam +75% de dano contra ele. Também serve de condutor para acertos em cadeia." },
+  { re: "Fumaça", tip: "Fumaça: bloqueia a linha de visão de técnicas à distância quando fica entre o atacante e o alvo, mas não impede movimento nem ataques corpo a corpo." },
   { re: "Barreira", tip: "Barreira: escudo que absorve parte do dano recebido antes de descontar da sua vida." },
   { re: "Imobilização|preso(?:s)? ao chão", tip: "Imobilização: o alvo não consegue sair do lugar. Ainda pode atacar." },
   { re: "mais lento(?:s)?|Lentidão", tip: "Lentidão: o movimento do alvo cai pela metade." },
@@ -163,11 +174,11 @@ const GLOSSARY = [
   { re: "Ignora Bloqueio e Aparo", tip: "Sem guarda: o alvo ainda pode tentar Esquivar, mas não pode reagir com Bloqueio nem Aparo." },
   { re: "bloque\\w* o Ninjutsu|Bloqueio de Ninjutsu", tip: "Bloqueio de Ninjutsu: o alvo não consegue usar jutsu de categoria Ninjutsu enquanto durar. Não drena chakra (isso seria Dreno de Chakra, outro efeito) — só tranca esse tipo de técnica." },
   { re: "Fuga bloqueada|não consegue fugir|sem poder fugir|não conseguem fugir", tip: "Fuga bloqueada: o alvo não pode usar a ação de fugir do combate enquanto o efeito durar." },
-  { re: "Dreno de Chakra|perde 10% de chakra por turno|perder 10% de chakra por turno", tip: "Dreno de Chakra: o alvo perde chakra a cada turno enquanto durar." },
+  { re: "Dreno de Chakra|perde 10% de chakra por turno|perder 10% de chakra por turno", tip: "Dreno de Chakra: remove 10% de chakra do alvo no início de cada turno enquanto durar." },
   { re: "Confuso|Confusão", tip: "Confusão: enquanto durar, o alvo confuso ataca alguém aleatório entre todos os vivos em vez de escolher — pode até acertar o próprio time." },
-  { re: "Aceleração|Acelerado", tip: "Aceleração: mais movimento, esquiva e chance de fuga; quem acertar você corpo a corpo no período leva dano de contra-ataque." },
+  { re: "Aceleração|Acelerado", tip: "Aceleração: concede +2 de movimento, +10 pontos percentuais de Esquiva e +25 pontos percentuais de chance de fuga. Quem acertar o portador corpo a corpo sofre 8 de dano." },
   { re: "Desarme", tip: "Desarme: o alvo derruba a arma equipada e precisa recuperá-la antes de voltar a usá-la." },
-  { re: "Sobrecarga", tip: "Sobrecarga: aumenta temporariamente o dano causado. Algumas técnicas cobram um efeito negativo quando ela termina." },
+  { re: "Sobrecarga", tip: "Sobrecarga: aumenta em 60% o dano das técnicas indicadas pela habilidade. Algumas técnicas aplicam um efeito negativo quando ela termina." },
   // ---- exclusivo do clã Nara ----
   { re: "Vínculo de Sombra", tip: "Vínculo de Sombra: sem dano, mas o alvo não pode se mover nem reagir (Esquivar/Bloquear/Aparar) enquanto durar — o corpo dele copia o do usuário. Só uma Esquiva bem-sucedida ANTES do vínculo prender evita o efeito." },
   // ---- kekkei genkai: Cristal ----
@@ -175,14 +186,14 @@ const GLOSSARY = [
   { re: "selad[oa](?:s)?|selar", tip: "Selado: o casulo de cristal fechou. O alvo fica Atordoado 1 rodada e preso ao chão por 2." },
   { re: "Prisma", tip: "Prisma: casulo de luz sobre você. Corta 60% do dano de Ninjutsu recebido e devolve 30% do que barrou no atacante. Em troca, você fica imóvel e golpes físicos passam inteiros." },
   // ---- kekkei genkai: Vapor ----
-  { re: "Corrosão", tip: "Corrosão: névoa corrosiva no corpo do alvo. Causa dano leve por turno e derrete a Barreira (SHIELD) do alvo a cada rodada, ignorando-a por completo." },
+  { re: "Corrosão", tip: "Corrosão: causa 5 de dano por rodada e remove 8 pontos de Barreira por acúmulo a cada rodada." },
   // ---- kekkei genkai: Calor ----
-  { re: "Desidrata(?:d[oa])?(?:s)?|Desidratação", tip: "Desidratação: o calor sugou a água do corpo do alvo. Corta uma % de TODO o dano que ele causar (não só físico) enquanto durar." },
+  { re: "Desidrata(?:d[oa])?(?:s)?|Desidratação", tip: "Desidratação: reduz em 15% todo o dano causado pelo alvo por acúmulo." },
   // ---- kekkei genkai: Lava ----
-  { re: "Magma", tip: "Magma: lava acumulada no corpo do alvo. Causa dano leve por turno; ao juntar acúmulos suficientes, endurece e prende o alvo (Imobilização), sem Atordoar." },
+  { re: "Magma", tip: "Magma: causa 4 de dano por rodada. Ao juntar 4 acúmulos, eles são removidos e o alvo fica Imobilizado por 2 rodadas, sem Atordoamento." },
   { re: "endureceu|endurecer", tip: "Endureceu: o Magma acumulado fechou. O alvo fica preso no lugar (Imobilização), mas continua podendo agir." },
   // ---- kekkei genkai: Explosão ----
-  { re: "Minado", tip: "Minado: carga explosiva plantada no corpo do alvo. Não causa dano nenhum enquanto o pavio queima — detona tudo de uma vez quando a duração termina." },
+  { re: "Minado", tip: "Minado: não causa dano durante a contagem. Quando a duração termina, causa 20 de dano por acúmulo." },
   { re: "defletiu|redireciona(?:r)?", tip: "Explosão Defensiva: contra um projétil (arma arremessada), apara e devolve o golpe inteiro no atacante em vez de só reduzir o dano." },
 ];
 const GLOSSARY_RE = new RegExp("(" + GLOSSARY.map((g) => g.re).join("|") + ")", "gi");
@@ -275,6 +286,7 @@ const CENTER_X = 360, COL_GAP = 150, ROW_GAP = 132, TOP_PAD = 60, WIDTH = 720;
 let state = null;      // resposta de /api/state
 let activeEl = null;   // elemento em exibição
 let modalNode = null;  // nó aberto no modal
+let equipmentOpen = false;
 
 const $ = (id) => document.getElementById(id);
 
@@ -422,7 +434,79 @@ async function pull() {
   state = ns;
   lastSig = g;
   buildElemBar();       // elementos podem ter sido concedidos
-  renderTree(activeEl); // mantém o elemento aberto, atualiza status/pontos/topo
+  if (equipmentOpen) renderEquipmentPage();
+  else renderTree(activeEl); // mantém o elemento aberto, atualiza status/pontos/topo
+}
+
+function equipmentAbilityHtml(ability, command) {
+  if (!ability) return "";
+  const damage = ability.baseDamage
+    ? `<span>Dano base: <b>${ability.baseDamage}</b></span>`
+    : "";
+  return `<div class="equipment-ability">
+    <div class="equipment-ability-head"><code>${escHtml(command)}</code><strong>${escHtml(ability.name)}</strong></div>
+    <div class="equipment-stats">
+      <span>${escHtml(CAT_LABEL[ability.category] || ability.category)}</span>
+      <span>${escHtml(ACT_LABEL[ability.actionType] || ability.actionType)}</span>
+      <span>${escHtml(areaText(ability))}</span>
+      <span>${escHtml(RES_LABEL[ability.resource] || ability.resource)}: <b>${ability.cost}%</b></span>
+      ${damage}
+    </div>
+    <p>${highlightEffects(ability.mechanics || ability.description)}</p>
+  </div>`;
+}
+
+function renderEquipmentPage() {
+  const catalog = state && state.equipment;
+  if (!catalog) return;
+  $("equipmentQuickStart").innerHTML =
+    `<div class="equipment-section-title"><span>🥷</span><div><small>Primeiros passos</small><h2>Fluxo rápido</h2></div></div>` +
+    `<ol>${catalog.quickStart.map((step) => `<li>${escHtml(step)}</li>`).join("")}</ol>`;
+  $("equipmentCommands").innerHTML = catalog.commandGroups.map((group) =>
+    `<section class="command-group">
+      <div class="equipment-section-title"><span>${group.icon}</span><div><small>Comandos básicos</small><h2>${escHtml(group.title)}</h2></div></div>
+      <div class="command-grid">${group.commands.map((entry) =>
+        `<article><code>${escHtml(entry.command)}</code><p>${escHtml(entry.description)}</p></article>`
+      ).join("")}</div>
+    </section>`
+  ).join("");
+
+  $("equipmentUnarmed").innerHTML =
+    `<div class="equipment-section-title"><span>👊</span><div><small>Sem arma equipada</small><h2>Ataque desarmado</h2></div></div>` +
+    equipmentAbilityHtml(catalog.unarmedAttack, "/atacar alvo");
+
+  $("equipmentGroups").innerHTML = catalog.categories.flatMap((category) => {
+    const items = catalog.items.filter((item) => item.category === category.id);
+    if (!items.length) return [];
+    const cards = items.map((item) => {
+      const actions = item.actions.map((action) => `<span>${escHtml(action.label)}</span>`).join("");
+      const basicCommand = item.id === "kunai" ? "/atacar alvo" : `/usar ${item.id}`;
+      return `<article class="equipment-card">
+        <div class="equipment-card-head">
+          <div><small>${escHtml(category.label)}</small><h3>${escHtml(item.name)}</h3></div>
+          <div class="equipment-actions">${actions}</div>
+        </div>
+        <p class="equipment-description">${escHtml(item.description)}</p>
+        ${item.specialRule ? `<p class="equipment-special">${escHtml(item.specialRule)}</p>` : ""}
+        ${equipmentAbilityHtml(item.basicAbility, basicCommand)}
+        ${equipmentAbilityHtml(item.throwAbility, `/arremessar ${item.id} alvo`)}
+      </article>`;
+    }).join("");
+    return [`<section class="equipment-group">
+      <div class="equipment-section-title"><span>${category.icon}</span><div><small>Categoria</small><h2>${escHtml(category.label)}</h2></div></div>
+      <div class="equipment-grid">${cards}</div>
+    </section>`];
+  }).join("");
+}
+
+function setEquipmentOpen(open) {
+  equipmentOpen = open;
+  $("equipmentPage").classList.toggle("hidden", !open);
+  document.querySelector(".workspace").classList.toggle("hidden", open);
+  $("elembar").classList.toggle("hidden", open);
+  $("equipmentBtn").classList.toggle("active", open);
+  $("charPointsBox").classList.toggle("hidden", open);
+  if (open) renderEquipmentPage();
 }
 
 function buildElemBar() {
@@ -434,18 +518,20 @@ function buildElemBar() {
     // arvore de cla (clanGate) so aparece pra quem e' daquele cla.
     const unlocked =
       e.id === "FUNDAMENTOS" ||
+      e.id === "BUKIJUTSU" ||
       (e.clanGate ? state.char.clanId === e.clanGate : state.char.elements.includes(e.id));
     if (!unlocked && !showAllTrees) continue;
     const div = document.createElement("div");
     div.className = "elem" + (!unlocked ? " locked" : "");
     div.style.setProperty("--ec", e.color);
     div.style.setProperty("--ecg", glow(e.color));
-    const iconImage = e.img || (e.clanGate ? CLAN_FOOTER_ICONS[e.clanGate] : undefined);
+    const iconImage = versionedIcon(e.img || (e.clanGate ? CLAN_FOOTER_ICONS[e.clanGate] : undefined));
     const eface = iconImage
       ? `<img class="e-img" src="${iconImage}" alt="" loading="lazy">`
       : e.icon;
     div.innerHTML = `<div class="e-ico">${eface}</div><div class="e-name">${e.name}</div>`;
     div.onclick = () => {
+      setEquipmentOpen(false);
       activeEl = e.id;
       renderTree(e.id);
     };
@@ -718,5 +804,6 @@ $("showAllBtn").onclick = () => {
   $("showAllBtn").classList.toggle("active", showAllTrees);
   buildElemBar();
 };
+$("equipmentBtn").onclick = () => setEquipmentOpen(!equipmentOpen);
 
 boot();

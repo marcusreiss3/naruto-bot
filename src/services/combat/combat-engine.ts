@@ -71,6 +71,7 @@ import {
 } from "./terrain.js";
 import { fleeCheck } from "./flee.js";
 import { characterPassiveMods, passiveMods, receivedEffectDurationReduction } from "./passives.js";
+import { validateAndConsumeAbilityItems } from "../characters/inventory.js";
 import { resolvePush, impactDamage } from "./push.js";
 import { clampInfiniteHp } from "./training-dummy.js";
 import {
@@ -776,20 +777,24 @@ export async function useAbility(
   abilityId: string,
   targetCell: string | null,
   targetId?: string | null,
+  options?: { allowUnlearned?: boolean },
 ): Promise<UseAbilityResult> {
   const logs: string[] = [];
   const actor = s.participants.find((p) => p.id === actorId);
   if (!actor) return fail("Você não está neste combate.");
   if (actor.hpCurrent <= 0) return fail("Personagem incapacitado.");
-  const ability = getAbility(abilityId);
-  if (!ability) return fail("Habilidade desconhecida.");
+  const foundAbility = getAbility(abilityId);
+  if (!foundAbility) return fail("Habilidade desconhecida.");
+  let ability = foundAbility;
 
   const learned = await learnedJutsuIds(actor);
   const isCopied =
     !learned.includes(abilityId) &&
     actor.flags.sharinganTomoe === 3 &&
     actor.flags.sharinganCopiedAbilityId === abilityId;
-  if (!learned.includes(abilityId) && !isCopied) return fail("Habilidade não desbloqueada.");
+  if (!learned.includes(abilityId) && !isCopied && !options?.allowUnlearned) {
+    return fail("Habilidade não desbloqueada.");
+  }
   if (isCopied) {
     const attrs = (actor.flags.attrs as Record<string, number> | undefined) ?? {};
     let elements = Array.isArray(actor.flags.elements) ? (actor.flags.elements as Element[]) : [];
@@ -811,6 +816,32 @@ export async function useAbility(
       return node ? { level: node.reqLevel, ninjutsu: node.pool === "ninjutsu" ? node.reqPool : undefined } : {};
     })());
     if (error) return fail(error);
+  }
+
+  // Afinidades acumulativas da Lâmina de Chakra. A técnica continua sendo
+  // Bukijutsu, mas cada natureza conhecida acrescenta sua própria propriedade.
+  if (
+    ownedNodes(actor).includes("buki_afinidade_lamina") &&
+    ability.tags.includes("lamina-chakra")
+  ) {
+    const elements = new Set(Array.isArray(actor.flags.elements) ? actor.flags.elements as Element[] : []);
+    const basicElements: Element[] = ["FOGO", "AGUA", "VENTO", "RAIO", "TERRA"];
+    const knownBasicElements = basicElements.filter((element) => elements.has(element)).length;
+    const extraEffects = [...(ability.effects ?? [])];
+    if (elements.has("FOGO")) extraEffects.push({ effectId: "BURN", stacks: 1, duration: 2 });
+    if (elements.has("RAIO")) extraEffects.push({ effectId: "STUN", duration: 1, chance: 0.2 });
+    if (elements.has("TERRA")) extraEffects.push({ effectId: "DEFENSE_DOWN", duration: 1 });
+    const affinityCost = ability.cost * (1 + knownBasicElements * 0.1);
+    const finalAffinityCost = elements.has("AGUA") ? affinityCost * 0.85 : affinityCost;
+    ability = {
+      ...ability,
+      baseDamage: ability.baseDamage === undefined
+        ? undefined
+        : ability.baseDamage * (1 + knownBasicElements * 0.1),
+      cost: Math.max(1, Math.round(finalAffinityCost)),
+      range: ability.range + (elements.has("VENTO") ? 1 : 0),
+      effects: extraEffects.length ? extraEffects : ability.effects,
+    };
   }
   if (ability.toggleRules) {
     return fail(`Esta técnica é contínua. Use ${ability.toggleRules.command} para ativar ou desativar.`);
@@ -900,6 +931,19 @@ export async function useAbility(
         return fail("Sem linha de visão: algo bloqueia o caminho até o alvo.");
       }
     }
+  }
+
+  if ((ability.requiredItems?.length || ability.equippedItemIds?.length) && !actor.charId) {
+    return fail("Esta técnica exige uma mochila vinculada ao personagem.");
+  }
+  if (actor.charId && (ability.requiredItems?.length || ability.equippedItemIds?.length)) {
+    const itemUse = await validateAndConsumeAbilityItems(
+      actor.charId,
+      ability.requiredItems,
+      ability.equippedItemIds,
+    );
+    if (!itemUse.ok) return fail(itemUse.error);
+    if (itemUse.consumed.length) logs.push(`🎒 Consumiu ${itemUse.consumed.join(", ")}.`);
   }
 
   // deduz recurso e marca acao
@@ -1183,7 +1227,11 @@ export async function resolveHit(
       `🌑 ${target.name} está com a sombra vinculada — o corpo copia o do atacante e não consegue reagir.`,
     );
   }
-  const reaction = boundByShadow ? "NONE" : requestedReaction;
+  const alreadyReacted = target.flags.reactionUsedRound === s.round;
+  if (alreadyReacted && requestedReaction !== "NONE") {
+    logs.push(`⏳ ${target.name} já usou uma reação defensiva nesta rodada.`);
+  }
+  const reaction = boundByShadow || alreadyReacted ? "NONE" : requestedReaction;
   if (reaction === "DODGE" && !undodgeable && !ability.unblockable) {
     const reactAb = opts.reactionAbilityId ? getAbility(opts.reactionAbilityId) : undefined;
     const physical = isPhysicalCategory(ability.category);
@@ -1193,7 +1241,11 @@ export async function resolveHit(
     // Esquiva normal gasta energia contra ataque fisico, chakra contra o resto.
     let canDodge = true;
     if (reactAb) {
-      await payReaction(target, reactAb);
+      const paid = await payReaction(target, reactAb);
+      if (paid === null) {
+        canDodge = false;
+        logs.push(`❌ ${target.name} não tinha ${reactAb.resource} para usar ${reactAb.name}.`);
+      }
     } else {
       const resource: "chakra" | "energia" = physical ? "energia" : "chakra";
       const cost = BALANCE.esquivaNormalCost;
@@ -1207,6 +1259,7 @@ export async function resolveHit(
     }
 
     if (canDodge) {
+      await setFlag(target.id, "reactionUsedRound", s.round);
       const dc = dodgeChance({
         ability,
         defenseDown: target.effects.some((e) => e.effectId === "DEFENSE_DOWN"),
@@ -1247,7 +1300,12 @@ export async function resolveHit(
     }
   } else if ((reaction === "BLOCK" || reaction === "PARRY") && !ability.unblockable && !ability.unguardable) {
     const reactAb = opts.reactionAbilityId ? getAbility(opts.reactionAbilityId) : undefined;
-    if (reactAb) await payReaction(target, reactAb);
+    const paid = reactAb ? await payReaction(target, reactAb) : 0;
+    if (paid === null) {
+      logs.push(`❌ ${target.name} não tinha ${reactAb!.resource} para usar ${reactAb!.name}.`);
+    } else {
+      await setFlag(target.id, "reactionUsedRound", s.round);
+      if (reactAb) await applyReactionBenefits(target, reactAb, logs);
     // Explosao Defensiva (Explosao): apara um projetil (BUKIJUTSU) e devolve
     // o golpe INTEIRO no proprio atacante, em vez de so reduzir o dano. Contra
     // qualquer outra categoria, funciona como um aparo comum (cai no else).
@@ -1285,6 +1343,7 @@ export async function resolveHit(
         defaultDurationFor("SHIELD"),
       );
       logs.push(`🪨 ${target.name} ganhou Barreira ao se defender.`);
+    }
     }
   }
 
@@ -1333,7 +1392,17 @@ export async function resolveHit(
 
   // Barreira absorve antes do HP. Raio (Ponta Perfurante) ignora barreira.
   if (damage > 0 && !atkMods?.ignoresShield) {
-    const pool = shieldPoints(target.effects);
+    // Uma reação pode ter criado Barreira depois que a sessão foi carregada.
+    // Relê os efeitos para ela já proteger contra o golpe que a ativou.
+    const latestEffects = await prisma.effectInstance.findMany({ where: { participantId: target.id } });
+    const pool = shieldPoints(
+      latestEffects.map((effect) => ({
+        effectId: effect.effectId as EffectId,
+        stacks: effect.stacks,
+        duration: effect.duration,
+        dataJson: effect.dataJson,
+      })),
+    );
     if (pool > 0) {
       const { damageToHp, absorbed } = absorbWithShield(damage, pool);
       if (absorbed > 0) {
@@ -1569,10 +1638,46 @@ function hasImpactPassive(
   return ability.element === "VENTO" && ownedNodes(attacker).includes("vento_vacuo");
 }
 
-async function payReaction(target: SessionFull["participants"][number], reactAb: Ability): Promise<void> {
+async function payReaction(
+  target: SessionFull["participants"][number],
+  reactAb: Ability,
+): Promise<number | null> {
   const mastery = await masteryFor(target, reactAb.resource);
-  const cost = costAfterMastery(reactAb.cost, mastery);
+  const mods = passiveMods(ownedNodes(target), reactAb);
+  const cost = Math.max(1, Math.round(costAfterMastery(reactAb.cost, mastery) * mods.costMult));
+  const pool = reactAb.resource === "chakra" ? target.chakra : target.energia;
+  if (pool < cost) return null;
   await deductResource(target.id, reactAb.resource, cost);
+  return cost;
+}
+
+async function applyReactionBenefits(
+  target: SessionFull["participants"][number],
+  reactAb: Ability,
+  logs: string[],
+): Promise<void> {
+  const mods = passiveMods(ownedNodes(target), reactAb);
+  for (const effect of reactAb.effects ?? []) {
+    if (effect.chance !== undefined && !chance(effect.chance)) continue;
+    const stacks = (effect.stacks ?? 1) + (mods.effectStacksBonus[effect.effectId] ?? 0);
+    const duration =
+      (effect.duration ?? defaultDurationFor(effect.effectId)) +
+      (mods.effectDurationBonus[effect.effectId] ?? 0);
+    await applyEffect(target.id, effect.effectId, stacks, duration, {
+      replaceGroup: effect.replaceGroup,
+      onExpire: effect.onExpire,
+      empoweredScope: resolveEmpoweredScope(effect.empoweredScope, reactAb),
+    });
+    logs.push(`⚡ ${target.name} recebeu efeito **${effectLabel(effect.effectId)}** pela reação.`);
+  }
+  if (reactAb.cleanses?.length) {
+    for (const effectId of reactAb.cleanses) {
+      await prisma.effectInstance.deleteMany({
+        where: { participantId: target.id, effectId },
+      });
+    }
+    logs.push(`🧼 ${target.name} removeu ${reactAb.cleanses.map(effectLabel).join(", ")}.`);
+  }
 }
 
 // Gasta pontos de Barreira, comecando pelas instancias que expiram antes.

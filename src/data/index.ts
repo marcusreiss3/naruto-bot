@@ -2,12 +2,16 @@ import type { Ability, ClanDef } from "./types.js";
 import { ELEMENTAL } from "./jutsus/elemental.js";
 import { SUPPORT } from "./jutsus/support.js";
 import { FUNDAMENTOS as FUNDAMENTOS_ABILITIES } from "./jutsus/fundamentals.js";
+import { ITEM_ABILITIES } from "./jutsus/items.js";
+import { BUKIJUTSU_ABILITIES } from "./jutsus/bukijutsu.js";
 import { CLAN_ABILITIES, CLANS } from "./clans/index.js";
 
 export const ALL_ABILITIES: Ability[] = [
   ...ELEMENTAL,
   ...SUPPORT,
   ...FUNDAMENTOS_ABILITIES,
+  ...ITEM_ABILITIES,
+  ...BUKIJUTSU_ABILITIES,
   ...CLAN_ABILITIES,
 ];
 

@@ -40,6 +40,9 @@ export interface AppliedEffect {
 export interface AbilityRequirements {
   level?: number;
   attributes?: Partial<Record<Attribute, number>>;
+  // Basta cumprir um dos atributos listados. Útil para fundamentos que podem
+  // ser aprendidos por disciplinas equivalentes, como Aparo por Buki ou Ken.
+  anyAttribute?: Partial<Record<Attribute, number>>;
   element?: Element;
   clanId?: string;
   // se true, nao desbloqueia por requisito automatico (so admin/arma/pergaminho)
@@ -76,6 +79,11 @@ export interface Ability {
   // Texto exclusivamente narrativo para o modal. Quando ausente, a descrição
   // antiga é filtrada para separar ambientação das regras.
   visualDescription?: string;
+  // Ferramentas exigidas pela técnica. `consume` remove a quantidade da
+  // mochila somente depois que todas as validações da ação passam.
+  requiredItems?: { itemId: string; amount: number; consume?: boolean }[];
+  // Ao menos um destes itens precisa estar equipado.
+  equippedItemIds?: string[];
   // Técnica contínua ligada/desligada por comando. Estes dados também
   // alimentam a apresentação uniforme na árvore.
   toggleRules?: {

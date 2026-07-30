@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { ATTRIBUTES, type Attribute } from "../src/config/enums.js";
+import { ATTRIBUTES, type Attribute, type Element } from "../src/config/enums.js";
 import { computeDamage, resolveAreaCells, dodgeChance } from "../src/services/combat/combat-math.js";
 import { BALANCE } from "../src/config/balance.js";
 import type { Ability } from "../src/data/types.js";
@@ -87,6 +87,18 @@ describe("desbloqueio de jutsu", () => {
       clanId: null,
     });
     expect(semElemento).toBe(false);
+  });
+
+  it("Aparo pode ser aprendido por Bukijutsu ou Kenjutsu", () => {
+    const ab = getAbility("ken_aparar")!;
+    const context = {
+      level: 20,
+      elements: [] as Element[],
+      clanId: null,
+    };
+    expect(meetsRequirements(ab, { ...context, attrs: attrs({ bukijutsu: 5 }) })).toBe(true);
+    expect(meetsRequirements(ab, { ...context, attrs: attrs({ kenjutsu: 5 }) })).toBe(true);
+    expect(meetsRequirements(ab, { ...context, attrs: attrs({ bukijutsu: 4, kenjutsu: 4 }) })).toBe(false);
   });
 });
 

@@ -68,6 +68,7 @@
         <span class="who-lvl" id="charLevel">Nv. —</span>
       </div>
       <div class="points-row" id="charPointsBox" title="Pontos disponíveis dos atributos que pagam esta árvore (valor do atributo − já gastos nele)"></div>
+      <button class="toggle-all equipment-nav-btn" id="equipmentBtn">Equipamentos e ações básicas</button>
       <button class="toggle-all" id="showAllBtn" title="Mostra todas as árvores (elementos, kekkei genkai e clãs), mesmo as que você não desbloqueou — só pra consulta, não dá pra comprar nó de fora do seu clã/elemento">Ver todas as árvores</button>
       <button class="logout" id="logoutBtn" title="Sair"><span class="x-ico"></span></button>
     </header>
@@ -116,6 +117,18 @@
       </main>
     </div>
 
+    <section class="equipment-page hidden" id="equipmentPage">
+      <header class="equipment-hero">
+        <span class="equipment-kicker">Referência shinobi</span>
+        <h1>Equipamentos e ações básicas</h1>
+        <p>Guia rápido dos comandos essenciais, do desenvolvimento do personagem ao combate e uso de equipamentos.</p>
+      </header>
+      <section class="equipment-quick" id="equipmentQuickStart"></section>
+      <div class="equipment-commands" id="equipmentCommands"></div>
+      <section class="equipment-unarmed" id="equipmentUnarmed"></section>
+      <div class="equipment-groups" id="equipmentGroups"></div>
+    </section>
+
     <!-- Seletor de elementos (embaixo) -->
     <nav class="elembar" id="elembar"></nav>
   </section>
@@ -152,6 +165,6 @@
   <!-- Toast -->
   <div id="toast" class="toast hidden"></div>
 
-  <script src="/app.js?v=yuki-icons-1"></script>
+  <script src="/app.js?v=equipment-page-2"></script>
 </body>
 </html>

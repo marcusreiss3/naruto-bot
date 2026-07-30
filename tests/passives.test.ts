@@ -142,8 +142,8 @@ describe("passivas: Água (dano condicional)", () => {
     expect(passiveMods(["agua_fio"], agua, seco).damageMult).toBe(1);
   });
 
-  it("Fio d'Água multiplica contra alvo Encharcado", () => {
-    expect(passiveMods(["agua_fio"], agua, encharcado).damageMult).toBeCloseTo(1.75);
+  it("Fio d'Água aumenta o dano contra alvo Encharcado", () => {
+    expect(passiveMods(["agua_fio"], agua, encharcado).damageMult).toBeCloseTo(1.5);
   });
 
   it("sem informação do alvo, o condicional não conta (cálculo de custo)", () => {
@@ -154,17 +154,19 @@ describe("passivas: Água (dano condicional)", () => {
     const todas = ["agua_raiz", "agua_correnteza", "agua_condutora", "agua_fio"];
     const contraSeco = passiveMods(todas, agua, seco).damageMult;
     const contraWet = passiveMods(todas, agua, encharcado).damageMult;
-    expect(contraSeco).toBeCloseTo(1.15);
-    expect(contraWet).toBeCloseTo(2.0125); // mesma faixa do Fogo, mas exige setup
-    expect(contraWet / contraSeco).toBeCloseTo(1.75);
+    expect(contraSeco).toBeCloseTo(1.15 * 1.25);
+    expect(contraWet).toBeCloseTo(1.15 * 1.25 * 1.5);
+    expect(contraWet / contraSeco).toBeCloseTo(1.5);
   });
 
   it("Correnteza dá 1 casa a mais de empurrão", () => {
     expect(passiveMods(["agua_correnteza"], agua).pushBonus).toBe(1);
   });
 
-  it("Maré Condutora estende o Encharcado em 1 rodada", () => {
-    expect(passiveMods(["agua_condutora"], agua).effectDurationBonus.WET).toBe(1);
+  it("Maré Condutora fortalece Água e estende o Encharcado em 1 rodada", () => {
+    const mods = passiveMods(["agua_condutora"], agua);
+    expect(mods.damageMult).toBeCloseTo(1.25);
+    expect(mods.effectDurationBonus.WET).toBe(1);
   });
 
   it("Fluxo Constante corta o custo em 15%", () => {

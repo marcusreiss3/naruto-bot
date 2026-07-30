@@ -58,6 +58,8 @@ describe("Senju", () => {
 
   it("Muralha Inabalável fortalece somente a Muralha de Água", () => {
     const wall = getAbility("suiton_suijinheki")!;
+    expect(wall.actionType).toBe("REACAO");
+    expect(wall.reactionKind).toBe("BLOCK");
     const dragon = getAbility("suiton_suiryuudan")!;
     expect(passiveMods(["senju_muralha"], wall).effectStacksBonus.SHIELD).toBe(12);
     expect(passiveMods(["senju_muralha"], dragon).effectStacksBonus.SHIELD).toBeUndefined();

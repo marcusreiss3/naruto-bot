@@ -12,7 +12,31 @@ import { admin } from "./admin.js";
 import { aparencia } from "./aparencia.js";
 import { clear } from "./clear.js";
 import { bonecoTreino } from "./boneco-treino.js";
+import { inventario } from "./inventario.js";
+import { arremessar, atacar, darItem, desequipar, equipar, largarItem, usarItem } from "./itens.js";
 
-export const commands: Command[] = [perfil, atributos, mapa, combate, mover, jutsu, party, missoes, interagir, admin, aparencia, clear, bonecoTreino];
+export const commands: Command[] = [
+  perfil,
+  atributos,
+  inventario,
+  equipar,
+  desequipar,
+  atacar,
+  arremessar,
+  usarItem,
+  darItem,
+  largarItem,
+  mapa,
+  combate,
+  mover,
+  jutsu,
+  party,
+  missoes,
+  interagir,
+  admin,
+  aparencia,
+  clear,
+  bonecoTreino,
+];
 
 export const commandMap = new Map<string, Command>(commands.map((c) => [c.data.name, c]));

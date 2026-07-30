@@ -203,6 +203,8 @@ describe("Hyuuga: passivas — atravessa defesa, sela chakra", () => {
 
   it("Guarda Perpétua estende a Barreira da Palma Rotativa e soma esquiva permanente contra Ninjutsu", () => {
     const rotativa = getAbility("hyuuga_palma_rotativa")!;
+    expect(rotativa.actionType).toBe("REACAO");
+    expect(rotativa.reactionKind).toBe("BLOCK");
     const m = passiveMods(["hyuuga_guarda_perpetua"], rotativa);
     expect(m.effectDurationBonus.SHIELD).toBe(1);
     expect(characterPassiveMods(["hyuuga_guarda_perpetua"]).ninjutsuDodgeBonus).toBeCloseTo(0.08);

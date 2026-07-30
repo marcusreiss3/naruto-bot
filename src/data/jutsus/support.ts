@@ -380,9 +380,9 @@ export const SUPPORT: Ability[] = [
     range: 0,
     shape: "SELF",
     scalingAttribute: "bukijutsu",
-    requirements: { attributes: { bukijutsu: 5 } },
+    requirements: { anyAttribute: { bukijutsu: 5, kenjutsu: 5 } },
     tags: ["arma", "defesa"],
-    description: "Apara o ataque com a arma, reduzindo muito o dano e podendo contra-atacar.",
+    description: "Desvia o ataque com a arma antes que ele alcance o corpo.",
   },
   {
     id: "ken_pergaminho_lamina",

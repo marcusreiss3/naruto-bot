@@ -23,6 +23,7 @@ import {
   type Shape,
 } from "../../config/enums.js";
 import { ELEMENT_TREES, getNode, type SkillNodeDef } from "../../data/element-trees/index.js";
+import { BUKIJUTSU_TREE } from "../../data/bukijutsu-tree.js";
 import { CLAN_TREES } from "../../data/clan-trees/index.js";
 import { getAbility, getClan } from "../../data/index.js";
 import { FUNDAMENTOS } from "../../data/element-trees/fundamentals.js";
@@ -323,6 +324,22 @@ export function viewClanTree(snap: CharSnapshot, clanId: string): NodeView[] {
     return reason
       ? { ...visibleNode, combat, visualDescription, mechanics, effectiveReqPool: effectiveRequired, status: "LOCKED", reason }
       : { ...visibleNode, combat, visualDescription, mechanics, effectiveReqPool: effectiveRequired, status: "BUYABLE" };
+  });
+}
+
+export function viewBukijutsuTree(snap: CharSnapshot): NodeView[] {
+  return BUKIJUTSU_TREE.map((node) => {
+    const combat = combatOf(node);
+    const mechanics = mechanicsOf(node);
+    const visualDescription = visualDescriptionOf(node);
+    const effectiveRequired = effectiveReqPool(node);
+    if (snap.owned.has(node.id)) {
+      return { ...node, combat, visualDescription, mechanics, effectiveReqPool: effectiveRequired, status: "OWNED" };
+    }
+    const reason = lockReason(snap, node);
+    return reason
+      ? { ...node, combat, visualDescription, mechanics, effectiveReqPool: effectiveRequired, status: "LOCKED", reason }
+      : { ...node, combat, visualDescription, mechanics, effectiveReqPool: effectiveRequired, status: "BUYABLE" };
   });
 }
 

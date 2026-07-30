@@ -7,9 +7,10 @@ import { getSessionDiscordId } from "./auth.js";
 import { ELEMENT_TREES } from "../data/element-trees/index.js";
 import { CLAN_TREES } from "../data/clan-trees/index.js";
 import { CLANS, getAbility } from "../data/index.js";
-import { loadSnapshot, viewTree, viewFundamentosTree, viewClanTree, buyNode } from "../services/characters/skill-tree.js";
+import { loadSnapshot, viewTree, viewFundamentosTree, viewClanTree, viewBukijutsuTree, buyNode } from "../services/characters/skill-tree.js";
 import { buildMechanicsSummary, buildVisualDescription } from "../services/characters/skill-description.js";
 import { MANGEKYO_VARIANT_LABEL } from "../services/characters/mangekyo.js";
+import { buildEquipmentCatalog } from "../services/characters/equipment-catalog.js";
 
 export function registerApi(app: FastifyInstance): void {
   // Estado completo: personagem + as 5 árvores com o status de cada nó.
@@ -20,7 +21,10 @@ export function registerApi(app: FastifyInstance): void {
     const snap = await loadSnapshot(discordId, ENV.DISCORD_GUILD_ID);
     if (!snap) return reply.send({ authenticated: true, hasChar: false });
 
-    const trees: Record<string, unknown> = { FUNDAMENTOS: viewFundamentosTree(snap) };
+    const trees: Record<string, unknown> = {
+      FUNDAMENTOS: viewFundamentosTree(snap),
+      BUKIJUTSU: viewBukijutsuTree(snap),
+    };
     for (const el of Object.keys(ELEMENT_TREES) as Element[]) {
       trees[el] = viewTree(snap, el);
     }
@@ -71,6 +75,7 @@ export function registerApi(app: FastifyInstance): void {
             }];
           })
         : [],
+      equipment: buildEquipmentCatalog(),
       trees,
     });
   });

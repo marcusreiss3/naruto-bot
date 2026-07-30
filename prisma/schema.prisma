@@ -24,6 +24,8 @@ model UserCharacter {
   hpMax           Int      @default(100)
   // contador de evolucoes de maestria liberadas (1 a cada 15 niveis)
   masteryPoints   Int      @default(0)
+  // Uma única arma preparada por vez. Equipar não remove o item do inventário.
+  equippedItemId  String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

@@ -595,6 +595,45 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
   { nodeId: "senju_imunidade", clanId: "senju", receivedEffectDurationReduction: { POISON: 1, STUN: 1 } },
   { nodeId: "senju_regenerativo", clanId: "senju", crossCategory: "IRYO_NINJUTSU", healMult: 1.15 },
   { nodeId: "senju_especialista", clanId: "senju", crossCategory: "IRYO_NINJUTSU", healMult: 1.15, costMult: 0.9 },
+
+  // ------------------------------------------------------------ BUKIJUTSU
+  // Catálogo genérico: o clanId serve apenas para o formato comum das
+  // passivas; crossCategory faz o bônus valer para a escola de armas.
+  { nodeId: "buki_fundamentos", clanId: "bukijutsu", crossCategory: "BUKIJUTSU", damageMult: 1.15 },
+  {
+    nodeId: "buki_manipulacao_fios", clanId: "bukijutsu",
+    abilityIds: ["buki_moinho", "buki_meteoro_anexado", "buki_camara_tortura"],
+    damageMult: 1.1,
+  },
+  {
+    nodeId: "buki_arsenal_selado", clanId: "bukijutsu",
+    abilityIds: ["buki_dragoes_gemeos", "buki_esfera_explosiva", "buki_cadeia_desastre"],
+    costMult: 0.9,
+  },
+  {
+    nodeId: "buki_lamina_chakra", clanId: "bukijutsu",
+    abilityIds: ["item_lamina_chakra_cortar", "buki_voo_andorinha"], armorPierce: 0.2,
+  },
+  {
+    nodeId: "buki_maestria_arremesso", clanId: "bukijutsu",
+    abilityIds: [
+      "item_kunai_arremessar",
+      "item_shuriken_arremessar",
+      "item_fuma_shuriken_arremessar",
+      "item_senbon_arremessar",
+      "item_kunai_explosiva_arremessar",
+      "buki_moinho",
+      "buki_dragoes_gemeos",
+      "buki_clone_shuriken",
+      "buki_esfera_explosiva",
+      "buki_cadeia_desastre",
+    ],
+    damageMult: 1.15, rangeBonus: 1, rangeShapes: ["SINGLE_TARGET", "LINE", "RADIUS"],
+  },
+  {
+    nodeId: "buki_resma_explosiva", clanId: "bukijutsu",
+    abilityIds: ["buki_esfera_explosiva", "item_kunai_explosiva_arremessar"], damageMult: 1.2,
+  },
 ];
 
 const CLAN_PASSIVE_INDEX: Map<string, ClanPassiveDef> = new Map(CLAN_PASSIVES.map((p) => [p.nodeId, p]));

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { BALANCE } from "../src/config/balance.js";
 import { ALL_ABILITIES } from "../src/data/index.js";
 import { allNodes, getNode } from "../src/data/element-trees/index.js";
 import {
@@ -43,6 +44,51 @@ describe("resumo uniforme de efeitos e regras", () => {
         expect(summary, ability.id).toContain(`${Math.round(ability.toggleRules.dodgeBonus * 100)}%`);
         expect(summary, ability.id).toContain(`${ability.toggleRules.upkeepPerTurn}%`);
       }
+    }
+  });
+
+  it("deixa as regras detalhadas dos efeitos somente para o glossário", () => {
+    const drain = ALL_ABILITIES.find((ability) =>
+      ability.effects?.some((effect) => effect.effectId === "CHAKRA_DRAIN"),
+    )!;
+    const haste = ALL_ABILITIES.find((ability) =>
+      ability.effects?.some((effect) => effect.effectId === "HASTE"),
+    )!;
+
+    const drainSummary = buildMechanicsSummary(drain);
+    expect(drainSummary).toContain("Dreno de Chakra");
+    expect(drainSummary).not.toContain(`${BALANCE.effects.CHAKRA_DRAIN.chakraPerTurn}% de chakra`);
+
+    const hasteSummary = buildMechanicsSummary(haste);
+    expect(hasteSummary).toContain("Aceleração");
+    expect(hasteSummary).not.toContain(`+${BALANCE.effects.HASTE.moveBonus} de movimento`);
+  });
+
+  it("informa o bônus de Raio ao explicar Encharcado", () => {
+    const wet = ALL_ABILITIES.find((ability) =>
+      ability.effects?.some((effect) => effect.effectId === "WET"),
+    )!;
+    const summary = buildMechanicsSummary(wet);
+    expect(summary).toContain("Encharcado");
+    expect(summary).not.toContain("Nuvens de Tempestade");
+    expect(summary).not.toContain("+75% de dano");
+  });
+
+  it("explica de forma concreta como o Kirin prepara a tempestade", () => {
+    const kirin = ALL_ABILITIES.find((ability) => ability.id === "raiton_kirin")!;
+    const summary = buildMechanicsSummary(kirin);
+    expect(summary).toContain("área de chamas ainda ativa");
+    expect(summary).toContain("Nuvens de Tempestade");
+  });
+
+  it("deixa o funcionamento do terreno de Fumaça somente para o glossário", () => {
+    const smokeAbilities = ALL_ABILITIES.filter((ability) => ability.terrain?.kind === "SMOKE");
+    expect(smokeAbilities.length).toBeGreaterThan(0);
+    for (const ability of smokeAbilities) {
+      const summary = buildMechanicsSummary(ability);
+      expect(summary, ability.id).toContain("terreno de fumaça");
+      expect(summary, ability.id).not.toContain("bloqueia a linha de visão");
+      expect(summary, ability.id).not.toContain("ataques corpo a corpo");
     }
   });
 

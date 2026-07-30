@@ -53,6 +53,7 @@ import { runNpcTurn } from "../services/combat/npc-combat.js";
 import { getAbility } from "../data/index.js";
 import { onCombatEnded, onCombatLost } from "../services/missions/mission-runtime.js";
 import { partyMemberIds } from "../services/party/party-service.js";
+import { pickUpInventoryItem } from "../services/characters/inventory.js";
 import { MapRenderer } from "../services/maps/renderer.js";
 import { buildSessionEntities, condenseLogs } from "../services/combat/combat-render.js";
 import { startKidDialogue } from "../services/missions/kid-dialogue.js";
@@ -104,6 +105,7 @@ export const combate: Command = {
     )
     .addSubcommand((s) => s.setName("fim-turno").setDescription("Encerra seu turno"))
     .addSubcommand((s) => s.setName("pegar-arma").setDescription("Pega a arma caída na sua célula (ação comum)"))
+    .addSubcommand((s) => s.setName("pegar-item").setDescription("Pega um item largado na sua célula (ação comum)"))
     .addSubcommand((s) =>
       s
         .setName("agua")
@@ -147,6 +149,8 @@ export const combate: Command = {
         return fimTurno(interaction);
       case "pegar-arma":
         return pegarArma(interaction);
+      case "pegar-item":
+        return pegarItem(interaction);
       case "agua":
         return agua(interaction);
       case "byakugan":
@@ -495,26 +499,36 @@ async function moverMissaoGato(interaction: ChatInputCommandInteraction, dest: s
 }
 
 export async function usar(interaction: ChatInputCommandInteraction): Promise<void> {
+  const rawAbility = interaction.options.getString("habilidade", true);
+  const abilityId = resolveAbilityId(rawAbility);
+  if (!abilityId) {
+    await interaction.reply({ content: `❌ Jutsu não encontrado: "${rawAbility}".`, ephemeral: true });
+    return;
+  }
+  const rawAlvo = interaction.options.getString("alvo") ?? null;
+  await executeKnownAbility(interaction, abilityId, rawAlvo);
+}
+
+export async function executeKnownAbility(
+  interaction: ChatInputCommandInteraction,
+  abilityId: string,
+  rawAlvo: string | null,
+  options?: {
+    allowUnlearned?: boolean;
+    afterAccepted?: () => Promise<{ ok: true } | { ok: false; error: string }>;
+  },
+): Promise<boolean> {
   const { session, me } = await getMyParticipant(interaction);
   if (!session || !me) {
     await interaction.reply({ content: "❌ Você não está em combate aqui.", ephemeral: true });
-    return;
+    return false;
   }
   const turnErr = ensureMyTurn(session, me.id);
   if (turnErr) {
     await interaction.reply({ content: `❌ ${turnErr}`, ephemeral: true });
-    return;
+    return false;
   }
-  const rawAbility = interaction.options.getString("habilidade", true);
-  const abilityId = resolveAbilityId(rawAbility);
-  const rawAlvo = interaction.options.getString("alvo") ?? null;
-
   await interaction.deferReply();
-  if (!abilityId) {
-    await interaction.editReply(`❌ Jutsu não encontrado: "${rawAbility}".`);
-    return;
-  }
-
   // alvo pode ser um participantId (escolhido no autocomplete) ou uma célula (ex: C4)
   let targetId: string | null = null;
   let targetCell: string | null = null;
@@ -530,12 +544,26 @@ export async function usar(interaction: ChatInputCommandInteraction): Promise<vo
 
   // jutsu de area: mostra o que vai ser atingido e pede confirmacao
   const confirmed = await confirmAreaAbility(interaction, session, me, abilityId, targetCell);
-  if (!confirmed) return;
+  if (!confirmed) return false;
 
-  const res = await useAbility(session, me.id, abilityId, targetCell, targetId);
+  const res = await useAbility(session, me.id, abilityId, targetCell, targetId, {
+    allowUnlearned: options?.allowUnlearned,
+  });
   if (!res.ok) {
     await interaction.editReply({ content: `❌ ${res.error}`, embeds: [], files: [], components: [] });
-    return;
+    return false;
+  }
+  if (options?.afterAccepted) {
+    const accepted = await options.afterAccepted();
+    if (!accepted.ok) {
+      await interaction.editReply({
+        content: `❌ A ação foi aceita, mas o item não pôde ser consumido: ${accepted.error}`,
+        embeds: [],
+        files: [],
+        components: [],
+      });
+      return false;
+    }
   }
 
   const logs = [...res.logs];
@@ -546,6 +574,7 @@ export async function usar(interaction: ChatInputCommandInteraction): Promise<vo
 
   await sendCombatView(interaction, session.id, logs);
   await checkVictory(interaction, session.id);
+  return true;
 }
 
 // Mostra a area de um jutsu no mapa e pede confirmacao antes de gastar recurso.
@@ -672,6 +701,12 @@ async function resolveWithReaction(
   if (reactor.isNpc || !reactor.charId) {
     return resolveHit(sessionId, hit, attackerId, { reaction: "NONE" });
   }
+  if (target.flags.reactionUsedRound === session!.round) {
+    await interaction.followUp({
+      content: `⏳ **${target.name}** já usou uma reação defensiva nesta rodada e não pode reagir novamente.`,
+    });
+    return resolveHit(sessionId, hit, attackerId, { reaction: "NONE" });
+  }
   const targetChar = await prisma.userCharacter.findUnique({ where: { id: reactor.charId } });
   if (!targetChar) return resolveHit(sessionId, hit, attackerId, { reaction: "NONE" });
 
@@ -682,7 +717,12 @@ async function resolveWithReaction(
   });
   const reactionJutsus = ownedRows
     .map((r) => getAbility(r.jutsuId))
-    .filter((a): a is NonNullable<typeof a> => !!a && a.actionType === "REACAO");
+    .filter(
+      (a): a is NonNullable<typeof a> =>
+        !!a &&
+        a.actionType === "REACAO" &&
+        (!a.requiresActiveDoujutsu || reactor.flags[a.requiresActiveDoujutsu.flag] === true),
+    );
 
   // ---- Passo 1: reagir ou levar o dano ----
   const gateRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -719,7 +759,7 @@ async function resolveWithReaction(
   const buttons: ButtonBuilder[] = [
     new ButtonBuilder().setCustomId("rx_dodge").setLabel("💨 Esquiva normal").setStyle(ButtonStyle.Primary),
   ];
-  for (const j of reactionJutsus.slice(0, 5)) {
+  for (const j of reactionJutsus.slice(0, 12)) {
     buttons.push(new ButtonBuilder().setCustomId(`rx_j_${j.id}`).setLabel(j.name.slice(0, 40)).setStyle(ButtonStyle.Success));
   }
   buttons.push(new ButtonBuilder().setCustomId("rx_block").setLabel("🛡️ Bloquear").setStyle(ButtonStyle.Secondary));
@@ -858,6 +898,30 @@ async function pegarArma(interaction: ChatInputCommandInteraction): Promise<void
   const msg = await pickUpWeapon(session.id, me.id);
   await prisma.combatParticipant.update({ where: { id: me.id }, data: { actedCommon: true } });
   await interaction.reply(`🗡️ ${msg}`);
+}
+
+async function pegarItem(interaction: ChatInputCommandInteraction): Promise<void> {
+  const { session, me } = await getMyParticipant(interaction);
+  if (!session || !me?.charId) {
+    await interaction.reply({ content: "❌ Você não está em combate aqui.", ephemeral: true });
+    return;
+  }
+  const turnErr = ensureMyTurn(session, me.id);
+  if (turnErr) {
+    await interaction.reply({ content: `❌ ${turnErr}`, ephemeral: true });
+    return;
+  }
+  if (me.actedCommon) {
+    await interaction.reply({ content: "❌ Ação comum já usada.", ephemeral: true });
+    return;
+  }
+  const result = await pickUpInventoryItem(me.charId, session.id, me.cell);
+  if (!result.ok) {
+    await interaction.reply({ content: `❌ ${result.error}`, ephemeral: true });
+    return;
+  }
+  await prisma.combatParticipant.update({ where: { id: me.id }, data: { actedCommon: true } });
+  await interaction.reply(`📦 ${me.name} pegou **${result.amount}x ${result.name}**.`);
 }
 
 async function agua(interaction: ChatInputCommandInteraction): Promise<void> {

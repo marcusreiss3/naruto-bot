@@ -16,6 +16,7 @@ import type { Attribute, Element } from "../../config/enums.js";
 import type { CharacterCondition } from "../../services/characters/mangekyo.js";
 import { FUNDAMENTOS } from "./fundamentals.js";
 import { CLAN_TREES } from "../clan-trees/index.js";
+import { BUKIJUTSU_TREE } from "../bukijutsu-tree.js";
 
 export type NodeKind = "JUTSU" | "PASSIVE" | "ELEMENT";
 export type NodeRank = "D" | "C" | "B" | "A" | "S";
@@ -45,7 +46,9 @@ export interface SkillNodeDef {
   pool: Attribute;
   cost: number; // custo em pontos do `pool` deste no
   branch: string; // rótulo do ramo (só visual)
-  col: -1 | 0 | 1; // -1 esquerda, 0 tronco, 1 direita
+  // Posição horizontal. A maioria usa -1/0/1; árvores com quatro caminhos
+  // podem usar meias colunas (ex: -1.5/-0.5/0.5/1.5 em Bukijutsu).
+  col: number;
   row: number; // profundidade (linha)
   requires: string[]; // ids de nó pré-requisito (vazio = raiz; exige só o elemento)
   reqLevel: number;
@@ -146,7 +149,7 @@ const FOGO: SkillNodeDef[] = [
   F.pass("fogo_pavio", "Pavio", "🧨", "Cerco", -1, 6, ["fogo_dragao"], 12, 10, "Passiva: as casas atingidas pelos seus jutsus de Fogo ficam em chamas por 2 rodadas e queimam quem passar por elas."),
   F.jutsu("fogo_cinzas", "Cinzas Ardentes", "🌫️", "A", "Cerco", -1, 7, ["fogo_pavio"], 22, 16, "Solta uma cortina de cinzas que bloqueia a visão e depois detona, aplicando 3 acúmulos de Queimadura em área."),
   F.jutsu("fogo_grande_dragao", "Grande Dragão de Fogo", "🐲", "A", "Conflagração", 0, 8, ["fogo_dragao"], 25, 18, "Jato colossal de fogo em linha reta. É o maior dano direto do elemento."),
-  F.pass("fogo_folego", "Fôlego do Dragão", "🌬️", "Conflagração", 1, 8, ["fogo_grande_dragao"], 25, 18, "Passiva: +55% de dano com jutsus de Fogo (multiplica com o bônus da raiz: 2x no total)."),
+  F.pass("fogo_folego", "Fôlego do Dragão", "🌬️", "Conflagração", 1, 8, ["fogo_grande_dragao"], 25, 18, "Passiva: seus jutsus de Fogo causam +55% de dano."),
   F.jutsu("fogo_bomba_dragao", "Bomba do Dragão Flamejante", "🔱", "A", "Conflagração", 1, 9, ["fogo_folego"], 28, 20, "Dragão de fogo que se divide em 3 direções e cerca o alvo. Aplica 2 acúmulos de Queimadura."),
   F.jutsu("fogo_corrida", "Corrida de Fogo", "⭕", "B", "Cerco", 0, 10, ["fogo_grande_dragao"], 25, 18, "Cria um anel de fogo em volta do alvo: enquanto durar, ele não consegue fugir do combate."),
   F.pass("fogo_sopro", "Sopro Eficiente", "💨", "Brasa", 0, 11, ["fogo_corrida"], 25, 18, "Passiva: seus jutsus de Fogo em cone custam 20% menos chakra."),
@@ -164,7 +167,7 @@ const TERRA: SkillNodeDef[] = [
   T.jutsu("terra_clone", "Clone de Terra", "🧍", "B", "Colosso", 1, 4, ["terra_punho"], 12, 8, "Cria um clone de terra que luta ao seu lado e explode em pedras quando morre, ferindo quem está perto."),
   T.pass("terra_barro", "Vínculo de Barro", "🧎", "Colosso", 1, 5, ["terra_clone"], 18, 12, "Passiva: seus clones e invocações nascem com +25% de vida."),
   T.jutsu("terra_decapitacao", "Decapitação Subterrânea", "🕳️", "B", "Aprisionamento", 0, 6, ["terra_punho"], 12, 8, "Você mergulha no solo e puxa o alvo para baixo da terra: ele fica preso ao chão, atordoado e sem poder fugir."),
-  T.pass("terra_peso", "Peso da Montanha", "🏔️", "Aprisionamento", -1, 6, ["terra_decapitacao"], 18, 12, "Passiva: +55% de dano com jutsus de Terra (2x no total, com a raiz) e prender alguém ao chão dura 1 rodada a mais."),
+  T.pass("terra_peso", "Peso da Montanha", "🏔️", "Aprisionamento", -1, 6, ["terra_decapitacao"], 18, 12, "Passiva: seus jutsus de Terra causam +55% de dano, e prender alguém ao chão dura 1 rodada a mais."),
   T.jutsu("terra_pantano", "Pântano do Submundo", "🟫", "A", "Aprisionamento", -1, 7, ["terra_peso"], 25, 18, "Transforma a área num pântano que fica no mapa: quem estiver dentro fica preso ao chão e mais lento."),
   T.jutsu("terra_dragao", "Projétil do Dragão de Terra", "🐉", "B", "Colosso", 0, 8, ["terra_decapitacao"], 12, 10, "Invoca um dragão de terra que cospe projéteis de lama em linha. Deixa o alvo mais lento."),
   T.jutsu("terra_biscoito", "Biscoito de Terra Sepulcral", "🥮", "B", "Terraplanagem", 1, 8, ["terra_dragao"], 15, 12, "Arranca um pedaço gigante do chão e arremessa: causa dano em área, empurra os alvos 1 casa e o bloco vira um obstáculo onde cair."),
@@ -181,11 +184,11 @@ const AGUA: SkillNodeDef[] = [
   A.pass("agua_correnteza", "Correnteza", "💫", "Maré", 1, 4, ["agua_ondas"], 12, 8, "Passiva: seus empurrões e puxões de Água movem o alvo 1 casa a mais."),
   A.jutsu("agua_prisao", "Prisão de Água", "🫧", "B", "Maré", 1, 5, ["agua_correnteza"], 15, 12, "Prende o alvo dentro de uma esfera de água: ele fica preso ao chão, Encharcado e não consegue fugir."),
   A.jutsu("agua_trombeta", "Trombeta de Água", "🎺", "C", "Corrente", 0, 6, ["agua_ondas"], 6, 4, "Dispara um jato de água pressurizada. Deixa o alvo Encharcado."),
-  A.pass("agua_condutora", "Maré Condutora", "⚡", "Corrente", -1, 6, ["agua_trombeta"], 18, 12, "Passiva: o estado Encharcado dura 1 rodada a mais."),
+  A.pass("agua_condutora", "Maré Condutora", "⚡", "Corrente", -1, 6, ["agua_trombeta"], 18, 12, "Passiva: seus jutsus de Água causam +25% de dano, e o estado Encharcado que você aplica dura 1 rodada a mais."),
   A.jutsu("agua_cachoeira", "Grande Cachoeira Explosiva", "🏞️", "A", "Corrente", -1, 7, ["agua_condutora"], 25, 18, "Onda gigante que empurra e inunda a área inteira, deixando todos os atingidos Encharcados."),
   A.jutsu("agua_amarra", "Amarra de Água", "🌀", "C", "Corrente", 0, 8, ["agua_trombeta"], 6, 4, "Tentáculos de água que puxam o alvo para perto de você e o deixam mais lento."),
   A.jutsu("agua_louva", "Louva-a-deus de Água", "🦗", "C", "Lâmina", 1, 8, ["agua_amarra"], 8, 6, "Garras de água que aumentam o alcance dos seus golpes. Causa Sangramento."),
-  A.pass("agua_fio", "Fio d'Água", "🪡", "Lâmina", 1, 9, ["agua_louva"], 18, 12, "Passiva: +75% de dano contra alvos Encharcados. É daqui que vem a força da Água: contra alvo seco você bate pouco, contra Encharcado você bate como os outros elementos."),
+  A.pass("agua_fio", "Fio d'Água", "🪡", "Lâmina", 1, 9, ["agua_louva"], 18, 12, "Passiva: seus jutsus de Água causam +50% de dano contra alvos Encharcados."),
   A.jutsu("agua_dragao", "Dragão de Água", "🐉", "B", "Corrente", 0, 10, ["agua_amarra"], 12, 10, "Dragão de água em linha reta: empurra o alvo e o deixa Encharcado. É o ataque principal do elemento."),
   A.jutsu("agua_muralha", "Técnica da Muralha de Água", "🛡️", "B", "Defesa", 1, 10, ["agua_louva"], 14, 12, "Uma coluna circular de água se ergue e protege o usuário."),
   A.jutsu("agua_onda", "Grande Onda Explosiva", "🌊", "S", "Ápice", 0, 12, ["agua_dragao"], 35, 24, "Inunda o mapa inteiro: todo o terreno vira água e todos ficam Encharcados. Gasta muito chakra."),
@@ -197,7 +200,7 @@ const VENTO: SkillNodeDef[] = [
   V.pass("vento_raiz", "Fio de Navalha", "🌪️", "Raiz", 0, 0, [], 1, 1, "Passiva sempre ativa: seus jutsus de Vento causam +30% de dano e cortam 20% da redução de quem bloqueia ou apara.", true),
   V.jutsu("vento_palma", "Palma do Vendaval Violento", "🖐️", "C", "Corte", 0, 2, ["vento_raiz"], 1, 3, "Rajada de vento comprimido em cone que empurra os alvos para trás e corta na passagem, causando Sangramento."),
   V.jutsu("vento_bestial", "Palma da Onda Bestial", "🌊", "B", "Corte", 1, 2, ["vento_palma"], 12, 10, "Uma onda cortante avança em leque pelo campo."),
-  V.pass("vento_corte", "Corte Profundo", "🩸", "Corte", 1, 3, ["vento_bestial"], 18, 12, "Passiva: +55% de dano com jutsus de Vento (2x no total, com a raiz) e seu Sangramento dura 1 rodada a mais."),
+  V.pass("vento_corte", "Corte Profundo", "🩸", "Corte", 1, 3, ["vento_bestial"], 18, 12, "Passiva: seus jutsus de Vento causam +55% de dano, e seu Sangramento dura 1 rodada a mais."),
   V.jutsu("vento_destruicao", "Grande Destruição", "💨", "C", "Vendaval", 0, 4, ["vento_palma"], 5, 5, "Rajada frontal forte que empurra o alvo 3 casas para trás."),
   V.jutsu("vento_danca", "Dança da Dispersão de Flor", "🌸", "B", "Dispersão", 1, 4, ["vento_destruicao"], 12, 10, "Turbilhão de pétalas: causa dano em área, empurra os alvos 2 casas e cega quem for atingido, reduzindo a defesa deles."),
   V.pass("vento_vacuo", "Vácuo Cortante", "🌀", "Vendaval", -1, 4, ["vento_destruicao"], 18, 12, "Passiva: alvo empurrado contra uma parede ou obstáculo toma +15 de dano de impacto."),
@@ -348,7 +351,7 @@ export const ELEMENT_TREES: Record<Element, SkillNodeDef[]> = {
 // ELEMENT_TREES (nao pertencem a nenhum elemento), mas entram no indice
 // global — e' aqui que getNode/allNodes/buyNode as acham.
 const NODE_INDEX: Map<string, SkillNodeDef> = new Map(
-  [...Object.values(ELEMENT_TREES).flat(), ...FUNDAMENTOS, ...Object.values(CLAN_TREES).flat()].map((n) => [
+  [...Object.values(ELEMENT_TREES).flat(), ...FUNDAMENTOS, ...BUKIJUTSU_TREE, ...Object.values(CLAN_TREES).flat()].map((n) => [
     n.id,
     n,
   ]),
@@ -358,6 +361,23 @@ const NODE_INDEX: Map<string, SkillNodeDef> = new Map(
 // A subpasta de árvore de clã tem o mesmo nome do clanId (nara/, hyuuga/...),
 // igual as elementais usam o nome do elemento.
 const NODE_ICONS: Record<string, string> = {
+  // ---- Bukijutsu ----
+  buki_fundamentos: "bukijutsu/fundamentos-de-bukijutsu.png",
+  buki_manipulacao_fios: "bukijutsu/manipulacao-de-fios.png",
+  buki_arsenal_selado: "bukijutsu/arsenal-selado.png",
+  buki_lamina_chakra: "bukijutsu/lamina-de-chakra.png",
+  buki_moinho: "bukijutsu/moinho-de-vento-laminas-triplas.png",
+  buki_dragoes_gemeos: "bukijutsu/dragoes-gemeos-ascendentes.png",
+  buki_afinidade_lamina: "bukijutsu/afinidade-na-lamina.png",
+  buki_voo_andorinha: "bukijutsu/voo-da-andorinha.png",
+  buki_maestria_arremesso: "bukijutsu/maestria-de-arremesso.png",
+  buki_resma_explosiva: "bukijutsu/resma-de-amuletos-explosivos.png",
+  buki_meteoro_anexado: "bukijutsu/meteoro-anexado.png",
+  buki_clone_shuriken: "bukijutsu/clone-da-sombra-de-shuriken.png",
+  buki_esfera_explosiva: "bukijutsu/esfera-explosiva.png",
+  buki_cadeia_desastre: "bukijutsu/cadeia-do-desastre-celestial.png",
+  buki_camara_tortura: "bukijutsu/camara-de-tortura.png",
+
   // ---- Vapor (Ebulição) ----
   vapor_raiz: "vapor/ponto-de-ebulicao.png",
   vapor_nevoa: "vapor/nevoa-qualificada.png",
@@ -620,6 +640,7 @@ const NODE_ICONS: Record<string, string> = {
   agua_fio: "agua/fio-de-agua.png",
   agua_dragao: "agua/dragao-de-agua.png",
   agua_onda: "agua/grande-onda-explosiva.png",
+  agua_muralha: "agua/muralha-de-agua.png",
   vento_raiz: "vento/fio-de-navalha.png",
   vento_palma: "vento/palma-do-vendaval-violento.png",
   vento_bestial: "vento/palma-da-onda-bestial.png",
