@@ -46,6 +46,8 @@ export interface ItemDef {
   actions: ItemAction[];
   basicAbilityId?: string;
   throwAbilityId?: string;
+  ryoValue?: number;
+  restoresItemId?: string;
 }
 
 export const ITEMS: ItemDef[] = [
@@ -156,6 +158,14 @@ export const ITEMS: ItemDef[] = [
     stackable: false,
     actions: [],
   },
+  ...(["D", "C", "B", "A", "S"] as const).flatMap((rank, index) => {
+    const values = [80, 150, 280, 500, 900];
+    const activeId = `pergaminho_rank_${rank.toLowerCase()}`;
+    return [
+      { id: activeId, name: `Pergaminho Rank ${rank}`, description: `Pergaminho de Bukijutsu Rank ${rank}. Após ser usado, fica gasto até ser restaurado.`, category: "NINJA_TOOL" as const, stackable: false, actions: [], ryoValue: values[index] },
+      { id: `${activeId}_gasto`, name: `Pergaminho Rank ${rank} (gasto)`, description: `Pergaminho Rank ${rank} sem chakra selado. Pode ser restaurado por metade do valor do pergaminho.`, category: "NINJA_TOOL" as const, stackable: false, actions: [], ryoValue: values[index], restoresItemId: activeId },
+    ];
+  }),
   {
     id: "corrente_ferro",
     name: "Corrente de Ferro",

@@ -47,6 +47,12 @@ export interface AbilityRequirements {
   clanId?: string;
   // se true, nao desbloqueia por requisito automatico (so admin/arma/pergaminho)
   manualOnly?: boolean;
+  // pre-requisito de OUTRO jutsu: so' pode USAR esta ability se ja conhecer o
+  // jutsu com este id (checado ao vivo via ownedJutsuIds em useAbility, nao
+  // so' no desbloqueio). Ex: Tecnica do Clone da Sombra de Shuriken exige
+  // conhecer Clones das Sombras primeiro (a variante com arma parte do
+  // principio da tecnica base).
+  requiresAbilityId?: string;
 }
 
 export interface Ability {
@@ -73,6 +79,9 @@ export interface Ability {
   effects?: AppliedEffect[];
   // remove efeitos do alvo (Iryo)
   cleanses?: EffectId[];
+  // Reduz a duração dos efeitos sem removê-los necessariamente. Usado por
+  // tratamentos médicos que aliviam uma condição, mas não a curam por inteiro.
+  reduceEffectDuration?: { effectId: EffectId; turns: number }[];
   requirements?: AbilityRequirements;
   tags: string[];
   description: string;
@@ -81,7 +90,7 @@ export interface Ability {
   visualDescription?: string;
   // Ferramentas exigidas pela técnica. `consume` remove a quantidade da
   // mochila somente depois que todas as validações da ação passam.
-  requiredItems?: { itemId: string; amount: number; consume?: boolean }[];
+  requiredItems?: { itemId: string; amount: number; consume?: boolean; exhaustToItemId?: string }[];
   // Ao menos um destes itens precisa estar equipado.
   equippedItemIds?: string[];
   // Técnica contínua ligada/desligada por comando. Estes dados também
@@ -144,6 +153,11 @@ export interface Ability {
   // summonerId === ator) — ex: as tecnicas de combo do cao ninja (Inuzuka)
   // que nao funcionam se o cao ja morreu na luta.
   requiresPet?: boolean;
+  // exige que o ALVO ja esteja sob pelo menos um destes efeitos pra poder
+  // usar esta ability nele (captura previa) — mesma ideia do chainWetTargets,
+  // generalizada. Ex: Genjutsu: Interrogatorio so funciona numa vitima ja
+  // Imobilizada (ROOT) ou Atordoada (STUN) por outra tecnica.
+  requiresTargetEffect?: EffectId[];
   // exige que o PROPRIO ator esteja com um dojutsu de toggle ligado no
   // momento do uso (ex: Palma de Vacuo do Hyuuga usa o Byakugan como mira;
   // Genjutsu Ketsuryuugan do Chinoike E' o proprio doujutsu agindo). O `flag`
@@ -176,6 +190,27 @@ export interface Ability {
     onHit?: { effectId: EffectId; duration?: number };
     // o que acontece quando a invocacao morre (clone d'agua estoura molhando)
     onDeath?: { effectId: EffectId; radius: number; duration?: number };
+    // teto de invocacoes VIVAS deste mesmo templateId por invocador. Uma nova
+    // criacao acima do teto e' recusada em useAbility (ver createSummon), mas
+    // repor uma que morreu volta a ser permitido. Ex: Clones das Sombras (ate' 6).
+    maxAlive?: number;
+    // em vez do NpcTemplate.abilityIds fixo, a invocacao herda um snapshot dos
+    // jutsu que o PROPRIO invocador ja possui no momento da criacao (ver
+    // ownedJutsuIds em combat-engine.ts), filtrado a `maxCostPct` (custo base
+    // da ability, sem maestria). Ex: Clones das Sombras usam o que o jogador
+    // sabe, mas nao os jutsus mais caros que 35% de chakra.
+    inheritOwnerJutsu?: { maxCostPct: number };
+    // a invocacao entra no grid e pode se mover nesta rodada, mas so' pode
+    // ATACAR a partir da rodada seguinte a que foi criada (ver firstActiveRound
+    // em createSummon() e runNpcTurn() em npc-combat.ts).
+    actsNextRound?: boolean;
+    // ao morrer: reflete no invocador `overkillDamagePct` do dano que
+    // EXCEDEU o hpMax da invocacao (ex: invocacao com 1 de vida toma 20 de
+    // dano -> excedente 19), e cobra do invocador `jutsuCostPct` do custo
+    // BASE de cada jutsu que a invocacao usou em vida (acumulado em
+    // flags.chakraDebt a cada uso, cobrado de uma vez na morte). Ex: Clones
+    // das Sombras (30%/30%).
+    deathReflect?: { overkillDamagePct: number; jutsuCostPct: number };
   };
   // SELF apenas: ao usar, aplica `effectId` (ex: ROOT) em todo INIMIGO dentro
   // de `radius` casas (Chebyshev) do ator, por `duration` rodadas — ex: Domo

@@ -27,7 +27,7 @@ describe("árvore de Bukijutsu", () => {
   it("mantém a Lâmina de Chakra e o Voo da Andorinha no patamar reforçado", () => {
     const basic = getAbility("item_lamina_chakra_cortar")!;
     expect(basic.baseDamage).toBe(16);
-    expect(basic.cost).toBe(10);
+    expect(basic.cost).toBe(15);
     expect(getAbility("buki_voo_andorinha")?.baseDamage).toBe(26);
   });
 
@@ -59,6 +59,10 @@ describe("árvore de Bukijutsu", () => {
     expect(byId.get("buki_clone_shuriken")?.requires).toEqual(["buki_maestria_arremesso"]);
   });
 
+  it("Clone da Sombra de Shuriken só pode ser USADO com Clones das Sombras já conhecido", () => {
+    expect(getAbility("buki_clone_shuriken")?.requirements?.requiresAbilityId).toBe("kage_bunshin");
+  });
+
   it("mantém o dano-base abaixo do teto dos Ninjutsus elementais", () => {
     const bukiDamage = BUKIJUTSU_TREE
       .flatMap((node) => node.grantsAbilityId ? [getAbility(node.grantsAbilityId)?.baseDamage ?? 0] : []);
@@ -76,7 +80,7 @@ describe("árvore de Bukijutsu", () => {
   it("expõe equipamentos e consumo no bloco Efeitos e regras", () => {
     const dragons = getAbility("buki_dragoes_gemeos")!;
     const text = buildMechanicsSummary(dragons);
-    expect(text).toMatch(/Exige 1x Pergaminho de Arsenal/);
+    expect(text).toMatch(/Gasta 1x Pergaminho Rank B/);
     expect(text).toMatch(/Consome 3x Kunai/);
     expect(text).toMatch(/Consome 3x Kunai e 3x Shuriken/);
 

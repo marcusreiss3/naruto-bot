@@ -2281,15 +2281,15 @@ const SENJU: SkillNodeDef[] = [
     "Ondas finas e afiadas avançam em leque, cortando vários inimigos. Tem 70% de chance de causar Sangramento por 2 rodadas.",
     undefined, "ninjutsu", 6),
 
-  SJ.pass("senju_diagnostico", "Diagnóstico Preciso", "🩺", "Ninjutsu Médico", 1, 3, ["senju_heranca"], 10, 6,
+  SJ.pass("senju_diagnostico", "Diagnóstico Preciso", "🩺", "Iryō Ninjutsu", 1, 3, ["senju_heranca"], 10, 6,
     "Passiva: seus Ninjutsus Médicos gastam 10% menos chakra.", false, undefined, "iryoNinjutsu"),
-  SJ.pass("senju_cirurgia", "Cirurgia de Emergência", "❤️‍🩹", "Ninjutsu Médico", 1, 4, ["senju_diagnostico"], 14, 9,
+  SJ.pass("senju_cirurgia", "Cirurgia de Emergência", "❤️‍🩹", "Iryō Ninjutsu", 1, 4, ["senju_diagnostico"], 14, 9,
     "Passiva: suas curas restauram 25% mais vida em alvos com 35% da vida máxima ou menos.", false, undefined, "iryoNinjutsu"),
-  SJ.pass("senju_imunidade", "Imunidade Adaptativa", "🧬", "Ninjutsu Médico", 1, 5, ["senju_cirurgia"], 18, 12,
+  SJ.pass("senju_imunidade", "Imunidade Adaptativa", "🧬", "Iryō Ninjutsu", 1, 5, ["senju_cirurgia"], 18, 12,
     "Passiva: Veneno e Atordoamento recebidos duram 1 rodada a menos, respeitando a duração mínima de 1 rodada.", false, undefined, "iryoNinjutsu"),
-  SJ.pass("senju_regenerativo", "Controle Regenerativo", "💚", "Ninjutsu Médico", 1, 6, ["senju_imunidade"], 22, 15,
+  SJ.pass("senju_regenerativo", "Controle Regenerativo", "💚", "Iryō Ninjutsu", 1, 6, ["senju_imunidade"], 22, 15,
     "Passiva: seus Ninjutsus Médicos restauram 15% mais vida.", false, undefined, "iryoNinjutsu"),
-  SJ.pass("senju_especialista", "Especialista Médico", "⚕️", "Ninjutsu Médico", 1, 7, ["senju_regenerativo"], 28, 20,
+  SJ.pass("senju_especialista", "Especialista Médico", "⚕️", "Iryō Ninjutsu", 1, 7, ["senju_regenerativo"], 28, 20,
     "Passiva: seus Ninjutsus Médicos restauram 15% mais vida e gastam 10% menos chakra.", false, undefined, "iryoNinjutsu"),
 ];
 

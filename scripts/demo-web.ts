@@ -17,6 +17,8 @@ import { ELEMENT_TREES, getNode, type SkillNodeDef } from "../src/data/element-t
 import { CLAN_TREES } from "../src/data/clan-trees/index.js";
 import { FUNDAMENTOS } from "../src/data/element-trees/fundamentals.js";
 import { BUKIJUTSU_TREE } from "../src/data/bukijutsu-tree.js";
+import { IRYO_NINJUTSU_TREE } from "../src/data/iryo-ninjutsu-tree.js";
+import { GENJUTSU_TREE } from "../src/data/genjutsu-tree.js";
 import { CLAN_STARTING_ELEMENT } from "../src/data/clans/starting-element.js";
 import { getAbility, getClan, CLANS } from "../src/data/index.js";
 import {
@@ -173,6 +175,8 @@ function buildState() {
   const trees: Record<string, unknown> = {
     FUNDAMENTOS: viewNodes(snap, fundamentos),
     BUKIJUTSU: viewNodes(snap, BUKIJUTSU_TREE),
+    GENJUTSU: viewNodes(snap, GENJUTSU_TREE),
+    IRYO_NINJUTSU: viewNodes(snap, IRYO_NINJUTSU_TREE),
   };
   for (const el of Object.keys(ELEMENT_TREES) as Element[]) trees[el] = viewNodes(snap, ELEMENT_TREES[el]);
   for (const clanId of Object.keys(CLAN_TREES)) trees[clanId.toUpperCase()] = viewNodes(snap, CLAN_TREES[clanId]);

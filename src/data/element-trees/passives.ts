@@ -7,11 +7,26 @@
 // Ao criar uma passiva nova: se ela precisar de um modificador que ainda nao
 // existe aqui, o campo tem que nascer em PassiveDef E ser consumido na engine —
 // campo sem consumo e' passiva morta (o jogador paga e nao ganha nada).
-import type { EffectId, Element, Shape, TerrainKind } from "../../config/enums.js";
+import type { Category, EffectId, Element, Shape, TerrainKind } from "../../config/enums.js";
 
 export interface PassiveDef {
   nodeId: string;
-  element: Element;
+  // ausente pra passivas que nao pertencem a nenhum elemento (ex: arvore de
+  // Genjutsu) — essas usam `crossCategory` pra achar a ability em vez de
+  // comparar elemento.
+  element?: Element;
+  // ESCAPE HATCH: quando presente, a passiva vale pra QUALQUER ability desta
+  // categoria (ex: "GENJUTSU"), independente de elemento — mesmo campo que
+  // ClanPassiveDef.crossCategory ja usa pros clas (Chinoike/Olhos de Sangue).
+  // Necessario pra arvores sem natureza de chakra (Genjutsu, Iryo): elas nao
+  // tem `element` na Ability pra comparar. Ver passiveMods() em
+  // services/combat/passives.ts.
+  crossCategory?: Category;
+  // restringe a passiva a tecnicas ESPECIFICAS (por id), mesmo dentro da
+  // categoria aberta por crossCategory — mesmo campo que ClanPassiveDef ja'
+  // usa. Ex: um desconto de custo que so' vale pras 2 tecnicas do ramo
+  // Ilusao/Fuga da arvore de Genjutsu, nao pra qualquer GENJUTSU.
+  abilityIds?: string[];
   // multiplica o dano dos jutsus do elemento (1.15 = +15%)
   damageMult?: number;
   // multiplica o dano SO quando o alvo tem o efeito (dano de quem monta jogada)
@@ -359,6 +374,46 @@ export const PASSIVES: PassiveDef[] = [
     nodeId: "explosao_apice",
     element: "EXPLOSAO",
     damageMult: 1.5, // 1.35 * 1.50 = 2.025, idêntico ao Cristal
+  },
+
+  // ---------------------------------------------------------------- GENJUTSU
+  // Sem elemento (usa crossCategory, nao element) e sem damageMult: Genjutsu e'
+  // arvore de CONTROLE, igual Nara/Hyuuga/Aburame — o valor vem de duracao e
+  // chance de efeito, nunca de dano bruto (genjutsuScaling fica em 0 de
+  // proposito, ver balance.ts). O atributo genjutsu ja' rende sozinho via
+  // genjutsuDuration() (ligada em resolveHit, combat-engine.ts); estas
+  // passivas sao o valor ADICIONAL de investir na arvore por cima disso.
+  {
+    // Sem custo reduzido de proposito (nao faz sentido a arvore abrir com
+    // "desconto" antes de entregar qualquer identidade de combate) — em vez
+    // disso, o mesmo par nao-ofensivo que Raio usa na propria raiz: le o
+    // fluxo de chakra do adversario, esquiva mais e age mais cedo.
+    // Nerf: comecou em 0.08 (copiado igual do raio_raiz), mas empilha com o
+    // de Raio pra quem tiver as duas arvores (character-level, nao gated por
+    // ability) e e' de graca no primeiro no' — cortado pra 0.03.
+    nodeId: "gen_raiz",
+    ninjutsuDodgeBonus: 0.03,
+    initiativePriority: 1,
+  },
+  {
+    // Ecos do Cativeiro: a Imobilizacao da Arvore Assassina prende por mais tempo.
+    nodeId: "gen_ecos_cativeiro",
+    crossCategory: "GENJUTSU",
+    effectDurationBonus: { effectId: "ROOT", bonus: 1 },
+  },
+  {
+    // Dominio do Medo: suas ilusoes de panico/atordoamento pegam mais.
+    nodeId: "gen_dominio_do_medo",
+    crossCategory: "GENJUTSU",
+    effectChanceBonus: { STUN: 0.2 },
+  },
+  {
+    // Fluencia da Ilusao: as DUAS tecnicas do ramo Ilusao/Fuga custam menos —
+    // abilityIds (nao crossCategory) de proposito, pra nao virar um desconto
+    // generico de Genjutsu igual o da raiz que ja foi cortado.
+    nodeId: "gen_fluencia_ilusao",
+    abilityIds: ["gen_contra_genjutsu", "gen_substituicao_ilusoria"],
+    costMult: 0.8,
   },
 ];
 

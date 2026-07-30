@@ -105,9 +105,30 @@ export async function consumeInventoryItem(
   });
 }
 
+export async function restoreSpentScroll(charId: string, spentItemId: string): Promise<{ ok: true; name: string; cost: number } | { ok: false; error: string }> {
+  const spent = getItem(spentItemId);
+  const restoredId = spent?.restoresItemId;
+  if (!spent || !restoredId || !spent.ryoValue) return { ok: false, error: "Este item não é um pergaminho gasto." };
+  const cost = Math.ceil(spent.ryoValue / 2);
+  return prisma.$transaction(async (tx) => {
+    const char = await tx.userCharacter.findUnique({ where: { id: charId }, select: { ryo: true } });
+    const owned = await tx.inventoryItem.findFirst({ where: { charId, itemId: spentItemId, qty: { gt: 0 } } });
+    if (!owned) return { ok: false as const, error: `Você não possui ${spent.name}.` };
+    if (!char || char.ryo < cost) return { ok: false as const, error: `Você precisa de ${cost} ryō para restaurar este pergaminho.` };
+    if (owned.qty === 1) await tx.inventoryItem.delete({ where: { id: owned.id } });
+    else await tx.inventoryItem.update({ where: { id: owned.id }, data: { qty: owned.qty - 1 } });
+    const active = getItem(restoredId)!;
+    const already = await tx.inventoryItem.findFirst({ where: { charId, itemId: restoredId } });
+    if (already) await tx.inventoryItem.update({ where: { id: already.id }, data: { qty: already.qty + 1 } });
+    else await tx.inventoryItem.create({ data: { charId, itemId: restoredId, name: active.name, qty: 1 } });
+    await tx.userCharacter.update({ where: { id: charId }, data: { ryo: { decrement: cost } } });
+    return { ok: true as const, name: active.name, cost };
+  });
+}
+
 export async function validateAndConsumeAbilityItems(
   charId: string,
-  requiredItems: { itemId: string; amount: number; consume?: boolean }[] = [],
+  requiredItems: { itemId: string; amount: number; consume?: boolean; exhaustToItemId?: string }[] = [],
   equippedItemIds: string[] = [],
 ): Promise<{ ok: true; consumed: string[] } | { ok: false; error: string }> {
   return prisma.$transaction(async (tx) => {
@@ -138,7 +159,7 @@ export async function validateAndConsumeAbilityItems(
     }
 
     const consumed: string[] = [];
-    for (const requirement of requiredItems.filter((entry) => entry.consume)) {
+    for (const requirement of requiredItems.filter((entry) => entry.consume || entry.exhaustToItemId)) {
       const row = byId.get(requirement.itemId)!;
       const remaining = row.qty - requirement.amount;
       if (remaining > 0) {
@@ -150,7 +171,15 @@ export async function validateAndConsumeAbilityItems(
           data: { equippedItemId: null },
         });
       }
-      consumed.push(`${requirement.amount}x ${getItem(requirement.itemId)?.name ?? requirement.itemId}`);
+      if (requirement.exhaustToItemId) {
+        const spent = getItem(requirement.exhaustToItemId);
+        const existingSpent = await tx.inventoryItem.findFirst({ where: { charId, itemId: requirement.exhaustToItemId } });
+        if (existingSpent) await tx.inventoryItem.update({ where: { id: existingSpent.id }, data: { qty: existingSpent.qty + requirement.amount } });
+        else await tx.inventoryItem.create({ data: { charId, itemId: requirement.exhaustToItemId, name: spent?.name ?? requirement.exhaustToItemId, qty: requirement.amount } });
+        consumed.push(`${requirement.amount}x ${getItem(requirement.itemId)?.name ?? requirement.itemId} (gasto)`);
+      } else {
+        consumed.push(`${requirement.amount}x ${getItem(requirement.itemId)?.name ?? requirement.itemId}`);
+      }
     }
     return { ok: true as const, consumed };
   });

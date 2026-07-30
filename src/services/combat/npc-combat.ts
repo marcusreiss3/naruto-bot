@@ -27,8 +27,11 @@ export async function runNpcTurn(sessionId: string, npcId: string): Promise<stri
     .map((id) => getAbility(id))
     .filter((a): a is NonNullable<ReturnType<typeof getAbility>> => Boolean(a) && Boolean(a!.baseDamage));
 
-  // inimigo inanimado (ex: tronco): sem habilidades de dano, não se move nem ataca
-  if (abilities.length === 0) {
+  // inimigo inanimado (ex: tronco): sem habilidades de dano, não se move nem
+  // ataca. Invocações (isSummon) sempre tentam se mover mesmo sem jutsu
+  // utilizável — ex: Clone das Sombras que só herdou jutsu caro demais do
+  // invocador ainda avança até o alvo, só não ataca.
+  if (abilities.length === 0 && !npc.flags.isSummon) {
     return [`🪵 ${npc.name} permanece imóvel.`];
   }
 
@@ -47,6 +50,14 @@ export async function runNpcTurn(sessionId: string, npcId: string): Promise<stri
       if (mv.ok) logs.push(`🤖 ${npc.name} avançou para ${dest}.`);
       session = (await getSessionById(sessionId))!;
     }
+  }
+
+  // Clone das Sombras (summon.actsNextRound): entra em campo e pode se mover,
+  // mas só ataca a partir da rodada seguinte à que foi criado.
+  const firstActiveRound = npc.flags.firstActiveRound as number | undefined;
+  if (firstActiveRound !== undefined && session.round < firstActiveRound) {
+    logs.push(`🌀 ${npc.name} acabou de ser invocado e ainda não pode atacar.`);
+    return logs;
   }
 
   // ataca se houver alvo em alcance

@@ -1,5 +1,5 @@
 // Camada de balanceamento editavel. Ajuste tudo aqui sem mexer na engine.
-import type { MasteryLevel } from "./enums.js";
+import type { EffectId, MasteryLevel } from "./enums.js";
 
 export const BALANCE = {
   // ---- Vida / atributos ----
@@ -251,6 +251,92 @@ export const BALANCE = {
 
   // ---- Progressao / XP ----
   xpPerLevel: (level: number) => 100 + level * 50,
+
+  // ---- Formula de custo sugerido de jutsu ----
+  // Ferramenta de AUTORIA (services/characters/jutsu-balance.ts): dado
+  // baseDamage/baseHeal/effects/actionType/shape/unblockable de uma ability,
+  // devolve um custo "justo" sugerido, pra nao inventar o numero de olho.
+  // NAO e' chamada pela engine de combate (o `cost` que a engine usa continua
+  // sendo o valor escrito na ability) e NAO cobre summon/mindTransfer/
+  // trapField/cleanses/teamBuff — esses continuam a criterio de quem escreve
+  // o jutsu (valor de combo/multi-alvo que a formula nao enxerga).
+  //
+  // v2: a v1 usava uma taxa LINEAR de dano (0.55/ponto) calibrada so' contra 3
+  // jutsu tier 1-2. Rodando scripts/audit-jutsu-costs.ts contra as ~170
+  // abilities restantes, ela furava feio pra cima: jutsu de apice com 34-46 de
+  // dano bruto ficavam 30-46 pontos ABAIXO do custo real (ex: Punho de Mina
+  // Terrestre 74 -> sugeria 28). Dano NAO escala linear no orcamento do jogo —
+  // um golpe de 46 nao "vale" so' o triplo de um de 14, vale muito mais que
+  // isso, e a curva precisa refletir. Daqui pra baixo, `damageBrackets`
+  // substitui `outputRate` por uma taxa PROGRESSIVA (tipo faixa de IR): os
+  // primeiros pontos custam pouco, o excedente custa cada vez mais.
+  //
+  // As severidades tambem subiram: rodando o audit contra ~25 abilities SEM
+  // dano (so' efeito puro — SHADOW_BOUND, EMPOWERED, PRISM, HASTE, SHIELD...)
+  // a v1 tambem furava pra baixo nelas. Uma parte disso e' real (o efeito
+  // sozinho vale mais do que eu estimava), outra parte e' valor de COMBO que
+  // nenhuma formula estatica por-ability enxerga (ex: SHADOW_BOUND do Nara so'
+  // vale tanto porque garante o proximo golpe de um jutsu DIFERENTE — Nara
+  // ainda fica com o maior residuo de erro do roster, e isso e' esperado, nao
+  // bug: ver tests/jutsu-balance.test.ts). Os numeros aqui sao a MEDIANA das
+  // abilities reais que usam cada efeito sozinho, nao um chute.
+  jutsuCostFormula: {
+    base: 6, // piso: "taxa de selos de mao" mesmo pra jutsu sem dano/cura/efeito
+    // faixas progressivas de custo por ponto de baseDamage OU baseHeal (os
+    // dois contam igual). Cada faixa cobre so' os pontos DENTRO dela — os
+    // primeiros 20 pontos sempre custam 0.55/ponto, nao importa o total.
+    // A 3a faixa quase NAO sobe (0.15, quase um teto): jutsu que ja' passam de
+    // 35 de dano bruto sao apice/quase-apice, e esses ja' sao freados por
+    // OUTRO eixo — nivel/atributo altissimo pra desbloquear, `oncePerCombat`
+    // em alguns, arvore cara pra chegar la'. Cobrar em cima disso TAMBEM na
+    // taxa progressiva normal double-conta o freio (Kirin e Bomba Liger, os
+    // dois dano 48, viravam +38/+37 antes desta faixa quase-plana existir).
+    damageBrackets: [
+      { upTo: 20, rate: 0.55 }, // calibrado contra tier 1-2 (Bola de Fogo, Esfera de Relampago...)
+      { upTo: 35, rate: 1.5 },
+      { upTo: Infinity, rate: 0.15 }, // apice: o nivel/atributo/oncePerCombat ja' freiam
+    ],
+    areaMult: 1.15, // LINE/CONE/RADIUS acertam varios alvos de uma vez
+    // multiplicadores de "sem defesa possivel" — so' o mais forte presente conta
+    unblockableMult: 1.4, // ignora Bloqueio, Aparo E Esquiva
+    undodgeableMult: 1.2, // ignora so' Esquiva
+    unguardableMult: 1.15, // ignora so' Bloqueio/Aparo
+    // multiplica o total conforme o slot de acao — BONUS paga premio por ser
+    // uma acao "de graca" (soma com a acao COMUM no mesmo turno); REACAO paga
+    // um pouco menos por so' estar disponivel quando o alvo e' atacado, MOVIMENTO
+    // um pouco menos ainda por consumir o slot mais barato.
+    actionTypeMult: { COMUM: 1.0, BONUS: 1.3, MOVIMENTO: 0.85, REACAO: 0.85 },
+    // pontos de severidade por RODADA de cada efeito (multiplicado por duracao
+    // e chance na formula). Recalibrados contra abilities reais SEM dano (so'
+    // o efeito) — ver comentario acima. Efeitos que travam ACAO INTEIRA (STUN)
+    // ou que a engine sabe ter um "pagamento escondido" em BALANCE.effects
+    // (MINADO explode depois, CRYSTALLIZED/MAGMA selam ao encher) valem mais.
+    effectSeverity: {
+      STUN: 4, // trava a acao inteira — calibrado (raiton_esfera/ataque_raio)
+      SHADOW_BOUND: 8, // trava movimento+reacao E e' combo-enabler do Nara — mediana real 5-19, ver nota acima
+      PRISM: 8, // casulo de luz: reduz dano recebido E reflete — mediana real (Fio de Luz)
+      NINJUTSU_BLOCK: 4, // fecha uma categoria inteira
+      CONFUSION: 4, // ataca alvo aleatorio, pode acertar aliado
+      DISARM: 3,
+      ROOT: 3, // so' trava movimento — mediana real (Abelha do Mel) puxou pra cima
+      POISON: 3, // mediana real (Nuvem de Veneno do Aburame)
+      CRYSTALLIZED: 4, // acumula ate SELAR (Atordoamento + Imobilizacao) — pagamento escondido
+      MAGMA: 3, // acumula ate ENDURECER (Imobilizacao) — pagamento escondido
+      MINADO: 18, // detona SOZINHO depois (explodeDamagePerStack: 20/acumulo) — calibrado (Punho de Mina Terrestre)
+      DEHYDRATION: 3,
+      HASTE: 3.5, // mediana real (Armadura de Raio, Quatro Patas, Deslocamento...)
+      EMPOWERED: 4, // mediana real (Bisturi, Pilula Secreta, Lobo de Duas Cabecas...)
+      SHIELD: 4.5, // mediana real (Muralha de Agua, Tamanho Multiplo, Parede de Insetos...)
+      DEFENSE_DOWN: 2,
+      CHAKRA_DRAIN: 2,
+      CORROSION: 2.5,
+      BURN: 1.5, // calibrado (Grande Bola de Fogo)
+      BLEED: 1.5,
+      SLOW: 1,
+      FLEE_LOCK: 1.5,
+      WET: 1, // setup puro (habilita outro jutsu), sem valor direto
+    } as Record<EffectId, number>,
+  },
 } as const;
 
 export type Balance = typeof BALANCE;

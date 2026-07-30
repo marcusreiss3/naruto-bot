@@ -21,7 +21,7 @@ export const BUKIJUTSU_ABILITIES: Ability[] = [
     baseDamage: 24, scalingAttribute: "bukijutsu", range: 5, shape: "RADIUS",
     requirements: { manualOnly: true },
     requiredItems: [
-      { itemId: "pergaminho_arsenal", amount: 1 },
+      { itemId: "pergaminho_rank_b", amount: 1, exhaustToItemId: "pergaminho_rank_b_gasto" },
       { itemId: "kunai", amount: 3, consume: true },
       { itemId: "shuriken", amount: 3, consume: true },
     ],
@@ -57,7 +57,9 @@ export const BUKIJUTSU_ABILITIES: Ability[] = [
     category: "BUKIJUTSU", tier: 3, resource: "chakra", cost: 48, actionType: "COMUM",
     baseDamage: 32, scalingAttribute: "bukijutsu", range: 6, shape: "RADIUS",
     undodgeable: true,
-    requirements: { manualOnly: true },
+    // parte do princípio dos Clones das Sombras (kage_bunshin) aplicado numa
+    // arma — precisa conhecer a técnica base primeiro.
+    requirements: { manualOnly: true, requiresAbilityId: "kage_bunshin" },
     requiredItems: [{ itemId: "shuriken", amount: 1, consume: true }],
     tags: ["projétil", "clones"],
     description: "Uma shuriken se transforma em uma nuvem de cópias que fecha todas as rotas de fuga.",
@@ -69,7 +71,7 @@ export const BUKIJUTSU_ABILITIES: Ability[] = [
     effects: [{ effectId: "MINADO", stacks: 1, duration: 2 }],
     requirements: { manualOnly: true },
     requiredItems: [
-      { itemId: "pergaminho_arsenal", amount: 1 },
+      { itemId: "pergaminho_rank_a", amount: 1, exhaustToItemId: "pergaminho_rank_a_gasto" },
       { itemId: "esfera_explosiva", amount: 1, consume: true },
     ],
     tags: ["projétil", "explosivo", "pergaminho"],
@@ -98,7 +100,7 @@ export const BUKIJUTSU_ABILITIES: Ability[] = [
     undodgeable: true, oncePerCombat: true,
     requirements: { manualOnly: true },
     requiredItems: [
-      { itemId: "pergaminho_arsenal", amount: 1 },
+      { itemId: "pergaminho_rank_s", amount: 1, exhaustToItemId: "pergaminho_rank_s_gasto" },
       { itemId: "kunai", amount: 5, consume: true },
       { itemId: "shuriken", amount: 5, consume: true },
     ],

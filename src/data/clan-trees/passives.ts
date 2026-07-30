@@ -634,6 +634,19 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
     nodeId: "buki_resma_explosiva", clanId: "bukijutsu",
     abilityIds: ["buki_esfera_explosiva", "item_kunai_explosiva_arremessar"], damageMult: 1.2,
   },
+  // --------------------------------------------------------- IRYO NINJUTSU
+  // Árvore genérica: crossCategory permite que os nós funcionem sem exigir
+  // um clã específico, como já acontece com Bukijutsu acima.
+  { nodeId: "iryo_cura_economica", clanId: "iryo", crossCategory: "IRYO_NINJUTSU", costMult: 0.9 },
+  { nodeId: "iryo_cura_precisa", clanId: "iryo", crossCategory: "IRYO_NINJUTSU", healMult: 1.1 },
+  { nodeId: "iryo_cura_critica", clanId: "iryo", crossCategory: "IRYO_NINJUTSU", criticalHealBonus: { hpThreshold: 0.35, mult: 1.2 } },
+  { nodeId: "iryo_mitose_acelerada", clanId: "iryo", abilityIds: ["iryo_regeneracao"], costMult: 0.85 },
+  { nodeId: "iryo_antidoto_eficiente", clanId: "iryo", abilityIds: ["iryo_desintoxicacao", "iryo_mosquitos"], costMult: 0.85 },
+  { nodeId: "iryo_hemostasia_precisa", clanId: "iryo", abilityIds: ["iryo_hemostatica", "iryo_yin"], costMult: 0.85 },
+  { nodeId: "iryo_triagem_rapida", clanId: "iryo", abilityIds: ["iryo_desintoxicacao", "iryo_hemostatica", "iryo_mosquitos", "iryo_yin"], rangeBonus: 1 },
+  { nodeId: "iryo_lamina_estavel", clanId: "iryo", abilityIds: ["iryo_bisturi"], effectDurationBonus: { effectId: "EMPOWERED", bonus: 1 } },
+  { nodeId: "iryo_sinapses_caoticas", clanId: "iryo", abilityIds: ["iryo_choque_desorientacao"], effectDurationBonus: { effectId: "CONFUSION", bonus: 1 } },
+  { nodeId: "iryo_anatomia_combate", clanId: "iryo", abilityIds: ["iryo_choque_desorientacao"], rangeBonus: 1, costMult: 0.9 },
 ];
 
 const CLAN_PASSIVE_INDEX: Map<string, ClanPassiveDef> = new Map(CLAN_PASSIVES.map((p) => [p.nodeId, p]));

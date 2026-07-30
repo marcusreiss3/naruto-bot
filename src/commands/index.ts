@@ -13,7 +13,7 @@ import { aparencia } from "./aparencia.js";
 import { clear } from "./clear.js";
 import { bonecoTreino } from "./boneco-treino.js";
 import { inventario } from "./inventario.js";
-import { arremessar, atacar, darItem, desequipar, equipar, largarItem, usarItem } from "./itens.js";
+import { arremessar, atacar, darItem, desequipar, equipar, largarItem, restaurarPergaminho, usarItem } from "./itens.js";
 
 export const commands: Command[] = [
   perfil,
@@ -21,6 +21,7 @@ export const commands: Command[] = [
   inventario,
   equipar,
   desequipar,
+  restaurarPergaminho,
   atacar,
   arremessar,
   usarItem,

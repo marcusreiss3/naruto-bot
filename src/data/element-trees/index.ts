@@ -17,6 +17,8 @@ import type { CharacterCondition } from "../../services/characters/mangekyo.js";
 import { FUNDAMENTOS } from "./fundamentals.js";
 import { CLAN_TREES } from "../clan-trees/index.js";
 import { BUKIJUTSU_TREE } from "../bukijutsu-tree.js";
+import { IRYO_NINJUTSU_TREE } from "../iryo-ninjutsu-tree.js";
+import { GENJUTSU_TREE } from "../genjutsu-tree.js";
 
 export type NodeKind = "JUTSU" | "PASSIVE" | "ELEMENT";
 export type NodeRank = "D" | "C" | "B" | "A" | "S";
@@ -351,7 +353,7 @@ export const ELEMENT_TREES: Record<Element, SkillNodeDef[]> = {
 // ELEMENT_TREES (nao pertencem a nenhum elemento), mas entram no indice
 // global — e' aqui que getNode/allNodes/buyNode as acham.
 const NODE_INDEX: Map<string, SkillNodeDef> = new Map(
-  [...Object.values(ELEMENT_TREES).flat(), ...FUNDAMENTOS, ...BUKIJUTSU_TREE, ...Object.values(CLAN_TREES).flat()].map((n) => [
+  [...Object.values(ELEMENT_TREES).flat(), ...FUNDAMENTOS, ...BUKIJUTSU_TREE, ...IRYO_NINJUTSU_TREE, ...GENJUTSU_TREE, ...Object.values(CLAN_TREES).flat()].map((n) => [
     n.id,
     n,
   ]),

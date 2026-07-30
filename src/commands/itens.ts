@@ -13,6 +13,7 @@ import {
   transferInventoryItem,
   dropInventoryItem,
   unequipInventoryItem,
+  restoreSpentScroll,
 } from "../services/characters/inventory.js";
 import {
   displayName,
@@ -237,6 +238,19 @@ export const desequipar: Command = {
       ephemeral: true,
     });
   },
+};
+
+export const restaurarPergaminho: Command = {
+  data: new SlashCommandBuilder()
+    .setName("restaurar-pergaminho")
+    .setDescription("Restaura um pergaminho de Bukijutsu gasto por metade do valor em ryō")
+    .addStringOption((option) => option.setName("pergaminho").setDescription("Pergaminho gasto").setRequired(true).setAutocomplete(true)),
+  async execute(interaction) {
+    const char = await character(interaction);
+    const result = await restoreSpentScroll(char.id, interaction.options.getString("pergaminho", true));
+    await interaction.reply({ content: result.ok ? `✅ **${result.name}** restaurado por **${result.cost} ryō**.` : `❌ ${result.error}`, ephemeral: true });
+  },
+  autocomplete: autocompleteAllOwnedItems,
 };
 
 export const atacar: Command = {

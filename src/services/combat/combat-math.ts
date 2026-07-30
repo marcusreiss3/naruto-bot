@@ -80,6 +80,15 @@ export function computeHeal(ability: Ability, iryo: number, healMult = 1): numbe
   return Math.max(0, Math.round(dmg * healMult));
 }
 
+// Clones das Sombras (e futuras invocacoes frageis com deathReflect): quando
+// a invocacao morre, o invocador so' sente o dano que SOBROU alem do hpMax
+// dela (overkill), nao o golpe inteiro — ex: clone com 1 de vida toma 20,
+// overkill e' 19. `pct` e' Ability.summon.deathReflect.overkillDamagePct.
+export function summonOverkillReflect(incomingDamage: number, cloneHpMax: number, pct: number): number {
+  const overkill = Math.max(0, incomingDamage - cloneHpMax);
+  return Math.round(overkill * pct);
+}
+
 export interface DodgeContext {
   ability: Ability; // ataque recebido
   defenseDown?: boolean; // efeito DEFENSE_DOWN ativo

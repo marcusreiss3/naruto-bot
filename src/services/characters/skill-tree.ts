@@ -24,6 +24,8 @@ import {
 } from "../../config/enums.js";
 import { ELEMENT_TREES, getNode, type SkillNodeDef } from "../../data/element-trees/index.js";
 import { BUKIJUTSU_TREE } from "../../data/bukijutsu-tree.js";
+import { IRYO_NINJUTSU_TREE } from "../../data/iryo-ninjutsu-tree.js";
+import { GENJUTSU_TREE } from "../../data/genjutsu-tree.js";
 import { CLAN_TREES } from "../../data/clan-trees/index.js";
 import { getAbility, getClan } from "../../data/index.js";
 import { FUNDAMENTOS } from "../../data/element-trees/fundamentals.js";
@@ -340,6 +342,24 @@ export function viewBukijutsuTree(snap: CharSnapshot): NodeView[] {
     return reason
       ? { ...node, combat, visualDescription, mechanics, effectiveReqPool: effectiveRequired, status: "LOCKED", reason }
       : { ...node, combat, visualDescription, mechanics, effectiveReqPool: effectiveRequired, status: "BUYABLE" };
+  });
+}
+
+export function viewIryoNinjutsuTree(snap: CharSnapshot): NodeView[] {
+  return IRYO_NINJUTSU_TREE.map((node) => {
+    const combat = combatOf(node); const mechanics = mechanicsOf(node); const visualDescription = visualDescriptionOf(node); const effectiveRequired = effectiveReqPool(node);
+    if (snap.owned.has(node.id)) return { ...node, combat, mechanics, visualDescription, effectiveReqPool: effectiveRequired, status: "OWNED" };
+    const reason = lockReason(snap, node);
+    return reason ? { ...node, combat, mechanics, visualDescription, effectiveReqPool: effectiveRequired, status: "LOCKED", reason } : { ...node, combat, mechanics, visualDescription, effectiveReqPool: effectiveRequired, status: "BUYABLE" };
+  });
+}
+
+export function viewGenjutsuTree(snap: CharSnapshot): NodeView[] {
+  return GENJUTSU_TREE.map((node) => {
+    const combat = combatOf(node); const mechanics = mechanicsOf(node); const visualDescription = visualDescriptionOf(node); const effectiveRequired = effectiveReqPool(node);
+    if (snap.owned.has(node.id)) return { ...node, combat, mechanics, visualDescription, effectiveReqPool: effectiveRequired, status: "OWNED" };
+    const reason = lockReason(snap, node);
+    return reason ? { ...node, combat, mechanics, visualDescription, effectiveReqPool: effectiveRequired, status: "LOCKED", reason } : { ...node, combat, mechanics, visualDescription, effectiveReqPool: effectiveRequired, status: "BUYABLE" };
   });
 }
 

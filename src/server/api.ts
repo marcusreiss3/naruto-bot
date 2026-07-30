@@ -7,7 +7,7 @@ import { getSessionDiscordId } from "./auth.js";
 import { ELEMENT_TREES } from "../data/element-trees/index.js";
 import { CLAN_TREES } from "../data/clan-trees/index.js";
 import { CLANS, getAbility } from "../data/index.js";
-import { loadSnapshot, viewTree, viewFundamentosTree, viewClanTree, viewBukijutsuTree, buyNode } from "../services/characters/skill-tree.js";
+import { loadSnapshot, viewTree, viewFundamentosTree, viewClanTree, viewBukijutsuTree, viewIryoNinjutsuTree, viewGenjutsuTree, buyNode } from "../services/characters/skill-tree.js";
 import { buildMechanicsSummary, buildVisualDescription } from "../services/characters/skill-description.js";
 import { MANGEKYO_VARIANT_LABEL } from "../services/characters/mangekyo.js";
 import { buildEquipmentCatalog } from "../services/characters/equipment-catalog.js";
@@ -24,6 +24,8 @@ export function registerApi(app: FastifyInstance): void {
     const trees: Record<string, unknown> = {
       FUNDAMENTOS: viewFundamentosTree(snap),
       BUKIJUTSU: viewBukijutsuTree(snap),
+      GENJUTSU: viewGenjutsuTree(snap),
+      IRYO_NINJUTSU: viewIryoNinjutsuTree(snap),
     };
     for (const el of Object.keys(ELEMENT_TREES) as Element[]) {
       trees[el] = viewTree(snap, el);

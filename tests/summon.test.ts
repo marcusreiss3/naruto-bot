@@ -22,6 +22,10 @@ describe("invocações: integridade", () => {
     for (const a of comSummon) {
       const tpl = getNpc(a.summon!.templateId)!;
       expect(tpl.hpMax, `${tpl.id} sem HP`).toBeGreaterThan(0);
+      // inheritOwnerJutsu (Clones das Sombras): abilityIds do template fica
+      // vazio de proposito — createSummon() substitui pelo snapshot do
+      // invocador em tempo de execucao, entao "ficaria parado" nao se aplica.
+      if (a.summon!.inheritOwnerJutsu) continue;
       expect(tpl.abilityIds.length, `${tpl.id} sem jutsu (ficaria parado)`).toBeGreaterThan(0);
     }
   });

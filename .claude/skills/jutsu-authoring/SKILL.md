@@ -88,6 +88,35 @@ Regras de proporção:
 - `chance` de efeito sobe com tier: t1 ~0.6, t2 ~0.8, t3 = garantido (omitir `chance`).
 - BURN explode em 5 stacks por 40 de dano. Não dê stacks que permitam explodir em 1 turno sozinho.
 
+## Calculadora de custo (`suggestedJutsuCost`)
+
+A tabela acima é o ponto de partida; pra um número mais preciso, use
+`suggestedJutsuCost()` (`src/services/characters/jutsu-balance.ts`, pesos em
+`BALANCE.jutsuCostFormula`). Ela pega `baseDamage`/`baseHeal`/`effects`/
+`actionType`/`shape`/`unblockable`/`undodgeable`/`unguardable` da ability e
+devolve um custo sugerido — dano em faixas progressivas (os primeiros 20
+pontos custam pouco, o excedente custa cada vez mais, mas achata de novo
+depois de 35: apice já é freado por nível/atributo altíssimo, não precisa
+também levar o preço da faixa do meio), cada efeito com peso próprio
+(Atordoamento > Confusão > Imobilização > debuff parcial), área e
+indefensável como multiplicador, e o tipo de ação (BONUS paga prêmio por ser
+uma ação "de graça" no mesmo turno).
+
+Rode `npx tsx scripts/audit-jutsu-costs.ts` pra comparar o custo sugerido
+contra TODA ability existente (mostra o delta, do maior pro menor) — útil pra
+achar outlier antes de commitar um custo novo. `npx tsx scripts/apply-jutsu-costs.ts --dry`
+mostra o que mudaria se você reaplicasse a fórmula em massa (sem escrever
+nada); tire o `--dry` só se for mesmo reprecificar o roster inteiro de novo.
+
+**Não cobre** (fica a critério de quem escreve o jutsu, como antes):
+`summon`, `mindTransfer`, `trapField`, `cleanses`, `reduceEffectDuration`,
+`restoreResource`, `requiredItems`/`equippedItemIds`, `toggleRules`, `teamBuff`,
+e combo-enablers cujo valor real vem de OUTRA ability (ex: SHADOW_BOUND do
+Nara — garante o próximo golpe de uma técnica diferente; a fórmula não
+enxerga isso e vai sugerir um número mais baixo do que o jutsu realmente
+vale). Também não mexe em conteúdo de NPC de verdade — `cost: 0` sem
+`requirements` é o sinal de "isso é NPC, não precifique".
+
 ## Exemplo
 
 ```ts

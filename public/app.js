@@ -5,7 +5,9 @@
 // pré-requisito) — por isso sempre aparece desbloqueada, ver buildElemBar.
 const ELEMENTS = [
   { id: "FUNDAMENTOS", name: "Ninjutsu", icon: "", img: "/assets/icons/footer/ninjutsu.png", color: "#8a8a8a" },
+  { id: "IRYO_NINJUTSU", name: "Iryō Ninjutsu", icon: "", img: "/assets/icons/footer/iryo-ninjutsu.png", color: "#57c99a" },
   { id: "BUKIJUTSU", name: "Bukijutsu", icon: "", img: "/assets/icons/footer/bukijutsu.png", color: "#b7a27a" },
+  { id: "GENJUTSU", name: "Genjutsu", icon: "", img: "/assets/icons/footer/genjutsu.png", color: "#9b63c7" },
   { id: "FOGO", name: "Fogo", icon: "", img: "/assets/icons/footer/katon.png", color: "#e2492d" },
   { id: "AGUA", name: "Água", icon: "", img: "/assets/icons/footer/suiton.png", color: "#2b7fd4" },
   { id: "VENTO", name: "Vento", icon: "", img: "/assets/icons/footer/futon.png", color: "#2fa36b" },
@@ -518,7 +520,7 @@ function buildElemBar() {
     // arvore de cla (clanGate) so aparece pra quem e' daquele cla.
     const unlocked =
       e.id === "FUNDAMENTOS" ||
-      e.id === "BUKIJUTSU" ||
+      e.id === "BUKIJUTSU" || e.id === "IRYO_NINJUTSU" || e.id === "GENJUTSU" ||
       (e.clanGate ? state.char.clanId === e.clanGate : state.char.elements.includes(e.id));
     if (!unlocked && !showAllTrees) continue;
     const div = document.createElement("div");
@@ -648,7 +650,7 @@ function closeCopyArsenal() {
 // 1 casa do grid ≈ 1,5 m (escala tática usada só p/ exibir alcance no site).
 const METERS_PER_CELL = 1.5;
 const CAT_LABEL = { NINJUTSU: "Ninjutsu", TAIJUTSU: "Taijutsu", BUKIJUTSU: "Bukijutsu",
-  KENJUTSU: "Kenjutsu", DOJUTSU: "Dojutsu", IRYO_NINJUTSU: "Ninjutsu Médico", GENJUTSU: "Genjutsu", CLA: "Técnica de Clã" };
+  KENJUTSU: "Kenjutsu", DOJUTSU: "Dojutsu", IRYO_NINJUTSU: "Iryō Ninjutsu", GENJUTSU: "Genjutsu", CLA: "Técnica de Clã" };
 const ACT_LABEL = { COMUM: "Ação comum", BONUS: "Ação bônus", REACAO: "Reação" };
 const RES_LABEL = { chakra: "Chakra", energia: "Energia" };
 

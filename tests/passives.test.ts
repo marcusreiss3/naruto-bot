@@ -46,7 +46,7 @@ describe("passivas: integridade do registro", () => {
     const porElemento = new Map<string, number>();
     for (const p of PASSIVES) {
       const mult = (p.damageMult ?? 1) * (p.damageMultVsEffect?.mult ?? 1);
-      if (mult === 1) continue;
+      if (mult === 1 || !p.element) continue;
       porElemento.set(p.element, (porElemento.get(p.element) ?? 1) * mult);
     }
     for (const [element, mult] of porElemento) {

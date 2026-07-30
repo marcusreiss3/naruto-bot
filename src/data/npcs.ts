@@ -540,6 +540,16 @@ export const NPCS: NpcTemplate[] = [
     abilityIds: ["doton_punho_rochoso"],
   },
   {
+    // Kage Bunshin: 1 de vida sempre (nao usa summon.hpFraction). abilityIds
+    // fica vazio de proposito — createSummon() substitui pelo snapshot dos
+    // jutsu que o INVOCADOR ja possui (ver Ability.summon.inheritOwnerJutsu).
+    id: "summon_kage_bunshin",
+    name: "Clone das Sombras",
+    hpMax: 1,
+    attributes: { ninjutsu: 8, taijutsu: 8 },
+    abilityIds: [],
+  },
+  {
     // Cao ninja do cla Inuzuka. hpMax aqui e' so um fallback — na pratica a
     // vida real vem de `summon.hpFraction` (1/3 da vida do dono), ver
     // createSummon() em combat-engine.ts e a ability "inuzuka_cao_ninja".

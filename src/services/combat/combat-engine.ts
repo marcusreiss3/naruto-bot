@@ -6,7 +6,7 @@ import { allNodes } from "../../data/element-trees/index.js";
 import type { Ability, AppliedEffect, ScenarioDef } from "../../data/types.js";
 import { allCells, neighbors, parseCell, radiusCells, toCell } from "../../utils/grid.js";
 import { pick, randInt, chance } from "../../utils/random.js";
-import { costAfterMastery, moveRange } from "../characters/formulas.js";
+import { costAfterMastery, moveRange, genjutsuDuration } from "../characters/formulas.js";
 import {
   computeDamage,
   computeHeal,
@@ -16,6 +16,7 @@ import {
   isPhysicalCategory,
   canYamanakaInvade,
   yamanakaResistChance,
+  summonOverkillReflect,
 } from "./combat-math.js";
 import {
   applyBurnStacks,
@@ -44,6 +45,7 @@ import {
   isStunned,
   isFleeLocked,
   isWet,
+  hasEffect,
   shieldPoints,
   absorbWithShield,
   chakraDrainPerTurn,
@@ -360,6 +362,21 @@ async function createSummon(
   const hp = Math.max(1, Math.round(baseHp * (1 + hpBonus)));
   const scenario = getScenarioById(s.scenarioId)!;
 
+  // Clones das Sombras: em vez do abilityIds fixo do template, herda um
+  // snapshot dos jutsu que o INVOCADOR ja possui agora, sem os caros demais
+  // pra um clone usar (maxCostPct). Se o jogador nao tiver nenhum jutsu de
+  // dano dentro do teto, o clone entra sem jutsu (ainda assim se move — ver
+  // runNpcTurn em npc-combat.ts).
+  let abilityIds = tpl.abilityIds;
+  if (summon.inheritOwnerJutsu) {
+    const owned = await ownedJutsuIds(summoner);
+    const maxCost = summon.inheritOwnerJutsu.maxCostPct;
+    abilityIds = owned.filter((id) => {
+      const ab = getAbility(id);
+      return Boolean(ab?.baseDamage) && ab!.cost <= maxCost;
+    });
+  }
+
   const blocked = effectiveObstacles(scenario, s.terrain, s.round);
   const taken = new Set(s.participants.filter((p) => p.hpCurrent > 0).map((p) => p.cell));
   const origin = parseCell(summoner.cell);
@@ -391,12 +408,16 @@ async function createSummon(
         hpMax: hp,
         chakra: 100,
         energia: 100,
-        jutsuIdsJson: JSON.stringify(tpl.abilityIds),
+        jutsuIdsJson: JSON.stringify(abilityIds),
         flagsJson: JSON.stringify({
           isSummon: true,
           summonerId: summoner.id,
+          summonTemplateId: summon.templateId,
           onHit: summon.onHit ?? null,
           onDeath: summon.onDeath ?? null,
+          deathReflect: summon.deathReflect ?? null,
+          chakraDebt: 0,
+          firstActiveRound: summon.actsNextRound ? s.round + 1 : undefined,
         }),
       },
     });
@@ -458,6 +479,43 @@ async function triggerSummonDeath(
     logs.push(
       `${icon} **${dead.name}** se desfez e atingiu ${atingidos.map((a) => a.name).join(", ")}.`,
     );
+  }
+}
+
+// Clones das Sombras: quando o clone morre, o invocador sente parte do dano
+// que EXCEDEU o hpMax do clone (ex: 1 de vida, tomou 20 -> excedente 19) e
+// paga de volta o chakra acumulado (flags.chakraDebt) de cada jutsu que o
+// clone usou em vida. `incomingDamage` e' o dano que efetivamente matou o
+// clone nesta troca (variavel `damage` de resolveHit, ja liquida de
+// reacao/Barreira).
+async function reflectSummonDeath(
+  sessionId: string,
+  s: SessionFull,
+  dead: SessionFull["participants"][number],
+  incomingDamage: number,
+  logs: string[],
+): Promise<void> {
+  const deathReflect = dead.flags.deathReflect as
+    | { overkillDamagePct: number; jutsuCostPct: number }
+    | null
+    | undefined;
+  if (!deathReflect) return;
+  const owner = s.participants.find((p) => p.id === dead.flags.summonerId);
+  if (!owner || owner.hpCurrent <= 0) return;
+
+  const reflectedDamage = summonOverkillReflect(incomingDamage, dead.hpMax, deathReflect.overkillDamagePct);
+  if (reflectedDamage > 0) {
+    const hpAfter = await applyDamage(sessionId, owner, reflectedDamage, logs);
+    logs.push(
+      `💢 ${dead.name} se desfez e ${owner.name} sentiu o retorno: ${reflectedDamage} de dano (HP ${hpAfter}/${owner.hpMax}).`,
+    );
+  }
+
+  const chakraDebt = Math.round(Number(dead.flags.chakraDebt ?? 0));
+  if (chakraDebt > 0) {
+    const newChakra = Math.max(0, owner.chakra - chakraDebt);
+    await prisma.combatParticipant.update({ where: { id: owner.id }, data: { chakra: newChakra } });
+    logs.push(`🌀 O chakra gasto pelo clone voltou pra ${owner.name}: -${chakraDebt}% de chakra.`);
   }
 }
 
@@ -896,6 +954,14 @@ export async function useAbility(
   if (ability.chainWetTargets && (!targetP || !isWet(targetP.effects))) {
     return fail("O alvo inicial precisa estar Encharcado para conduzir a corrente.");
   }
+  if (
+    ability.requiresTargetEffect &&
+    (!targetP || !ability.requiresTargetEffect.some((eff) => hasEffect(targetP!.effects, eff)))
+  ) {
+    return fail(
+      `O alvo precisa estar sob ${ability.requiresTargetEffect.map(effectLabel).join(" ou ")} para esta técnica funcionar.`,
+    );
+  }
   if (ability.oncePerCombat && actor.flags.usedOnceAbility === ability.id) {
     return fail(`${ability.name} so pode ser usado uma vez por combate.`);
   }
@@ -913,8 +979,25 @@ export async function useAbility(
   ) {
     return fail("Precisa do seu cão ninja vivo em campo pra usar essa técnica.");
   }
+  if (ability.summon?.maxAlive) {
+    const aliveOfKind = s.participants.filter(
+      (p) =>
+        p.hpCurrent > 0 &&
+        p.flags.isSummon &&
+        p.flags.summonerId === actor.id &&
+        p.flags.summonTemplateId === ability.summon!.templateId,
+    ).length;
+    if (aliveOfKind >= ability.summon.maxAlive) {
+      return fail(`Você já tem o máximo de ${ability.summon.maxAlive} invocações desse tipo vivas em campo.`);
+    }
+  }
   if (ability.requiresActiveDoujutsu && !actor.flags[ability.requiresActiveDoujutsu.flag]) {
     return fail(`Precisa estar com o ${ability.requiresActiveDoujutsu.label} ativo pra usar essa técnica.`);
+  }
+  const requiredAbilityId = ability.requirements?.requiresAbilityId;
+  if (requiredAbilityId && !(await ownedJutsuIds(actor)).includes(requiredAbilityId)) {
+    const reqAbility = getAbility(requiredAbilityId);
+    return fail(`Precisa conhecer ${reqAbility?.name ?? requiredAbilityId} pra usar essa técnica.`);
   }
 
   // alcance
@@ -948,6 +1031,17 @@ export async function useAbility(
 
   // deduz recurso e marca acao
   await deductResource(actor.id, ability.resource, cost);
+  // Clones das Sombras (e futuras invocacoes com deathReflect): o custo BASE
+  // do jutsu (sem maestria) vira divida acumulada, cobrada do invocador de
+  // uma vez so' quando o clone morrer — ver reflectSummonDeath().
+  if (actor.flags.isSummon && actor.flags.deathReflect && ability.resource === "chakra") {
+    const debtRate = (actor.flags.deathReflect as { jutsuCostPct: number }).jutsuCostPct;
+    const increment = Math.round(ability.cost * debtRate);
+    if (increment > 0) {
+      const current = Number(actor.flags.chakraDebt ?? 0);
+      await setFlag(actor.id, "chakraDebt", current + increment);
+    }
+  }
   await markAction(actor.id, ability.actionType);
   if (ability.oncePerCombat) await setFlag(actor.id, "usedOnceAbility", ability.id);
   if (isCopied) await setFlag(actor.id, "sharinganCopiedAbilityId", undefined);
@@ -955,7 +1049,7 @@ export async function useAbility(
   await offerSharinganCopy(s, actor.id, ability, logs);
 
   // cura / cleanse / buff
-  if (ability.baseHeal || ability.cleanses || ability.restoreResource) {
+  if (ability.baseHeal || ability.cleanses || ability.reduceEffectDuration || ability.restoreResource) {
     const healTarget = targetP ?? actor;
     if (ability.cleanses) {
       for (const eff of ability.cleanses) {
@@ -964,6 +1058,22 @@ export async function useAbility(
         });
       }
       logs.push(`🧼 Efeitos removidos de ${healTarget.name}: ${ability.cleanses.join(", ")}.`);
+    }
+    if (ability.reduceEffectDuration) {
+      for (const reduction of ability.reduceEffectDuration) {
+        const activeEffects = await prisma.effectInstance.findMany({
+          where: { participantId: healTarget.id, effectId: reduction.effectId },
+        });
+        for (const activeEffect of activeEffects) {
+          const remaining = activeEffect.duration - reduction.turns;
+          if (remaining <= 0) {
+            await prisma.effectInstance.delete({ where: { id: activeEffect.id } });
+          } else {
+            await prisma.effectInstance.update({ where: { id: activeEffect.id }, data: { duration: remaining } });
+          }
+        }
+      }
+      logs.push(`🩺 Duração reduzida em ${ability.reduceEffectDuration.map((r) => `${r.turns} turno(s) de ${r.effectId}`).join(", ")} para ${healTarget.name}.`);
     }
     if (ability.baseHeal) {
       let passiveHealMult = mods.healMult;
@@ -1452,11 +1562,21 @@ export async function resolveHit(
       const extraStacks =
         (ae.effectId === "CRYSTALLIZED" ? (atkMods?.extraCrystalStacks ?? 0) : 0) +
         (atkMods?.effectStacksBonus[ae.effectId] ?? 0);
+      // Genjutsu e' a UNICA categoria em que o atributo de escala (genjutsu)
+      // se traduz em duracao em vez de dano bruto (genjutsuScaling fica em 0
+      // de proposito, ver balance.ts) — +1 rodada a cada 10 pontos, capado em
+      // BALANCE.genjutsuDurationCap. Sem isso o atributo genjutsu nao fazia
+      // nada em combate (ver skill combat-engine).
+      const baseDur = (ae.duration ?? defaultDurationFor(ae.effectId)) + bonus;
+      const finalDur =
+        ability.category === "GENJUTSU" && attacker
+          ? genjutsuDuration(baseDur, getAttr(attacker, "genjutsu"))
+          : baseDur;
       const r = await applyEffect(
         target.id,
         ae.effectId,
         (ae.stacks ?? 1) + extraStacks,
-        (ae.duration ?? defaultDurationFor(ae.effectId)) + bonus,
+        finalDur,
         {
           burn: ae.effectId === "BURN" ? burnOpts : undefined,
           replaceGroup: ae.replaceGroup,
@@ -1620,6 +1740,11 @@ export async function resolveHit(
     logs.push(`☠️ ${target.name} foi derrotado!`);
     // invocacao que morre pode estourar (clone d'agua molha a area)
     if (target.flags.isSummon) await triggerSummonDeath(s, target, logs);
+    // Clones das Sombras: parte do dano excedente e' sentido pelo invocador,
+    // que tambem paga de volta o chakra que o clone gastou em vida.
+    if (target.flags.isSummon && target.flags.deathReflect) {
+      await reflectSummonDeath(sessionId, s, target, damage, logs);
+    }
     // Yamanaka: corpo controlado morreu — nao fica "controlado" por um cadaver.
     if (target.controlledById) {
       logs.push(`🧠 O corpo controlado morreu — a mente do controlador foi expelida de volta.`);

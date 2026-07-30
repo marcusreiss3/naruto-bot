@@ -101,6 +101,9 @@ export function buildMechanicsSummary(ability: Ability): string {
   if (ability.cleanses?.length) {
     parts.push(`Remove ${ability.cleanses.map((effect) => EFFECT_NAMES[effect]).join(", ")}.`);
   }
+  if (ability.reduceEffectDuration?.length) {
+    parts.push(`Reduz ${ability.reduceEffectDuration.map(({ effectId, turns }) => `${turns} turno(s) de ${EFFECT_NAMES[effectId]}`).join(" e ")}.`);
+  }
   if (ability.restoreResource) {
     const resource = ability.restoreResource.resource === "chakra" ? "chakra" : "energia";
     parts.push(`Restaura ${ability.restoreResource.amount}% de ${resource} do alvo.`);
@@ -188,8 +191,10 @@ export function buildMechanicsSummary(ability: Ability): string {
       .map((requirement) => `${requirement.amount}x ${getItem(requirement.itemId)?.name ?? requirement.itemId}`)
       .join(entries.length > 1 ? " e " : "");
   const consumedItems = (ability.requiredItems ?? []).filter((entry) => entry.consume);
-  const retainedItems = (ability.requiredItems ?? []).filter((entry) => !entry.consume);
+  const exhaustedItems = (ability.requiredItems ?? []).filter((entry) => entry.exhaustToItemId);
+  const retainedItems = (ability.requiredItems ?? []).filter((entry) => !entry.consume && !entry.exhaustToItemId);
   if (consumedItems.length) parts.push(`Consome ${itemPhrase(consumedItems)}.`);
+  if (exhaustedItems.length) parts.push(`Gasta ${itemPhrase(exhaustedItems)}; restaure-o para usar novamente.`);
   if (retainedItems.length) parts.push(`Exige ${itemPhrase(retainedItems)}.`);
   if (ability.equippedItemIds?.length) {
     const names = ability.equippedItemIds.map((id) => getItem(id)?.name ?? id);
