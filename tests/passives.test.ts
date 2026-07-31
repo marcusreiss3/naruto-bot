@@ -52,7 +52,11 @@ describe("passivas: integridade do registro", () => {
     for (const [element, mult] of porElemento) {
       // Kekkei genkai fecha perto de 2.025x. O teto bruto fica controlado;
       // sua vantagem adicional vem dos efeitos e utilidades exclusivos.
-      const [min, max] = isKekkeiGenkai(element as Element) ? [2, 2.1] : [1.8, 2.2];
+      // Poeira e' excecao deliberada: pedido explicito do usuario pra ser o
+      // KKG MAIS FORTE (2.17x = 1.40 * 1.55, ver element-trees/passives.ts),
+      // por isso tem a propria faixa, acima da dos outros KKG.
+      const [min, max] =
+        element === "POEIRA" ? [2.1, 2.25] : isKekkeiGenkai(element as Element) ? [2, 2.1] : [1.8, 2.2];
       expect(mult, `${element} está em ${mult.toFixed(2)}x`).toBeGreaterThanOrEqual(min);
       expect(mult, `${element} está em ${mult.toFixed(2)}x`).toBeLessThanOrEqual(max);
     }

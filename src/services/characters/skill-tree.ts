@@ -29,7 +29,8 @@ import { GENJUTSU_TREE } from "../../data/genjutsu-tree.js";
 import { CLAN_TREES } from "../../data/clan-trees/index.js";
 import { getAbility, getClan } from "../../data/index.js";
 import { FUNDAMENTOS } from "../../data/element-trees/fundamentals.js";
-import { clanStartingElement, CLAN_STARTING_ELEMENT } from "../../data/clans/starting-element.js";
+import { clanStartingElementForNode, CLAN_STARTING_ELEMENT } from "../../data/clans/starting-element.js";
+import { eligibleKekkeiGenkai } from "./kekkei-genkai.js";
 import { buildMechanicsSummary, buildVisualDescription } from "./skill-description.js";
 import { abilityIdFromSharinganCopyNode } from "../combat/sharingan.js";
 import {
@@ -55,6 +56,12 @@ const ELEMENT_ICON: Partial<Record<Element, string>> = {
 // No da Arvore de Ninjutsu que concede o PRIMEIRO elemento — este vem do cla
 // (starting-element.ts). Os demais (funda_elemento_2..5) continuam aleatorios.
 const FIRST_ELEMENT_NODE_ID = "funda_elemento_1";
+
+// Raiz da arvore do Sarutobi (nasce comprada, ver autoGrantedNodeIds em
+// clans/index.ts): quem tiver este no dobra o sorteio de qualquer no ELEMENT
+// (ver buyNode abaixo) — pedido explicito do usuario ("sempre que compra um,
+// vem dois").
+const SARUTOBI_DOUBLE_ELEMENT_NODE_ID = "sarutobi_raiz";
 
 // Elementos basicos = os que um personagem pode ganhar por sorteio na arvore
 // de Fundamentos. Kekkei genkai fica de fora (so entra via /admin).
@@ -396,7 +403,9 @@ export interface BuyResult {
   pool?: Attribute; // de qual bolsa saiu
   grantedAbilityId?: string;
   grantedElement?: Element; // no ELEMENT: qual elemento saiu no sorteio
+  grantedElement2?: Element; // Sarutobi (Legado do Professor): segundo elemento dobrado
   grantedMangekyoVariant?: string;
+  grantedKekkeiGenkai?: Element; // fusao automatica ao completar as arvores da receita
 }
 
 // COMPRA AUTORITATIVA. Revalida contra o banco dentro da transação para evitar
@@ -446,16 +455,46 @@ export async function buyNode(
       });
     }
 
-    // ELEMENT (Arvore de Ninjutsu): o PRIMEIRO elemento (funda_elemento_1) vem
-    // do cla (starting-element.ts). Os demais (2..5) sao sorteados entre os
-    // basicos que o personagem ainda nao tem. Kekkei genkai fica fora (so /admin).
+    // ELEMENT (Arvore de Ninjutsu): a sequencia de elementos forçados do cla
+    // (starting-element.ts) cobre funda_elemento_1..N — normalmente so' o
+    // primeiro, mas Onoki/Bakurei tem 2-3 forçados em sequencia. O que sobra
+    // da sequencia (ou clã sem mapa) sorteia entre os basicos restantes.
+    // Kekkei genkai fica fora do sorteio (so' /admin ou fusao, ver
+    // kekkei-genkai.ts).
     let grantedElement: Element | undefined;
+    let grantedElement2: Element | undefined;
     if (node.kind === "ELEMENT") {
       const pool = remainingBasicElements(snap.elements);
       if (pool.length === 0) return { ok: false, error: "Todos os elementos básicos já foram concedidos." };
-      const doCla = node.id === FIRST_ELEMENT_NODE_ID ? clanStartingElement(snap.clanId, snap.elements) : null;
+      const doCla = clanStartingElementForNode(snap.clanId, node.id, snap.elements);
       grantedElement = doCla ?? pool[Math.floor(Math.random() * pool.length)]!;
       await tx.characterElement.create({ data: { charId: char.id, element: grantedElement } });
+
+      // Legado do Professor (Sarutobi): este no' concede um segundo elemento
+      // basico aleatorio de graça, se ainda sobrar algum no sorteio.
+      if (snap.owned.has(SARUTOBI_DOUBLE_ELEMENT_NODE_ID)) {
+        const pool2 = remainingBasicElements([...snap.elements, grantedElement]);
+        if (pool2.length > 0) {
+          grantedElement2 = pool2[Math.floor(Math.random() * pool2.length)]!;
+          await tx.characterElement.create({ data: { charId: char.id, element: grantedElement2 } });
+        }
+      }
+    }
+
+    // Fusao de kekkei genkai: completar as arvores da receita concede o KKG
+    // automaticamente (ver services/characters/kekkei-genkai.ts). Roda depois
+    // de QUALQUER compra (o no' recem-comprado pode ser o que fecha uma
+    // arvore) — owned/elements aqui já incluem o que este buyNode concedeu.
+    const ownedAfter = new Set(snap.owned);
+    ownedAfter.add(node.id);
+    const elementsAfter = grantedElement
+      ? [...snap.elements, grantedElement, ...(grantedElement2 ? [grantedElement2] : [])]
+      : snap.elements;
+    const fused = eligibleKekkeiGenkai({ owned: ownedAfter, elements: elementsAfter, clanId: snap.clanId });
+    let grantedKekkeiGenkai: Element | undefined;
+    if (fused) {
+      await tx.characterElement.create({ data: { charId: char.id, element: fused } });
+      grantedKekkeiGenkai = fused;
     }
 
     const leftBefore = snap.pointsByPool[node.pool] ?? (snap.attributes[node.pool] ?? 1);
@@ -465,7 +504,9 @@ export async function buyNode(
       pool: node.pool,
       grantedAbilityId,
       grantedElement,
+      grantedElement2,
       grantedMangekyoVariant: grantedMangekyoVariant ? MANGEKYO_VARIANT_LABEL[grantedMangekyoVariant] : undefined,
+      grantedKekkeiGenkai,
     };
   });
 }

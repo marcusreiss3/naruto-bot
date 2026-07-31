@@ -28,6 +28,7 @@ const EFFECT_NAMES: Record<EffectId, string> = {
   DEHYDRATION: "Desidratação",
   MAGMA: "Magma",
   MINADO: "Minado",
+  DISINTEGRATION: "Desintegração",
 };
 
 const STACK_EFFECTS = new Set<EffectId>([
@@ -39,6 +40,7 @@ const STACK_EFFECTS = new Set<EffectId>([
   "DEHYDRATION",
   "MAGMA",
   "MINADO",
+  "DISINTEGRATION",
 ]);
 
 function rounds(value: number): string {

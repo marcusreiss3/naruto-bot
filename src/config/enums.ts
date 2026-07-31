@@ -3,13 +3,16 @@
 // Os 5 elementos basicos + os kekkei genkai. Kekkei genkai e' um elemento como
 // qualquer outro para a engine (arvore, requisitos, passivas); a diferenca e'
 // que ele NAO e' sorteado: so entra via /admin. Ver KEKKEI_GENKAI abaixo.
-export const ELEMENTS = ["FOGO", "AGUA", "VENTO", "TERRA", "RAIO", "CRISTAL", "VAPOR", "CALOR", "LAVA", "EXPLOSAO"] as const;
+export const ELEMENTS = ["FOGO", "AGUA", "VENTO", "TERRA", "RAIO", "CRISTAL", "VAPOR", "CALOR", "LAVA", "EXPLOSAO", "POEIRA", "GELO"] as const;
 export type Element = (typeof ELEMENTS)[number];
 
 // Subconjunto de ELEMENTS que e' kekkei genkai (linhagem sanguinea). Usado para
 // rotular na UI e para separar a faixa de balanceamento no teste das passivas:
-// KG bate mais forte que elemento basico de proposito.
-export const KEKKEI_GENKAI = ["CRISTAL", "VAPOR", "CALOR", "LAVA", "EXPLOSAO"] as const;
+// KG bate mais forte que elemento basico de proposito. Poeira (Jinton) e' o
+// mais forte de todos os KKG — ver comentario no topo da secao POEIRA em
+// element-trees/index.ts. Gelo (Hyoton, ex-arvore de clã do Yuki) fica no
+// mesmo nível de Vapor/Calor/Lava (2.025x), ver secao GELO no mesmo arquivo.
+export const KEKKEI_GENKAI = ["CRISTAL", "VAPOR", "CALOR", "LAVA", "EXPLOSAO", "POEIRA", "GELO"] as const;
 export type KekkeiGenkai = (typeof KEKKEI_GENKAI)[number];
 
 export function isKekkeiGenkai(element: Element): boolean {
@@ -27,6 +30,8 @@ export const ELEMENT_LABELS: Record<Element, string> = {
   CALOR: "Calor",
   LAVA: "Lava",
   EXPLOSAO: "Explosão",
+  POEIRA: "Poeira",
+  GELO: "Gelo",
 };
 
 // Os 9 atributos do personagem. Ordem = ordem de exibicao no /perfil e no menu.
@@ -134,6 +139,7 @@ export const EFFECT_IDS = [
   "DEHYDRATION", // desidratacao: Calor suga a agua do corpo, corta o dano de TUDO que o alvo causar (nao so tai/buki)
   "MAGMA", // magma: Lava acumula, queima leve, e ao encher endurece e prende (ROOT) o alvo
   "MINADO", // minado: Explosao planta uma carga no contato que detona sozinha ao fim da duracao
+  "DISINTEGRATION", // desintegracao: Poeira derrete Barreira por turno E, ao encher, colapsa: zera toda Barreira restante e reduz a defesa
 ] as const;
 
 // Terreno temporario criado por jutsu (camada por cima do cenario estatico).
@@ -171,6 +177,7 @@ export const EFFECT_LABELS: Record<EffectId, string> = {
   DEHYDRATION: "Desidratação",
   MAGMA: "Magma",
   MINADO: "Minado",
+  DISINTEGRATION: "Desintegração",
 };
 
 export function effectLabel(effectId: string): string {

@@ -42,6 +42,7 @@ const DEFAULT_DURATIONS: Partial<Record<EffectId, number>> = {
   DEHYDRATION: E.DEHYDRATION.defaultDuration,
   MAGMA: E.MAGMA.defaultDuration,
   MINADO: E.MINADO.defaultDuration,
+  DISINTEGRATION: E.DISINTEGRATION.defaultDuration,
 };
 
 export function defaultDurationFor(effectId: EffectId): number {
@@ -348,6 +349,41 @@ export function minadoExplosionDamage(stacks: number, duration: number): number 
   return duration - 1 <= 0 ? stacks * E.MINADO.explodeDamagePerStack : 0;
 }
 
+// -------------------------------------------------------------- POEIRA (KG)
+// Desintegracao e' o KKG mais forte: combina os DOIS payoffs que os outros
+// batem separado. Corrosao por turno (como Vapor — derrete Barreira
+// ignorando-a) E acumulo ate um gatilho (como Cristal/Lava), so' que o
+// gatilho aqui nao Atordoa/Enraiza — ele COLAPSA a defesa: zera toda
+// Barreira restante do alvo de uma vez (nao so' o que o tick ja drenaria) e
+// aplica Defesa Reduzida (ver applyEffect() em combat-engine.ts, que chama
+// consumeShield com um valor bem alto pra zerar tudo).
+
+// Acumulos de desintegracao ativos no alvo.
+export function disintegrationStacks(activeEffects: EffectState[]): number {
+  return activeEffects
+    .filter((e) => isActive(e, "DISINTEGRATION"))
+    .reduce((total, e) => total + e.stacks, 0);
+}
+
+// Quanto de Barreira (SHIELD) a Desintegracao derrete neste tick (mesmo
+// contrato de corrosionShieldDrain, so' que mais forte).
+export function disintegrationShieldDrain(activeEffects: EffectState[]): number {
+  return disintegrationStacks(activeEffects) * E.DISINTEGRATION.shieldCorrodePerStack;
+}
+
+// Aplica acumulos de desintegracao; se encher, a defesa colapsa por completo
+// (mesmo contrato de applyMagmaStacks/applyCrystalStacks).
+export function applyDisintegrationStacks(
+  currentStacks: number,
+  addStacks: number,
+  opts?: { collapseAtStacks?: number },
+): { stacks: number; collapsed: boolean } {
+  const collapseAt = opts?.collapseAtStacks ?? E.DISINTEGRATION.collapseAtStacks;
+  const total = currentStacks + addStacks;
+  if (total >= collapseAt) return { stacks: 0, collapsed: true };
+  return { stacks: total, collapsed: false };
+}
+
 // Processa o dano-por-turno de UM efeito (chamado no inicio do turno do portador).
 export function tickEffect(effect: EffectState): TurnTickResult {
   let damage = 0;
@@ -369,6 +405,9 @@ export function tickEffect(effect: EffectState): TurnTickResult {
       break;
     case "MINADO":
       damage = minadoExplosionDamage(effect.stacks, effect.duration);
+      break;
+    case "DISINTEGRATION":
+      damage = E.DISINTEGRATION.dmgPerTurn;
       break;
     default:
       damage = 0;

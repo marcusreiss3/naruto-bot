@@ -68,6 +68,12 @@ export interface PassiveDef {
   burnExplodeDamage?: number;
   // deixa terreno nas celulas atingidas por qualquer jutsu do elemento
   terrainOnHit?: { kind: TerrainKind; duration: number };
+  // acumulos extras de um efeito especifico por acerto (generico — mesmo
+  // campo que ClanPassiveDef ja usa; extraBurnStacks/extraCrystalStacks
+  // sao versoes antigas e dedicadas do mesmo conceito, mantidas por
+  // compatibilidade. Novo efeito com acumulo deveria usar este em vez de
+  // criar mais um campo dedicado).
+  effectStacksBonus?: Partial<Record<EffectId, number>>;
 }
 
 export const PASSIVES: PassiveDef[] = [
@@ -414,6 +420,66 @@ export const PASSIVES: PassiveDef[] = [
     nodeId: "gen_fluencia_ilusao",
     abilityIds: ["gen_contra_genjutsu", "gen_substituicao_ilusoria"],
     costMult: 0.8,
+  },
+
+  // --------------------------------------------------- POEIRA (kekkei genkai)
+  // O KKG MAIS FORTE do jogo (pedido explicito do usuario) — teto de dano
+  // 1.40 * 1.55 = 2.17x, ACIMA do 2.025x que todo outro KKG (Cristal/Vapor/
+  // Calor/Lava/Explosao) compartilha. As duas passivas do meio nao sao dano:
+  // uma crava Desintegracao a mais por acerto (acelera o colapso — mesmo
+  // papel que Faceta Cortante cumpre pro Cristal, so' que via
+  // effectStacksBonus generico em vez de um campo dedicado), a outra corta
+  // Bloqueio/Aparo mais que qualquer outro elemento (0.25 contra o 0.2 padrao
+  // de Vento/Vapor/Calor/Lava) — coerente com "nada resiste ao Poeira".
+  {
+    nodeId: "poeira_raiz",
+    element: "POEIRA",
+    damageMult: 1.4,
+  },
+  {
+    nodeId: "poeira_estilhaco",
+    element: "POEIRA",
+    effectStacksBonus: { DISINTEGRATION: 1 },
+  },
+  {
+    nodeId: "poeira_erosao",
+    element: "POEIRA",
+    armorPierce: 0.25,
+  },
+  {
+    nodeId: "poeira_apice",
+    element: "POEIRA",
+    damageMult: 1.55, // 1.40 * 1.55 = 2.17 — acima do teto 2.025 dos outros KKG de proposito
+  },
+
+  // ------------------------------------------------------ GELO (kekkei genkai)
+  // Hyoton: ex-arvore de clã do Yuki, migrada pra kekkei genkai (pedido
+  // explicito do usuario) — balanceada no MESMO nivel de Vapor/Calor/Lava:
+  // raiz 1.35x + ápice 1.50x = 2.025x, o formato padrao (raiz/apice so' dano,
+  // as passivas do meio so' utilidade). O desconto de custo que estava na
+  // raiz original foi pra Reflexos Gélidos; o bonus de Defesa Reduzida extra
+  // + Lentidão do ápice original ficou concentrado na Presença Silenciosa.
+  {
+    nodeId: "gelo_raiz",
+    element: "GELO",
+    damageMult: 1.35,
+  },
+  {
+    nodeId: "gelo_presenca",
+    element: "GELO",
+    effectChanceBonus: { DEFENSE_DOWN: 0.15 },
+    effectDurationBonus: { effectId: "SLOW", bonus: 1 },
+  },
+  {
+    nodeId: "gelo_reflexos",
+    element: "GELO",
+    ninjutsuDodgeBonus: 0.08,
+    costMult: 0.9,
+  },
+  {
+    nodeId: "gelo_apice",
+    element: "GELO",
+    damageMult: 1.5, // 1.35 * 1.50 = 2.025, identico a Vapor/Calor/Lava
   },
 ];
 

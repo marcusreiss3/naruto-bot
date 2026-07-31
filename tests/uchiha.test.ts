@@ -68,8 +68,8 @@ describe("Uchiha: árvore do Sharingan", () => {
 
     expect(first.sharinganUpkeepMult).toBeCloseTo(0.85);
     expect(both.sharinganUpkeepMult).toBeCloseTo(0.85 * 0.85);
-    expect(Math.round(BALANCE.sharingan[3].upkeepPerTurn * first.sharinganUpkeepMult)).toBe(6);
-    expect(Math.round(BALANCE.sharingan[3].upkeepPerTurn * both.sharinganUpkeepMult)).toBe(5);
+    expect(Math.round(BALANCE.sharingan[3].upkeepPerTurn * first.sharinganUpkeepMult)).toBe(8);
+    expect(Math.round(BALANCE.sharingan[3].upkeepPerTurn * both.sharinganUpkeepMult)).toBe(7);
   });
 
   it("registra os três tomoe e o Mangekyō como habilidades ativas do clã", () => {
@@ -114,7 +114,7 @@ describe("Sharingan de três tomoe: cópia", () => {
     expect(isSharinganCopyable(getAbility("senju_ondas_cortantes")!)).toBe(false);
     expect(isSharinganCopyable(getAbility("vapor_nevoa_qualificada")!)).toBe(true);
     expect(isSharinganCopyable(getAbility("nara_possessao")!)).toBe(false);
-    expect(isSharinganCopyable(getAbility("yuki_agulhas")!)).toBe(false);
+    expect(isSharinganCopyable(getAbility("gelo_agulhas")!)).toBe(false);
     const suitonSenju = getAbility("senju_ondas_cortantes")!;
     expect(isSharinganCopyable(suitonSenju)).toBe(false);
     expect(isSharinganCopyable({ ...suitonSenju, id: "mokuton_teste", tags: ["mokuton", "madeira"] })).toBe(false);

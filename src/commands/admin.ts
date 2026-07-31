@@ -18,6 +18,7 @@ import {
   removeJutsu,
 } from "../services/characters/character-service.js";
 import { CLANS, getAbility, ALL_ABILITIES, MISSIONS } from "../data/index.js";
+import { allNodes } from "../data/element-trees/index.js";
 import { assignMission, removeMission, completeMission, buildMissionCompleteEmbed } from "../services/missions/mission-service.js";
 import { getActiveSession, getSessionById, endCombat, type SessionFull } from "../services/combat/combat-engine.js";
 import { onCombatEnded } from "../services/missions/mission-runtime.js";
@@ -206,6 +207,12 @@ export const admin: Command = {
       s
         .setName("debug-personagem")
         .setDescription("Mostra dados crus do personagem")
+        .addUserOption((o) => o.setName("usuario").setDescription("Usuário").setRequired(true)),
+    )
+    .addSubcommand((s) =>
+      s
+        .setName("desbloquear-tudo")
+        .setDescription("DEBUG: 999 em todo atributo, todo elemento concedido, todo nó de toda árvore desbloqueado")
         .addUserOption((o) => o.setName("usuario").setDescription("Usuário").setRequired(true)),
     ),
   async autocomplete(interaction: AutocompleteInteraction) {
@@ -456,6 +463,30 @@ export const admin: Command = {
           freed
             ? `🗑️ Aparência de <@${user.id}>${ap ? ` (**${ap.characterName}**)` : ""} apagada.`
             : `ℹ️ <@${user.id}> não tinha aparência reservada.`,
+        );
+        return;
+      }
+      case "desbloquear-tudo": {
+        const char = await getChar();
+        for (const attr of ATTRIBUTES) await setAttribute(char.id, attr, 999);
+        for (const element of ELEMENTS) await setElement(char.id, element);
+        const nodes = allNodes();
+        for (const node of nodes) {
+          await prisma.characterSkillNode.upsert({
+            where: { charId_nodeId: { charId: char.id, nodeId: node.id } },
+            create: { charId: char.id, nodeId: node.id },
+            update: {},
+          });
+          if (node.kind === "JUTSU" && node.grantsAbilityId) {
+            await prisma.characterJutsu.upsert({
+              where: { charId_jutsuId: { charId: char.id, jutsuId: node.grantsAbilityId } },
+              create: { charId: char.id, jutsuId: node.grantsAbilityId },
+              update: {},
+            });
+          }
+        }
+        await interaction.editReply(
+          `✅ **${char.name}**: 999 em todos os atributos, todos os elementos concedidos e ${nodes.length} nós desbloqueados (todas as árvores — elementos, kekkei genkai e TODOS os clãs, mesmo os que não são o seu).`,
         );
         return;
       }

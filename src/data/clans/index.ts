@@ -17,12 +17,12 @@ export const CLAN_ABILITIES: Ability[] = [
     tags: ["cla", "uchiha", "doujutsu", "buff", "esquiva"],
     toggleRules: {
       command: "/combate sharingan tomoe:1",
-      dodgeBonus: 0.05,
-      upkeepPerTurn: 3,
+      dodgeBonus: 0.03,
+      upkeepPerTurn: 5,
       disablesWithoutResource: true,
     },
     description:
-      "Desperta o primeiro tomoe do Sharingan. Enquanto estiver ativo, concede +5% de esquiva e consome 3% de chakra por turno.",
+      "Desperta o primeiro tomoe do Sharingan. Enquanto estiver ativo, concede +3% de esquiva e consome 5% de chakra por turno.",
   },
   {
     id: "uchiha_sharingan_2_tomoe",
@@ -38,12 +38,12 @@ export const CLAN_ABILITIES: Ability[] = [
     tags: ["cla", "uchiha", "doujutsu", "buff", "esquiva"],
     toggleRules: {
       command: "/combate sharingan tomoe:2",
-      dodgeBonus: 0.1,
-      upkeepPerTurn: 5,
+      dodgeBonus: 0.05,
+      upkeepPerTurn: 7,
       disablesWithoutResource: true,
     },
     description:
-      "Evolui o Sharingan para dois tomoe. Enquanto estiver ativo, concede +10% de esquiva e consome 5% de chakra por turno.",
+      "Evolui o Sharingan para dois tomoe. Enquanto estiver ativo, concede +5% de esquiva e consome 7% de chakra por turno.",
   },
   {
     id: "uchiha_sharingan_3_tomoe",
@@ -59,14 +59,14 @@ export const CLAN_ABILITIES: Ability[] = [
     tags: ["cla", "uchiha", "doujutsu", "buff", "esquiva", "copia"],
     toggleRules: {
       command: "/combate sharingan tomoe:3",
-      dodgeBonus: 0.15,
-      upkeepPerTurn: 7,
+      dodgeBonus: 0.1,
+      upkeepPerTurn: 9,
       disablesWithoutResource: true,
     },
     visualDescription:
       "O terceiro tomoe acompanha os movimentos do adversário e grava permanentemente no arsenal as técnicas elementais que consegue copiar.",
     description:
-      "Completa o Sharingan de três tomoe. Enquanto estiver ativo, concede +15% de esquiva, consome 7% de chakra por turno e aprende permanentemente cada Ninjutsu elemental elegível observado em combate. Não copia técnicas exclusivas de clã, Gelo ou Madeira; exige afinidade com o elemento, além do nível e Ninjutsu mínimos da técnica.",
+      "Completa o Sharingan de três tomoe. Enquanto estiver ativo, concede +10% de esquiva, consome 9% de chakra por turno e aprende permanentemente cada Ninjutsu elemental elegível observado em combate. Não copia técnicas exclusivas de clã, Gelo ou Madeira; exige afinidade com o elemento, além do nível e Ninjutsu mínimos da técnica.",
   },
   {
     id: "uchiha_mangekyo_sharingan",
@@ -1395,113 +1395,6 @@ export const CLAN_ABILITIES: Ability[] = [
       "Concentra todo o poder do próprio corpo, projetando os ossos comprimidos em lanças rígidas ao extremo: uma arma de osso incrivelmente destrutiva. Ignora Bloqueio e Aparo. 85% de chance de causar Sangramento por 3 rodadas.",
   },
 
-  // ---- Yuki ----
-  // Habilidades concedidas pela arvore de cla (src/data/clan-trees/index.ts),
-  // mesmo padrao do Hoshigaki/Hozuki. Hyoton (Gelo) e' Suiton na base —
-  // `element: "AGUA"` ao lado de `requirements.clanId`, mesmo raciocinio dos
-  // outros dois clãs de Kiri (ver CLAN_STARTING_ELEMENT: yuki tambem começa
-  // com Água). Domo de Iceberg NAO tem baseDamage de proposito (e' defesa
-  // pura, SELF) — dar dano E defesa de graça no mesmo nó ficaria forte
-  // demais pro custo (ver "Custo total da árvore vs dano" na skill
-  // jutsu-authoring: essa árvore fecha em 34 PN, igual o Hoshigaki, com o
-  // mesmo +15% de dano de raiz — nada de multiplicador extra no ápice, que
-  // aqui e' so' controle).
-  {
-    id: "yuki_agulhas",
-    name: "Agulhas de Gelo",
-    category: "NINJUTSU",
-    element: "AGUA",
-    tier: 1,
-    resource: "chakra",
-    cost: 19,
-    actionType: "COMUM",
-    baseDamage: 18,
-    scalingAttribute: "ninjutsu",
-    range: 4,
-    shape: "LINE",
-    effects: [{ effectId: "BLEED", duration: 2, chance: 0.6 }],
-    requirements: { clanId: "yuki", manualOnly: true },
-    tags: ["yuki", "gelo", "linha", "agulhas"],
-    description:
-      "Congela a umidade do ar em agulhas afiadas e as dispara em linha reta contra o alvo, cortando fundo.",
-  },
-  {
-    id: "yuki_espelho",
-    name: "Espelho Demoníaco de Gelo Fino",
-    category: "NINJUTSU",
-    element: "AGUA",
-    tier: 2,
-    resource: "chakra",
-    cost: 29,
-    actionType: "COMUM",
-    baseDamage: 24,
-    scalingAttribute: "ninjutsu",
-    range: 3,
-    shape: "CONE",
-    effects: [{ effectId: "DEFENSE_DOWN", duration: 2, chance: 0.7 }],
-    requirements: { clanId: "yuki", manualOnly: true },
-    tags: ["yuki", "gelo", "espelho", "controle"],
-    description:
-      "Cria um único espelho de gelo fino e ataca de dentro dele com agulhas em vários ângulos ao mesmo tempo. O alvo, distraído tentando achar de onde vem o golpe, baixa a guarda.",
-  },
-  {
-    id: "yuki_domo",
-    name: "Domo de Iceberg",
-    category: "NINJUTSU",
-    element: "AGUA",
-    tier: 2,
-    resource: "chakra",
-    cost: 30,
-    actionType: "BONUS",
-    range: 0,
-    shape: "SELF",
-    effects: [{ effectId: "SHIELD", stacks: 16, duration: 3 }],
-    trapField: { effectId: "ROOT", radius: 1, duration: 3 },
-    requirements: { clanId: "yuki", manualOnly: true },
-    tags: ["yuki", "gelo", "defesa", "controle"],
-    description:
-      "Ergue rapidamente uma cúpula de gelo ao seu redor: ganha Barreira na hora, e qualquer inimigo que já estiver corpo a corpo fica preso lá dentro com você, sem conseguir sair. A prisão dura enquanto a Barreira aguentar — se ela quebrar antes, quem estava preso se solta na hora.",
-  },
-  {
-    id: "yuki_chuva_agulhas",
-    name: "Chuva de Agulhas Geladas",
-    category: "NINJUTSU",
-    element: "AGUA",
-    tier: 3,
-    resource: "chakra",
-    cost: 45,
-    actionType: "COMUM",
-    baseDamage: 34,
-    scalingAttribute: "ninjutsu",
-    range: 5,
-    shape: "RADIUS",
-    effects: [{ effectId: "SLOW", duration: 2, chance: 0.75 }],
-    requirements: { clanId: "yuki", manualOnly: true },
-    tags: ["yuki", "gelo", "area", "controle"],
-    description:
-      "Multiplica os espelhos e enche a área de agulhas de gelo caindo de todos os ângulos, deixando quem for atingido mais lento pelo frio nos ferimentos.",
-  },
-  {
-    id: "yuki_agulhas_mil",
-    name: "Mil Agulhas Voadoras de Água da Morte",
-    category: "NINJUTSU",
-    element: "AGUA",
-    tier: 3,
-    resource: "chakra",
-    cost: 53,
-    actionType: "COMUM",
-    baseDamage: 46,
-    scalingAttribute: "ninjutsu",
-    range: 6,
-    shape: "SINGLE_TARGET",
-    undodgeable: true,
-    effects: [{ effectId: "BLEED", stacks: 2, duration: 3, chance: 0.85 }],
-    requirements: { clanId: "yuki", manualOnly: true },
-    tags: ["yuki", "gelo", "finalizador", "indefensavel"],
-    description:
-      "Produz mil agulhas de gelo afiadas e longas, mira num único alvo específico e as lança todas de uma vez em altíssima velocidade. Rápido demais pra esquivar.",
-  },
-
   // ---- Chinoike ----
   // Habilidades concedidas pela arvore de cla (src/data/clan-trees/index.ts),
   // mesmo padrao dos outros. A Genjutsu Ketsuryuugan e' a excecao real do
@@ -2098,9 +1991,17 @@ export const CLANS: ClanDef[] = [
   {
     id: "sarutobi",
     name: "Sarutobi",
-    description: "Clã do Terceiro Hokage: versáteis, com tradição de vento (Asuma).",
+    description:
+      "Clã do Terceiro Hokage: domínio raro sobre as cinco naturezas básicas de chakra, com tradição de vento (Asuma).",
     passiveIds: [],
+    // Sem jutsu proprio (o "Professor" nao tem tecnica assinatura no roster,
+    // so' versatilidade elemental) — todo o kit mora na arvore de cla
+    // (src/data/clan-trees/index.ts): 1 raiz que dobra o sorteio de elemento
+    // na arvore de Fundamentos + 5 passivas crossElement (uma por natureza).
     activeIds: [],
+    // Legado do Professor nasce comprado, igual o cao ninja do Inuzuka —
+    // e' a mecanica do clã, nao algo que se upa.
+    autoGrantedNodeIds: ["sarutobi_raiz"],
     hooks: {},
   },
   {
@@ -2238,17 +2139,13 @@ export const CLANS: ClanDef[] = [
   {
     id: "yuki",
     name: "Yuki",
-    description: "Clã de Kiri: Hyoton, o Gelo — combina água e vento.",
+    description: "Clã de Kiri: afinidade de Água, o elemento que funde no próprio kekkei genkai — o Hyoton (Gelo).",
     passiveIds: [],
-    // concedidas pela arvore de cla (src/data/clan-trees/index.ts), nao por
-    // requisito automatico — mesmo padrao dos outros clas com arvore propria.
-    activeIds: [
-      "yuki_agulhas",
-      "yuki_espelho",
-      "yuki_domo",
-      "yuki_chuva_agulhas",
-      "yuki_agulhas_mil",
-    ],
+    // O Hyoton (Gelo) virou kekkei genkai de verdade (element-trees/index.ts,
+    // secao GELO) — pedido explicito do usuario, migrado pra fora do clã. O
+    // clã Yuki foi reconstruido do zero, mesmo padrao do Onoki/Bakurei: so'
+    // passiva, sem jutsu proprio (ver clan-trees/index.ts).
+    activeIds: [],
     hooks: {},
   },
 
@@ -2256,8 +2153,11 @@ export const CLANS: ClanDef[] = [
   {
     id: "yotsuki",
     name: "Yotsuki",
-    description: "Clã de Kumo: força física e afinidade de raio.",
+    description: "Clã de Kumo: força física, afinidade de raio e mestria em Kenjutsu.",
     passiveIds: [],
+    // Sem jutsu proprio — mesmo padrao do Onoki/Sarutobi: a arvore inteira
+    // (clan-trees/index.ts) e' passiva, reforçando tecnicas de Raio
+    // especificas (nao so' o elemento) e Kenjutsu em geral.
     activeIds: [],
     hooks: {},
   },
@@ -2308,8 +2208,11 @@ export const CLANS: ClanDef[] = [
   {
     id: "bakurei",
     name: "Bakurei",
-    description: "Clã de Iwagakure.",
+    description: "Clã de Iwagakure: afinidade dupla com Doton e o kekkei genkai Bakuton (Explosão).",
     passiveIds: [],
+    // Sem jutsu proprio — mesmo padrao do Onoki/Yotsuki/Sarutobi: a arvore
+    // inteira (clan-trees/index.ts) e' passiva, reforçando Terra E o kekkei
+    // genkai Explosão (elemento inteiro + tecnicas especificas de cada um).
     activeIds: [],
     hooks: {},
   },
@@ -2334,6 +2237,10 @@ export const CLANS: ClanDef[] = [
     name: "Onoki",
     description: "Linhagem dos Tsuchikage de Iwa: Doton e o Jinton (Poeira).",
     passiveIds: [],
+    // Sem jutsu proprio — pedido explicito do usuario: o cla so' da PASSIVA
+    // pra Terra e pro kekkei genkai Poeira (ver clan-trees/index.ts), mesmo
+    // padrao do Sarutobi (arvore 100% passiva, sem ability nova pra registrar
+    // aqui).
     activeIds: [],
     hooks: {},
   },

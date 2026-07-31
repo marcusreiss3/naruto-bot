@@ -22,6 +22,7 @@ import {
   applyBurnStacks,
   applyCrystalStacks,
   applyMagmaStacks,
+  applyDisintegrationStacks,
   applyCrystalToMove,
   applyHasteToMove,
   applySlowToMove,
@@ -29,6 +30,7 @@ import {
   isPrismed,
   refractDamage,
   corrosionShieldDrain,
+  disintegrationShieldDrain,
   dehydrationMultiplier,
   bleedExtraOnPhysical,
   burnTaijutsuMultiplier,
@@ -1593,6 +1595,11 @@ export async function resolveHit(
       if (r.hardened) {
         logs.push(`🌋🔒 A lava endureceu sobre ${target.name}: **preso** (Imobilização).`);
       }
+      if (r.collapsed) {
+        logs.push(
+          `💨💥 A desintegração colapsou a defesa de ${target.name}: **Barreira zerada** e **Defesa Reduzida**.`,
+        );
+      }
       if (r.explosion) {
         hpAfterEffects = await applyDamage(
           sessionId,
@@ -1851,7 +1858,7 @@ export async function applyEffect(
     onExpire?: { effectId: EffectId; stacks?: number; duration?: number };
     empoweredScope?: { kind: "physical" } | { kind: "clan"; clanId: string };
   },
-): Promise<{ explosion?: number; sealed?: boolean; hardened?: boolean }> {
+): Promise<{ explosion?: number; sealed?: boolean; hardened?: boolean; collapsed?: boolean }> {
   const burnOpts = opts?.burn;
   const replaceGroup = opts?.replaceGroup;
   const onExpire = opts?.onExpire;
@@ -1914,6 +1921,34 @@ export async function applyEffect(
       await applyEffect(participantId, "ROOT", 1, M.hardenRootDuration);
     }
     return { hardened: hardened || undefined };
+  }
+
+  // poeira: mesma forma do cristal/magma (acumula ate um gatilho), mas o
+  // payoff nao e' Atordoar/Enraizar — e' DESINTEGRAR a defesa: zera toda a
+  // Barreira restante do alvo de uma vez (consumeShield com valor bem alto)
+  // e aplica Defesa Reduzida. O KKG mais forte tem o gatilho mais rapido
+  // (collapseAtStacks 3, contra 4 do Cristal/Magma).
+  if (effectId === "DISINTEGRATION") {
+    const existing = await prisma.effectInstance.findFirst({
+      where: { participantId, effectId: "DISINTEGRATION" },
+    });
+    const { stacks: newStacks, collapsed } = applyDisintegrationStacks(existing?.stacks ?? 0, stacks);
+    if (existing) {
+      await prisma.effectInstance.update({
+        where: { id: existing.id },
+        data: { stacks: newStacks, duration: Math.max(existing.duration, dur) },
+      });
+    } else {
+      await prisma.effectInstance.create({
+        data: { participantId, effectId, name: "Desintegração", stacks: newStacks, duration: dur },
+      });
+    }
+    if (collapsed) {
+      const D = BALANCE.effects.DISINTEGRATION;
+      await consumeShield(participantId, Number.MAX_SAFE_INTEGER);
+      await applyEffect(participantId, "DEFENSE_DOWN", 1, D.collapseDefenseDownDuration);
+    }
+    return { collapsed: collapsed || undefined };
   }
 
   // queimadura: stacks acumulam e podem explodir
@@ -2064,9 +2099,11 @@ async function processTurnStart(sessionId: string, participantId: string, logs: 
   const remaining: EffectState[] = [];
   const snapshot: EffectState[] = [];
   let corrosaoStacks = 0;
+  let desintegracaoStacks = 0;
   for (const e of p.effects) {
     snapshot.push({ effectId: e.effectId as any, stacks: e.stacks, duration: e.duration });
     if (e.effectId === "CORROSION") corrosaoStacks += e.stacks;
+    if (e.effectId === "DISINTEGRATION") desintegracaoStacks += e.stacks;
     const res = tickEffect({ effectId: e.effectId as any, stacks: e.stacks, duration: e.duration });
     if (res.damage > 0) {
       hp = Math.max(0, hp - res.damage);
@@ -2105,6 +2142,21 @@ async function processTurnStart(sessionId: string, participantId: string, logs: 
     if (drained > 0) {
       await consumeShield(participantId, drained);
       logs.push(`🧪 A Corrosão derreteu ${drained} de Barreira de ${p.name}.`);
+    }
+  }
+
+  // Desintegracao (Poeira): mesmo drenar por turno da Corrosao, so' que mais
+  // forte (shieldCorrodePerStack maior) — o colapso ao encher os acumulos
+  // (Barreira zerada de vez + Defesa Reduzida) acontece em applyEffect().
+  if (desintegracaoStacks > 0) {
+    const wanted = disintegrationShieldDrain([
+      { effectId: "DISINTEGRATION", stacks: desintegracaoStacks, duration: 1 },
+    ]);
+    const pool = shieldPoints(snapshot);
+    const drained = Math.min(wanted, pool);
+    if (drained > 0) {
+      await consumeShield(participantId, drained);
+      logs.push(`💨 A Desintegração derreteu ${drained} de Barreira de ${p.name}.`);
     }
   }
 

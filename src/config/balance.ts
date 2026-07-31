@@ -91,9 +91,9 @@ export const BALANCE = {
   // Sharingan (Uchiha): bônus e manutenção crescem com os tomoe. O terceiro
   // também habilita a cópia temporária, tratada em combat/sharingan.ts.
   sharingan: {
-    1: { upkeepPerTurn: 3, dodgeBonus: 0.05 },
-    2: { upkeepPerTurn: 5, dodgeBonus: 0.1 },
-    3: { upkeepPerTurn: 7, dodgeBonus: 0.15 },
+    1: { upkeepPerTurn: 5, dodgeBonus: 0.03 },
+    2: { upkeepPerTurn: 7, dodgeBonus: 0.05 },
+    3: { upkeepPerTurn: 9, dodgeBonus: 0.1 },
   } as Record<1 | 2 | 3, { upkeepPerTurn: number; dodgeBonus: number }>,
 
   // ---- Maestria: multiplicador de custo por recurso ----
@@ -201,6 +201,23 @@ export const BALANCE = {
     MINADO: {
       defaultDuration: 2,
       explodeDamagePerStack: 20,
+    },
+    // Desintegracao (Poeira/Jinton): o KKG MAIS FORTE do jogo, entao o efeito
+    // combina os DOIS payoffs que os outros KKG batem separado em vez de um
+    // so — corrosao por turno (como Vapor: derrete Barreira ignorando-a,
+    // shieldCorrodePerStack um pouco acima do da Corrosao) E controle por
+    // acumulo (como Cristal/Lava: ao encher, colapsa). O colapso do Poeira
+    // nao Atordoa nem Enraiza (isso ja e' o payoff do Cristal/Lava) — em vez
+    // disso ele DESINTEGRA a defesa de verdade: zera toda Barreira restante
+    // do alvo de uma vez (nao so' o que o tick drenaria) e aplica Defesa
+    // Reduzida. collapseAtStacks mais baixo que sealAtStacks/hardenAtStacks
+    // (4) de proposito — o Poeira deve colapsar mais rapido que os outros.
+    DISINTEGRATION: {
+      defaultDuration: 3,
+      dmgPerTurn: 6,
+      shieldCorrodePerStack: 10,
+      collapseAtStacks: 3,
+      collapseDefenseDownDuration: 3,
     },
   },
 
@@ -323,6 +340,7 @@ export const BALANCE = {
       CRYSTALLIZED: 4, // acumula ate SELAR (Atordoamento + Imobilizacao) — pagamento escondido
       MAGMA: 3, // acumula ate ENDURECER (Imobilizacao) — pagamento escondido
       MINADO: 18, // detona SOZINHO depois (explodeDamagePerStack: 20/acumulo) — calibrado (Punho de Mina Terrestre)
+      DISINTEGRATION: 5, // corroi Barreira por turno E acumula ate COLAPSAR (zera Barreira restante + Defesa Reduzida) — os dois payoffs do Cristal/Vapor num efeito so', o KKG mais forte
       DEHYDRATION: 3,
       HASTE: 3.5, // mediana real (Armadura de Raio, Quatro Patas, Deslocamento...)
       EMPOWERED: 4, // mediana real (Bisturi, Pilula Secreta, Lobo de Duas Cabecas...)

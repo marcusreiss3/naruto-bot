@@ -115,7 +115,7 @@ const UCHIHA: SkillNodeDef[] = [
     [],
     1,
     1,
-    "Ativa o Sharingan de um tomoe. Concede +5% de esquiva e consome 3% de chakra por turno enquanto estiver ativo.",
+    "Ativa o Sharingan de um tomoe. Concede +3% de esquiva e consome 5% de chakra por turno enquanto estiver ativo.",
   ),
   UC.pass(
     "uchiha_controle_ocular",
@@ -140,7 +140,7 @@ const UCHIHA: SkillNodeDef[] = [
     ["uchiha_controle_ocular"],
     10,
     8,
-    "Ativa o Sharingan de dois tomoe. Concede +10% de esquiva e consome 5% de chakra por turno enquanto estiver ativo.",
+    "Ativa o Sharingan de dois tomoe. Concede +5% de esquiva e consome 7% de chakra por turno enquanto estiver ativo.",
   ),
   UC.pass(
     "uchiha_economia_visual",
@@ -165,7 +165,7 @@ const UCHIHA: SkillNodeDef[] = [
     ["uchiha_economia_visual"],
     20,
     15,
-    "Ativa o Sharingan de três tomoe. Concede +15% de esquiva, consome 7% de chakra por turno e aprende permanentemente cada Ninjutsu elemental elegível observado. Não copia técnicas exclusivas de clã, gelo ou madeira; exige afinidade, nível e Ninjutsu mínimos.",
+    "Ativa o Sharingan de três tomoe. Concede +10% de esquiva, consome 9% de chakra por turno e aprende permanentemente cada Ninjutsu elemental elegível observado. Não copia técnicas exclusivas de clã, gelo ou madeira; exige afinidade, nível e Ninjutsu mínimos.",
   ),
   {
     ...UC.jutsu(
@@ -1509,133 +1509,25 @@ const KAGUYA: SkillNodeDef[] = [
 ];
 
 // -------------------------------------------------------------------- YUKI
-// Terceiro clã de Kirigakure com árvore própria. Hyoton (o Gelo) é Suiton na
-// base — o clã paga do pool ninjutsu, igual Hoshigaki/Hozuki. Tronco central
-// (raiz -> Agulhas de Gelo -> Espelho Demoníaco -> Presença Silenciosa ->
-// Chuva de Agulhas -> ápice -> Mil Agulhas Voadoras) com um RAMO de defesa
-// isolado (coluna +1: Domo de Iceberg -> Reflexos Gélidos) que sai das
-// Agulhas de Gelo e termina em beco sem saída — mesmo padrão da ramificação
-// de Kenjutsu do Hoshigaki/Hozuki: não gate nem é gateado pelo tronco. Custo
-// total fecha em 34 PN, IGUAL ao Hoshigaki (mesmo +15% de dano na raiz,
-// nenhum multiplicador extra no ápice) — clã de dano médio a esse preço, não
-// o mais forte do jogo (ver "Custo total da árvore vs dano" na skill
-// jutsu-authoring).
+// Reconstruido do zero — pedido explicito do usuario: o Hyoton (Gelo) virou
+// kekkei genkai de verdade (ver secao GELO em element-trees/index.ts, ids
+// gelo_* migrados dos antigos yuki_*), e o clã Yuki passa a ser puramente de
+// suporte, mesmo padrao do Onoki/Bakurei — sem jutsu proprio. Dual
+// crossElement (Água + Gelo, 1.1x cada) igual o Onoki, com DOIS ramos
+// simetricos de abilityIds (mesmo padrao do Yotsuki/Senju): Água mira
+// Prisão de Água + Dragão de Água; Gelo mira Espelho Demoníaco + Chuva de
+// Agulhas Geladas. Pedido explicito do usuario: +2 passivas de Gelo,
+// -1 de Água pra compensar (Ondas Furiosas saiu, Prisão passa a sair
+// direto de Domínio Suiton).
 const YK = makeClan("yuki", "ninjutsu");
 const YUKI: SkillNodeDef[] = [
-  YK.pass(
-    "yuki_raiz",
-    "Sangue de Gelo",
-    "❄️",
-    "Raiz",
-    0,
-    0,
-    [],
-    1,
-    1,
-    "Passiva sempre ativa: a linhagem gélida do clã Yuki potencializa cada golpe. Seus jutsus de clã causam +15% de dano e custam 10% menos recurso.",
-    true,
-  ),
-  YK.jutsu(
-    "yuki_agulhas",
-    "Agulhas de Gelo",
-    "🧊",
-    "C",
-    "Gelo",
-    0,
-    1,
-    ["yuki_raiz"],
-    4,
-    4,
-    "Congela a umidade do ar em agulhas afiadas e as dispara em linha reta contra o alvo, cortando fundo.",
-  ),
-  YK.jutsu(
-    "yuki_espelho",
-    "Espelho Demoníaco de Gelo Fino",
-    "🪞",
-    "B",
-    "Gelo",
-    0,
-    2,
-    ["yuki_agulhas"],
-    9,
-    8,
-    "Cria um único espelho de gelo fino e ataca de dentro dele com agulhas em vários ângulos ao mesmo tempo. O alvo, distraído tentando achar de onde vem o golpe, baixa a guarda.",
-  ),
-  YK.jutsu(
-    "yuki_domo",
-    "Domo de Iceberg",
-    "🏔️",
-    "B",
-    "Defesa",
-    1,
-    2,
-    ["yuki_agulhas"],
-    9,
-    8,
-    "Ergue rapidamente uma cúpula de gelo ao seu redor: ganha Barreira na hora, e qualquer inimigo que já estiver corpo a corpo fica preso lá dentro com você, sem conseguir sair. A prisão dura enquanto a Barreira aguentar — se ela quebrar antes, quem estava preso se solta na hora.",
-  ),
-  YK.pass(
-    "yuki_presenca",
-    "Presença Silenciosa",
-    "🌫️",
-    "Gelo",
-    0,
-    3,
-    ["yuki_espelho"],
-    13,
-    11,
-    "Passiva sempre ativa: os espelhos e reflexos gélidos do clã confundem qualquer um. Seus jutsus de clã têm +15 pontos percentuais de chance de deixar o alvo com a guarda baixa (Defesa Reduzida).",
-  ),
-  YK.pass(
-    "yuki_reflexos",
-    "Reflexos Gélidos",
-    "💠",
-    "Defesa",
-    1,
-    3,
-    ["yuki_domo"],
-    13,
-    11,
-    "Passiva sempre ativa: anos refletindo o próprio corpo no gelo afiam os reflexos. +8 pontos percentuais de esquiva contra qualquer jutsu de Ninjutsu.",
-  ),
-  YK.jutsu(
-    "yuki_chuva_agulhas",
-    "Chuva de Agulhas Geladas",
-    "🌨️",
-    "A",
-    "Gelo",
-    0,
-    4,
-    ["yuki_presenca"],
-    18,
-    15,
-    "Multiplica os espelhos e enche a área de agulhas de gelo caindo de todos os ângulos, deixando quem for atingido mais lento pelo frio nos ferimentos.",
-  ),
-  YK.pass(
-    "yuki_apice",
-    "Domínio do Espelho de Gelo",
-    "🔷",
-    "Ápice",
-    0,
-    5,
-    ["yuki_chuva_agulhas"],
-    24,
-    19,
-    "Passiva: o domínio total da técnica do espelho chega ao ápice. Seus jutsus de clã têm +10 pontos percentuais a mais de chance de Defesa Reduzida, e a Lentidão que você aplica dura 1 rodada a mais.",
-  ),
-  YK.jutsu(
-    "yuki_agulhas_mil",
-    "Mil Agulhas Voadoras de Água da Morte",
-    "❄️",
-    "S",
-    "Ápice",
-    0,
-    6,
-    ["yuki_apice"],
-    30,
-    24,
-    "Produz mil agulhas de gelo afiadas e longas, mira num único alvo específico e as lança todas de uma vez em altíssima velocidade. Rápido demais pra esquivar.",
-  ),
+  YK.pass("yuki_raiz", "Vitalidade Yuki", "❄️", "Raiz", 0, 0, [], 1, 1, "Passiva sempre ativa: a resistência do clã ao frio de Kiri. +8% de vida máxima e recupera 3 HP no início de cada turno.", true),
+  YK.pass("yuki_agua", "Domínio Suiton", "💧", "Água", -1, 1, ["yuki_raiz"], 10, 8, "Passiva: seus jutsus de Água causam +10% de dano."),
+  YK.pass("yuki_hyoton", "Domínio Hyoton", "🧊", "Gelo", 1, 1, ["yuki_raiz"], 10, 8, "Passiva: seus jutsus de Gelo causam +10% de dano."),
+  YK.pass("yuki_prisao", "Prisão Persistente", "🫧", "Água", -1, 2, ["yuki_agua"], 14, 10, "Passiva: a Prisão de Água custa 10% menos chakra e o Encharcado que ela aplica dura 1 rodada a mais."),
+  YK.pass("yuki_dragao", "Dragão Ampliado", "🐉", "Água", -1, 3, ["yuki_prisao"], 20, 14, "Passiva: o Dragão de Água causa +15% de dano e alcança 1 casa a mais."),
+  YK.pass("yuki_espelho_amplificado", "Espelho Amplificado", "🪞", "Gelo", 1, 2, ["yuki_hyoton"], 14, 10, "Passiva: o Espelho Demoníaco de Gelo Fino causa +15% de dano e tem +10 pontos percentuais de chance de deixar a guarda baixa (Defesa Reduzida)."),
+  YK.pass("yuki_chuva_amplificada", "Nevasca Amplificada", "🌨️", "Gelo", 1, 3, ["yuki_espelho_amplificado"], 20, 14, "Passiva: a Chuva de Agulhas Geladas causa +15% de dano e a Lentidão que ela aplica dura 1 rodada a mais."),
 ];
 
 // ----------------------------------------------------------- CHINOIKE
@@ -2293,6 +2185,174 @@ const SENJU: SkillNodeDef[] = [
     "Passiva: seus Ninjutsus Médicos restauram 15% mais vida e gastam 10% menos chakra.", false, undefined, "iryoNinjutsu"),
 ];
 
+// ---------------------------------------------------------------- SARUTOBI
+// O "Professor": Hiruzen e' canonicamente o unico shinobi a dominar as CINCO
+// naturezas basicas de chakra. O clã nao tem jutsu proprio nenhum — o kit
+// inteiro e' versatilidade elemental pura, entao a arvore vira 1 raiz +
+// 5 ramos paralelos (1 por natureza), sem tronco/apice.
+//
+// A raiz ("Legado do Professor") NASCE COMPRADA (ver autoGrantedNodeIds em
+// clans/index.ts, mesmo padrao do cao ninja do Inuzuka) e carrega o pedido
+// explicito do usuario: comprar QUALQUER no ELEMENT da arvore de Fundamentos
+// concede um segundo elemento basico aleatorio de graça junto (ver
+// buyNode() em services/characters/skill-tree.ts — a raiz e' so' o
+// marcador que a engine verifica por id, nao tem PassiveDef porque nao e'
+// um modificador de combate).
+//
+// Os 5 ramos sao a passiva "que buffa cada elemento" pedida pelo usuario:
+// cada um exige a raiz de clã E a raiz do proprio elemento (mesmo padrao de
+// cross-tree que senju_dominio_suiton usa com agua_raiz) — o clã reforça
+// naturezas que o personagem ja' desbloqueou, nao da' poder de graça sem
+// nenhum investimento na arvore elemental. Cada no' rouba um MECANISMO
+// diferente de outro lugar do jogo (nao "+X% de dano" repetido 5x — pedido
+// explicito do usuario, "algo unico pra cada um, tipo a lâmina de chakra" do
+// Hatake): Katon crava Queimadura extra, Fūton propaga fogo de graça
+// (combo canonico do Hiruzen), Suiton corta custo, Raiton atordoa mais,
+// Doton segura terreno mais tempo. Ver os numeros e o raciocinio de cada um
+// em clan-trees/passives.ts.
+const SR = makeClan("sarutobi", "ninjutsu");
+const SARUTOBI: SkillNodeDef[] = [
+  SR.pass(
+    "sarutobi_raiz",
+    "Legado do Professor",
+    "🐒",
+    "Raiz",
+    0,
+    0,
+    [],
+    1,
+    1,
+    "Passiva sempre ativa (já nasce concedida): domina as cinco naturezas básicas desde cedo. Sempre que você desbloquear um elemento na árvore de Ninjutsu (Fundamentos), um segundo elemento básico aleatório vem de graça junto — sempre que compra um, vem dois.",
+    true,
+  ),
+  SR.pass(
+    "sarutobi_katon",
+    "Fogo do Professor",
+    "🔥",
+    "Naturezas",
+    -1,
+    1,
+    ["sarutobi_raiz", "fogo_raiz"],
+    5,
+    4,
+    "Passiva: todo acerto seu de Fogo crava 1 acúmulo de Queimadura a mais, aproximando a explosão.",
+  ),
+  SR.pass(
+    "sarutobi_futon",
+    "Vento que Aviva as Chamas",
+    "🌪️",
+    "Naturezas",
+    0,
+    1,
+    ["sarutobi_raiz", "vento_raiz"],
+    5,
+    4,
+    "Passiva: quando seu vento passa por chamas, ele espalha o fogo — causa dano extra e passa 1 acúmulo de Queimadura para quem estiver ao lado (Combo Fogo → Vento).",
+  ),
+  SR.pass(
+    "sarutobi_raiton",
+    "Trovão Certeiro",
+    "⚡",
+    "Naturezas",
+    1,
+    1,
+    ["sarutobi_raiz", "raio_raiz"],
+    5,
+    4,
+    "Passiva: seus jutsus de Raio têm +10 pontos percentuais de chance de Atordoar o alvo.",
+  ),
+  SR.pass(
+    "sarutobi_suiton",
+    "Correnteza Perene",
+    "💧",
+    "Naturezas",
+    -1,
+    2,
+    ["sarutobi_raiz", "agua_raiz"],
+    5,
+    4,
+    "Passiva: seus jutsus de Água custam 10% menos chakra.",
+  ),
+  SR.pass(
+    "sarutobi_doton",
+    "Muralha do Professor",
+    "🪨",
+    "Naturezas",
+    1,
+    2,
+    ["sarutobi_raiz", "terra_raiz"],
+    5,
+    4,
+    "Passiva: os muros, cúpulas e pântanos que você cria com Terra duram 2 rodadas a mais.",
+  ),
+];
+
+// ---------------------------------------------------------------- ONOKI
+// Linhagem dos Tsuchikage: pedido explicito do usuario, so' passiva — sem
+// jutsu proprio (mesmo padrao do Sarutobi). Balanceamento COPIADO do ramo de
+// Água do Senju (senju_dominio_suiton/senju_cachoeira/senju_muralha, ver
+// clan-trees/passives.ts): crossElement damageMult 1.1, push/alcance +1,
+// custo -10%, os MESMOS numeros, so' que espalhados em Terra E Poeira em vez
+// de so' um elemento — nao dobra o valor (cada elemento recebe metade do que
+// o Senju concentra num so), mantendo o total por elemento igual. Raiz
+// tambem copiada do Senju (senju_vitalidade: +8% vida, +3 HP/turno) — a
+// unica parte da arvore sem gate de elemento, igual o proprio Senju faz.
+const ON = makeClan("onoki", "ninjutsu");
+const ONOKI: SkillNodeDef[] = [
+  ON.pass("onoki_raiz", "Legado do Tsuchikage", "🗿", "Raiz", 0, 0, [], 1, 1, "Passiva sempre ativa: a resistência lendária dos Tsuchikage. +8% de vida máxima e recupera 3 HP no início de cada turno.", true),
+  ON.pass("onoki_doton", "Domínio Doton", "🪨", "Terra", -1, 1, ["onoki_raiz"], 10, 8, "Passiva: seus jutsus de Terra causam +10% de dano."),
+  ON.pass("onoki_jinton", "Legado do Jinton", "🌫️", "Poeira", 1, 1, ["onoki_raiz"], 10, 8, "Passiva: seus jutsus de Poeira causam +10% de dano."),
+  ON.pass("onoki_peso_montanha", "Peso da Montanha Verdadeira", "⛰️", "Terra", -1, 2, ["onoki_doton"], 14, 11, "Passiva: seus jutsus de Terra empurram o alvo 1 casa a mais e alcançam 1 casa a mais."),
+  ON.pass("onoki_particula_primordial", "Partícula Primordial", "⚪", "Poeira", 1, 2, ["onoki_jinton"], 14, 11, "Passiva: seus jutsus de Poeira custam 10% menos chakra."),
+];
+
+// ---------------------------------------------------------------- YOTSUKI
+// Clã de Killer Bee, em Kumo: pedido explicito do usuario, so' passiva — sem
+// jutsu proprio (mesmo padrao do Onoki/Sarutobi). Balanceamento baseado no
+// ramo de Água do Senju (ver clan-trees/passives.ts): raiz de vitalidade
+// identica (+8% vida, +3 HP/turno), um crossElement RAIO generico (1.1x,
+// "pode ser o elemento tambem" — pedido explicito) e QUATRO passivas
+// abilityIds mirando tecnicas ESPECIFICAS de Raio (mesmo padrao de
+// senju_dragao_mare/muralha/cachoeira/chuva, cada uma so' pra UMA ability),
+// deliberadamente SEM tocar em raiton_kirin (pedido explicito: "não pode ser
+// o Kirin" — o apice da arvore de Raio fica de fora). As duas ultimas sao
+// Kenjutsu — mesmo par que Hatake/Hoshigaki/Hozuki ja usam (crossCategory
+// "KENJUTSU": dano bruto + ignora Barreira/executa ferido), pra valer em
+// QUALQUER espada, nao so' uma exclusiva do clã (que nao existe aqui).
+const YT = makeClan("yotsuki", "ninjutsu");
+const YOTSUKI: SkillNodeDef[] = [
+  YT.pass("yotsuki_raiz", "Vitalidade Yotsuki", "🐝", "Raiz", 0, 0, [], 1, 1, "Passiva sempre ativa: a resistência do clã de Kumo. +8% de vida máxima e recupera 3 HP no início de cada turno.", true),
+  YT.pass("yotsuki_raiton", "Domínio Raiton", "⚡", "Raio", 0, 1, ["yotsuki_raiz"], 10, 8, "Passiva: seus jutsus de Raio causam +10% de dano."),
+  YT.pass("yotsuki_esfera", "Reflexo Elétrico", "🔵", "Raio", -1, 2, ["yotsuki_raiton"], 14, 10, "Passiva: a Esfera de Relâmpago causa +15% de dano e tem +15 pontos percentuais de chance de Atordoar."),
+  YT.pass("yotsuki_kenjutsu_1", "Estilo das Sete Lâminas", "⚔️", "Kenjutsu", 1, 2, ["yotsuki_raiton"], 14, 10, "Passiva sempre ativa: seus golpes de Kenjutsu causam +15% de dano."),
+  YT.pass("yotsuki_pilares", "Prisão Amplificada", "🏛️", "Raio", -1, 3, ["yotsuki_esfera"], 20, 14, "Passiva: a Prisão dos Quatro Pilares causa +15% de dano e alcança 1 casa a mais."),
+  YT.pass("yotsuki_kenjutsu_2", "Corte Fulminante", "🗲", "Kenjutsu", 1, 3, ["yotsuki_kenjutsu_1"], 20, 14, "Passiva sempre ativa: seus golpes de Kenjutsu ignoram a Barreira do alvo e causam +15% de dano em quem estiver abaixo de 30% de vida."),
+  YT.pass("yotsuki_armadura", "Armadura Econômica", "🛡️", "Raio", -1, 4, ["yotsuki_pilares"], 25, 18, "Passiva: a Armadura do Ataque Relâmpago custa 10% menos chakra e a Aceleração que ela concede dura 1 rodada a mais."),
+  YT.pass("yotsuki_assassinato", "Corrente Amplificada", "🧲", "Raio", -1, 5, ["yotsuki_armadura"], 30, 22, "Passiva: o Assassinato Eletromagnético causa +15% de dano e perfura 20% da redução de quem bloqueia ou apara."),
+];
+
+// ---------------------------------------------------------------- BAKUREI
+// Clã de Iwagakure: pedido explicito do usuario, so' passiva — sem jutsu
+// proprio (mesmo padrao do Onoki/Yotsuki/Sarutobi). Hibrido dos dois moldes
+// recentes: dual crossElement como o Onoki (Terra E o kekkei genkai
+// Explosão, cada um com seu proprio damageMult 1.1x) MAIS passivas
+// abilityIds mirando tecnicas ESPECIFICAS de cada elemento (mesmo padrao do
+// Yotsuki, baseado no ramo de Água do Senju) — nenhuma delas toca no apice
+// de cada arvore (terra_golem/explosao_mina ficam de fora, mesma logica de
+// nao empilhar ainda mais poder em cima do no' que ja e' o mais forte da
+// propria arvore).
+const BK = makeClan("bakurei", "ninjutsu");
+const BAKUREI: SkillNodeDef[] = [
+  BK.pass("bakurei_raiz", "Vigor de Iwa", "🪨", "Raiz", 0, 0, [], 1, 1, "Passiva sempre ativa: a resistência física do clã de Iwa. +10% de vida máxima.", true),
+  BK.pass("bakurei_doton", "Domínio Doton", "⛰️", "Terra", -1, 1, ["bakurei_raiz"], 10, 8, "Passiva: seus jutsus de Terra causam +10% de dano."),
+  BK.pass("bakurei_bakuton", "Domínio Bakuton", "💥", "Explosão", 1, 1, ["bakurei_raiz"], 10, 8, "Passiva: seus jutsus de Explosão causam +10% de dano."),
+  BK.pass("bakurei_punho_rochoso", "Punho Reforçado", "👊", "Terra", -1, 2, ["bakurei_doton"], 14, 10, "Passiva: o Punho Rochoso causa +15% de dano e concede mais 8 pontos de Barreira."),
+  BK.pass("bakurei_impacto", "Onda de Choque Ampliada", "💢", "Explosão", 1, 2, ["bakurei_bakuton"], 14, 10, "Passiva: a Explosão de Impacto causa +15% de dano e empurra o alvo 1 casa a mais."),
+  BK.pass("bakurei_dragao_terra", "Projétil Ampliado", "🐉", "Terra", -1, 3, ["bakurei_punho_rochoso"], 20, 14, "Passiva: o Projétil do Dragão de Terra causa +15% de dano e a Lentidão que ele aplica dura 1 rodada a mais."),
+  BK.pass("bakurei_cortina", "Cortina Persistente", "💨", "Explosão", 1, 3, ["bakurei_impacto"], 20, 14, "Passiva: a Cortina de Fumaça custa 10% menos chakra e dura 1 rodada a mais."),
+  BK.pass("bakurei_cupula", "Cúpula Sufocante", "🛖", "Terra", -1, 4, ["bakurei_dragao_terra"], 25, 18, "Passiva: a Prisão Cúpula de Terra custa 10% menos chakra e o Dreno de Chakra que ela aplica dura 1 rodada a mais."),
+];
+
 export const CLAN_TREES: Record<string, SkillNodeDef[]> = {
   uchiha: UCHIHA,
   nara: NARA,
@@ -2312,4 +2372,8 @@ export const CLAN_TREES: Record<string, SkillNodeDef[]> = {
   raikage: RAIKAGE,
   kamizuru: KAMIZURU,
   senju: SENJU,
+  sarutobi: SARUTOBI,
+  onoki: ONOKI,
+  yotsuki: YOTSUKI,
+  bakurei: BAKUREI,
 };

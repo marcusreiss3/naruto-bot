@@ -336,6 +336,68 @@ const EXPLOSAO: SkillNodeDef[] = [
   EX.jutsu("explosao_mina", "Técnica do Punho de Mina Terrestre", "⛏️", "S", "Ápice", 0, 8, ["explosao_apice"], 38, 28, "Usa o Estilo Explosão para plantar uma carga no ponto de contato físico. O golpe inicial já dói, mas duas rodadas depois uma explosão enorme detona no local."),
 ];
 
+// -------------------------------------------------------------- POEIRA (KG)
+// Jinton: o kekkei genkai MAIS FORTE do jogo (pedido explicito do usuario).
+// Efeito exclusivo: Desintegracao (DISINTEGRATION, ver config/enums.ts e
+// services/combat/effects.ts) — combina os dois payoffs que os outros KKG
+// batem separado (corroi Barreira por turno como Vapor/Corrosao E acumula
+// ate um gatilho como Cristal/Lava), mas o gatilho nao Atordoa/Enraiza: ele
+// COLAPSA a defesa por completo (zera toda a Barreira restante de uma vez +
+// Defesa Reduzida). Teto de dano 1.40 * 1.55 = 2.17x (poeira_raiz + apice em
+// element-trees/passives.ts), ACIMA do 2.025 padrao dos outros KKG.
+//
+// As 4 tecnicas pedidas viram os 4 nos de JUTSU. Pedido explicito: a arvore
+// NAO abre com a passiva de dano (diferente de todo outro elemento/cla) — o
+// primeiro no' e' o proprio jutsu rank C (Desprendimento base), e a passiva
+// generica de dano ("Nucleo do Mundo Primitivo") fica logo depois dele, no
+// meio do tronco. Dali em diante e' o mesmo padrao Aburame/Hyuuga de
+// ramo-e-convergencia ate o apice:
+//   Desprendimento do Mundo Primitivo (base, RADIUS): a esfera se expande,
+//     prende (ROOT) e explode — dano em area.
+//   Pilar (LINE, undodgeable): a mesma tecnica esticada da mao ate o alvo —
+//     feixe direto, dificil de esquivar por ser instantaneo.
+//   Cônica (CONE, alcance maior): a mesma tecnica em area bem mais ampla.
+//   Projéteis (SINGLE_TARGET, unguardable): barragem de projeteis pequenos —
+//     Bloqueio/Aparo nao adianta (a propria desintegracao "passa por cima"),
+//     so' Esquiva continua valendo (dificil por causa da velocidade).
+// Ver as Abilities reais em data/jutsus/elemental.ts (familia "jinton_*") e
+// a ponte de id em NODE_ABILITY, mais abaixo.
+const PO = make("POEIRA");
+const POEIRA: SkillNodeDef[] = [
+  PO.jutsu("poeira_desprendimento", "Desprendimento do Mundo Primitivo", "⚪", "C", "Colapso", 0, 0, [], 1, 4, "A estrutura se expande rapidamente em tamanho ao ser impulsionada contra o alvo, prendendo-o — a esfera então explode com uma força tremenda, desintegrando o que estiver por perto."),
+  PO.pass("poeira_raiz", "Núcleo do Mundo Primitivo", "🌫️", "Colapso", 0, 1, ["poeira_desprendimento"], 5, 7, "Passiva sempre ativa: todos os seus jutsus de Poeira causam +40% de dano.", false),
+  PO.jutsu("poeira_pilar", "Desprendimento do Mundo Primitivo: Pilar", "➡️", "B", "Colapso", 0, 2, ["poeira_raiz"], 11, 11, "Variação da técnica padrão: a esfera se estende diretamente da mão do usuário até o oponente, um feixe contínuo rápido demais para desviar."),
+  PO.pass("poeira_estilhaco", "Fragmentação Progressiva", "💠", "Colapso", -1, 3, ["poeira_pilar"], 16, 14, "Passiva: cada acerto seu de Poeira crava 1 acúmulo de Desintegração a mais, acelerando o colapso da defesa do alvo."),
+  PO.pass("poeira_erosao", "Erosão Absoluta", "🧪", "Colapso", 1, 3, ["poeira_pilar"], 16, 14, "Passiva: seus jutsus de Poeira perfuram 25% da redução de quem bloqueia ou apara."),
+  PO.jutsu("poeira_conica", "Desprendimento do Mundo Primitivo: Cônica", "📐", "A", "Colapso", -1, 4, ["poeira_estilhaco"], 24, 20, "Variação em formato de cone da técnica padrão, cobrindo uma área muito mais ampla."),
+  PO.jutsu("poeira_projeteis", "Desprendimento do Mundo Primitivo: Projéteis", "✴️", "A", "Colapso", 1, 4, ["poeira_erosao"], 26, 21, "Lança pequenos projéteis da técnica consecutivamente contra o alvo, desintegrando proporcionalmente o que tocam. Defender é impossível, e a velocidade extrema torna a esquiva muito difícil."),
+  PO.pass("poeira_apice", "Vazio Absoluto", "🕳️", "Ápice", 0, 5, ["poeira_conica", "poeira_projeteis"], 34, 28, "Passiva: seus jutsus de Poeira causam +55% de dano — nada resiste ao Poeira."),
+];
+
+// ---------------------------------------------------------------- GELO (KG)
+// Hyoton: ex-arvore de clã do Yuki, migrada pra kekkei genkai de verdade
+// (pedido explicito do usuario) — mesmos ids de sempre com o prefixo trocado
+// de yuki_* pra gelo_* (evita colisão com os novos nós do clã Yuki
+// reconstruido, ver clan-trees/index.ts), mesma forma de árvore (tronco +
+// ramo de defesa isolado Domo/Reflexos, igual Hoshigaki/Hozuki). Balanceado
+// no MESMO nível de Vapor/Calor/Lava: raiz 1.35x + ápice 1.50x = 2.025x — a
+// raiz e o ápice agora são dano PURO (formato padrão dos outros KKG); o
+// desconto de custo que estava na raiz foi pra Reflexos Gélidos, e o bônus
+// de Defesa Reduzida/Lentidão que estava no ápice ficou só na Presença
+// Silenciosa.
+const GL = make("GELO");
+const GELO: SkillNodeDef[] = [
+  GL.pass("gelo_raiz", "Sangue de Gelo", "❄️", "Raiz", 0, 0, [], 1, 1, "Passiva sempre ativa: todos os seus jutsus de Gelo causam +35% de dano.", true),
+  GL.jutsu("gelo_agulhas", "Agulhas de Gelo", "🧊", "C", "Gelo", 0, 1, ["gelo_raiz"], 4, 4, "Congela a umidade do ar em agulhas afiadas e as dispara em linha reta contra o alvo, cortando fundo."),
+  GL.jutsu("gelo_espelho", "Espelho Demoníaco de Gelo Fino", "🪞", "B", "Gelo", 0, 2, ["gelo_agulhas"], 9, 8, "Cria um único espelho de gelo fino e ataca de dentro dele com agulhas em vários ângulos ao mesmo tempo. O alvo, distraído tentando achar de onde vem o golpe, baixa a guarda."),
+  GL.jutsu("gelo_domo", "Domo de Iceberg", "🏔️", "B", "Defesa", 1, 2, ["gelo_agulhas"], 9, 8, "Ergue rapidamente uma cúpula de gelo ao seu redor: ganha Barreira na hora, e qualquer inimigo que já estiver corpo a corpo fica preso lá dentro com você, sem conseguir sair. A prisão dura enquanto a Barreira aguentar — se ela quebrar antes, quem estava preso se solta na hora."),
+  GL.pass("gelo_presenca", "Presença Silenciosa", "🌫️", "Gelo", 0, 3, ["gelo_espelho"], 13, 11, "Passiva sempre ativa: os espelhos e reflexos gélidos confundem qualquer um. Seus jutsus de Gelo têm +15 pontos percentuais de chance de deixar o alvo com a guarda baixa (Defesa Reduzida), e a Lentidão que você aplica dura 1 rodada a mais."),
+  GL.pass("gelo_reflexos", "Reflexos Gélidos", "💠", "Defesa", 1, 3, ["gelo_domo"], 13, 11, "Passiva sempre ativa: anos refletindo o próprio corpo no gelo afiam os reflexos. +8 pontos percentuais de esquiva contra qualquer jutsu de Ninjutsu, e seus jutsus de Gelo custam 10% menos chakra."),
+  GL.jutsu("gelo_chuva_agulhas", "Chuva de Agulhas Geladas", "🌨️", "A", "Gelo", 0, 4, ["gelo_presenca"], 18, 15, "Multiplica os espelhos e enche a área de agulhas de gelo caindo de todos os ângulos, deixando quem for atingido mais lento pelo frio nos ferimentos."),
+  GL.pass("gelo_apice", "Domínio do Espelho de Gelo", "🔷", "Ápice", 0, 5, ["gelo_chuva_agulhas"], 24, 19, "Passiva: o domínio total da técnica do espelho chega ao ápice. Seus jutsus de Gelo causam +50% de dano."),
+  GL.jutsu("gelo_agulhas_mil", "Mil Agulhas Voadoras de Água da Morte", "❄️", "S", "Ápice", 0, 6, ["gelo_apice"], 30, 24, "Produz mil agulhas de gelo afiadas e longas, mira num único alvo específico e as lança todas de uma vez em altíssima velocidade. Rápido demais pra esquivar."),
+];
+
 export const ELEMENT_TREES: Record<Element, SkillNodeDef[]> = {
   FOGO,
   TERRA,
@@ -347,6 +409,8 @@ export const ELEMENT_TREES: Record<Element, SkillNodeDef[]> = {
   CALOR,
   LAVA,
   EXPLOSAO,
+  POEIRA,
+  GELO,
 };
 
 // FUNDAMENTOS e as arvores de CLA (CLAN_TREES, ex: Nara) nao entram em
@@ -467,15 +531,15 @@ const NODE_ICONS: Record<string, string> = {
   hyuuga_apice: "hyuuga/rede-de-tenketsu.png",
   hyuuga_leoes_gemeos: "hyuuga/punhos-dos-leoes-gemeos.png",
 
-  yuki_raiz: "yuki/sangue-de-gelo.png",
-  yuki_agulhas: "yuki/agulhas-de-gelo.png",
-  yuki_espelho: "yuki/espelho-demoniaco-de-gelo-fino.png",
-  yuki_domo: "yuki/domo-de-iceberg.png",
-  yuki_presenca: "yuki/presenca-silenciosa.png",
-  yuki_reflexos: "yuki/reflexos-gelidos.png",
-  yuki_chuva_agulhas: "yuki/chuva-de-agulhas-geladas.png",
-  yuki_apice: "yuki/dominio-do-espelho-de-gelo.png",
-  yuki_agulhas_mil: "yuki/mil-agulhas-voadoras.png",
+  gelo_raiz: "yuki/sangue-de-gelo.png",
+  gelo_agulhas: "yuki/agulhas-de-gelo.png",
+  gelo_espelho: "yuki/espelho-demoniaco-de-gelo-fino.png",
+  gelo_domo: "yuki/domo-de-iceberg.png",
+  gelo_presenca: "yuki/presenca-silenciosa.png",
+  gelo_reflexos: "yuki/reflexos-gelidos.png",
+  gelo_chuva_agulhas: "yuki/chuva-de-agulhas-geladas.png",
+  gelo_apice: "yuki/dominio-do-espelho-de-gelo.png",
+  gelo_agulhas_mil: "yuki/mil-agulhas-voadoras.png",
 
   aburame_raiz: "aburame/colonia-ancestral.png",
   aburame_clone_inseto: "aburame/tecnica-dos-clones-de-inseto.png",
@@ -757,6 +821,10 @@ const NODE_ABILITY: Record<string, string> = {
   lava_huaguo: "lava_monte_huaguo",
   explosao_cortina: "explosao_cortina_fumaca",
   explosao_mina: "explosao_punho_mina",
+  poeira_desprendimento: "jinton_desprendimento_mundo_primitivo",
+  poeira_pilar: "jinton_pilar",
+  poeira_conica: "jinton_conica",
+  poeira_projeteis: "jinton_projeteis",
   // funda_* (Fundamentos) ja' declara grantsAbilityId direto no proprio no
   // (nao passa pela fabrica make().jutsu()), entao nao precisa de ponte aqui.
 };

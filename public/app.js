@@ -19,6 +19,8 @@ const ELEMENTS = [
   { id: "CALOR", name: "Calor", icon: "", img: "/assets/icons/footer/calor.png", color: "#d9662b" },
   { id: "LAVA", name: "Lava", icon: "", img: "/assets/icons/footer/lava.png", color: "#b23a1f" },
   { id: "EXPLOSAO", name: "Explosão", icon: "", img: "/assets/icons/footer/explosao.png", color: "#c9a227" },
+  { id: "POEIRA", name: "Poeira", icon: "🌫️", img: "/assets/icons/footer/poeira.png", color: "#8a8577" },
+  { id: "GELO", name: "Gelo", icon: "❄️", img: "/assets/icons/footer/gelo.png", color: "#a8d8e8" },
   // Árvores de clã (gate por clanId em vez de elemento — ver clanGate abaixo).
   // Ordem por vila, mesmo agrupamento de src/data/clans/index.ts.
   // ---- Konoha ----
@@ -30,6 +32,7 @@ const ELEMENTS = [
   { id: "ABURAME", name: "Aburame", icon: "🪲", color: "#6f7a35", clanGate: "aburame" },
   { id: "INUZUKA", name: "Inuzuka", icon: "🐕", color: "#a8562e", clanGate: "inuzuka" },
   { id: "UZUMAKI", name: "Uzumaki", icon: "🌀", color: "#c8482f", clanGate: "uzumaki" },
+  { id: "SARUTOBI", name: "Sarutobi", icon: "🐒", color: "#6b8e4e", clanGate: "sarutobi" },
   { id: "HATAKE", name: "Hatake", icon: "⚔️", color: "#a8a8b0", clanGate: "hatake" },
   { id: "YAMANAKA", name: "Yamanaka", icon: "🧠", color: "#c9a6d9", clanGate: "yamanaka" },
   // ---- Suna ----
@@ -42,8 +45,11 @@ const ELEMENTS = [
   // ---- Kumo ----
   { id: "CHINOIKE", name: "Chinoike", icon: "🩸", color: "#8c2f2f", clanGate: "chinoike" },
   { id: "RAIKAGE", name: "Raikage", icon: "⚡", color: "#f0c419", clanGate: "raikage" },
+  { id: "YOTSUKI", name: "Yotsuki", icon: "🐝", color: "#d9c419", clanGate: "yotsuki" },
   // ---- Iwa ----
   { id: "KAMIZURU", name: "Kamizuru", icon: "🐝", color: "#d9a441", clanGate: "kamizuru" },
+  { id: "ONOKI", name: "Onoki", icon: "🗿", color: "#8a7a5a", clanGate: "onoki" },
+  { id: "BAKUREI", name: "Bakurei", icon: "💥", color: "#c9a227", clanGate: "bakurei" },
 ];
 
 // Compatibilidade para árvores que acabaram de ganhar arte enquanto o servidor
@@ -76,15 +82,15 @@ const NODE_IMAGE_FALLBACKS = {
   explosao_apice: "/assets/icons/explosao/estilo-explosao-pleno.png",
   explosao_mina: "/assets/icons/explosao/punho-de-mina-terrestre.png",
   agua_muralha: "/assets/icons/agua/muralha-de-agua.png",
-  yuki_raiz: "/assets/icons/yuki/sangue-de-gelo.png",
-  yuki_agulhas: "/assets/icons/yuki/agulhas-de-gelo.png",
-  yuki_espelho: "/assets/icons/yuki/espelho-demoniaco-de-gelo-fino.png",
-  yuki_domo: "/assets/icons/yuki/domo-de-iceberg.png",
-  yuki_presenca: "/assets/icons/yuki/presenca-silenciosa.png",
-  yuki_reflexos: "/assets/icons/yuki/reflexos-gelidos.png",
-  yuki_chuva_agulhas: "/assets/icons/yuki/chuva-de-agulhas-geladas.png",
-  yuki_apice: "/assets/icons/yuki/dominio-do-espelho-de-gelo.png",
-  yuki_agulhas_mil: "/assets/icons/yuki/mil-agulhas-voadoras.png",
+  gelo_raiz: "/assets/icons/yuki/sangue-de-gelo.png",
+  gelo_agulhas: "/assets/icons/yuki/agulhas-de-gelo.png",
+  gelo_espelho: "/assets/icons/yuki/espelho-demoniaco-de-gelo-fino.png",
+  gelo_domo: "/assets/icons/yuki/domo-de-iceberg.png",
+  gelo_presenca: "/assets/icons/yuki/presenca-silenciosa.png",
+  gelo_reflexos: "/assets/icons/yuki/reflexos-gelidos.png",
+  gelo_chuva_agulhas: "/assets/icons/yuki/chuva-de-agulhas-geladas.png",
+  gelo_apice: "/assets/icons/yuki/dominio-do-espelho-de-gelo.png",
+  gelo_agulhas_mil: "/assets/icons/yuki/mil-agulhas-voadoras.png",
 };
 
 const ICON_ASSET_VERSION = "20260730-c";
@@ -110,6 +116,7 @@ const CLAN_FOOTER_ICONS = {
   aburame: "/assets/icons/footer/Aburame_Symbol.png",
   inuzuka: "/assets/icons/footer/Inuzuka_Symbol.png",
   uzumaki: "/assets/icons/footer/Uzumaki_Symbol.png",
+  sarutobi: "/assets/icons/footer/Sarutobi_Symbol.png",
   hatake: "/assets/icons/footer/Hatake_Symbol.png",
   yamanaka: "/assets/icons/footer/Yamanaka_Symbol.png",
   // ---- Suna ----
@@ -122,8 +129,11 @@ const CLAN_FOOTER_ICONS = {
   // ---- Kumo ----
   chinoike: "/assets/icons/footer/Chinoike_Symbol.png",
   raikage: "/assets/icons/footer/Raikage_Symbol.png",
+  yotsuki: "/assets/icons/footer/yotsuki.png",
   // ---- Iwa ----
   kamizuru: "/assets/icons/footer/Kamiuru_Symbol.png",
+  onoki: "/assets/icons/footer/onoki.png",
+  bakurei: "/assets/icons/footer/bakurei.png",
 };
 // Rótulo de atributo pro chip de requisito extra (reqAttribute) no modal —
 // mesmos rótulos de ATTRIBUTE_LABELS em src/config/enums.ts.
@@ -190,13 +200,16 @@ const GLOSSARY = [
   // ---- kekkei genkai: Vapor ----
   { re: "Corrosão", tip: "Corrosão: causa 5 de dano por rodada e remove 8 pontos de Barreira por acúmulo a cada rodada." },
   // ---- kekkei genkai: Calor ----
-  { re: "Desidrata(?:d[oa])?(?:s)?|Desidratação", tip: "Desidratação: reduz em 15% todo o dano causado pelo alvo por acúmulo." },
+  { re: "Desidratação|Desidrata(?:d[oa])?(?:s)?", tip: "Desidratação: reduz em 15% todo o dano causado pelo alvo por acúmulo." },
   // ---- kekkei genkai: Lava ----
   { re: "Magma", tip: "Magma: causa 4 de dano por rodada. Ao juntar 4 acúmulos, eles são removidos e o alvo fica Imobilizado por 2 rodadas, sem Atordoamento." },
   { re: "endureceu|endurecer", tip: "Endureceu: o Magma acumulado fechou. O alvo fica preso no lugar (Imobilização), mas continua podendo agir." },
   // ---- kekkei genkai: Explosão ----
   { re: "Minado", tip: "Minado: não causa dano durante a contagem. Quando a duração termina, causa 20 de dano por acúmulo." },
   { re: "defletiu|redireciona(?:r)?", tip: "Explosão Defensiva: contra um projétil (arma arremessada), apara e devolve o golpe inteiro no atacante em vez de só reduzir o dano." },
+  // ---- kekkei genkai: Poeira ----
+  { re: "Desintegração", tip: "Desintegração: causa 6 de dano por rodada e remove 10 pontos de Barreira por acúmulo a cada rodada. Ao juntar 3 acúmulos, a Barreira restante é zerada de uma vez e o alvo fica com Defesa Reduzida." },
+  { re: "colapsou|colapso", tip: "Colapso: a Desintegração acumulada zerou toda a Barreira do alvo de uma vez e aplicou Defesa Reduzida." },
 ];
 const GLOSSARY_RE = new RegExp("(" + GLOSSARY.map((g) => g.re).join("|") + ")", "gi");
 
@@ -517,11 +530,15 @@ function buildElemBar() {
   for (const e of ELEMENTS) {
     // So aparece o que o personagem tem. FUNDAMENTOS (Ninjutsu) e' sempre
     // desbloqueado; elemento/kekkei genkai que ele nao possui nem aparece;
-    // arvore de cla (clanGate) so aparece pra quem e' daquele cla.
+    // arvore de cla (clanGate) so aparece pra quem e' daquele cla — OU pra
+    // quem ja possui algum no' dela (ex: /admin desbloquear-tudo concede
+    // todo no' de todo cla sem trocar o clanId do personagem).
     const unlocked =
       e.id === "FUNDAMENTOS" ||
       e.id === "BUKIJUTSU" || e.id === "IRYO_NINJUTSU" || e.id === "GENJUTSU" ||
-      (e.clanGate ? state.char.clanId === e.clanGate : state.char.elements.includes(e.id));
+      (e.clanGate
+        ? state.char.clanId === e.clanGate || (state.trees[e.id] || []).some((n) => n.status === "OWNED")
+        : state.char.elements.includes(e.id));
     if (!unlocked && !showAllTrees) continue;
     const div = document.createElement("div");
     div.className = "elem" + (!unlocked ? " locked" : "");
@@ -769,7 +786,19 @@ async function doBuy() {
       return;
     }
     const elName = out.grantedElement && ELEMENTS.find((e) => e.id === out.grantedElement)?.name;
-    toast(out.grantedMangekyoVariant ? `${out.grantedMangekyoVariant} despertou! 👁️` : (elName ? `Elemento sorteado: ${elName}! 🎴` : `Desbloqueado: ${modalNode.name}!`));
+    const elName2 = out.grantedElement2 && ELEMENTS.find((e) => e.id === out.grantedElement2)?.name;
+    const kkgName = out.grantedKekkeiGenkai && ELEMENTS.find((e) => e.id === out.grantedKekkeiGenkai)?.name;
+    toast(
+      kkgName
+        ? `Kekkei Genkai fundido: ${kkgName}! 🌟`
+        : out.grantedMangekyoVariant
+          ? `${out.grantedMangekyoVariant} despertou! 👁️`
+          : elName2
+            ? `Elementos sorteados: ${elName} e ${elName2}! 🎴`
+            : elName
+              ? `Elemento sorteado: ${elName}! 🎴`
+              : `Desbloqueado: ${modalNode.name}!`,
+    );
     closeModal();
     // recarrega o estado autoritativo e re-renderiza
     state = await fetchState();

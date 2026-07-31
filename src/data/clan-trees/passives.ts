@@ -105,6 +105,18 @@ export interface ClanPassiveDef {
   // Mente, Yamanaka). Ver establishControl(), chamado a partir de resolveHit
   // em combat-engine.ts.
   mindTransferMaxBonus?: number;
+  // acumulos extras de Queimadura por acerto — mesmo campo que Brasas
+  // Persistentes (Fogo) ja usa em element-trees/passives.ts; aqui e' a
+  // versao de clã (Sarutobi).
+  extraBurnStacks?: number;
+  // vento cruzando chamas propaga fogo — mesmo campo que Vento em Brasa
+  // (Vento) ja usa em element-trees/passives.ts; aqui e' a versao de clã
+  // (Sarutobi), concedida sem precisar comprar o no' elemental equivalente.
+  spreadsBurn?: boolean;
+  // rodadas extras no terreno criado pelos jutsus de clã (muro, pantano) —
+  // mesmo campo que Terreno Firme (Terra) ja usa em element-trees/passives.ts;
+  // aqui e' a versao de clã (Sarutobi).
+  terrainDurationBonus?: number;
 }
 
 export const CLAN_PASSIVES: ClanPassiveDef[] = [
@@ -411,35 +423,6 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
     rangeShapes: ["SINGLE_TARGET", "LINE"],
   },
 
-  // ---------------------------------------------------------------- YUKI
-  // Terceiro clã de Kirigakure. Mesmo nível de dano do Hoshigaki (raiz +15%,
-  // sem multiplicador extra no ápice) — 34 PN de custo total, dano médio,
-  // não o mais forte do jogo. O ápice e' puramente controle (mais chance de
-  // Defesa Reduzida + Lentidão mais longa), coerente com a identidade de
-  // "distração + precisão" do clã, em vez de mais um multiplicador de dano.
-  {
-    nodeId: "yuki_raiz",
-    clanId: "yuki",
-    damageMult: 1.15,
-    costMult: 0.9,
-  },
-  {
-    nodeId: "yuki_presenca",
-    clanId: "yuki",
-    effectChanceBonus: { DEFENSE_DOWN: 0.15 },
-  },
-  {
-    nodeId: "yuki_reflexos",
-    clanId: "yuki",
-    ninjutsuDodgeBonus: 0.08,
-  },
-  {
-    nodeId: "yuki_apice",
-    clanId: "yuki",
-    effectChanceBonus: { DEFENSE_DOWN: 0.1 },
-    effectDurationBonus: { effectId: "SLOW", bonus: 1 },
-  },
-
   // ------------------------------------------------------------ CHINOIKE
   // Primeiro clã de Kumogakure. Identidade dupla: Ketsuryuugan (doujutsu de
   // sangue, especialista em Genjutsu que causa dano real) e Suiton explosivo
@@ -595,6 +578,126 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
   { nodeId: "senju_imunidade", clanId: "senju", receivedEffectDurationReduction: { POISON: 1, STUN: 1 } },
   { nodeId: "senju_regenerativo", clanId: "senju", crossCategory: "IRYO_NINJUTSU", healMult: 1.15 },
   { nodeId: "senju_especialista", clanId: "senju", crossCategory: "IRYO_NINJUTSU", healMult: 1.15, costMult: 0.9 },
+
+  // -------------------------------------------------------------- SARUTOBI
+  // "O Professor": sem jutsu proprio, entao os 5 nos crossElement (1 por
+  // natureza basica) tinham TODOS o mesmo truque (+20% de dano) — nao tem
+  // identidade nenhuma, so' 5 copias do mesmo numero pintadas de cores
+  // diferentes. Reescrito pra cada natureza roubar um mecanismo DIFERENTE
+  // do que ja existe no jogo (o mesmo espirito da Lâmina da Luz Branca do
+  // Hatake: nao e' "+X% de dano", e' um comportamento novo emprestado de
+  // outro lugar) — coerente com Hiruzen ser o unico shinobi a dominar as
+  // cinco naturezas: cada uma vira um truque de mestre, nao um numero.
+  // sarutobi_raiz NAO entra aqui: e' um marcador de mecanica (dobra o
+  // sorteio de elemento em buyNode), nao um modificador de combate.
+  {
+    // Fogo do Professor: mesmo truque de Brasas Persistentes (fogo_brasas),
+    // so' que de graça — cada acerto de Katon crava 1 acumulo de Queimadura
+    // a mais, empurrando o alvo mais rapido pra explosao (burnExplodeAtStacks).
+    nodeId: "sarutobi_katon",
+    clanId: "sarutobi",
+    crossElement: "FOGO",
+    extraBurnStacks: 1,
+  },
+  {
+    // Vento que Aviva as Chamas: a combinacao canonica de Hiruzen (a Bola de
+    // Fogo do Dragao usa Fuuton pra alimentar o Katon) — mesmo campo que
+    // Vento em Brasa (vento_brasa) usa na propria arvore de Vento, so' que
+    // concedido aqui sem precisar comprar aquele no'.
+    nodeId: "sarutobi_futon",
+    clanId: "sarutobi",
+    crossElement: "VENTO",
+    spreadsBurn: true,
+  },
+  {
+    // Trovao Certeiro: controle puro em vez de dano — chance extra de
+    // Atordoar, menor que a Sobrecarga (raio_sobrecarga, +20pp) do proprio
+    // Raio de proposito (nerf pedido pelo usuario: 25pp -> 10pp).
+    nodeId: "sarutobi_raiton",
+    clanId: "sarutobi",
+    crossElement: "RAIO",
+    effectChanceBonus: { STUN: 0.1 },
+  },
+  {
+    // Correnteza Perene: economia de chakra, nao dano — nerf pedido pelo
+    // usuario (20% -> 10%), fica um pouco abaixo do desconto da propria raiz
+    // de Agua (agua_raiz, -15%).
+    nodeId: "sarutobi_suiton",
+    clanId: "sarutobi",
+    crossElement: "AGUA",
+    costMult: 0.9,
+  },
+  {
+    // Muralha do Professor: as paredes, cupulas e pantanos de Terra do
+    // personagem duram mais tempo em campo — dobro do bonus de Terreno Firme
+    // (terra_firme, +1 rodada) da propria arvore de Terra.
+    nodeId: "sarutobi_doton",
+    clanId: "sarutobi",
+    crossElement: "TERRA",
+    terrainDurationBonus: 2,
+  },
+
+  // ----------------------------------------------------------------- ONOKI
+  // Numeros COPIADOS do ramo de Água do Senju (senju_dominio_suiton/
+  // senju_cachoeira/senju_muralha, ver acima) — mesmo crossElement
+  // damageMult 1.1, mesmo push/alcance +1, mesmo costMult 0.9 — so' que
+  // divididos entre Terra E Poeira em vez de concentrados num elemento so'.
+  { nodeId: "onoki_raiz", clanId: "onoki", maxHpBonus: 0.08, hpRegenPerTurn: 3 },
+  { nodeId: "onoki_doton", clanId: "onoki", crossElement: "TERRA", damageMult: 1.1 },
+  { nodeId: "onoki_jinton", clanId: "onoki", crossElement: "POEIRA", damageMult: 1.1 },
+  { nodeId: "onoki_peso_montanha", clanId: "onoki", crossElement: "TERRA", pushBonus: 1, rangeBonus: 1 },
+  { nodeId: "onoki_particula_primordial", clanId: "onoki", crossElement: "POEIRA", costMult: 0.9 },
+
+  // --------------------------------------------------------------- YOTSUKI
+  // Numeros baseados no ramo de Água do Senju (crossElement 1.1x na raiz do
+  // ramo, abilityIds especificos 1.15x + utilidade dali em diante). Diferente
+  // do Senju, aqui as 4 passivas de Raio miram tecnicas ESPECIFICAS via
+  // abilityIds (pedido explicito: "não só o elemento... só em si"), NUNCA
+  // raiton_kirin (pedido explicito de exclusao — o apice da arvore de Raio
+  // fica de fora de proposito). As duas de Kenjutsu reusam o MESMO par que
+  // Hatake/Hoshigaki/Hozuki ja usam (crossCategory "KENJUTSU"): dano bruto +
+  // ignora Barreira/executa ferido — vale em qualquer espada, ja que o clã
+  // nao tem uma exclusiva.
+  { nodeId: "yotsuki_raiz", clanId: "yotsuki", maxHpBonus: 0.08, hpRegenPerTurn: 3 },
+  { nodeId: "yotsuki_raiton", clanId: "yotsuki", crossElement: "RAIO", damageMult: 1.1 },
+  { nodeId: "yotsuki_esfera", clanId: "yotsuki", abilityIds: ["raiton_esfera_relampago"], damageMult: 1.15, effectChanceBonus: { STUN: 0.15 } },
+  { nodeId: "yotsuki_kenjutsu_1", clanId: "yotsuki", crossCategory: "KENJUTSU", damageMult: 1.15 },
+  { nodeId: "yotsuki_pilares", clanId: "yotsuki", abilityIds: ["raiton_prisao_quatro_pilares"], damageMult: 1.15, rangeBonus: 1 },
+  { nodeId: "yotsuki_kenjutsu_2", clanId: "yotsuki", crossCategory: "KENJUTSU", ignoresShield: true, executeBonus: { hpThreshold: 0.3, mult: 1.15 } },
+  { nodeId: "yotsuki_armadura", clanId: "yotsuki", abilityIds: ["raiton_armadura_ataque_relampago"], costMult: 0.9, effectDurationBonus: { effectId: "HASTE", bonus: 1 } },
+  { nodeId: "yotsuki_assassinato", clanId: "yotsuki", abilityIds: ["raiton_assassinato_eletromagnetico"], damageMult: 1.15, armorPierce: 0.2 },
+
+  // ---------------------------------------------------------------- BAKUREI
+  // Hibrido Onoki (dual crossElement, 1.1x cada) + Yotsuki (abilityIds
+  // especificos, 1.15x + utilidade). Terra e Explosão, nunca o apice de
+  // nenhuma das duas arvores (terra_golem/explosao_mina fora de proposito).
+  // Raiz e' so' vida maxima (nao vida+regen como Senju/Onoki/Yotsuki) — um
+  // pouco mais forte no unico numero que tem (10% contra o 8% padrao) pra
+  // compensar nao vir com hpRegenPerTurn junto. Pedido explicito do usuario:
+  // nada de mecanica nova aqui, so' "mais vida, um pouco mais que antes".
+  { nodeId: "bakurei_raiz", clanId: "bakurei", maxHpBonus: 0.1 },
+  { nodeId: "bakurei_doton", clanId: "bakurei", crossElement: "TERRA", damageMult: 1.1 },
+  { nodeId: "bakurei_bakuton", clanId: "bakurei", crossElement: "EXPLOSAO", damageMult: 1.1 },
+  { nodeId: "bakurei_punho_rochoso", clanId: "bakurei", abilityIds: ["doton_punho_rochoso"], damageMult: 1.15, effectStacksBonus: { SHIELD: 8 } },
+  { nodeId: "bakurei_impacto", clanId: "bakurei", abilityIds: ["explosao_impacto"], damageMult: 1.15, pushBonus: 1 },
+  { nodeId: "bakurei_dragao_terra", clanId: "bakurei", abilityIds: ["doton_dragao"], damageMult: 1.15, effectDurationBonus: { effectId: "SLOW", bonus: 1 } },
+  { nodeId: "bakurei_cortina", clanId: "bakurei", abilityIds: ["explosao_cortina_fumaca"], costMult: 0.9, terrainDurationBonus: 1 },
+  { nodeId: "bakurei_cupula", clanId: "bakurei", abilityIds: ["doton_cupula"], costMult: 0.9, effectDurationBonus: { effectId: "CHAKRA_DRAIN", bonus: 1 } },
+
+  // ------------------------------------------------------------------ YUKI
+  // Clã reconstruido do zero (o antigo kit virou o kekkei genkai Gelo, ver
+  // element-trees/passives.ts) — mesmo hibrido Onoki+Yotsuki: dual
+  // crossElement (Água + Gelo, 1.1x cada) e DOIS ramos simetricos de
+  // abilityIds (2 Água + 2 Gelo, pedido explicito do usuario — Ondas
+  // Furiosas saiu pra abrir espaço pras 2 novas de Gelo), numeros copiados
+  // do ramo de Água do Senju.
+  { nodeId: "yuki_raiz", clanId: "yuki", maxHpBonus: 0.08, hpRegenPerTurn: 3 },
+  { nodeId: "yuki_agua", clanId: "yuki", crossElement: "AGUA", damageMult: 1.1 },
+  { nodeId: "yuki_hyoton", clanId: "yuki", crossElement: "GELO", damageMult: 1.1 },
+  { nodeId: "yuki_prisao", clanId: "yuki", abilityIds: ["suiton_prisao"], costMult: 0.9, effectDurationBonus: { effectId: "WET", bonus: 1 } },
+  { nodeId: "yuki_dragao", clanId: "yuki", abilityIds: ["suiton_suiryuudan"], damageMult: 1.15, rangeBonus: 1 },
+  { nodeId: "yuki_espelho_amplificado", clanId: "yuki", abilityIds: ["gelo_espelho"], damageMult: 1.15, effectChanceBonus: { DEFENSE_DOWN: 0.1 } },
+  { nodeId: "yuki_chuva_amplificada", clanId: "yuki", abilityIds: ["gelo_chuva_agulhas"], damageMult: 1.15, effectDurationBonus: { effectId: "SLOW", bonus: 1 } },
 
   // ------------------------------------------------------------ BUKIJUTSU
   // Catálogo genérico: o clanId serve apenas para o formato comum das

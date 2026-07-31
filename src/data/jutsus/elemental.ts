@@ -1438,4 +1438,202 @@ export const ELEMENTAL: Ability[] = [
     description:
       "Usa o Estilo Explosão para plantar uma carga no ponto de contato físico. O golpe inicial já dói, mas duas rodadas depois uma explosão enorme detona no local.",
   },
+
+  // ---------------- POEIRA (Jinton) — KEKKEI GENKAI ----------------
+  // O KKG MAIS FORTE do jogo (pedido explicito do usuario, ver o comentario
+  // completo em element-trees/index.ts). Gira em torno de Desintegracao:
+  // corroi Barreira por turno (como Corrosao/Vapor) E acumula ate um
+  // gatilho que COLAPSA a defesa por completo (zera toda a Barreira restante
+  // + Defesa Reduzida) em vez de Atordoar/Enraizar como Cristal/Lava. As 4
+  // tecnicas sao as 4 variantes pedidas pelo usuario, cada uma com uma
+  // identidade mecanica diferente (nao so' reskin de dano): a base prende E
+  // explode (ROOT + area), o Pilar e' um feixe direto dificil de esquivar
+  // (undodgeable), a Cônica e' a mesma tecnica com alcance de area muito
+  // maior, e os Projéteis sao indefensaveis por bloqueio/aparo (unguardable)
+  // — só Esquiva ainda vale, igual pedido: "defender torna-se impossível...
+  // evadir é difícil".
+  {
+    id: "jinton_desprendimento_mundo_primitivo",
+    name: "Desprendimento do Mundo Primitivo",
+    category: "NINJUTSU",
+    element: "POEIRA",
+    tier: 1,
+    resource: "chakra",
+    cost: 51,
+    actionType: "COMUM",
+    baseDamage: 26,
+    scalingAttribute: "ninjutsu",
+    range: 4,
+    shape: "RADIUS",
+    effects: [
+      { effectId: "ROOT", duration: 2, chance: 0.75 },
+      { effectId: "DISINTEGRATION", stacks: 1, duration: 3 },
+    ],
+    requirements: { element: "POEIRA", manualOnly: true },
+    tags: ["poeira", "jinton", "area", "prisao", "explosao", "desintegracao"],
+    description:
+      "A estrutura se expande rapidamente em tamanho quando é impulsionada em direção ao alvo, prendendo-o. A esfera, em seguida, explode com uma tremenda quantidade de força, desintegrando o que estiver por perto.",
+  },
+  {
+    id: "jinton_pilar",
+    name: "Desprendimento do Mundo Primitivo: Pilar",
+    category: "NINJUTSU",
+    element: "POEIRA",
+    tier: 2,
+    resource: "chakra",
+    cost: 67,
+    actionType: "COMUM",
+    baseDamage: 32,
+    scalingAttribute: "ninjutsu",
+    range: 5,
+    shape: "LINE",
+    undodgeable: true,
+    effects: [{ effectId: "DISINTEGRATION", stacks: 1, duration: 3 }],
+    requirements: { element: "POEIRA", manualOnly: true },
+    tags: ["poeira", "jinton", "linha", "indefensavel", "desintegracao"],
+    description:
+      "É uma variação da técnica Desprendimento do Mundo Primitivo padrão, onde a técnica pode se estender desde a mão do usuário até o oponente — um feixe contínuo rápido demais para desviar.",
+  },
+  {
+    id: "jinton_conica",
+    name: "Desprendimento do Mundo Primitivo: Cônica",
+    category: "NINJUTSU",
+    element: "POEIRA",
+    tier: 3,
+    resource: "chakra",
+    cost: 46,
+    actionType: "COMUM",
+    baseDamage: 26,
+    scalingAttribute: "ninjutsu",
+    range: 7,
+    shape: "CONE",
+    effects: [{ effectId: "DISINTEGRATION", stacks: 1, duration: 3 }],
+    requirements: { element: "POEIRA", manualOnly: true },
+    tags: ["poeira", "jinton", "area", "cone", "desintegracao"],
+    description:
+      "Técnica semelhante ao Desprendimento do Mundo Primitivo padrão, porém em formato de cone, com um alcance em área muito maior.",
+  },
+  {
+    id: "jinton_projeteis",
+    name: "Desprendimento do Mundo Primitivo: Projéteis",
+    category: "NINJUTSU",
+    element: "POEIRA",
+    tier: 3,
+    resource: "chakra",
+    cost: 60,
+    actionType: "COMUM",
+    baseDamage: 34,
+    scalingAttribute: "ninjutsu",
+    range: 5,
+    shape: "SINGLE_TARGET",
+    unguardable: true,
+    effects: [{ effectId: "DISINTEGRATION", stacks: 2, duration: 3 }],
+    requirements: { element: "POEIRA", manualOnly: true },
+    tags: ["poeira", "jinton", "barragem", "indefensavel", "apice", "desintegracao"],
+    description:
+      "Variante da técnica padrão: o usuário lança pequenos projéteis da técnica, consecutivamente, contra o oponente, desintegrando proporcionalmente o que tocam. Defender torna-se impossível por causa da desintegração, e evadir é difícil, já que a velocidade dos projéteis é altíssima.",
+  },
+
+  // ---------------- GELO (Hyoton) — KEKKEI GENKAI ----------------
+  // Ex-arvore de clã do Yuki, migrada pra kekkei genkai de verdade (pedido
+  // explicito do usuario) — mesmos ids de sempre (yuki_agulhas virou
+  // gelo_agulhas etc., ver element-trees/index.ts), so' o `element` e o
+  // `requirements` que trocam de clanId pra element. Balanceado no mesmo
+  // nivel de Vapor/Calor/Lava (2.025x = 1.35 * 1.50, ver
+  // element-trees/passives.ts).
+  {
+    id: "gelo_agulhas",
+    name: "Agulhas de Gelo",
+    category: "NINJUTSU",
+    element: "GELO",
+    tier: 1,
+    resource: "chakra",
+    cost: 19,
+    actionType: "COMUM",
+    baseDamage: 18,
+    scalingAttribute: "ninjutsu",
+    range: 4,
+    shape: "LINE",
+    effects: [{ effectId: "BLEED", duration: 2, chance: 0.6 }],
+    requirements: { element: "GELO", manualOnly: true },
+    tags: ["gelo", "hyoton", "linha", "agulhas"],
+    description:
+      "Congela a umidade do ar em agulhas afiadas e as dispara em linha reta contra o alvo, cortando fundo.",
+  },
+  {
+    id: "gelo_espelho",
+    name: "Espelho Demoníaco de Gelo Fino",
+    category: "NINJUTSU",
+    element: "GELO",
+    tier: 2,
+    resource: "chakra",
+    cost: 29,
+    actionType: "COMUM",
+    baseDamage: 24,
+    scalingAttribute: "ninjutsu",
+    range: 3,
+    shape: "CONE",
+    effects: [{ effectId: "DEFENSE_DOWN", duration: 2, chance: 0.7 }],
+    requirements: { element: "GELO", manualOnly: true },
+    tags: ["gelo", "hyoton", "espelho", "controle"],
+    description:
+      "Cria um único espelho de gelo fino e ataca de dentro dele com agulhas em vários ângulos ao mesmo tempo. O alvo, distraído tentando achar de onde vem o golpe, baixa a guarda.",
+  },
+  {
+    id: "gelo_domo",
+    name: "Domo de Iceberg",
+    category: "NINJUTSU",
+    element: "GELO",
+    tier: 2,
+    resource: "chakra",
+    cost: 30,
+    actionType: "BONUS",
+    range: 0,
+    shape: "SELF",
+    effects: [{ effectId: "SHIELD", stacks: 16, duration: 3 }],
+    trapField: { effectId: "ROOT", radius: 1, duration: 3 },
+    requirements: { element: "GELO", manualOnly: true },
+    tags: ["gelo", "hyoton", "defesa", "controle"],
+    description:
+      "Ergue rapidamente uma cúpula de gelo ao seu redor: ganha Barreira na hora, e qualquer inimigo que já estiver corpo a corpo fica preso lá dentro com você, sem conseguir sair. A prisão dura enquanto a Barreira aguentar — se ela quebrar antes, quem estava preso se solta na hora.",
+  },
+  {
+    id: "gelo_chuva_agulhas",
+    name: "Chuva de Agulhas Geladas",
+    category: "NINJUTSU",
+    element: "GELO",
+    tier: 3,
+    resource: "chakra",
+    cost: 45,
+    actionType: "COMUM",
+    baseDamage: 34,
+    scalingAttribute: "ninjutsu",
+    range: 5,
+    shape: "RADIUS",
+    effects: [{ effectId: "SLOW", duration: 2, chance: 0.75 }],
+    requirements: { element: "GELO", manualOnly: true },
+    tags: ["gelo", "hyoton", "area", "controle"],
+    description:
+      "Multiplica os espelhos e enche a área de agulhas de gelo caindo de todos os ângulos, deixando quem for atingido mais lento pelo frio nos ferimentos.",
+  },
+  {
+    id: "gelo_agulhas_mil",
+    name: "Mil Agulhas Voadoras de Água da Morte",
+    category: "NINJUTSU",
+    element: "GELO",
+    tier: 3,
+    resource: "chakra",
+    cost: 53,
+    actionType: "COMUM",
+    baseDamage: 46,
+    scalingAttribute: "ninjutsu",
+    range: 6,
+    shape: "SINGLE_TARGET",
+    undodgeable: true,
+    effects: [{ effectId: "BLEED", stacks: 2, duration: 3, chance: 0.85 }],
+    requirements: { element: "GELO", manualOnly: true },
+    tags: ["gelo", "hyoton", "finalizador", "indefensavel"],
+    description:
+      "Produz mil agulhas de gelo afiadas e longas, mira num único alvo específico e as lança todas de uma vez em altíssima velocidade. Rápido demais pra esquivar.",
+  },
 ];
