@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { getAbility } from "../src/data/index.js";
 import { allNodes } from "../src/data/element-trees/index.js";
 import { passiveMods } from "../src/services/combat/passives.js";
+import { empoweredDamageMult, type EffectState } from "../src/services/combat/effects.js";
 
 describe("Iryō Ninjutsu", () => {
   it("expõe as sete técnicas na árvore usando a bolsa de Iryō", () => {
@@ -47,5 +48,22 @@ describe("Iryō Ninjutsu", () => {
     expect(apex.baseHeal).toBe(62);
     expect(apex.cleanses).toEqual(["BLEED", "BURN"]);
     expect(passiveMods(["iryo_mitose_acelerada"], apex).costMult).toBe(0.85);
+  });
+
+  it("Bisturi de Chakra concede +20% somente a Taijutsu", () => {
+    const bisturi = getAbility("iryo_bisturi")!;
+    const effect = bisturi.effects!.find((candidate) => candidate.effectId === "EMPOWERED")!;
+    expect(effect.stacks).toBe(1.2);
+    expect(effect.empoweredScope).toBe("taijutsu");
+    const active: EffectState[] = [{
+      effectId: "EMPOWERED",
+      stacks: 1.2,
+      duration: 2,
+      dataJson: JSON.stringify({ empoweredScope: { kind: "taijutsu" } }),
+    }];
+    expect(empoweredDamageMult(active, { category: "TAIJUTSU" })).toBeCloseTo(1.2);
+    expect(empoweredDamageMult(active, { category: "KENJUTSU" })).toBe(1);
+    expect(empoweredDamageMult(active, { category: "BUKIJUTSU" })).toBe(1);
+    expect(empoweredDamageMult(active, { category: "NINJUTSU" })).toBe(1);
   });
 });

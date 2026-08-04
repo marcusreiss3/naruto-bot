@@ -29,12 +29,13 @@ export interface AppliedEffect {
   // relacao com a fantasia da skill (ex: virar lobo nao deveria turbinar um
   // jutsu elemental sem nada a ver). So' tem efeito quando effectId ===
   // "EMPOWERED"; omitido = vale pra qualquer dano, como antes.
-  //   "physical" -> so' categoria TAIJUTSU/BUKIJUTSU (Lobo de Duas/Tres
-  //     Cabecas, Grande Braco de Agua, Pilula Secreta)
+  //   "physical" -> categorias TAIJUTSU/KENJUTSU
+  //   "taijutsu" -> somente TAIJUTSU (ex: Bisturi de Chakra nas maos)
+  //   "ninjutsu" -> qualquer NINJUTSU (ex: Casulo de Insetos)
   //   "clan"     -> so' jutsu que exigem o MESMO cla de quem concedeu o
   //     efeito (Casulo do Aburame: so' golpes que exigem clanId "aburame",
   //     cobrindo a Mordida de Inseto mesmo sendo categoria NINJUTSU)
-  empoweredScope?: "physical" | "clan";
+  empoweredScope?: "physical" | "taijutsu" | "ninjutsu" | "clan";
 }
 
 export interface AbilityRequirements {
@@ -188,8 +189,10 @@ export interface Ability {
     count?: number;
     // clone reativo: ao sofrer dano, desfaz-se e pune quem o acertou
     onHit?: { effectId: EffectId; duration?: number };
-    // o que acontece quando a invocacao morre (clone d'agua estoura molhando)
-    onDeath?: { effectId: EffectId; radius: number; duration?: number };
+    // o que acontece quando a invocacao morre (clone d'agua estoura molhando).
+    // `stacks` e' especialmente importante para Barreira: representa a vida
+    // do escudo concedido, em vez de depender do valor padrao de 1.
+    onDeath?: { effectId: EffectId; radius: number; duration?: number; stacks?: number };
     // teto de invocacoes VIVAS deste mesmo templateId por invocador. Uma nova
     // criacao acima do teto e' recusada em useAbility (ver createSummon), mas
     // repor uma que morreu volta a ser permitido. Ex: Clones das Sombras (ate' 6).

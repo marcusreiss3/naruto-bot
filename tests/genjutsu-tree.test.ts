@@ -46,10 +46,10 @@ describe("árvore de Genjutsu: integridade", () => {
     }
   });
 
-  it("toda ability com effects tem baseDamage > 0 (senão a engine nunca aplicaria o efeito)", () => {
+  it("toda ability com effects declara baseDamage (zero também dispara efeitos de controle puro)", () => {
     for (const id of IDS) {
       const ab = getAbility(id)!;
-      if (ab.effects?.length) expect(ab.baseDamage ?? 0, id).toBeGreaterThan(0);
+      if (ab.effects?.length) expect(ab.baseDamage, id).toBeDefined();
     }
   });
 });
@@ -115,7 +115,9 @@ describe("árvore de Genjutsu: identidade de controle (sem damageMult de dano br
   it("Ecos do Cativeiro estende ROOT, Domínio do Medo soma chance de STUN", () => {
     const arvore = getAbility("gen_arvore_assassina")!;
     const penas = getAbility("gen_penas_caidas")!;
+    const nonGenjutsuRoot = getAbility("abelha_gigante_mel")!;
     expect(passiveMods(["gen_ecos_cativeiro"], arvore).effectDurationBonus.ROOT).toBe(1);
+    expect(passiveMods(["gen_ecos_cativeiro"], nonGenjutsuRoot).effectDurationBonus.ROOT ?? 0).toBe(0);
     expect(passiveMods(["gen_dominio_do_medo"], penas).effectChanceBonus.STUN).toBeCloseTo(0.2);
   });
 
@@ -145,12 +147,12 @@ describe("Raízes Obscuras: versão básica — só Imobiliza, pode ser esquivad
   });
 });
 
-describe("Aprisionamento da Árvore Assassina: atordoa + imobiliza sem poder ser esquivada", () => {
+describe("Aprisionamento da Árvore Assassina: prende com contrajogo", () => {
   const ab = getAbility("gen_arvore_assassina")!;
-  it("aplica STUN e ROOT (lockdown quase completo) e não pode ser esquivada", () => {
-    expect(ab.undodgeable).toBe(true);
+  it("pode ser esquivada; se acertar, imobiliza e pode Atordoar brevemente", () => {
+    expect(ab.undodgeable).toBeUndefined();
     expect(ab.effects).toEqual([
-      { effectId: "STUN", duration: 2 },
+      { effectId: "STUN", duration: 1, chance: 0.6 },
       { effectId: "ROOT", duration: 2 },
     ]);
   });
@@ -169,8 +171,8 @@ describe("Aprisionamento da Árvore Assassina: atordoa + imobiliza sem poder ser
 
 describe("Contra-Genjutsu: libera si mesmo ou aliado", () => {
   const ab = getAbility("gen_contra_genjutsu")!;
-  it("é ação bônus, sem dano, e limpa efeitos de ilusão", () => {
-    expect(ab.actionType).toBe("BONUS");
+  it("é ação comum, sem dano, e limpa efeitos de ilusão", () => {
+    expect(ab.actionType).toBe("COMUM");
     expect(ab.baseDamage).toBeUndefined();
     expect(ab.shape).toBe("ALLY");
     expect(ab.cleanses).toEqual(["CONFUSION", "NINJUTSU_BLOCK", "DEFENSE_DOWN"]);
@@ -226,11 +228,10 @@ describe("Ilusão Demoníaca: Visão do Inferno — ápice, inevitável", () => 
   });
 });
 
-describe("custos da árvore batem com suggestedJutsuCost (exceto Contra-Genjutsu e Substituição Ilusória, fora do escopo da fórmula)", () => {
+describe("custos da árvore batem com suggestedJutsuCost (exceto técnicas de suporte condicionais, fora do escopo da fórmula)", () => {
   it.each([
     "gen_raizes_obscuras",
     "gen_penas_caidas",
-    "gen_interrogatorio",
     "gen_dominio_mundo_obscuro",
     "gen_visao_inferno",
   ] as const)("%s", (id) => {

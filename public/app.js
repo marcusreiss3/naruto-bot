@@ -81,19 +81,73 @@ const NODE_IMAGE_FALLBACKS = {
   explosao_blindagem: "/assets/icons/explosao/blindagem-explosiva.png",
   explosao_apice: "/assets/icons/explosao/estilo-explosao-pleno.png",
   explosao_mina: "/assets/icons/explosao/punho-de-mina-terrestre.png",
+  poeira_desprendimento: "/assets/icons/poeira/desprendimento-do-mundo-primitivo.png",
+  poeira_raiz: "/assets/icons/poeira/nucleo-do-mundo-primitivo.png",
+  poeira_pilar: "/assets/icons/poeira/desprendimento-do-mundo-primitivo-pilar.png",
+  poeira_estilhaco: "/assets/icons/poeira/fragmentacao-progressiva.png",
+  poeira_erosao: "/assets/icons/poeira/erosao-absoluta.png",
+  poeira_conica: "/assets/icons/poeira/desprendimento-do-mundo-primitivo-conica.png",
+  poeira_projeteis: "/assets/icons/poeira/desprendimento-do-mundo-primitivo-projeteis.png",
+  poeira_apice: "/assets/icons/poeira/vazio-absoluto.png",
+  gen_raiz: "/assets/icons/genjutsu/veu-da-mente.png",
+  gen_raizes_obscuras: "/assets/icons/genjutsu/raizes-obscuras.png",
+  gen_ecos_cativeiro: "/assets/icons/genjutsu/ecos-do-cativeiro.png",
+  gen_arvore_assassina: "/assets/icons/genjutsu/aprisionamento-da-arvore-assassina.png",
+  gen_interrogatorio: "/assets/icons/genjutsu/genjutsu-interrogatorio.png",
+  gen_contra_genjutsu: "/assets/icons/genjutsu/contra-genjutsu.png",
+  gen_substituicao_ilusoria: "/assets/icons/genjutsu/substituicao-ilusoria.png",
+  gen_fluencia_ilusao: "/assets/icons/genjutsu/fluencia-da-ilusao.png",
+  gen_penas_caidas: "/assets/icons/genjutsu/penas-caidas.png",
+  gen_dominio_do_medo: "/assets/icons/genjutsu/dominio-do-medo.png",
+  gen_dominio_mundo_obscuro: "/assets/icons/genjutsu/dominio-do-mundo-obscuro.png",
+  gen_visao_inferno: "/assets/icons/genjutsu/ilusao-demoniaca-visao-do-inferno.png",
   agua_muralha: "/assets/icons/agua/muralha-de-agua.png",
-  gelo_raiz: "/assets/icons/yuki/sangue-de-gelo.png",
-  gelo_agulhas: "/assets/icons/yuki/agulhas-de-gelo.png",
-  gelo_espelho: "/assets/icons/yuki/espelho-demoniaco-de-gelo-fino.png",
-  gelo_domo: "/assets/icons/yuki/domo-de-iceberg.png",
-  gelo_presenca: "/assets/icons/yuki/presenca-silenciosa.png",
-  gelo_reflexos: "/assets/icons/yuki/reflexos-gelidos.png",
-  gelo_chuva_agulhas: "/assets/icons/yuki/chuva-de-agulhas-geladas.png",
-  gelo_apice: "/assets/icons/yuki/dominio-do-espelho-de-gelo.png",
-  gelo_agulhas_mil: "/assets/icons/yuki/mil-agulhas-voadoras.png",
+  gelo_raiz: "/assets/icons/gelo/sangue-de-gelo.png",
+  gelo_agulhas: "/assets/icons/gelo/agulhas-de-gelo.png",
+  gelo_espelho: "/assets/icons/gelo/espelho-demoniaco-de-gelo-fino.png",
+  gelo_domo: "/assets/icons/gelo/domo-de-iceberg.png",
+  gelo_presenca: "/assets/icons/gelo/presenca-silenciosa.png",
+  gelo_reflexos: "/assets/icons/gelo/reflexos-gelidos.png",
+  gelo_chuva_agulhas: "/assets/icons/gelo/chuva-de-agulhas-geladas.png",
+  gelo_apice: "/assets/icons/gelo/dominio-do-espelho-de-gelo.png",
+  gelo_agulhas_mil: "/assets/icons/gelo/mil-agulhas-voadoras.png",
+  yuki_raiz: "/assets/icons/yuki/controle-de-chakra-yuki.png",
+  yuki_agua: "/assets/icons/yuki/dominio-suiton.png",
+  yuki_hyoton: "/assets/icons/yuki/dominio-hyoton.png",
+  yuki_prisao: "/assets/icons/yuki/prisao-persistente.png",
+  yuki_dragao: "/assets/icons/yuki/dragao-ampliado.png",
+  yuki_espelho_amplificado: "/assets/icons/yuki/espelho-amplificado.png",
+  yuki_chuva_amplificada: "/assets/icons/yuki/nevasca-amplificada.png",
+  sarutobi_raiz: "/assets/icons/sarutobi/legado-do-professor.png",
+  sarutobi_katon: "/assets/icons/sarutobi/fogo-do-professor.png",
+  sarutobi_futon: "/assets/icons/sarutobi/vento-que-aviva-as-chamas.png",
+  sarutobi_raiton: "/assets/icons/sarutobi/trovao-certeiro.png",
+  sarutobi_suiton: "/assets/icons/sarutobi/correnteza-perene.png",
+  sarutobi_doton: "/assets/icons/sarutobi/muralha-do-professor.png",
+  onoki_raiz: "/assets/icons/onoki/legado-do-tsuchikage.png",
+  onoki_doton: "/assets/icons/onoki/dominio-doton.png",
+  onoki_jinton: "/assets/icons/onoki/legado-do-jinton.png",
+  onoki_peso_montanha: "/assets/icons/onoki/peso-da-montanha-verdadeira.png",
+  onoki_particula_primordial: "/assets/icons/onoki/particula-primordial.png",
+  yotsuki_raiz: "/assets/icons/yotsuki/vitalidade-yotsuki.png",
+  yotsuki_raiton: "/assets/icons/yotsuki/dominio-raiton.png",
+  yotsuki_esfera: "/assets/icons/yotsuki/reflexo-eletrico.png",
+  yotsuki_armadura: "/assets/icons/yotsuki/armadura-economica.png",
+  yotsuki_assassinato: "/assets/icons/yotsuki/corrente-amplificada.png",
+  yotsuki_pilares: "/assets/icons/yotsuki/prisao-amplificada.png",
+  yotsuki_kenjutsu_1: "/assets/icons/yotsuki/estilo-das-sete-laminas.png",
+  yotsuki_kenjutsu_2: "/assets/icons/yotsuki/corte-fulminante.png",
+  bakurei_raiz: "/assets/icons/bakurei/vigor-de-iwa.png",
+  bakurei_doton: "/assets/icons/bakurei/dominio-doton-bakurei.png",
+  bakurei_bakuton: "/assets/icons/bakurei/dominio-bakuton.png",
+  bakurei_punho_rochoso: "/assets/icons/bakurei/punho-reforcado.png",
+  bakurei_impacto: "/assets/icons/bakurei/onda-de-choque-ampliada.png",
+  bakurei_dragao_terra: "/assets/icons/bakurei/projetil-ampliado.png",
+  bakurei_cortina: "/assets/icons/bakurei/cortina-persistente.png",
+  bakurei_cupula: "/assets/icons/bakurei/cupula-sufocante.png",
 };
 
-const ICON_ASSET_VERSION = "20260730-c";
+const ICON_ASSET_VERSION = "20260804-d";
 
 function versionedIcon(path) {
   if (!path || !path.startsWith("/assets/icons/")) return path;
@@ -156,14 +210,42 @@ const ATTR_LABEL = {
 // pra comprar nada de fora do próprio clã/elemento (o servidor recusa).
 let showAllTrees = false;
 // Imagem de fundo por elemento (public/assets/bg). Ausente = sem imagem, só o gradiente.
+const BG_ASSET_VERSION = "20260804-h";
 const ELEMENT_BG = {
   FUNDAMENTOS: "url('/assets/bg/ninjutsu.webp')",
-  BUKIJUTSU: "url('/assets/bg/ninjutsu.webp')",
+  IRYO_NINJUTSU: `url('/assets/bg/iryo-ninjutsu.webp?v=${BG_ASSET_VERSION}')`,
+  BUKIJUTSU: `url('/assets/bg/bukijutsu.webp?v=${BG_ASSET_VERSION}')`,
+  GENJUTSU: `url('/assets/bg/genjutsu.webp?v=${BG_ASSET_VERSION}')`,
   FOGO: "url('/assets/bg/fogo.webp')",
   AGUA: "url('/assets/bg/agua.webp')",
   VENTO: "url('/assets/bg/vento.webp')",
   TERRA: "url('/assets/bg/terra.webp')",
   RAIO: "url('/assets/bg/raio.webp')",
+};
+const CLAN_BG = `url('/assets/bg/clas-v2.webp?v=${BG_ASSET_VERSION}')`;
+const CLAN_BACKGROUNDS = {
+  UCHIHA: `url('/assets/bg/uchiha-v2.webp?v=${BG_ASSET_VERSION}')`,
+  NARA: `url('/assets/bg/nara-v2.webp?v=${BG_ASSET_VERSION}')`,
+  SENJU: `url('/assets/bg/senju.webp?v=${BG_ASSET_VERSION}')`,
+  HYUUGA: `url('/assets/bg/hyuuga-fixed.webp?v=${BG_ASSET_VERSION}')`,
+  AKIMICHI: `url('/assets/bg/akimichi.webp?v=${BG_ASSET_VERSION}')`,
+  ABURAME: `url('/assets/bg/aburame.webp?v=${BG_ASSET_VERSION}')`,
+  INUZUKA: `url('/assets/bg/inuzuka.webp?v=${BG_ASSET_VERSION}')`,
+  UZUMAKI: `url('/assets/bg/uzumaki.webp?v=${BG_ASSET_VERSION}')`,
+  SARUTOBI: `url('/assets/bg/sarutobi.webp?v=${BG_ASSET_VERSION}')`,
+  HATAKE: `url('/assets/bg/hatake.webp?v=${BG_ASSET_VERSION}')`,
+  YAMANAKA: `url('/assets/bg/yamanaka.webp?v=${BG_ASSET_VERSION}')`,
+  KAMAITACHI: `url('/assets/bg/kamaitachi.webp?v=${BG_ASSET_VERSION}')`,
+  HOSHIGAKI: `url('/assets/bg/hoshigaki.webp?v=${BG_ASSET_VERSION}')`,
+  HOZUKI: `url('/assets/bg/hozuki.webp?v=${BG_ASSET_VERSION}')`,
+  KAGUYA: `url('/assets/bg/kaguya.webp?v=${BG_ASSET_VERSION}')`,
+  YUKI: `url('/assets/bg/yuki.webp?v=${BG_ASSET_VERSION}')`,
+  CHINOIKE: `url('/assets/bg/chinoike.webp?v=${BG_ASSET_VERSION}')`,
+  RAIKAGE: `url('/assets/bg/raikage.webp?v=${BG_ASSET_VERSION}')`,
+  YOTSUKI: `url('/assets/bg/yotsuki.webp?v=${BG_ASSET_VERSION}')`,
+  KAMIZURU: `url('/assets/bg/kamizuru.webp?v=${BG_ASSET_VERSION}')`,
+  ONOKI: `url('/assets/bg/onoki.webp?v=${BG_ASSET_VERSION}')`,
+  BAKUREI: `url('/assets/bg/bakurei.webp?v=${BG_ASSET_VERSION}')`,
 };
 // Glossário de efeitos: destaca o termo na descrição e explica no hover.
 // A descrição vem do servidor como texto puro; o realce é feito aqui por regex,
@@ -190,7 +272,7 @@ const GLOSSARY = [
   { re: "Confuso|Confusão", tip: "Confusão: enquanto durar, o alvo confuso ataca alguém aleatório entre todos os vivos em vez de escolher — pode até acertar o próprio time." },
   { re: "Aceleração|Acelerado", tip: "Aceleração: concede +2 de movimento, +10 pontos percentuais de Esquiva e +25 pontos percentuais de chance de fuga. Quem acertar o portador corpo a corpo sofre 8 de dano." },
   { re: "Desarme", tip: "Desarme: o alvo derruba a arma equipada e precisa recuperá-la antes de voltar a usá-la." },
-  { re: "Sobrecarga", tip: "Sobrecarga: aumenta em 60% o dano das técnicas indicadas pela habilidade. Algumas técnicas aplicam um efeito negativo quando ela termina." },
+  { re: "Sobrecarga", tip: "Sobrecarga: aumenta temporariamente o dano. A força do aumento, as técnicas afetadas e a duração aparecem em Efeitos e regras." },
   // ---- exclusivo do clã Nara ----
   { re: "Vínculo de Sombra", tip: "Vínculo de Sombra: sem dano, mas o alvo não pode se mover nem reagir (Esquivar/Bloquear/Aparar) enquanto durar — o corpo dele copia o do usuário. Só uma Esquiva bem-sucedida ANTES do vínculo prender evita o efeito." },
   // ---- kekkei genkai: Cristal ----
@@ -580,7 +662,19 @@ function renderTree(elId) {
     el.style.setProperty("--el", meta.color);
     el.style.setProperty("--elGlow", glow(meta.color));
   }
-  if (stage) stage.style.setProperty("--elBg", ELEMENT_BG[elId] || "none");
+  if (stage) {
+    const isClanTree = Boolean(meta?.clanGate);
+    const usesIllustratedBackground = isClanTree || ["IRYO_NINJUTSU", "BUKIJUTSU", "GENJUTSU"].includes(elId);
+    stage.style.setProperty("--elBg", ELEMENT_BG[elId] || CLAN_BACKGROUNDS[elId] || (isClanTree ? CLAN_BG : "none"));
+    stage.style.setProperty("--elBgOpacity", usesIllustratedBackground ? ".24" : ".14");
+    // Fundos panorâmicos usam sempre a largura do palco como referência. O
+    // antigo `cover` recalculava o zoom conforme a altura de cada árvore.
+    stage.style.setProperty("--elBgSize", usesIllustratedBackground ? "100% auto" : "cover");
+    // A arte de cada clã já carrega sua própria paleta. Tingir com uma cor de
+    // fundo preenchia também as áreas escuras e criava um véu claro no palco.
+    stage.style.setProperty("--elBgTint", "transparent");
+    stage.style.setProperty("--elBgBlend", "normal");
+  }
 
   const maxRow = nodes.reduce((m, n) => Math.max(m, n.row), 0);
   const height = TOP_PAD + maxRow * ROW_GAP + 110;

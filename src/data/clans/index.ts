@@ -21,6 +21,8 @@ export const CLAN_ABILITIES: Ability[] = [
       upkeepPerTurn: 5,
       disablesWithoutResource: true,
     },
+    visualDescription:
+      "A íris do usuário se torna vermelha e revela um único tomoe negro girando ao redor da pupila.",
     description:
       "Desperta o primeiro tomoe do Sharingan. Enquanto estiver ativo, concede +3% de esquiva e consome 5% de chakra por turno.",
   },
@@ -42,6 +44,8 @@ export const CLAN_ABILITIES: Ability[] = [
       upkeepPerTurn: 7,
       disablesWithoutResource: true,
     },
+    visualDescription:
+      "Um segundo tomoe surge na íris vermelha, e os dois símbolos passam a acompanhar cada movimento diante do usuário.",
     description:
       "Evolui o Sharingan para dois tomoe. Enquanto estiver ativo, concede +5% de esquiva e consome 7% de chakra por turno.",
   },
@@ -613,8 +617,10 @@ export const CLAN_ABILITIES: Ability[] = [
     ],
     requirements: { clanId: "akimichi", manualOnly: true },
     tags: ["akimichi", "pilulas", "buff", "risco"],
+    visualDescription:
+      "O usuário engole uma das pílulas secretas do clã, e seu corpo é tomado por uma intensa descarga de chakra.",
     description:
-      "Engole uma das pílulas secretas do clã: por 3 rodadas, +60% de dano nos seus golpes físicos (Taijutsu/Kenjutsu). Quando o efeito passa, o corpo cobra o preço: reduz a defesa por 2 rodadas.",
+      "O usuário engole uma das pílulas secretas do clã, e seu corpo é tomado por uma intensa descarga de chakra.",
   },
   {
     id: "akimichi_modo_borboleta",
@@ -692,12 +698,14 @@ export const CLAN_ABILITIES: Ability[] = [
     effects: [
       { effectId: "ROOT", duration: 2 },
       { effectId: "DEFENSE_DOWN", duration: 2 },
-      { effectId: "EMPOWERED", duration: 3, empoweredScope: "clan" },
+      { effectId: "EMPOWERED", stacks: 1.3, duration: 3, empoweredScope: "ninjutsu" },
     ],
     requirements: { clanId: "aburame", manualOnly: true },
     tags: ["aburame", "inseto", "buff", "risco"],
+    visualDescription:
+      "Um casulo espesso, formado por seda e insetos, se fecha completamente ao redor do usuário.",
     description:
-      "Envolve-se num casulo real pra acelerar o crescimento dos próprios insetos: por 3 rodadas, +60% de dano nos golpes que usam kikaichū. O preço: por 2 rodadas fica preso ao chão e reduz a defesa — melhor fazer isso longe da linha de frente ou protegido por um aliado.",
+      "Um casulo espesso, formado por seda e insetos, se fecha completamente ao redor do usuário.",
   },
   {
     id: "aburame_esfera",
@@ -854,8 +862,10 @@ export const CLAN_ABILITIES: Ability[] = [
     requiresPet: true,
     requirements: { clanId: "inuzuka", manualOnly: true },
     tags: ["inuzuka", "cao", "clone", "combo"],
+    visualDescription:
+      "O cão ninja assume uma cópia física perfeita do usuário, e os dois avançam com movimentos espelhados.",
     description:
-      "O cão ninja se transforma numa cópia física do usuário: os dois atacam juntos e coordenados. 60% de chance de deixar o alvo Confuso por 2 rodadas, sem conseguir identificar qual dos dois é o verdadeiro. Precisa do cão ninja vivo em campo.",
+      "O cão ninja assume uma cópia física perfeita do usuário, e os dois avançam com movimentos espelhados.",
   },
   {
     id: "inuzuka_sobre_presa",
@@ -893,8 +903,10 @@ export const CLAN_ABILITIES: Ability[] = [
     requiresPet: true,
     requirements: { clanId: "inuzuka", manualOnly: true },
     tags: ["inuzuka", "cao", "presa", "combo", "perfuracao"],
+    visualDescription:
+      "Usuário e cão giram lado a lado como duas brocas que se cruzam em alta velocidade.",
     description:
-      "Versão evoluída do Sobre Presa: usuário e cão giram juntos, multiplicando a potência da broca. Não pode ser esquivado, empurra o alvo 2 casas e tem 30% de chance de Atordoar por 1 rodada. Precisa do cão ninja vivo em campo.",
+      "Usuário e cão giram lado a lado como duas brocas que se cruzam em alta velocidade.",
   },
   {
     id: "inuzuka_lobo_duas_cabecas",
@@ -910,8 +922,10 @@ export const CLAN_ABILITIES: Ability[] = [
     requiresPet: true,
     requirements: { clanId: "inuzuka", manualOnly: true },
     tags: ["inuzuka", "cao", "fusao", "buff"],
+    visualDescription:
+      "Usuário e cão se fundem, formando um enorme lobo branco de duas cabeças com garras e presas salientes.",
     description:
-      "Usuário e cão se fundem num enorme lobo de duas cabeças: por 3 rodadas, +60% de dano nos seus golpes físicos (Taijutsu/Kenjutsu). Precisa do cão ninja vivo em campo.",
+      "Usuário e cão se fundem, formando um enorme lobo branco de duas cabeças com garras e presas salientes.",
   },
   {
     id: "inuzuka_presa_de_lobo",
@@ -930,8 +944,10 @@ export const CLAN_ABILITIES: Ability[] = [
     requiresPet: true,
     requirements: { clanId: "inuzuka", manualOnly: true },
     tags: ["inuzuka", "cao", "fusao", "perfuracao"],
+    visualDescription:
+      "O lobo de duas cabeças concentra o corpo numa enorme broca giratória e dispara em linha reta.",
     description:
-      "Depois da fusão em Lobo de Duas Cabeças, reúnem toda a força na super-rotação: perfuram o alvo com velocidade avassaladora numa linha reta. Não pode ser esquivado e empurra o alvo 2 casas. Precisa do cão ninja vivo em campo.",
+      "O lobo de duas cabeças concentra o corpo numa enorme broca giratória e dispara em linha reta.",
   },
   {
     id: "inuzuka_lobo_tres_cabecas",
@@ -950,8 +966,10 @@ export const CLAN_ABILITIES: Ability[] = [
     requiresPet: true,
     requirements: { clanId: "inuzuka", manualOnly: true },
     tags: ["inuzuka", "cao", "fusao", "buff", "apice"],
+    visualDescription:
+      "O usuário, seu clone e o cão ninja se fundem num lobo branco gigantesco de três cabeças.",
     description:
-      "Depois de criar um clone de sombra, o usuário se funde com o clone e o cão ninja num lobo gigante de três cabeças: por 3 rodadas, +60% de dano nos golpes físicos (Taijutsu/Kenjutsu), e ganha 26 pontos de Barreira por 3 rodadas. Garras e presas ficam brutalmente eficientes em ataques diretos. Precisa do cão ninja vivo em campo.",
+      "O usuário, seu clone e o cão ninja se fundem num lobo branco gigantesco de três cabeças.",
   },
   {
     id: "inuzuka_cauda_perseguidora",
@@ -970,8 +988,10 @@ export const CLAN_ABILITIES: Ability[] = [
     requiresPet: true,
     requirements: { clanId: "inuzuka", manualOnly: true },
     tags: ["inuzuka", "cao", "fusao", "apice", "finalizador"],
+    visualDescription:
+      "O lobo de três cabeças se enrola numa esfera e avança girando com violência pelo campo.",
     description:
-      "Ainda fundido no lobo gigante de três cabeças, o usuário se enrola numa bola e rola numa velocidade feroz, como se corresse atrás da própria cauda: a rotação ultra-violenta rasga através de vários inimigos na linha de ataque. Não pode ser esquivado e tem 35% de chance de Atordoar por 1 rodada. Precisa do cão ninja vivo em campo.",
+      "O lobo de três cabeças se enrola numa esfera e avança girando com violência pelo campo.",
   },
 
   // ---- Uzumaki ----
@@ -1065,8 +1085,10 @@ export const CLAN_ABILITIES: Ability[] = [
     requiresPet: true,
     requirements: { clanId: "hatake", manualOnly: true },
     tags: ["hatake", "cao", "controle", "combo"],
+    visualDescription:
+      "A matilha salta de vários ângulos ao mesmo tempo, derrubando e cercando o alvo com presas e patas.",
     description:
-      "A matilha cerca o alvo, mordendo e pesando sobre ele: 85% de chance de imobilizar por 2 rodadas e 30% de chance de Atordoar por 1 rodada. Precisa de pelo menos um cão vivo em campo.",
+      "A matilha salta de vários ângulos ao mesmo tempo, derrubando e cercando o alvo com presas e patas.",
   },
   {
     id: "hatake_lamina",
@@ -1235,8 +1257,10 @@ export const CLAN_ABILITIES: Ability[] = [
     effects: [{ effectId: "EMPOWERED", duration: 3, empoweredScope: "physical" }],
     requirements: { clanId: "hozuki", manualOnly: true },
     tags: ["hozuki", "buff", "forca"],
+    visualDescription:
+      "O braço do usuário absorve uma grande massa de água e cresce de forma desproporcional, coberto por músculos líquidos.",
     description:
-      "Usa o próprio estado líquido pra empilhar mais água sobre o corpo, principalmente o braço: por 3 rodadas, +60% de dano nos seus golpes físicos (Taijutsu/Kenjutsu).",
+      "O braço do usuário absorve uma grande massa de água e cresce de forma desproporcional, coberto por músculos líquidos.",
   },
   {
     id: "hozuki_revolver_agua",

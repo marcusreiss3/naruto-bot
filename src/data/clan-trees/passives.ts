@@ -654,10 +654,8 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
   // do Senju, aqui as 4 passivas de Raio miram tecnicas ESPECIFICAS via
   // abilityIds (pedido explicito: "não só o elemento... só em si"), NUNCA
   // raiton_kirin (pedido explicito de exclusao — o apice da arvore de Raio
-  // fica de fora de proposito). As duas de Kenjutsu reusam o MESMO par que
-  // Hatake/Hoshigaki/Hozuki ja usam (crossCategory "KENJUTSU"): dano bruto +
-  // ignora Barreira/executa ferido — vale em qualquer espada, ja que o clã
-  // nao tem uma exclusiva.
+  // fica de fora de proposito). O par de Kenjutsu continua em seu proprio
+  // ramo, separado da linha que melhora as quatro tecnicas eletricas.
   { nodeId: "yotsuki_raiz", clanId: "yotsuki", maxHpBonus: 0.08, hpRegenPerTurn: 3 },
   { nodeId: "yotsuki_raiton", clanId: "yotsuki", crossElement: "RAIO", damageMult: 1.1 },
   { nodeId: "yotsuki_esfera", clanId: "yotsuki", abilityIds: ["raiton_esfera_relampago"], damageMult: 1.15, effectChanceBonus: { STUN: 0.15 } },
@@ -691,7 +689,7 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
   // abilityIds (2 Água + 2 Gelo, pedido explicito do usuario — Ondas
   // Furiosas saiu pra abrir espaço pras 2 novas de Gelo), numeros copiados
   // do ramo de Água do Senju.
-  { nodeId: "yuki_raiz", clanId: "yuki", maxHpBonus: 0.08, hpRegenPerTurn: 3 },
+  { nodeId: "yuki_raiz", clanId: "yuki", crossCategory: "NINJUTSU", costMult: 0.92 },
   { nodeId: "yuki_agua", clanId: "yuki", crossElement: "AGUA", damageMult: 1.1 },
   { nodeId: "yuki_hyoton", clanId: "yuki", crossElement: "GELO", damageMult: 1.1 },
   { nodeId: "yuki_prisao", clanId: "yuki", abilityIds: ["suiton_prisao"], costMult: 0.9, effectDurationBonus: { effectId: "WET", bonus: 1 } },

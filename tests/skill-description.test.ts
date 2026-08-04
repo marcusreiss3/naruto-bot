@@ -23,7 +23,10 @@ describe("resumo uniforme de efeitos e regras", () => {
           new RegExp(`${EFFECT_NAMES[effect.effectId]}.* por \\d+ rodada`),
         );
         if (effect.stacks !== undefined) {
-          expect(summary, `${ability.id}: quantidade de ${effect.effectId}`).toContain(String(effect.stacks));
+          const displayedAmount = effect.effectId === "EMPOWERED" && effect.stacks > 1
+            ? `${Math.round((effect.stacks - 1) * 100)}%`
+            : String(effect.stacks);
+          expect(summary, `${ability.id}: quantidade de ${effect.effectId}`).toContain(displayedAmount);
         }
       }
     }
@@ -37,12 +40,18 @@ describe("resumo uniforme de efeitos e regras", () => {
       if (ability.unguardable && !ability.unblockable) expect(summary, ability.id).toContain("Bloqueio e Aparo");
       if (ability.oncePerCombat) expect(summary, ability.id).toContain("uma vez por combate");
       if (ability.requiresStorm) expect(summary, ability.id).toContain("tempestade");
-      if (ability.requiresPet) expect(summary, ability.id).toContain("invocação");
+      if (ability.requiresPet) expect(summary, ability.id).toContain("cão ninja");
       if (ability.requiresActiveDoujutsu) expect(summary, ability.id).toContain(ability.requiresActiveDoujutsu.label);
       if (ability.toggleRules) {
         expect(summary, ability.id).toContain(ability.toggleRules.command);
         expect(summary, ability.id).toContain(`${Math.round(ability.toggleRules.dodgeBonus * 100)}%`);
         expect(summary, ability.id).toContain(`${ability.toggleRules.upkeepPerTurn}%`);
+      }
+      if (ability.requiresTargetEffect?.length) {
+        expect(buildMechanicsSummary(ability), ability.id).toContain("Exige que o alvo esteja sob");
+        for (const effectId of ability.requiresTargetEffect) {
+          expect(buildMechanicsSummary(ability), ability.id).toContain(EFFECT_NAMES[effectId]);
+        }
       }
     }
   });

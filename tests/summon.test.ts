@@ -72,3 +72,16 @@ describe("Clone de Raio", () => {
     expect(no?.grantsAbilityId).toBe("raiton_clone");
   });
 });
+
+describe("Golem Defensor", () => {
+  const golem = getAbility("doton_golem")!;
+
+  it("deixa uma Barreira de 20 de vida ao morrer", () => {
+    expect(golem.summon?.onDeath).toMatchObject({
+      effectId: "SHIELD",
+      stacks: 20,
+      radius: 1,
+      duration: 3,
+    });
+  });
+});

@@ -58,6 +58,22 @@ function effectText(effect: AppliedEffect): string {
   if (effect.effectId === "SHIELD") {
     return `Concede Barreira de ${stacks} pontos${durationText}.`;
   }
+  if (effect.effectId === "EMPOWERED") {
+    const multiplier = stacks > 1
+      ? stacks
+      : 1 + (BALANCE.effects.EMPOWERED.dmgMultBonus ?? 0.6);
+    const bonus = Math.round((multiplier - 1) * 100);
+    const scope = effect.empoweredScope === "taijutsu"
+      ? "nos seus Taijutsus"
+      : effect.empoweredScope === "ninjutsu"
+        ? "nos seus Ninjutsus"
+        : effect.empoweredScope === "physical"
+          ? "nos seus Taijutsus e Kenjutsus"
+          : effect.empoweredScope === "clan"
+            ? "nas técnicas do próprio clã"
+            : "em todo o dano causado";
+    return `${prefix} ${name}: +${bonus}% de dano ${scope}${durationText}.`;
+  }
 
   const stackText = STACK_EFFECTS.has(effect.effectId)
     ? `${stacks} ${stacks === 1 ? "acúmulo" : "acúmulos"} de `
@@ -100,6 +116,14 @@ export function buildMechanicsSummary(ability: Ability): string {
     }
   }
 
+  if (ability.requiresTargetEffect?.length) {
+    const required = ability.requiresTargetEffect.map((effect) => EFFECT_NAMES[effect]);
+    const joined = required.length === 1
+      ? required[0]
+      : `${required.slice(0, -1).join(", ")} ou ${required[required.length - 1]}`;
+    parts.push(`Exige que o alvo esteja sob ${joined}.`);
+  }
+
   if (ability.cleanses?.length) {
     parts.push(`Remove ${ability.cleanses.map((effect) => EFFECT_NAMES[effect]).join(", ")}.`);
   }
@@ -132,7 +156,11 @@ export function buildMechanicsSummary(ability: Ability): string {
     parts.push("Não copia Gelo nem Madeira.");
     parts.push("A cópia exige afinidade com o elemento, além do nível e Ninjutsu mínimos da técnica.");
   }
-  if (ability.requiresPet) parts.push("Exige a invocação do usuário viva no campo.");
+  if (ability.requiresPet) {
+    if (ability.requirements?.clanId === "inuzuka") parts.push("Exige o cão ninja do usuário vivo no campo.");
+    else if (ability.requirements?.clanId === "hatake") parts.push("Exige ao menos um cão ninja do usuário vivo no campo.");
+    else parts.push("Exige a criatura companheira do usuário viva no campo.");
+  }
   if (ability.requiresActiveDoujutsu) parts.push(`Exige ${ability.requiresActiveDoujutsu.label} ativo.`);
   if (ability.pierceObstacles) parts.push("Atravessa obstáculos e não precisa de linha de visão livre.");
   if (ability.chainWetTargets) {
@@ -149,8 +177,12 @@ export function buildMechanicsSummary(ability: Ability): string {
     }
     if (ability.summon.onDeath) {
       const duration = ability.summon.onDeath.duration ?? defaultDurationFor(ability.summon.onDeath.effectId);
+      const amount = ability.summon.onDeath.stacks;
+      const effectText = ability.summon.onDeath.effectId === "SHIELD" && amount !== undefined
+        ? `${EFFECT_NAMES[ability.summon.onDeath.effectId]} de ${amount} de vida`
+        : EFFECT_NAMES[ability.summon.onDeath.effectId];
       parts.push(
-        `Ao morrer, a invocação aplica ${EFFECT_NAMES[ability.summon.onDeath.effectId]} por ${rounds(duration)} em um raio de ${ability.summon.onDeath.radius} casas.`,
+        `Ao morrer, a invocação aplica ${effectText} por ${rounds(duration)} em um raio de ${ability.summon.onDeath.radius} casas.`,
       );
     }
   }

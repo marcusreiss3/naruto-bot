@@ -454,7 +454,7 @@ async function triggerSummonDeath(
   logs: string[],
 ): Promise<void> {
   const onDeath = dead.flags.onDeath as
-    | { effectId: EffectId; radius: number; duration?: number }
+    | { effectId: EffectId; radius: number; duration?: number; stacks?: number }
     | null
     | undefined;
   if (!onDeath) return;
@@ -472,7 +472,7 @@ async function triggerSummonDeath(
     await applyEffect(
       alvo.id,
       onDeath.effectId,
-      1,
+      onDeath.stacks ?? 1,
       onDeath.duration ?? defaultDurationFor(onDeath.effectId),
     );
   }
@@ -1838,9 +1838,11 @@ async function consumeShield(participantId: string, amount: number): Promise<voi
 function resolveEmpoweredScope(
   scope: AppliedEffect["empoweredScope"],
   ability: Ability,
-): { kind: "physical" } | { kind: "clan"; clanId: string } | undefined {
+): { kind: "physical" } | { kind: "taijutsu" } | { kind: "ninjutsu" } | { kind: "clan"; clanId: string } | undefined {
   if (!scope) return undefined;
   if (scope === "physical") return { kind: "physical" };
+  if (scope === "taijutsu") return { kind: "taijutsu" };
+  if (scope === "ninjutsu") return { kind: "ninjutsu" };
   const clanId = ability.requirements?.clanId;
   return clanId ? { kind: "clan", clanId } : undefined;
 }
@@ -1856,7 +1858,11 @@ export async function applyEffect(
     // ver AppliedEffect.replaceGroup / .onExpire / .empoweredScope em data/types.ts
     replaceGroup?: string;
     onExpire?: { effectId: EffectId; stacks?: number; duration?: number };
-    empoweredScope?: { kind: "physical" } | { kind: "clan"; clanId: string };
+    empoweredScope?:
+      | { kind: "physical" }
+      | { kind: "taijutsu" }
+      | { kind: "ninjutsu" }
+      | { kind: "clan"; clanId: string };
   },
 ): Promise<{ explosion?: number; sealed?: boolean; hardened?: boolean; collapsed?: boolean }> {
   const burnOpts = opts?.burn;
@@ -1993,12 +1999,29 @@ export async function applyEffect(
   // ja' existia pra isso — ver EffectData/parseEffectData em effects.ts.
   const existing = await prisma.effectInstance.findFirst({ where: { participantId, effectId } });
   const data = parseEffectData(existing?.dataJson);
+  // Sobrecarga e' um multiplicador temporario, nao um acumulo. Reaplicar ou
+  // receber outra fonte mantem apenas a mais forte (1 = bonus padrao; valores
+  // acima de 1 guardam o multiplicador proprio, como 1.2 do Bisturi).
+  const empoweredValue = (raw: number): number => raw > 1
+    ? raw
+    : 1 + BALANCE.effects.EMPOWERED.dmgMultBonus;
+  const keepExistingEmpowered = effectId === "EMPOWERED"
+    && existing !== null
+    && empoweredValue(existing.stacks) >= empoweredValue(stacks);
   const prevFormAmount = replaceGroup && data.formGroup?.group === replaceGroup ? data.formGroup.amount : 0;
   if (replaceGroup) data.formGroup = { group: replaceGroup, amount: stacks };
-  if (onExpire) data.onExpire = onExpire;
-  if (empoweredScope) data.empoweredScope = empoweredScope;
+  if (!keepExistingEmpowered) {
+    if (effectId === "EMPOWERED") {
+      delete data.onExpire;
+      delete data.empoweredScope;
+    }
+    if (onExpire) data.onExpire = onExpire;
+    if (empoweredScope) data.empoweredScope = empoweredScope;
+  }
   if (existing) {
-    const newStacks = existing.stacks - prevFormAmount + stacks;
+    const newStacks = effectId === "EMPOWERED"
+      ? (keepExistingEmpowered ? existing.stacks : stacks)
+      : existing.stacks - prevFormAmount + stacks;
     await prisma.effectInstance.update({
       where: { id: existing.id },
       data: {

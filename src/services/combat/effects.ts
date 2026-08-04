@@ -183,8 +183,9 @@ export function hasteContactDamage(activeEffects: EffectState[]): number {
 // alvo). Generico — qualquer jutsu pode conceder. Por padrao vale pra
 // qualquer dano, mas a instancia pode ter nascido com um `empoweredScope`
 // (gravado no dataJson na hora que a skill aplicou o efeito — ver
-// AppliedEffect.empoweredScope em data/types.ts): "physical" so' libera em
-// TAIJUTSU/KENJUTSU — as 4 abilities que usam isto (Lobo de Duas/Tres
+// AppliedEffect.empoweredScope em data/types.ts): "physical" libera em
+// TAIJUTSU/KENJUTSU; "taijutsu" e "ninjutsu" restringem a uma categoria.
+// As abilities que usam "physical" (Lobo de Duas/Tres
 // Cabecas, Grande Braco de Agua, Pilula Secreta) prometem "golpes fisicos
 // (Taijutsu/Kenjutsu)" na descricao, entao BUKIJUTSU generico (arremesso de
 // kunai/shuriken) fica de fora de proposito — NAO usa isPhysicalCategory por
@@ -196,15 +197,22 @@ export function empoweredDamageMult(
   usedAbility: { category: string; requirements?: { clanId?: string } },
 ): number {
   const physical = usedAbility.category === "TAIJUTSU" || usedAbility.category === "KENJUTSU";
-  const applies = activeEffects.some((e) => {
-    if (!isActive(e, "EMPOWERED")) return false;
+  let multiplier = 1;
+  for (const e of activeEffects) {
+    if (!isActive(e, "EMPOWERED")) continue;
     const data = parseEffectData(e.dataJson);
-    if (!data.empoweredScope) return true;
-    if (data.empoweredScope.kind === "physical") return physical;
-    if (data.empoweredScope.kind === "clan") return usedAbility.requirements?.clanId === data.empoweredScope.clanId;
-    return true;
-  });
-  return applies ? 1 + E.EMPOWERED.dmgMultBonus : 1;
+    const scope = data.empoweredScope;
+    const applies = !scope
+      || (scope.kind === "physical" && physical)
+      || (scope.kind === "taijutsu" && usedAbility.category === "TAIJUTSU")
+      || (scope.kind === "ninjutsu" && usedAbility.category === "NINJUTSU")
+      || (scope.kind === "clan" && usedAbility.requirements?.clanId === scope.clanId);
+    if (!applies) continue;
+    // stacks acima de 1 guardam o multiplicador proprio da habilidade
+    // (1.2 = +20%). O valor antigo 1 continua usando a Sobrecarga padrao.
+    multiplier = Math.max(multiplier, e.stacks > 1 ? e.stacks : 1 + E.EMPOWERED.dmgMultBonus);
+  }
+  return multiplier;
 }
 
 // ---------------------------------------------------- dataJson de efeitos
@@ -218,7 +226,11 @@ export function empoweredDamageMult(
 export interface EffectData {
   formGroup?: { group: string; amount: number };
   onExpire?: { effectId: EffectId; stacks?: number; duration?: number };
-  empoweredScope?: { kind: "physical" } | { kind: "clan"; clanId: string };
+  empoweredScope?:
+    | { kind: "physical" }
+    | { kind: "taijutsu" }
+    | { kind: "ninjutsu" }
+    | { kind: "clan"; clanId: string };
 }
 export function parseEffectData(dataJson: string | null | undefined): EffectData {
   if (!dataJson) return {};

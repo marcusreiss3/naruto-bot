@@ -33,7 +33,7 @@ function makeClan(clanId: string, defaultPool: Attribute) {
     icon: string,
     rank: NodeRank,
     branch: string,
-    col: -1 | 0 | 1,
+    col: number,
     row: number,
     requires: string[],
     reqLevel: number,
@@ -69,7 +69,7 @@ function makeClan(clanId: string, defaultPool: Attribute) {
     name: string,
     icon: string,
     branch: string,
-    col: -1 | 0 | 1,
+    col: number,
     row: number,
     requires: string[],
     reqLevel: number,
@@ -581,7 +581,7 @@ const AKIMICHI: SkillNodeDef[] = [
     ["akimichi_bofetada"],
     25,
     19,
-    "Engole uma das pílulas secretas do clã: por 3 rodadas, +60% de dano nos seus golpes físicos (Taijutsu/Kenjutsu). Quando o efeito passa, o corpo cobra o preço: reduz a defesa por 2 rodadas.",
+    "O usuário engole uma das pílulas secretas do clã, e seu corpo é tomado por uma intensa descarga de chakra.",
     undefined,
     "ninjutsu",
   ),
@@ -666,7 +666,7 @@ const ABURAME: SkillNodeDef[] = [
     ["aburame_clone_inseto"],
     6,
     7,
-    "Envolve-se num casulo real pra acelerar o crescimento dos próprios insetos: por 3 rodadas, +60% de dano nos golpes que usam kikaichū. O preço: por 2 rodadas fica preso ao chão e reduz a defesa — melhor fazer isso longe da linha de frente ou protegido por um aliado.",
+    "Um casulo espesso, formado por seda e insetos, se fecha completamente ao redor do usuário.",
   ),
   AB.jutsu(
     "aburame_esfera",
@@ -829,7 +829,7 @@ const INUZUKA: SkillNodeDef[] = [
     ["inuzuka_raiz"],
     5,
     5,
-    "O cão ninja se transforma numa cópia física do usuário: os dois atacam juntos e coordenados. 60% de chance de deixar o alvo Confuso por 2 rodadas, sem conseguir identificar qual dos dois é o verdadeiro. Precisa do cão ninja vivo em campo.",
+    "O cão ninja assume uma cópia física perfeita do usuário, e os dois avançam com movimentos espelhados.",
     undefined,
     "ninjutsu",
   ),
@@ -857,7 +857,7 @@ const INUZUKA: SkillNodeDef[] = [
     ["inuzuka_sobre_presa", "inuzuka_clone_besta"],
     13,
     11,
-    "Versão evoluída do Sobre Presa: usuário e cão giram juntos, multiplicando a potência da broca. Não pode ser esquivado, empurra o alvo 2 casas e tem 30% de chance de Atordoar por 1 rodada. Precisa do cão ninja vivo em campo.",
+    "Usuário e cão giram lado a lado como duas brocas que se cruzam em alta velocidade.",
   ),
   IZ.jutsu(
     "inuzuka_lobo_duas_cabecas",
@@ -870,7 +870,7 @@ const INUZUKA: SkillNodeDef[] = [
     ["inuzuka_presa_sobre_presa"],
     17,
     14,
-    "Usuário e cão se fundem num enorme lobo de duas cabeças: por 3 rodadas, +60% de dano nos seus golpes físicos (Taijutsu/Kenjutsu). Precisa do cão ninja vivo em campo.",
+    "Usuário e cão se fundem, formando um enorme lobo branco de duas cabeças com garras e presas salientes.",
     undefined,
     "ninjutsu",
   ),
@@ -885,7 +885,7 @@ const INUZUKA: SkillNodeDef[] = [
     ["inuzuka_lobo_duas_cabecas"],
     20,
     17,
-    "Depois da fusão em Lobo de Duas Cabeças, reúnem toda a força na super-rotação: perfuram o alvo com velocidade avassaladora numa linha reta. Não pode ser esquivado e empurra o alvo 2 casas. Precisa do cão ninja vivo em campo.",
+    "O lobo de duas cabeças concentra o corpo numa enorme broca giratória e dispara em linha reta.",
   ),
   IZ.jutsu(
     "inuzuka_lobo_tres_cabecas",
@@ -898,7 +898,7 @@ const INUZUKA: SkillNodeDef[] = [
     ["inuzuka_presa_de_lobo"],
     24,
     20,
-    "Depois de criar um clone de sombra, o usuário se funde com o clone e o cão ninja num lobo gigante de três cabeças: por 3 rodadas, +60% de dano nos golpes físicos (Taijutsu/Kenjutsu), e ganha 26 pontos de Barreira por 3 rodadas. Garras e presas ficam brutalmente eficientes em ataques diretos. Precisa do cão ninja vivo em campo.",
+    "O usuário, seu clone e o cão ninja se fundem num lobo branco gigantesco de três cabeças.",
     undefined,
     "ninjutsu",
   ),
@@ -925,7 +925,7 @@ const INUZUKA: SkillNodeDef[] = [
     ["inuzuka_apice"],
     30,
     25,
-    "Ainda fundido no lobo gigante de três cabeças, o usuário se enrola numa bola e rola numa velocidade feroz, como se corresse atrás da própria cauda: a rotação ultra-violenta rasga através de vários inimigos na linha de ataque. Não pode ser esquivado e tem 35% de chance de Atordoar por 1 rodada. Precisa do cão ninja vivo em campo.",
+    "O lobo de três cabeças se enrola numa esfera e avança girando com violência pelo campo.",
   ),
 ];
 
@@ -1054,7 +1054,7 @@ const HATAKE: SkillNodeDef[] = [
     ["hatake_caes_ninja"],
     9,
     8,
-    "A matilha cerca o alvo, mordendo e pesando sobre ele: 85% de chance de imobilizar por 2 rodadas e 30% de chance de Atordoar por 1 rodada. Precisa de pelo menos um cão vivo em campo.",
+    "A matilha salta de vários ângulos ao mesmo tempo, derrubando e cercando o alvo com presas e patas.",
   ),
   HK.jutsu(
     "hatake_lamina",
@@ -1287,7 +1287,7 @@ const HOZUKI: SkillNodeDef[] = [
     ["hozuki_hidratacao"],
     9,
     8,
-    "Usa o próprio estado líquido pra empilhar mais água sobre o corpo, principalmente o braço: por 3 rodadas, +60% de dano nos seus golpes físicos (Taijutsu/Kenjutsu).",
+    "O braço do usuário absorve uma grande massa de água e cresce de forma desproporcional, coberto por músculos líquidos.",
   ),
   HZ.jutsu(
     "hozuki_revolver_agua",
@@ -1521,7 +1521,7 @@ const KAGUYA: SkillNodeDef[] = [
 // direto de Domínio Suiton).
 const YK = makeClan("yuki", "ninjutsu");
 const YUKI: SkillNodeDef[] = [
-  YK.pass("yuki_raiz", "Vitalidade Yuki", "❄️", "Raiz", 0, 0, [], 1, 1, "Passiva sempre ativa: a resistência do clã ao frio de Kiri. +8% de vida máxima e recupera 3 HP no início de cada turno.", true),
+  YK.pass("yuki_raiz", "Controle de Chakra Yuki", "❄️", "Raiz", 0, 0, [], 1, 1, "Passiva sempre ativa: o controle de chakra refinado do clã. Seus Ninjutsus gastam 8% menos chakra.", true),
   YK.pass("yuki_agua", "Domínio Suiton", "💧", "Água", -1, 1, ["yuki_raiz"], 10, 8, "Passiva: seus jutsus de Água causam +10% de dano."),
   YK.pass("yuki_hyoton", "Domínio Hyoton", "🧊", "Gelo", 1, 1, ["yuki_raiz"], 10, 8, "Passiva: seus jutsus de Gelo causam +10% de dano."),
   YK.pass("yuki_prisao", "Prisão Persistente", "🫧", "Água", -1, 2, ["yuki_agua"], 14, 10, "Passiva: a Prisão de Água custa 10% menos chakra e o Encharcado que ela aplica dura 1 rodada a mais."),
@@ -2160,15 +2160,15 @@ const SENJU: SkillNodeDef[] = [
 
   SJ.pass("senju_dominio_suiton", "Domínio Suiton", "🌊", "Estilo Água", -1, 3, ["senju_heranca", "agua_raiz"], 10, 8,
     "Passiva: seus jutsus de Água causam 10% mais dano."),
-  SJ.pass("senju_dragao_mare", "Dragão da Maré", "🐉", "Estilo Água", -1, 4, ["senju_dominio_suiton", "agua_dragao"], 14, 10,
+  SJ.pass("senju_dragao_mare", "Dragão da Maré", "🐉", "Estilo Água", -0.5, 4, ["senju_dominio_suiton", "agua_dragao"], 14, 10,
     "Passiva: o Dragão de Água causa 15% mais dano e alcança 1 casa adicional."),
-  SJ.pass("senju_muralha", "Muralha Inabalável", "🛡️", "Estilo Água", 0, 4, ["senju_dominio_suiton", "agua_muralha"], 14, 12,
+  SJ.pass("senju_muralha", "Muralha Inabalável", "🛡️", "Estilo Água", -0.5, 5, ["senju_dominio_suiton", "agua_muralha"], 14, 12,
     "Passiva: a Técnica da Muralha de Água concede 12 pontos adicionais de Barreira e gasta 10% menos chakra."),
-  SJ.pass("senju_cachoeira", "Grande Cachoeira Devastadora", "🏞️", "Estilo Água", -1, 5, ["senju_dragao_mare", "agua_cachoeira"], 25, 18,
+  SJ.pass("senju_cachoeira", "Grande Cachoeira Devastadora", "🏞️", "Estilo Água", -1.5, 5, ["senju_dragao_mare", "agua_cachoeira"], 25, 18,
     "Passiva: a Grande Cachoeira Explosiva causa 15% mais dano, alcança 1 casa adicional e empurra os alvos 1 casa a mais."),
-  SJ.pass("senju_chuva", "Chuva Celestial", "🌧️", "Estilo Água", 0, 5, ["senju_muralha", "agua_choro"], 20, 14,
+  SJ.pass("senju_chuva", "Chuva Celestial", "🌧️", "Estilo Água", -1.5, 4, ["senju_dominio_suiton", "agua_choro"], 12, 10,
     "Passiva: o Choro Celestial causa 15% mais dano, gasta 10% menos chakra e deixa o alvo Encharcado por 1 rodada a mais."),
-  SJ.jutsu("senju_ondas_cortantes", "Ondas de Águas Cortantes", "🌊", "A", "Estilo Água", -1, 6,
+  SJ.jutsu("senju_ondas_cortantes", "Ondas de Águas Cortantes", "🌊", "A", "Estilo Água", -1.5, 6,
     ["senju_cachoeira", "senju_chuva"], 28, 20,
     "Ondas finas e afiadas avançam em leque, cortando vários inimigos. Tem 70% de chance de causar Sangramento por 2 rodadas.",
     undefined, "ninjutsu", 6),
@@ -2315,20 +2315,18 @@ const ONOKI: SkillNodeDef[] = [
 // abilityIds mirando tecnicas ESPECIFICAS de Raio (mesmo padrao de
 // senju_dragao_mare/muralha/cachoeira/chuva, cada uma so' pra UMA ability),
 // deliberadamente SEM tocar em raiton_kirin (pedido explicito: "não pode ser
-// o Kirin" — o apice da arvore de Raio fica de fora). As duas ultimas sao
-// Kenjutsu — mesmo par que Hatake/Hoshigaki/Hozuki ja usam (crossCategory
-// "KENJUTSU": dano bruto + ignora Barreira/executa ferido), pra valer em
-// QUALQUER espada, nao so' uma exclusiva do clã (que nao existe aqui).
+// o Kirin" — o apice da arvore de Raio fica de fora). As quatro melhorias de
+// Raio formam uma linha continua; o Kenjutsu permanece num ramo separado.
 const YT = makeClan("yotsuki", "ninjutsu");
 const YOTSUKI: SkillNodeDef[] = [
   YT.pass("yotsuki_raiz", "Vitalidade Yotsuki", "🐝", "Raiz", 0, 0, [], 1, 1, "Passiva sempre ativa: a resistência do clã de Kumo. +8% de vida máxima e recupera 3 HP no início de cada turno.", true),
-  YT.pass("yotsuki_raiton", "Domínio Raiton", "⚡", "Raio", 0, 1, ["yotsuki_raiz"], 10, 8, "Passiva: seus jutsus de Raio causam +10% de dano."),
-  YT.pass("yotsuki_esfera", "Reflexo Elétrico", "🔵", "Raio", -1, 2, ["yotsuki_raiton"], 14, 10, "Passiva: a Esfera de Relâmpago causa +15% de dano e tem +15 pontos percentuais de chance de Atordoar."),
+  YT.pass("yotsuki_raiton", "Domínio Raiton", "⚡", "Raio", 0, 1, ["yotsuki_raiz"], 1, 8, "Passiva: seus jutsus de Raio causam +10% de dano."),
+  YT.pass("yotsuki_esfera", "Reflexo Elétrico", "🔵", "Raio", -1, 2, ["yotsuki_raiton"], 3, 10, "Passiva: a Esfera de Relâmpago causa +15% de dano e tem +15 pontos percentuais de chance de Atordoar."),
+  YT.pass("yotsuki_armadura", "Armadura Econômica", "🛡️", "Raio", -1, 3, ["yotsuki_esfera"], 14, 14, "Passiva: a Armadura do Ataque Relâmpago custa 10% menos chakra e a Aceleração que ela concede dura 1 rodada a mais."),
+  YT.pass("yotsuki_assassinato", "Corrente Amplificada", "🧲", "Raio", -1, 4, ["yotsuki_armadura"], 18, 18, "Passiva: o Assassinato Eletromagnético causa +15% de dano e perfura 20% da redução de quem bloqueia ou apara."),
+  YT.pass("yotsuki_pilares", "Prisão Amplificada", "🏛️", "Raio", -1, 5, ["yotsuki_assassinato"], 22, 22, "Passiva: a Prisão dos Quatro Pilares causa +15% de dano e alcança 1 casa a mais."),
   YT.pass("yotsuki_kenjutsu_1", "Estilo das Sete Lâminas", "⚔️", "Kenjutsu", 1, 2, ["yotsuki_raiton"], 14, 10, "Passiva sempre ativa: seus golpes de Kenjutsu causam +15% de dano."),
-  YT.pass("yotsuki_pilares", "Prisão Amplificada", "🏛️", "Raio", -1, 3, ["yotsuki_esfera"], 20, 14, "Passiva: a Prisão dos Quatro Pilares causa +15% de dano e alcança 1 casa a mais."),
   YT.pass("yotsuki_kenjutsu_2", "Corte Fulminante", "🗲", "Kenjutsu", 1, 3, ["yotsuki_kenjutsu_1"], 20, 14, "Passiva sempre ativa: seus golpes de Kenjutsu ignoram a Barreira do alvo e causam +15% de dano em quem estiver abaixo de 30% de vida."),
-  YT.pass("yotsuki_armadura", "Armadura Econômica", "🛡️", "Raio", -1, 4, ["yotsuki_pilares"], 25, 18, "Passiva: a Armadura do Ataque Relâmpago custa 10% menos chakra e a Aceleração que ela concede dura 1 rodada a mais."),
-  YT.pass("yotsuki_assassinato", "Corrente Amplificada", "🧲", "Raio", -1, 5, ["yotsuki_armadura"], 30, 22, "Passiva: o Assassinato Eletromagnético causa +15% de dano e perfura 20% da redução de quem bloqueia ou apara."),
 ];
 
 // ---------------------------------------------------------------- BAKUREI
@@ -2344,13 +2342,13 @@ const YOTSUKI: SkillNodeDef[] = [
 const BK = makeClan("bakurei", "ninjutsu");
 const BAKUREI: SkillNodeDef[] = [
   BK.pass("bakurei_raiz", "Vigor de Iwa", "🪨", "Raiz", 0, 0, [], 1, 1, "Passiva sempre ativa: a resistência física do clã de Iwa. +10% de vida máxima.", true),
-  BK.pass("bakurei_doton", "Domínio Doton", "⛰️", "Terra", -1, 1, ["bakurei_raiz"], 10, 8, "Passiva: seus jutsus de Terra causam +10% de dano."),
+  BK.pass("bakurei_doton", "Domínio Doton", "⛰️", "Terra", -1, 1, ["bakurei_raiz"], 5, 8, "Passiva: seus jutsus de Terra causam +10% de dano."),
   BK.pass("bakurei_bakuton", "Domínio Bakuton", "💥", "Explosão", 1, 1, ["bakurei_raiz"], 10, 8, "Passiva: seus jutsus de Explosão causam +10% de dano."),
-  BK.pass("bakurei_punho_rochoso", "Punho Reforçado", "👊", "Terra", -1, 2, ["bakurei_doton"], 14, 10, "Passiva: o Punho Rochoso causa +15% de dano e concede mais 8 pontos de Barreira."),
+  BK.pass("bakurei_punho_rochoso", "Punho Reforçado", "👊", "Terra", -1, 2, ["bakurei_doton"], 6, 10, "Passiva: o Punho Rochoso causa +15% de dano e concede mais 8 pontos de Barreira."),
   BK.pass("bakurei_impacto", "Onda de Choque Ampliada", "💢", "Explosão", 1, 2, ["bakurei_bakuton"], 14, 10, "Passiva: a Explosão de Impacto causa +15% de dano e empurra o alvo 1 casa a mais."),
-  BK.pass("bakurei_dragao_terra", "Projétil Ampliado", "🐉", "Terra", -1, 3, ["bakurei_punho_rochoso"], 20, 14, "Passiva: o Projétil do Dragão de Terra causa +15% de dano e a Lentidão que ele aplica dura 1 rodada a mais."),
-  BK.pass("bakurei_cortina", "Cortina Persistente", "💨", "Explosão", 1, 3, ["bakurei_impacto"], 20, 14, "Passiva: a Cortina de Fumaça custa 10% menos chakra e dura 1 rodada a mais."),
-  BK.pass("bakurei_cupula", "Cúpula Sufocante", "🛖", "Terra", -1, 4, ["bakurei_dragao_terra"], 25, 18, "Passiva: a Prisão Cúpula de Terra custa 10% menos chakra e o Dreno de Chakra que ela aplica dura 1 rodada a mais."),
+  BK.pass("bakurei_dragao_terra", "Projétil Ampliado", "🐉", "Terra", -1, 3, ["bakurei_punho_rochoso"], 14, 14, "Passiva: o Projétil do Dragão de Terra causa +15% de dano e a Lentidão que ele aplica dura 1 rodada a mais."),
+  BK.pass("bakurei_cortina", "Cortina Persistente", "💨", "Explosão", 1, 3, ["bakurei_bakuton"], 10, 14, "Passiva: a Cortina de Fumaça custa 10% menos chakra e dura 1 rodada a mais."),
+  BK.pass("bakurei_cupula", "Cúpula Sufocante", "🛖", "Terra", -1, 4, ["bakurei_dragao_terra"], 20, 18, "Passiva: a Prisão Cúpula de Terra custa 10% menos chakra e o Dreno de Chakra que ela aplica dura 1 rodada a mais."),
 ];
 
 export const CLAN_TREES: Record<string, SkillNodeDef[]> = {

@@ -218,8 +218,10 @@ export const ELEMENTAL: Ability[] = [
     terrain: { kind: "WATER", duration: 2 },
     requirements: { element: "AGUA", manualOnly: true },
     tags: ["agua", "area", "empurrao", "terreno"],
+    visualDescription:
+      "Uma massa turbulenta de água avança e se abre à frente do usuário como uma maré violenta.",
     description:
-      "Onda em cone que empurra os alvos para tras e deixa um rastro de agua no chao.",
+      "Uma massa turbulenta de água avança e se abre à frente do usuário como uma maré violenta.",
   },
   {
     id: "suiton_trombeta",
@@ -278,6 +280,8 @@ export const ELEMENTAL: Ability[] = [
     effects: [{ effectId: "BLEED", duration: 3 }],
     requirements: { element: "AGUA", manualOnly: true },
     tags: ["agua", "corte", "alcance"],
+    visualDescription:
+      "Duas lâminas curvas de água envolvem os braços do usuário, lembrando as garras de um louva-a-deus.",
     description:
       "Garras de agua que aumentam o alcance dos seus golpes. Causa Sangramento.",
   },
@@ -300,8 +304,10 @@ export const ELEMENTAL: Ability[] = [
     },
     requirements: { element: "AGUA", manualOnly: true },
     tags: ["agua", "invocacao", "setup"],
+    visualDescription:
+      "A água se ergue e assume uma cópia líquida do usuário, com corpo translúcido e movimentos fluidos.",
     description:
-      "Invoca um clone de agua que luta ao seu lado. Ao morrer, ele estoura e deixa todos em volta Encharcados, preparando o combo com Raio.",
+      "A água se ergue e assume uma cópia líquida do usuário, com corpo translúcido e movimentos fluidos.",
   },
   {
     id: "suiton_prisao",
@@ -382,6 +388,8 @@ export const ELEMENTAL: Ability[] = [
     terrain: { kind: "WATER", duration: 3 },
     requirements: { element: "AGUA", manualOnly: true },
     tags: ["agua", "area", "terreno"],
+    visualDescription:
+      "Uma parede colossal de água desaba sobre o campo com a força de uma cachoeira liberada de uma só vez.",
     description:
       "Onda gigante que empurra e inunda a area inteira, deixando todos os atingidos Encharcados.",
   },
@@ -430,6 +438,8 @@ export const ELEMENTAL: Ability[] = [
     effects: [{ effectId: "BLEED", duration: 2 }],
     requirements: { element: "VENTO", manualOnly: true },
     tags: ["vento", "area", "empurrao"],
+    visualDescription:
+      "O usuário projeta as mãos e libera uma massa compacta de vento que se expande violentamente à sua frente.",
     description:
       "Rajada de vento comprimido em cone que empurra os alvos para tras e corta na passagem, causando Sangramento.",
   },
@@ -470,6 +480,8 @@ export const ELEMENTAL: Ability[] = [
     effects: [{ effectId: "BLEED", duration: 2 }],
     requirements: { element: "VENTO", manualOnly: true },
     tags: ["vento", "area", "empurrao"],
+    visualDescription:
+      "Uma rajada densa explode à frente do usuário e cresce como uma parede de vento descontrolada.",
     description: "Rajada frontal forte que empurra o alvo 3 casas para tras.",
   },
   {
@@ -492,6 +504,8 @@ export const ELEMENTAL: Ability[] = [
     ],
     requirements: { element: "VENTO", manualOnly: true },
     tags: ["vento", "area", "debuff"],
+    visualDescription:
+      "Uma espiral de pétalas é capturada pelo vento e cresce ao redor dos alvos como um turbilhão cortante.",
     description:
       "Turbilhao de petalas: causa dano em area, empurra os alvos 2 casas e cega quem for atingido, reduzindo a defesa deles.",
   },
@@ -512,6 +526,8 @@ export const ELEMENTAL: Ability[] = [
     effects: [{ effectId: "BLEED", duration: 3 }],
     requirements: { element: "VENTO", manualOnly: true },
     tags: ["vento", "linha", "preciso"],
+    visualDescription:
+      "Uma lâmina curva de vento comprimido nasce diante da mão do usuário e corta o ar em alta velocidade.",
     description:
       "Lamina de vento invisivel que nao pode ser esquivada. Causa Sangramento.",
   },
@@ -764,10 +780,12 @@ export const ELEMENTAL: Ability[] = [
     shape: "SELF",
     summon: {
       templateId: "summon_golem",
-      onDeath: { effectId: "SHIELD", radius: 1, duration: 3 },
+      onDeath: { effectId: "SHIELD", stacks: 20, radius: 1, duration: 3 },
     },
     requirements: { element: "TERRA", manualOnly: true },
     tags: ["terra", "invocacao", "apice", "defesa"],
+    visualDescription:
+      "Blocos de rocha se unem e se erguem até formar um guardião colossal de pedra diante do usuário.",
     description:
       "Invoca um golem gigante que da Barreira aos aliados e ataca sozinho. Gasta muito chakra.",
   },

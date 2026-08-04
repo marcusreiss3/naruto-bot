@@ -47,21 +47,19 @@ export const GENJUTSU_ABILITIES: Ability[] = [
     category: "GENJUTSU",
     tier: 2,
     resource: "chakra",
-    // custo calculado por suggestedJutsuCost() — ver jutsu-balance.ts. Prende
-    // com STUN (nao age) + ROOT (nao foge) por 2 rodadas E ignora esquiva:
-    // e' um lockdown quase completo, tem que custar como um.
-    cost: 28,
+    // Controle confiável, mas com contrajogo: a Esquiva ainda evita o jutsu;
+    // se acertar, prende por 2 rodadas e só pode Atordoar brevemente.
+    cost: 20,
     actionType: "COMUM",
     baseDamage: 8,
     scalingAttribute: "genjutsu",
     range: 2,
     shape: "SINGLE_TARGET",
-    undodgeable: true,
-    effects: [{ effectId: "STUN", duration: 2 }, { effectId: "ROOT", duration: 2 }],
+    effects: [{ effectId: "STUN", duration: 1, chance: 0.6 }, { effectId: "ROOT", duration: 2 }],
     requirements: { manualOnly: true, attributes: { genjutsu: 12 }, level: 14 },
     tags: ["genjutsu", "controle", "aprisionamento"],
     description:
-      "Você desaparece como uma névoa para se aproximar sem ser detectado. Ao alcançar o alvo, ele vê uma árvore crescer e se enrolar ao redor do próprio corpo: fica paralisado e imobilizado, mas consciente. Não pode ser esquivado.",
+      "O usuário desaparece como névoa e, ao reaparecer, uma árvore ilusória cresce ao redor do alvo e fecha seus galhos sobre ele.",
   },
   {
     id: "gen_contra_genjutsu",
@@ -70,7 +68,7 @@ export const GENJUTSU_ABILITIES: Ability[] = [
     tier: 1,
     resource: "chakra",
     cost: 12,
-    actionType: "BONUS",
+    actionType: "COMUM",
     scalingAttribute: "genjutsu",
     range: 2,
     shape: "ALLY",
@@ -78,7 +76,7 @@ export const GENJUTSU_ABILITIES: Ability[] = [
     requirements: { manualOnly: true, attributes: { genjutsu: 3 } },
     tags: ["genjutsu", "remocao", "suporte"],
     description:
-      "Interrompe por um instante a rede de chakra do cérebro, cortando o fluxo que alimenta uma ilusão. Remove Confusão, Bloqueio de Ninjutsu e Defesa Reduzida de si mesmo ou de um aliado.",
+      "O usuário reorganiza o próprio fluxo de chakra, desfazendo as distorções que sustentam uma ilusão.",
   },
   {
     id: "gen_substituicao_ilusoria",
@@ -148,11 +146,11 @@ export const GENJUTSU_ABILITIES: Ability[] = [
     category: "GENJUTSU",
     tier: 2,
     resource: "chakra",
-    // custo calculado por suggestedJutsuCost() — mais barato que o normal do
-    // tier porque so' pode ser usado numa vitima ja capturada (requiresTargetEffect)
-    cost: 14,
-    actionType: "COMUM",
-    baseDamage: 8,
+    // Só pode ser usado contra uma vítima previamente controlada. Como não
+    // causa dano, entra como complemento de ação bônus ao controle do ramo.
+    cost: 10,
+    actionType: "BONUS",
+    baseDamage: 0,
     scalingAttribute: "genjutsu",
     range: 2,
     shape: "SINGLE_TARGET",
@@ -160,8 +158,10 @@ export const GENJUTSU_ABILITIES: Ability[] = [
     effects: [{ effectId: "CHAKRA_DRAIN", duration: 2 }],
     requirements: { manualOnly: true, attributes: { genjutsu: 17 }, level: 20 },
     tags: ["genjutsu", "controle", "captura"],
+    visualDescription:
+      "O mundo ao redor do alvo se apaga, restando apenas uma sala vazia onde vozes invisíveis pressionam sua mente.",
     description:
-      "Só funciona numa vítima já Imobilizada ou Atordoada por outra técnica: a ilusão quebra a força de vontade do capturado, drenando o chakra dele a cada rodada.",
+      "O mundo ao redor do alvo se apaga, restando apenas uma sala vazia onde vozes invisíveis pressionam sua mente.",
   },
   {
     id: "gen_visao_inferno",
@@ -179,7 +179,9 @@ export const GENJUTSU_ABILITIES: Ability[] = [
     effects: [{ effectId: "STUN", duration: 2 }, { effectId: "DEFENSE_DOWN", duration: 2 }],
     requirements: { manualOnly: true, attributes: { genjutsu: 28 }, level: 34 },
     tags: ["genjutsu", "apice", "controle", "medo"],
+    visualDescription:
+      "A vítima é arrastada para uma visão em que o seu medo mais profundo toma forma e parece completamente real.",
     description:
-      "Revela à vítima o medo mais profundo escondido nela — consciente ou não — e a faz acreditar que ele é real. O terror puro a paralisa e destrói sua defesa. É Inevitável.",
+      "A vítima é arrastada para uma visão em que o seu medo mais profundo toma forma e parece completamente real.",
   },
 ];

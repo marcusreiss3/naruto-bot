@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { getAbility, getClan } from "../src/data/index.js";
 import { CLAN_TREES } from "../src/data/clan-trees/index.js";
 import { CLAN_PASSIVES } from "../src/data/clan-trees/passives.js";
-import { passiveMods, characterPassiveMods } from "../src/services/combat/passives.js";
+import { passiveMods } from "../src/services/combat/passives.js";
 
 // Clã reconstruido: o antigo kit de jutsu virou o kekkei genkai Gelo (ver
 // tests/gelo.test.ts) — o Yuki agora é puramente passivo, mesmo padrão do
@@ -59,11 +59,11 @@ describe("Yuki: clã reconstruido (só passiva, sem jutsu próprio)", () => {
     expect(ice).toHaveLength(2);
   });
 
-  it("raiz dá vida máxima + regen, mesma fórmula do Onoki", () => {
+  it("raiz reduz o custo de todo Ninjutsu", () => {
     const node = CLAN_TREES.yuki!.find((n) => n.id === "yuki_raiz")!;
     expect(node.requires).toEqual([]);
-    const mods = characterPassiveMods(["yuki_raiz"]);
-    expect(mods.maxHpBonus).toBeCloseTo(0.08);
-    expect(mods.hpRegenPerTurn).toBe(3);
+    expect(node.name).toBe("Controle de Chakra Yuki");
+    const water = getAbility("suiton_suiryuudan")!;
+    expect(passiveMods(["yuki_raiz"], water).costMult).toBeCloseTo(0.92);
   });
 });

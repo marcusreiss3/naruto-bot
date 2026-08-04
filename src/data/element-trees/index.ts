@@ -143,19 +143,19 @@ function make(element: Element) {
 const F = make("FOGO");
 const FOGO: SkillNodeDef[] = [
   F.pass("fogo_raiz", "Chama Interior", "🔥", "Raiz", 0, 0, [], 1, 1, "Passiva sempre ativa: todos os seus jutsus de Fogo causam +30% de dano.", true),
-  F.jutsu("fogo_grande_bola", "Grande Bola de Fogo", "☄️", "C", "Brasa", 0, 2, ["fogo_raiz"], 1, 3, "Cospe uma grande bola de fogo em cone. Aplica 1 acúmulo de Queimadura."),
-  F.jutsu("fogo_flor_fenix", "Flor de Fogo Fênix", "🌸", "C", "Brasa", 0, 4, ["fogo_grande_bola"], 5, 5, "Dispara vários projéteis flamejantes de uma vez. Aplica 2 acúmulos de Queimadura."),
+  F.jutsu("fogo_grande_bola", "Grande Bola de Fogo", "☄️", "C", "Brasa", 0, 2, ["fogo_raiz"], 1, 3, "O usuário concentra chakra na boca e cospe uma esfera de fogo que avança em cone, iluminando o campo com uma explosão de chamas."),
+  F.jutsu("fogo_flor_fenix", "Flor de Fogo Fênix", "🌸", "C", "Brasa", 0, 4, ["fogo_grande_bola"], 5, 5, "Várias pequenas bolas de fogo florescem ao redor do usuário e voam em trajetórias diferentes, fechando os caminhos de fuga do alvo."),
   F.pass("fogo_brasas", "Brasas Persistentes", "♨️", "Brasa", 1, 4, ["fogo_flor_fenix"], 8, 8, "Passiva: todo acerto seu de Fogo aplica 1 acúmulo de Queimadura a mais."),
   F.pass("fogo_combustao", "Combustão", "💥", "Brasa", 1, 5, ["fogo_brasas"], 15, 12, "Passiva: a Queimadura explode com 4 acúmulos em vez de 5, e a explosão causa 60 de dano em vez de 40."),
   F.jutsu("fogo_dragao", "Fogo do Dragão", "🐉", "B", "Cerco", 0, 6, ["fogo_flor_fenix"], 12, 10, "Lança um jato de fogo em linha reta que deixa um rastro de chamas no caminho. Aplica 3 acúmulos de Queimadura."),
   F.pass("fogo_pavio", "Pavio", "🧨", "Cerco", -1, 6, ["fogo_dragao"], 12, 10, "Passiva: as casas atingidas pelos seus jutsus de Fogo ficam em chamas por 2 rodadas e queimam quem passar por elas."),
   F.jutsu("fogo_cinzas", "Cinzas Ardentes", "🌫️", "A", "Cerco", -1, 7, ["fogo_pavio"], 22, 16, "Solta uma cortina de cinzas que bloqueia a visão e depois detona, aplicando 3 acúmulos de Queimadura em área."),
-  F.jutsu("fogo_grande_dragao", "Grande Dragão de Fogo", "🐲", "A", "Conflagração", 0, 8, ["fogo_dragao"], 25, 18, "Jato colossal de fogo em linha reta. É o maior dano direto do elemento."),
+  F.jutsu("fogo_grande_dragao", "Grande Dragão de Fogo", "🐲", "A", "Conflagração", 0, 8, ["fogo_dragao"], 25, 18, "Um dragão colossal de chamas avança em linha reta, cobrindo o caminho com uma torrente de fogo e iluminando tudo ao redor."),
   F.pass("fogo_folego", "Fôlego do Dragão", "🌬️", "Conflagração", 1, 8, ["fogo_grande_dragao"], 25, 18, "Passiva: seus jutsus de Fogo causam +55% de dano."),
   F.jutsu("fogo_bomba_dragao", "Bomba do Dragão Flamejante", "🔱", "A", "Conflagração", 1, 9, ["fogo_folego"], 28, 20, "Dragão de fogo que se divide em 3 direções e cerca o alvo. Aplica 2 acúmulos de Queimadura."),
-  F.jutsu("fogo_corrida", "Corrida de Fogo", "⭕", "B", "Cerco", 0, 10, ["fogo_grande_dragao"], 25, 18, "Cria um anel de fogo em volta do alvo: enquanto durar, ele não consegue fugir do combate."),
+  F.jutsu("fogo_corrida", "Corrida de Fogo", "⭕", "B", "Cerco", 0, 10, ["fogo_grande_dragao"], 25, 18, "Um anel de fogo se fecha ao redor do alvo, cercando-o com chamas altas e contínuas que transformam o espaço numa muralha ardente."),
   F.pass("fogo_sopro", "Sopro Eficiente", "💨", "Brasa", 0, 11, ["fogo_corrida"], 25, 18, "Passiva: seus jutsus de Fogo em cone custam 20% menos chakra."),
-  F.jutsu("fogo_aniquilador", "Grande Fogo Aniquilador", "🌋", "S", "Ápice", 0, 12, ["fogo_sopro"], 35, 24, "Dilúvio de chamas num cone gigante. Evapora a água do terreno. Gasta muito chakra."),
+  F.jutsu("fogo_aniquilador", "Grande Fogo Aniquilador", "🌋", "S", "Ápice", 0, 12, ["fogo_sopro"], 35, 24, "Uma muralha de chamas se espalha em cone gigante, transformando tudo à frente do usuário num mar de fogo e vapor escaldante."),
 ];
 
 // ---------------------------------------------------------------- TERRA
@@ -181,13 +181,13 @@ const A = make("AGUA");
 const AGUA: SkillNodeDef[] = [
   A.pass("agua_raiz", "Fluxo Constante", "💧", "Raiz", 0, 0, [], 1, 1, "Passiva sempre ativa: seus jutsus de Água custam 15% menos chakra e causam +15% de dano.", true),
   A.jutsu("agua_choro", "Choro Celestial", "🩸", "D", "Lâmina", 0, 2, ["agua_raiz"], 1, 1, "Agulhas de água caem de surpresa sobre o alvo e não podem ser esquivadas. Deixa o alvo levemente Encharcado."),
-  A.jutsu("agua_ondas", "Ondas Furiosas", "🌊", "C", "Maré", 0, 4, ["agua_choro"], 5, 4, "Onda em cone que empurra os alvos para trás e deixa um rastro de água no chão."),
-  A.jutsu("agua_clone", "Clone de Água", "🌫️", "B", "Névoa", -1, 4, ["agua_ondas"], 12, 8, "Ação bônus: invoca um clone de água que luta sozinho ao seu lado. Ao morrer, ele estoura e deixa todos em volta Encharcados, preparando o combo com Raio."),
+  A.jutsu("agua_ondas", "Ondas Furiosas", "🌊", "C", "Maré", 0, 4, ["agua_choro"], 5, 4, "Uma massa turbulenta de água avança e se abre à frente do usuário como uma maré violenta."),
+  A.jutsu("agua_clone", "Clone de Água", "🌫️", "B", "Névoa", -1, 4, ["agua_ondas"], 12, 8, "A água se ergue e assume uma cópia líquida do usuário, com corpo translúcido e movimentos fluidos."),
   A.pass("agua_correnteza", "Correnteza", "💫", "Maré", 1, 4, ["agua_ondas"], 12, 8, "Passiva: seus empurrões e puxões de Água movem o alvo 1 casa a mais."),
   A.jutsu("agua_prisao", "Prisão de Água", "🫧", "B", "Maré", 1, 5, ["agua_correnteza"], 15, 12, "Prende o alvo dentro de uma esfera de água: ele fica preso ao chão, Encharcado e não consegue fugir."),
   A.jutsu("agua_trombeta", "Trombeta de Água", "🎺", "C", "Corrente", 0, 6, ["agua_ondas"], 6, 4, "Dispara um jato de água pressurizada. Deixa o alvo Encharcado."),
   A.pass("agua_condutora", "Maré Condutora", "⚡", "Corrente", -1, 6, ["agua_trombeta"], 18, 12, "Passiva: seus jutsus de Água causam +25% de dano, e o estado Encharcado que você aplica dura 1 rodada a mais."),
-  A.jutsu("agua_cachoeira", "Grande Cachoeira Explosiva", "🏞️", "A", "Corrente", -1, 7, ["agua_condutora"], 25, 18, "Onda gigante que empurra e inunda a área inteira, deixando todos os atingidos Encharcados."),
+  A.jutsu("agua_cachoeira", "Grande Cachoeira Explosiva", "🏞️", "A", "Corrente", -1, 7, ["agua_condutora"], 25, 18, "Uma parede colossal de água desaba sobre o campo com a força de uma cachoeira liberada de uma só vez."),
   A.jutsu("agua_amarra", "Amarra de Água", "🌀", "C", "Corrente", 0, 8, ["agua_trombeta"], 6, 4, "Tentáculos de água que puxam o alvo para perto de você e o deixam mais lento."),
   A.jutsu("agua_louva", "Louva-a-deus de Água", "🦗", "C", "Lâmina", 1, 8, ["agua_amarra"], 8, 6, "Garras de água que aumentam o alcance dos seus golpes. Causa Sangramento."),
   A.pass("agua_fio", "Fio d'Água", "🪡", "Lâmina", 1, 9, ["agua_louva"], 18, 12, "Passiva: seus jutsus de Água causam +50% de dano contra alvos Encharcados."),
@@ -503,6 +503,16 @@ const NODE_ICONS: Record<string, string> = {
   explosao_apice: "explosao/estilo-explosao-pleno.png",
   explosao_mina: "explosao/punho-de-mina-terrestre.png",
 
+  // ---- Poeira (Jinton) ----
+  poeira_desprendimento: "poeira/desprendimento-do-mundo-primitivo.png",
+  poeira_raiz: "poeira/nucleo-do-mundo-primitivo.png",
+  poeira_pilar: "poeira/desprendimento-do-mundo-primitivo-pilar.png",
+  poeira_estilhaco: "poeira/fragmentacao-progressiva.png",
+  poeira_erosao: "poeira/erosao-absoluta.png",
+  poeira_conica: "poeira/desprendimento-do-mundo-primitivo-conica.png",
+  poeira_projeteis: "poeira/desprendimento-do-mundo-primitivo-projeteis.png",
+  poeira_apice: "poeira/vazio-absoluto.png",
+
   // ---- clãs ----
   uchiha_sharingan_1_tomoe: "uchiha/sharingan-1-tomoe.png",
   uchiha_controle_ocular: "uchiha/controle-ocular.png",
@@ -531,15 +541,15 @@ const NODE_ICONS: Record<string, string> = {
   hyuuga_apice: "hyuuga/rede-de-tenketsu.png",
   hyuuga_leoes_gemeos: "hyuuga/punhos-dos-leoes-gemeos.png",
 
-  gelo_raiz: "yuki/sangue-de-gelo.png",
-  gelo_agulhas: "yuki/agulhas-de-gelo.png",
-  gelo_espelho: "yuki/espelho-demoniaco-de-gelo-fino.png",
-  gelo_domo: "yuki/domo-de-iceberg.png",
-  gelo_presenca: "yuki/presenca-silenciosa.png",
-  gelo_reflexos: "yuki/reflexos-gelidos.png",
-  gelo_chuva_agulhas: "yuki/chuva-de-agulhas-geladas.png",
-  gelo_apice: "yuki/dominio-do-espelho-de-gelo.png",
-  gelo_agulhas_mil: "yuki/mil-agulhas-voadoras.png",
+  gelo_raiz: "gelo/sangue-de-gelo.png",
+  gelo_agulhas: "gelo/agulhas-de-gelo.png",
+  gelo_espelho: "gelo/espelho-demoniaco-de-gelo-fino.png",
+  gelo_domo: "gelo/domo-de-iceberg.png",
+  gelo_presenca: "gelo/presenca-silenciosa.png",
+  gelo_reflexos: "gelo/reflexos-gelidos.png",
+  gelo_chuva_agulhas: "gelo/chuva-de-agulhas-geladas.png",
+  gelo_apice: "gelo/dominio-do-espelho-de-gelo.png",
+  gelo_agulhas_mil: "gelo/mil-agulhas-voadoras.png",
 
   aburame_raiz: "aburame/colonia-ancestral.png",
   aburame_clone_inseto: "aburame/tecnica-dos-clones-de-inseto.png",
@@ -745,6 +755,20 @@ const NODE_ICONS: Record<string, string> = {
   raio_perfurante: "raio/ponta-perfurante.png",
   raio_pararaios: "raio/para-raios.png",
   raio_kirin: "raio/kirin.png",
+
+  // ---- Genjutsu ----
+  gen_raiz: "genjutsu/veu-da-mente.png",
+  gen_raizes_obscuras: "genjutsu/raizes-obscuras.png",
+  gen_ecos_cativeiro: "genjutsu/ecos-do-cativeiro.png",
+  gen_arvore_assassina: "genjutsu/aprisionamento-da-arvore-assassina.png",
+  gen_interrogatorio: "genjutsu/genjutsu-interrogatorio.png",
+  gen_contra_genjutsu: "genjutsu/contra-genjutsu.png",
+  gen_substituicao_ilusoria: "genjutsu/substituicao-ilusoria.png",
+  gen_fluencia_ilusao: "genjutsu/fluencia-da-ilusao.png",
+  gen_penas_caidas: "genjutsu/penas-caidas.png",
+  gen_dominio_do_medo: "genjutsu/dominio-do-medo.png",
+  gen_dominio_mundo_obscuro: "genjutsu/dominio-do-mundo-obscuro.png",
+  gen_visao_inferno: "genjutsu/ilusao-demoniaca-visao-do-inferno.png",
 };
 for (const [id, file] of Object.entries(NODE_ICONS)) {
   const n = NODE_INDEX.get(id);

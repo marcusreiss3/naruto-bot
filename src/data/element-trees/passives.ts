@@ -402,7 +402,7 @@ export const PASSIVES: PassiveDef[] = [
     initiativePriority: 1,
   },
   {
-    // Ecos do Cativeiro: a Imobilizacao da Arvore Assassina prende por mais tempo.
+    // Ecos do Cativeiro: apenas as Imobilizacoes aplicadas por Genjutsus duram mais.
     nodeId: "gen_ecos_cativeiro",
     crossCategory: "GENJUTSU",
     effectDurationBonus: { effectId: "ROOT", bonus: 1 },

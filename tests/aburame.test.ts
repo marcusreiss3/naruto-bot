@@ -170,24 +170,24 @@ describe("Aburame: Casulo de Insetos — sobrecarga com risco na frente (não de
     expect(casulo.actionType).toBe("COMUM");
   });
 
-  it("EMPOWERED nasce escopado pro próprio clã — só golpes que exigem clanId aburame, não um ninjutsu elemental qualquer", () => {
+  it("a Sobrecarga fortalece qualquer Ninjutsu em 30%", () => {
     const eff = casulo.effects!.find((e) => e.effectId === "EMPOWERED")!;
-    expect(eff.empoweredScope).toBe("clan");
+    expect(eff.empoweredScope).toBe("ninjutsu");
+    expect(eff.stacks).toBe(1.3);
   });
 
-  it("EMPOWERED escopado como 'clan' só multiplica jutsu que exige o MESMO clã — Mordida de Inseto sim, Bola de Fogo não", () => {
+  it("o bônus vale para Ninjutsu de clã e elemental, mas não para Taijutsu", () => {
     const comEscopo: EffectState[] = [
       {
         effectId: "EMPOWERED",
-        stacks: 1,
+        stacks: 1.3,
         duration: 3,
-        dataJson: JSON.stringify({ empoweredScope: { kind: "clan", clanId: "aburame" } }),
+        dataJson: JSON.stringify({ empoweredScope: { kind: "ninjutsu" } }),
       },
     ];
-    const mordida = getAbility("aburame_mordida")!; // categoria NINJUTSU, mas exige clanId aburame
-    expect(empoweredDamageMult(comEscopo, mordida)).toBeCloseTo(1.6);
-    const bola = getAbility("katon_goukakyuu")!; // sem clanId nenhum
-    expect(empoweredDamageMult(comEscopo, bola)).toBe(1);
+    expect(empoweredDamageMult(comEscopo, getAbility("aburame_mordida")!)).toBeCloseTo(1.3);
+    expect(empoweredDamageMult(comEscopo, getAbility("katon_goukakyuu")!)).toBeCloseTo(1.3);
+    expect(empoweredDamageMult(comEscopo, { category: "TAIJUTSU" })).toBe(1);
   });
 });
 
