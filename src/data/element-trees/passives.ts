@@ -74,6 +74,20 @@ export interface PassiveDef {
   // compatibilidade. Novo efeito com acumulo deveria usar este em vez de
   // criar mais um campo dedicado).
   effectStacksBonus?: Partial<Record<EffectId, number>>;
+  maxHpBonus?: number;
+  hpRegenPerTurn?: number;
+  // teto/reserva de energia; a engine limita o acumulado a +50% (150% total).
+  maxEnergyBonus?: number;
+  // casas adicionais na ação de movimento; aplicado antes de lentidão/terreno.
+  moveBonus?: number;
+  firstHitDamageMult?: number;
+  mistDamageMult?: number;
+  markOnFirstHit?: { duration: number };
+  firstKenjutsuDamageMult?: number;
+  decisiveKenjutsuDamageMult?: number;
+  // reduz a chance final de Esquiva do alvo contra a técnica coberta, em
+  // pontos percentuais. Mantido baixo porque esquiva é uma defesa universal.
+  dodgePenalty?: number;
 }
 
 export const PASSIVES: PassiveDef[] = [
@@ -481,6 +495,49 @@ export const PASSIVES: PassiveDef[] = [
     element: "GELO",
     damageMult: 1.5, // 1.35 * 1.50 = 2.025, identico a Vapor/Calor/Lava
   },
+
+  // ------------------------------------------------ TAIIJUTSU (arvore geral)
+  { nodeId: "tai_pass_raiz", crossCategory: "TAIJUTSU", damageMult: 1.08 },
+  { nodeId: "tai_pass_vigor", maxHpBonus: 0.10 },
+  { nodeId: "tai_pass_corpo_temperado", maxHpBonus: 0.08 },
+  { nodeId: "tai_pass_recuperacao", hpRegenPerTurn: 3 },
+  { nodeId: "tai_pass_reserva", maxEnergyBonus: 0.25 },
+  { nodeId: "tai_pass_reserva_profunda", maxEnergyBonus: 0.25 },
+  { nodeId: "tai_pass_maestria", crossCategory: "TAIJUTSU", damageMult: 1.10 },
+  { nodeId: "tai_pass_passada", moveBonus: 1 },
+
+  { nodeId: "tai_agitacao_passos", crossCategory: "TAIJUTSU", dodgePenalty: 0.05 },
+  { nodeId: "tai_agitacao_finta", crossCategory: "TAIJUTSU", dodgePenalty: 0.04 },
+  { nodeId: "tai_agitacao_ritmo", crossCategory: "TAIJUTSU", dodgePenalty: 0.03 },
+
+  { nodeId: "tai_forte_ritmo", abilityIds: ["tai_furacao_folha", "tai_vendaval_folha", "tai_grande_furacao_folha"], costMult: 0.85 },
+
+  { nodeId: "tai_arhat_impacto", abilityIds: ["arhat_palmada_colapso", "arhat_ombro", "arhat_palmada_ascendente"], pushBonus: 1 },
+  { nodeId: "tai_arhat_pressao", abilityIds: ["arhat_palma_compressao", "arhat_golpe_rocha"], damageMult: 1.12 },
+  { nodeId: "tai_arhat_estabilidade", abilityIds: ["arhat_joelhada", "arhat_palma_compressao"], costMult: 0.88 },
+
+  { nodeId: "tai_adamantino_controle", abilityIds: ["adamantino_pe_dor_celestial", "adamantino_impacto_flor_cerejeira", "adamantino_impacto_flor_florescimento", "adamantino_cem_forcas", "adamantino_destruicao_pilar", "adamantino_super_peteleco"], costMult: 0.88 },
+  { nodeId: "tai_adamantino_ruptura", abilityIds: ["adamantino_impacto_flor_cerejeira", "adamantino_impacto_flor_florescimento", "adamantino_super_peteleco"], damageMult: 1.10 },
+  { nodeId: "tai_adamantino_forca", abilityIds: ["adamantino_pe_dor_celestial", "adamantino_impacto_flor_cerejeira", "adamantino_impacto_flor_florescimento", "adamantino_destruicao_pilar", "adamantino_super_peteleco"], damageMult: 1.08 },
+
+  { nodeId: "tai_gentil_fluxo", abilityIds: ["hyuuga_punho_suave", "hyuuga_64_palmas", "hyuuga_128_palmas"], effectChanceBonus: { NINJUTSU_BLOCK: 0.12 } },
+  { nodeId: "tai_gentil_precisao", abilityIds: ["hyuuga_palma_vacuo", "hyuuga_leoes_gemeos"], rangeBonus: 1, damageMult: 1.12 },
+  { nodeId: "tai_gentil_guarda", abilityIds: ["hyuuga_palma_rotativa"], costMult: 0.85, effectStacksBonus: { SHIELD: 10 } },
+  { nodeId: "tai_gentil_vacuo", abilityIds: ["hyuuga_palma_vacuo"], pushBonus: 1 },
+  { nodeId: "tai_gentil_tenketsu", abilityIds: ["hyuuga_64_palmas", "hyuuga_128_palmas"], costMult: 0.90 },
+  { nodeId: "tai_gentil_leoes", abilityIds: ["hyuuga_leoes_gemeos"], damageMult: 1.08 },
+
+  { nodeId: "tai_ken_postura", crossCategory: "KENJUTSU", costMult: 0.90 },
+  { nodeId: "tai_ken_fio", crossCategory: "KENJUTSU", damageMult: 1.10 },
+  { nodeId: "tai_ken_geometria", crossCategory: "KENJUTSU", rangeBonus: 1, rangeShapes: ["LINE"], armorPierce: 0.10 },
+
+  { nodeId: "tai_nevoa_primeiro_golpe", crossCategory: "TAIJUTSU", firstHitDamageMult: 1.15 },
+  { nodeId: "tai_nevoa_ponto_cego", crossCategory: "TAIJUTSU", damageMultVsEffect: { effectId: "DEFENSE_DOWN", mult: 1.12 }, armorPierce: 0.12 },
+  { nodeId: "tai_nevoa_ofuscante", crossCategory: "TAIJUTSU", mistDamageMult: 1.10 },
+  { nodeId: "tai_nevoa_marca", crossCategory: "TAIJUTSU", markOnFirstHit: { duration: 3 }, damageMultVsEffect: { effectId: "MARKED", mult: 1.10 } },
+  { nodeId: "tai_nevoa_misericordia", crossCategory: "TAIJUTSU", executeBonus: { hpThreshold: 0.20, mult: 1.18 } },
+  { nodeId: "tai_nevoa_saque", crossCategory: "KENJUTSU", firstKenjutsuDamageMult: 1.14, initiativePriority: 1 },
+  { nodeId: "tai_nevoa_corte", crossCategory: "KENJUTSU", decisiveKenjutsuDamageMult: 1.18, armorPierce: 0.18 },
 ];
 
 export const PASSIVE_INDEX: Map<string, PassiveDef> = new Map(PASSIVES.map((p) => [p.nodeId, p]));

@@ -19,6 +19,7 @@ import { FUNDAMENTOS } from "../src/data/element-trees/fundamentals.js";
 import { BUKIJUTSU_TREE } from "../src/data/bukijutsu-tree.js";
 import { IRYO_NINJUTSU_TREE } from "../src/data/iryo-ninjutsu-tree.js";
 import { GENJUTSU_TREE } from "../src/data/genjutsu-tree.js";
+import { TAIJUTSU_TREE } from "../src/data/taijutsu-tree.js";
 import { CLAN_STARTING_ELEMENT } from "../src/data/clans/starting-element.js";
 import { getAbility, getClan, CLANS } from "../src/data/index.js";
 import {
@@ -90,6 +91,7 @@ function combatOf(node: SkillNodeDef) {
   return {
     category: ab.category,
     actionType: ab.actionType,
+    additionalActionType: ab.additionalActionType,
     resource: ab.resource,
     cost: ab.cost,
     shape: ab.shape,
@@ -176,6 +178,7 @@ function buildState() {
     FUNDAMENTOS: viewNodes(snap, fundamentos),
     BUKIJUTSU: viewNodes(snap, BUKIJUTSU_TREE),
     GENJUTSU: viewNodes(snap, GENJUTSU_TREE),
+    TAIJUTSU: viewNodes(snap, TAIJUTSU_TREE),
     IRYO_NINJUTSU: viewNodes(snap, IRYO_NINJUTSU_TREE),
   };
   for (const el of Object.keys(ELEMENT_TREES) as Element[]) trees[el] = viewNodes(snap, ELEMENT_TREES[el]);

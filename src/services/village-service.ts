@@ -1,4 +1,5 @@
 import type { GuildMember } from "discord.js";
+import { ENV } from "../config/env.js";
 import {
   MANSAO_HOKAGE_CHANNEL_ID,
   MANSAO_KAZEKAGE_CHANNEL_ID,
@@ -44,6 +45,23 @@ export function villageFromMember(member: GuildMember | null | undefined): Villa
 export function normalizeVillageId(value: unknown): VillageId {
   if (value === "SUNA" || value === "IWA" || value === "KUMO" || value === "KIRI" || value === "KONOHA") {
     return value;
+  }
+  return "KONOHA";
+}
+
+// O site autentica apenas a identidade do Discord; para gates de vila ele
+// consulta o membro no servidor com o token do bot. Falha segura em Konoha:
+// nunca concede indevidamente um ramo exclusivo de Kirigakure.
+export async function villageForDiscordUser(guildId: string, discordId: string): Promise<VillageId> {
+  if (!guildId || !discordId) return "KONOHA";
+  const res = await fetch(`https://discord.com/api/v10/guilds/${guildId}/members/${discordId}`, {
+    headers: { Authorization: `Bot ${ENV.DISCORD_TOKEN}` },
+  }).catch(() => null);
+  if (!res?.ok) return "KONOHA";
+  const body = await res.json().catch(() => null) as { roles?: unknown } | null;
+  const roles = Array.isArray(body?.roles) ? body.roles : [];
+  for (const village of Object.keys(VILLAGE_ROLES) as VillageId[]) {
+    if (roles.includes(VILLAGE_ROLES[village])) return village;
   }
   return "KONOHA";
 }

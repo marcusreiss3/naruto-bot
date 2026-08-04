@@ -7,6 +7,9 @@ import { BUKIJUTSU_ABILITIES } from "./jutsus/bukijutsu.js";
 import { IRYO_ABILITIES } from "./jutsus/iryo.js";
 import { KAGE_BUNSHIN_ABILITIES } from "./jutsus/kage-bunshin.js";
 import { GENJUTSU_ABILITIES } from "./jutsus/genjutsu.js";
+import { TAIJUTSU_ABILITIES } from "./jutsus/taijutsu.js";
+import { ARHAT_ABILITIES } from "./jutsus/arhat.js";
+import { ADAMANTINO_ABILITIES } from "./jutsus/adamantino.js";
 import { CLAN_ABILITIES, CLANS } from "./clans/index.js";
 
 export const ALL_ABILITIES: Ability[] = [
@@ -18,6 +21,9 @@ export const ALL_ABILITIES: Ability[] = [
   ...IRYO_ABILITIES,
   ...KAGE_BUNSHIN_ABILITIES,
   ...GENJUTSU_ABILITIES,
+  ...TAIJUTSU_ABILITIES,
+  ...ARHAT_ABILITIES,
+  ...ADAMANTINO_ABILITIES,
   ...CLAN_ABILITIES,
 ];
 

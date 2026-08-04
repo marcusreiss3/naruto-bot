@@ -208,6 +208,7 @@ export async function startCombat(opts: {
     const cMods = characterPassiveMods(p.nodes ?? []);
     const hpMax = Math.round(p.hpMax * (1 + cMods.maxHpBonus));
     const hpCurrent = Math.round(p.hpCurrent * (1 + cMods.maxHpBonus));
+    const energia = Math.round(p.energia * (1 + cMods.maxEnergyBonus));
     const cp = await prisma.combatParticipant.create({
       data: {
         sessionId: session.id,
@@ -218,7 +219,7 @@ export async function startCombat(opts: {
         hpCurrent,
         hpMax,
         chakra: p.chakra,
-        energia: p.energia,
+        energia,
         jutsuIdsJson: JSON.stringify(p.jutsuIds),
         flagsJson: JSON.stringify({
           level: p.level,
@@ -569,7 +570,8 @@ export function validateMove(s: SessionFull, participantId: string, dest: string
     return { ok: false, error: "Célula bloqueada por obstáculo." };
   }
 
-  let move = moveRange(getAttr(p, "taijutsu"));
+  const passiveMoveBonus = characterPassiveMods(ownedNodes(p)).moveBonus;
+  let move = moveRange(getAttr(p, "taijutsu")) + passiveMoveBonus;
   move = applySlowToMove(move, p.effects);
   move = applyHasteToMove(move, p.effects);
   // pantano na celula de origem prende: sair dele custa o dobro
@@ -764,6 +766,11 @@ function sharinganDodgeBonus(flags: Record<string, unknown>): number {
   return tomoe ? BALANCE.sharingan[tomoe].dodgeBonus : 0;
 }
 
+function strongFistGate(flags: Record<string, unknown>): number | null {
+  const value = flags.punhoForteGate;
+  return typeof value === "number" && BALANCE.punhoForteGates[value] ? value : null;
+}
+
 async function offerSharinganCopy(
   s: SessionFull,
   userId: string,
@@ -906,8 +913,17 @@ export async function useAbility(
   if (ability.toggleRules) {
     return fail(`Esta técnica é contínua. Use ${ability.toggleRules.command} para ativar ou desativar.`);
   }
+  if (ability.gateRules) {
+    return fail(`Este Portão é ativado ou desativado com ${ability.gateRules.command}.`);
+  }
+  if (ability.requiresActiveGate && strongFistGate(actor.flags) !== ability.requiresActiveGate) {
+    return fail(`Esta técnica exige o Portão ${ability.requiresActiveGate} aberto.`);
+  }
 
   // economia de acao
+  if (ability.additionalActionType === "COMUM" && actor.actedCommon) return fail("Ação comum já usada.");
+  if (ability.additionalActionType === "BONUS" && actor.actedBonus) return fail("Ação bônus já usada.");
+  if (ability.additionalActionType === "MOVIMENTO" && actor.actedMove) return fail("Ação de movimento já usada.");
   if (ability.actionType === "COMUM" && actor.actedCommon) return fail("Ação comum já usada.");
   if (ability.actionType === "BONUS" && actor.actedBonus) return fail("Ação bônus já usada.");
   if (ability.actionType === "MOVIMENTO" && actor.actedMove) return fail("Ação de movimento já usada.");
@@ -934,6 +950,7 @@ export async function useAbility(
 
   // confusao: redireciona alvo para alguem aleatorio
   let effectiveTarget = targetP?.cell ?? targetCell;
+  if (ability.shape === "SELF" && ability.terrain) effectiveTarget = actor.cell;
   if (isConfused(actor.effects) && needsTarget(ability)) {
     const others = s.participants.filter((p) => p.id !== actor.id && p.hpCurrent > 0);
     const r = pick(others);
@@ -1045,6 +1062,7 @@ export async function useAbility(
     }
   }
   await markAction(actor.id, ability.actionType);
+  if (ability.additionalActionType) await markAction(actor.id, ability.additionalActionType);
   if (ability.oncePerCombat) await setFlag(actor.id, "usedOnceAbility", ability.id);
   if (isCopied) await setFlag(actor.id, "sharinganCopiedAbilityId", undefined);
   logs.push(`✨ ${actor.name} usou **${ability.name}** (-${cost}% ${ability.resource}).`);
@@ -1100,7 +1118,9 @@ export async function useAbility(
     if (ability.restoreResource) {
       const { resource, amount } = ability.restoreResource;
       const pool = resource === "chakra" ? healTarget.chakra : healTarget.energia;
-      const restored = Math.min(100, pool + amount) - pool;
+      const energyCap = Math.round(100 * (1 + characterPassiveMods(ownedNodes(healTarget)).maxEnergyBonus));
+      const cap = resource === "chakra" ? 100 : energyCap;
+      const restored = Math.min(cap, pool + amount) - pool;
       if (restored > 0) {
         await prisma.combatParticipant.update({
           where: { id: healTarget.id },
@@ -1159,6 +1179,16 @@ export async function useAbility(
   // zona que prende inimigos proximos (ex: Domo de Iceberg) — libera sozinha
   // se a Barreira do ator quebrar antes da duracao normal acabar, ver
   // consumeShield() em resolveHit().
+  if (ability.shape === "SELF" && ability.nearbyEnemyEffect) {
+    const near = ability.nearbyEnemyEffect;
+    for (const enemy of s.participants.filter((p) =>
+      p.hpCurrent > 0 && p.teamId !== actor.teamId && cellDistance(actor.cell, p.cell) <= near.radius,
+    )) {
+      await applyEffect(enemy.id, near.effectId, 1, near.duration);
+      logs.push(`🌫️ ${enemy.name} ficou com ${effectLabel(near.effectId)} pela névoa.`);
+    }
+  }
+
   if (ability.trapField) {
     const { effectId: trapEffect, radius, duration } = ability.trapField;
     const enemiesNear = s.participants.filter(
@@ -1178,7 +1208,10 @@ export async function useAbility(
   // terreno: o jutsu marca as celulas atingidas (chamas, poca, muro, fumaca,
   // pantano) — do proprio jutsu ou de passiva (ex: Pavio deixa tudo em chamas)
   if ((ability.terrain || ability.clearsTerrain || mods.terrainOnHit.length) && effectiveTarget) {
-    const shaped = resolveAreaCells(ability, actor.cell, effectiveTarget, scenario);
+    const origin = parseCell(actor.cell);
+    const shaped = ability.shape === "SELF" && ability.selfTerrainRadius !== undefined && origin
+      ? radiusCells(origin, ability.selfTerrainRadius, scenario.rows, scenario.cols).map(toCell)
+      : resolveAreaCells(ability, actor.cell, effectiveTarget, scenario);
     const cells = shaped.length ? shaped : [effectiveTarget];
     let next = s.terrain;
     if (ability.clearsTerrain) next = clearKindAt(next, cells, ability.clearsTerrain);
@@ -1242,12 +1275,23 @@ export async function useAbility(
     // no mesmo produto de "cenario e passivas" calculado uma vez so. Pode ter
     // nascido escopado (so' fisico, so' do mesmo clã) — ver empoweredDamageMult.
     const empoweredMult = empoweredDamageMult(actor.effects, ability);
+    const gate = strongFistGate(actor.flags);
+    const gateMult = gate && ability.category === "TAIJUTSU"
+      ? BALANCE.punhoForteGates[gate]!.taijutsuDamageMult
+      : 1;
     const heightBonus = onHeight(actor);
     // Yamanaka: pilotando um corpo emprestado (Shintenshin), todo golpe sai
     // com 1/3 a menos — nao domina o corpo 100%. Vale enquanto o controle
     // durar, nao so' no golpe que capturou (actor.controlledById fica setado
     // pra sessao inteira, ver establishControl()).
     const pilotedMult = actor.controlledById ? BALANCE.yamanaka.pilotedDamageMult : 1;
+    const attackedTargetIds = new Set(
+      Array.isArray(actor.flags.attackedTargetIds) ? actor.flags.attackedTargetIds as string[] : [],
+    );
+    const firstKenjutsu = ability.category === "KENJUTSU" && actor.flags.firstKenjutsuUsed !== true;
+    const lastAttackRound = typeof actor.flags.lastOffensiveRound === "number" ? actor.flags.lastOffensiveRound : -99;
+    const decisiveKenjutsu = ability.category === "KENJUTSU" && s.round - lastAttackRound >= 2;
+    const mistActive = hasActiveKind(s.terrain, "SMOKE", s.round);
     for (const t of targets) {
       // dano condicional (ex: Fio d'Agua so vale contra alvo Encharcado) precisa
       // do estado DESTE alvo, entao recalcula por alvo em vez de uma vez so.
@@ -1256,14 +1300,22 @@ export async function useAbility(
         perTarget.executeBonus && t.hpCurrent / t.hpMax <= perTarget.executeBonus.hpThreshold
           ? perTarget.executeBonus.mult
           : 1;
+      const firstHitMult = attackedTargetIds.has(t.id) ? 1 : perTarget.firstHitDamageMult;
+      const mistMult = mistActive ? perTarget.mistDamageMult : 1;
+      const kenjutsuMult = (firstKenjutsu ? perTarget.firstKenjutsuDamageMult : 1) *
+        (decisiveKenjutsu ? perTarget.decisiveKenjutsuDamageMult : 1);
       const raw = computeDamage(ability, {
         attrValue: getAttr(actor, ability.scalingAttribute ?? "ninjutsu"),
-        scenarioDmgMult: (scenarioMod ?? 1) * perTarget.damageMult * executeMult * empoweredMult * pilotedMult,
+        scenarioDmgMult: (scenarioMod ?? 1) * perTarget.damageMult * executeMult * empoweredMult * gateMult * pilotedMult * firstHitMult * mistMult * kenjutsuMult,
         burnTaiMult: burnMult,
         weakenMult,
         heightBonus,
       });
       hits.push({ targetId: t.id, ability, rawDamage: raw });
+    }
+    if (targets.length > 0) {
+      await setFlag(actor.id, "lastOffensiveRound", s.round);
+      if (ability.category === "KENJUTSU") await setFlag(actor.id, "firstKenjutsuUsed", true);
     }
     if (targets.length === 0) logs.push("⚠️ Nenhum alvo válido na área.");
   }
@@ -1396,6 +1448,9 @@ export async function resolveHit(
           (target.flags.ketsuryuuganActive ? BALANCE.ketsuryuuganDodgeBonus : 0) +
           // Sharingan: o bônus cresce de acordo com o estágio ativo.
           sharinganDodgeBonus(target.flags) +
+          // Agitação: fintas e ritmo corporal tiram leitura do alvo. A
+          // penalidade pertence ao golpe do atacante, não ao defensor.
+          -(atkMods?.dodgePenalty ?? 0) +
           (physical ? 0 : defenseMods.ninjutsuDodgeBonus) -
           // cada acumulo de cristal trava mais um pouco o corpo do alvo
           crystalDodgePenalty(target.effects),
@@ -1444,8 +1499,21 @@ export async function resolveHit(
         `🛡️ ${target.name} ${reaction === "PARRY" ? "aparou" : "bloqueou"} e reduziu o dano de ${damage} para ${reduced}.`,
       );
       damage = reduced;
+      if (reaction === "PARRY" && reactAb?.counterDamage && attacker && attacker.hpCurrent > 0) {
+        const counter = reactAb.counterDamage;
+        const counterAbility = {
+          ...reactAb,
+          baseDamage: counter.baseDamage,
+          scalingAttribute: counter.scalingAttribute ?? "taijutsu",
+        } as Ability;
+        const counterDamage = computeDamage(counterAbility, {
+          attrValue: getAttr(target, counterAbility.scalingAttribute ?? "taijutsu"),
+        });
+        const hpAtk = await applyDamage(sessionId, attacker, counterDamage, logs);
+        logs.push(`↩️ ${target.name} contra-atacou e causou ${counterDamage} de dano a ${attacker.name}.`);
+        if (hpAtk <= 0) logs.push(`☠️ ${attacker.name} foi derrotado pelo contra-ataque!`);
+      }
     }
-
     // Pele de Pedra (Terra): defender rende Barreira para o proximo golpe
     if (ownedNodes(target).includes("terra_raiz")) {
       await applyEffect(
@@ -1475,6 +1543,25 @@ export async function resolveHit(
       maxSimultaneous,
       turnsLeft: ability.mindTransferTurns,
     });
+  }
+
+  // Primeiro contato e dança na neblina. A Marca é aplicada uma vez por
+  // inimigo e fica ativa pelo tempo definido na passiva.
+  if (landed && attacker && atkMods) {
+    const hitIds = new Set(
+      Array.isArray(attacker.flags.attackedTargetIds) ? attacker.flags.attackedTargetIds as string[] : [],
+    );
+    const firstContact = !hitIds.has(target.id);
+    if (firstContact && atkMods.markOnFirstHit) {
+      await applyEffect(target.id, "MARKED", 1, atkMods.markOnFirstHit.duration);
+      logs.push(`🎯 ${target.name} foi Marcado.`);
+    }
+    hitIds.add(target.id);
+    await setFlag(attacker.id, "attackedTargetIds", [...hitIds]);
+    if (ability.category === "TAIJUTSU" && hasActiveKind(s.terrain, "SMOKE", s.round) && ownedNodes(attacker).includes("tai_nevoa_danca")) {
+      await applyEffect(attacker.id, "HASTE", 1, 1);
+      logs.push(`🌫️ ${attacker.name} dançou pela névoa e recebeu Aceleração.`);
+    }
   }
 
   // limpa flag de undodgeable do atacante (consumido)
@@ -2119,6 +2206,7 @@ async function processTurnStart(sessionId: string, participantId: string, logs: 
   // do Yamanaka, se este participante estiver sendo controlado (ver o final
   // da funcao, apos o write combinado de hp/chakra).
   let dotLoss = 0;
+  let energia = p.energia;
   const remaining: EffectState[] = [];
   const snapshot: EffectState[] = [];
   let corrosaoStacks = 0;
@@ -2180,6 +2268,27 @@ async function processTurnStart(sessionId: string, participantId: string, logs: 
     if (drained > 0) {
       await consumeShield(participantId, drained);
       logs.push(`💨 A Desintegração derreteu ${drained} de Barreira de ${p.name}.`);
+    }
+  }
+
+  // Portão Interno: o buff cobra HP no início de cada turno, antes de
+  // regenerações. Se o desgaste derrubar o usuário, o portão é fechado.
+  const openGate = strongFistGate(flags);
+  if (openGate) {
+    const gateRules = BALANCE.punhoForteGates[openGate]!;
+    const gateDamage = gateRules.selfDamagePerTurn;
+    hp = Math.max(0, hp - gateDamage);
+    dotLoss += gateDamage;
+    logs.push(`💥 ${p.name} sofreu ${gateDamage} de dano pelo desgaste do Portão ${openGate}.`);
+    if (hp <= 0) flags.punhoForteGate = undefined;
+    if (hp > 0 && gateRules.energyRecoveryPerTurn) {
+      const before = energia;
+      const turnNodes = Array.isArray(flags.nodes) ? flags.nodes as string[] : [];
+      const energyCap = Math.round(100 * (1 + characterPassiveMods(turnNodes).maxEnergyBonus));
+      energia = Math.min(energyCap, energia + gateRules.energyRecoveryPerTurn);
+      if (energia > before) {
+        logs.push(`⚡ ${p.name} recuperou ${energia - before}% de energia pelo Portão ${openGate}.`);
+      }
     }
   }
 
@@ -2354,6 +2463,7 @@ async function processTurnStart(sessionId: string, participantId: string, logs: 
     data: {
       hpCurrent: hp,
       chakra,
+      energia,
       actedCommon: false,
       actedBonus: false,
       actedMove: false,

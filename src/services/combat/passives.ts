@@ -35,6 +35,12 @@ export interface PassiveMods {
   // relevante pra abilities com mindTransfer (Clones de Transferencia de
   // Mente, Yamanaka). Ver establishControl() em combat-engine.ts.
   mindTransferMaxBonus: number;
+  firstHitDamageMult: number;
+  mistDamageMult: number;
+  markOnFirstHit: { duration: number } | null;
+  firstKenjutsuDamageMult: number;
+  decisiveKenjutsuDamageMult: number;
+  dodgePenalty: number;
 }
 
 export const NEUTRAL_MODS: PassiveMods = {
@@ -59,6 +65,12 @@ export const NEUTRAL_MODS: PassiveMods = {
   executeBonus: null,
   extraCrystalStacks: 0,
   mindTransferMaxBonus: 0,
+  firstHitDamageMult: 1,
+  mistDamageMult: 1,
+  markOnFirstHit: null,
+  firstKenjutsuDamageMult: 1,
+  decisiveKenjutsuDamageMult: 1,
+  dodgePenalty: 0,
 };
 
 // targetEffects e' opcional porque na hora de calcular custo ainda nao ha alvo.
@@ -156,6 +168,14 @@ export function passiveMods(
       }
     }
     if (p.executeBonus && scopeOk) mods.executeBonus = p.executeBonus;
+    if (scopeOk) {
+      mods.firstHitDamageMult *= p.firstHitDamageMult ?? 1;
+      mods.mistDamageMult *= p.mistDamageMult ?? 1;
+      mods.firstKenjutsuDamageMult *= p.firstKenjutsuDamageMult ?? 1;
+      mods.decisiveKenjutsuDamageMult *= p.decisiveKenjutsuDamageMult ?? 1;
+      mods.dodgePenalty += p.dodgePenalty ?? 0;
+      if (p.markOnFirstHit) mods.markOnFirstHit = p.markOnFirstHit;
+    }
     if (p.summonHpBonus) mods.summonHpBonus += p.summonHpBonus;
     if (p.terrainDurationBonus) mods.terrainDurationBonus += p.terrainDurationBonus;
     if (p.rangeBonus) {
@@ -204,6 +224,8 @@ export interface CharacterPassiveMods {
   // bonus fixo de Ninjutsu EFETIVO so' pra disputa de controle mental
   // (yamanakaResistChance) — ver processTurnStart em combat-engine.ts.
   mindControlNinjutsuBonus: number;
+  maxEnergyBonus: number;
+  moveBonus: number;
 }
 
 // Modificadores que pertencem ao personagem, e nao a um jutsu especifico.
@@ -221,6 +243,8 @@ export function characterPassiveMods(ownedNodeIds: string[]): CharacterPassiveMo
   let mindControlUpkeepMult = 1;
   let sharinganUpkeepMult = 1;
   let mindControlNinjutsuBonus = 0;
+  let maxEnergyBonus = 0;
+  let moveBonus = 0;
   for (const nodeId of owned) {
     const p: (Partial<PassiveDef> & Partial<ClanPassiveDef>) | undefined =
       getPassive(nodeId) ?? getClanPassive(nodeId);
@@ -234,6 +258,8 @@ export function characterPassiveMods(ownedNodeIds: string[]): CharacterPassiveMo
     mindControlUpkeepMult *= p.mindControlUpkeepMult ?? 1;
     sharinganUpkeepMult *= p.sharinganUpkeepMult ?? 1;
     mindControlNinjutsuBonus += p.mindControlNinjutsuBonus ?? 0;
+    maxEnergyBonus += p.maxEnergyBonus ?? 0;
+    moveBonus += p.moveBonus ?? 0;
   }
   return {
     ninjutsuDodgeBonus,
@@ -245,6 +271,8 @@ export function characterPassiveMods(ownedNodeIds: string[]): CharacterPassiveMo
     mindControlUpkeepMult,
     sharinganUpkeepMult,
     mindControlNinjutsuBonus,
+    maxEnergyBonus: Math.min(0.5, maxEnergyBonus),
+    moveBonus,
   };
 }
 

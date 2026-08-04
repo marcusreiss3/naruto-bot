@@ -21,6 +21,7 @@ const EFFECT_NAMES: Record<EffectId, string> = {
   CHAKRA_DRAIN: "Dreno de Chakra",
   HASTE: "Aceleração",
   EMPOWERED: "Sobrecarga",
+  MARKED: "Marcado",
   SHADOW_BOUND: "Vínculo de Sombra",
   CRYSTALLIZED: "Cristalizado",
   PRISM: "Prisma",
@@ -96,6 +97,10 @@ function terrainName(kind: TerrainKind): string {
 // Chance, duracao, acumulos e limitacoes nao ficam desatualizados.
 export function buildMechanicsSummary(ability: Ability): string {
   const parts: string[] = [];
+  if (ability.additionalActionType) {
+    const labels = { COMUM: "ação comum", BONUS: "ação bônus", MOVIMENTO: "ação de movimento" } as const;
+    parts.push(`Também consome ${labels[ability.additionalActionType]}.`);
+  }
 
   if (ability.actionType === "REACAO" && ability.reactionKind === "BLOCK") {
     parts.push("Reação de Bloqueio.");
@@ -247,6 +252,15 @@ export function buildMechanicsSummary(ability: Ability): string {
     }
     if (rules.disablesWithoutResource) parts.push("É desativado automaticamente quando o chakra acaba.");
   }
+
+  if (ability.gateRules) {
+    const rules = ability.gateRules;
+    parts.push(`Pode ser ativado e desativado com ${rules.command}.`);
+    parts.push(`Enquanto aberto, aumenta em ${Math.round((rules.taijutsuDamageMult - 1) * 100)}% o dano de Taijutsu.`);
+    parts.push(`Causa ${rules.selfDamagePerTurn} de dano ao usuário no início de cada turno.`);
+    if (rules.energyRecoveryPerTurn) parts.push(`Recupera ${rules.energyRecoveryPerTurn}% de energia por turno.`);
+  }
+  if (ability.requiresActiveGate) parts.push(`Exige o Portão ${ability.requiresActiveGate} aberto.`);
 
   return parts.join(" ");
 }

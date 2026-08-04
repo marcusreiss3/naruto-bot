@@ -18,6 +18,7 @@ function abilityView(abilityId: string | undefined) {
     resource: ability.resource,
     cost: ability.cost,
     actionType: ability.actionType,
+    additionalActionType: ability.additionalActionType,
     baseDamage: ability.baseDamage ?? 0,
     range: ability.range,
     shape: ability.shape,

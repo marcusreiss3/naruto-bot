@@ -66,6 +66,8 @@ export interface Ability {
   resource: "chakra" | "energia";
   cost: number; // percentual base
   actionType: ActionType;
+  // Custo adicional de ação no mesmo turno, quando a técnica combina duas categorias.
+  additionalActionType?: Exclude<ActionType, "REACAO">;
   baseDamage?: number;
   baseHeal?: number;
   // junto do baseHeal, tambem devolve recurso pro alvo curado (ex: Regeneracao
@@ -103,6 +105,19 @@ export interface Ability {
     disablesWithoutResource?: boolean;
     cloneDodgeReduction?: number;
   };
+  // Portões internos: toggle de ação bônus com buff de Taijutsu e desgaste
+  // fixo de HP no início de cada turno. O número do portão permite ampliar a
+  // progressão sem criar um efeito novo para cada estágio.
+  gateRules?: {
+    command: string;
+    gate: number;
+    taijutsuDamageMult: number;
+    selfDamagePerTurn: number;
+    energyRecoveryPerTurn?: number;
+  };
+  // Alguns golpes dos Portões só podem ser executados enquanto o estágio
+  // correspondente estiver aberto.
+  requiresActiveGate?: number;
   // flags especiais
   unblockable?: boolean;
   undodgeable?: boolean;
@@ -168,11 +183,17 @@ export interface Ability {
   // pode ser usada uma unica vez por combate
   oncePerCombat?: boolean;
   reactionKind?: "BLOCK" | "DODGE" | "PARRY" | "JUTSU";
+  // Dano aplicado ao atacante quando esta reação PARRY é bem-sucedida.
+  counterDamage?: { baseDamage: number; scalingAttribute?: Attribute };
   // terreno que o jutsu deixa nas celulas atingidas (chamas, agua, muro, fumaca, pantano)
   terrain?: {
     kind: TerrainKind;
     duration?: number; // rodadas; padrao BALANCE.terrain.defaultDuration
   };
+  // SELF: raio opcional do terreno criado em volta do usuário.
+  selfTerrainRadius?: number;
+  // SELF: efeito aplicado nos inimigos próximos sem ser um ataque de dano.
+  nearbyEnemyEffect?: { effectId: EffectId; radius: number; duration: number };
   // remove um tipo de terreno das celulas atingidas (ex: fogo evapora agua)
   clearsTerrain?: TerrainKind;
   // desloca o alvo: >0 empurra p/ longe, <0 puxa p/ perto (em casas)

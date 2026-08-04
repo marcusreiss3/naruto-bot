@@ -7,24 +7,33 @@ import { getSessionDiscordId } from "./auth.js";
 import { ELEMENT_TREES } from "../data/element-trees/index.js";
 import { CLAN_TREES } from "../data/clan-trees/index.js";
 import { CLANS, getAbility } from "../data/index.js";
-import { loadSnapshot, viewTree, viewFundamentosTree, viewClanTree, viewBukijutsuTree, viewIryoNinjutsuTree, viewGenjutsuTree, buyNode } from "../services/characters/skill-tree.js";
+import { loadSnapshot, viewTree, viewFundamentosTree, viewClanTree, viewBukijutsuTree, viewIryoNinjutsuTree, viewGenjutsuTree, viewTaijutsuTree, viewArhatTree, viewAdamantinoTree, viewTaijutsuPassivesTree, viewAssassinatoNinjaTree, viewPunhoGentilTree, viewTaijutsuAgitacaoTree, buyNode } from "../services/characters/skill-tree.js";
+import { villageForDiscordUser } from "../services/village-service.js";
 import { buildMechanicsSummary, buildVisualDescription } from "../services/characters/skill-description.js";
 import { MANGEKYO_VARIANT_LABEL } from "../services/characters/mangekyo.js";
 import { buildEquipmentCatalog } from "../services/characters/equipment-catalog.js";
 
 export function registerApi(app: FastifyInstance): void {
-  // Estado completo: personagem + as 5 árvores com o status de cada nó.
+  // Estado completo: personagem + as árvores com o status de cada nó.
   app.get("/api/state", async (req, reply) => {
     const discordId = getSessionDiscordId(req);
     if (!discordId) return reply.code(401).send({ authenticated: false });
 
-    const snap = await loadSnapshot(discordId, ENV.DISCORD_GUILD_ID);
+    const villageId = await villageForDiscordUser(ENV.DISCORD_GUILD_ID, discordId);
+    const snap = await loadSnapshot(discordId, ENV.DISCORD_GUILD_ID, villageId);
     if (!snap) return reply.send({ authenticated: true, hasChar: false });
 
     const trees: Record<string, unknown> = {
       FUNDAMENTOS: viewFundamentosTree(snap),
       BUKIJUTSU: viewBukijutsuTree(snap),
       GENJUTSU: viewGenjutsuTree(snap),
+      TAIJUTSU: viewTaijutsuTree(snap),
+      ARHAT: viewArhatTree(snap),
+      ADAMANTINO: viewAdamantinoTree(snap),
+      TAIJUTSU_PASSIVAS: viewTaijutsuPassivesTree(snap),
+      ASSASSINATO_NINJA: viewAssassinatoNinjaTree(snap),
+      PUNHO_GENTIL: viewPunhoGentilTree(snap),
+      TAIJUTSU_AGITACAO: viewTaijutsuAgitacaoTree(snap),
       IRYO_NINJUTSU: viewIryoNinjutsuTree(snap),
     };
     for (const el of Object.keys(ELEMENT_TREES) as Element[]) {
@@ -70,6 +79,7 @@ export function registerApi(app: FastifyInstance): void {
               resource: ability.resource,
               cost: ability.cost,
               actionType: ability.actionType,
+              additionalActionType: ability.additionalActionType,
               range: ability.range,
               shape: ability.shape,
               description: buildVisualDescription(ability.description, ability.visualDescription),
@@ -90,7 +100,8 @@ export function registerApi(app: FastifyInstance): void {
     const body = req.body as { nodeId?: string } | undefined;
     if (!body?.nodeId) return reply.code(400).send({ ok: false, error: "nodeId faltando." });
 
-    const result = await buyNode(discordId, ENV.DISCORD_GUILD_ID, body.nodeId);
+    const villageId = await villageForDiscordUser(ENV.DISCORD_GUILD_ID, discordId);
+    const result = await buyNode(discordId, ENV.DISCORD_GUILD_ID, body.nodeId, villageId);
     return reply.send(result);
   });
 }

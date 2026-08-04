@@ -96,6 +96,19 @@ export const BALANCE = {
     3: { upkeepPerTurn: 9, dodgeBonus: 0.1 },
   } as Record<1 | 2 | 3, { upkeepPerTurn: number; dodgeBonus: number }>,
 
+  // Punho Forte / Portões Internos: cada portão futuro poderá aumentar os
+  // dois valores; o primeiro já cobra o desgaste físico pedido pela árvore.
+  punhoForteGates: {
+    1: { taijutsuDamageMult: 1.45, selfDamagePerTurn: 5 },
+    2: { taijutsuDamageMult: 1.7, selfDamagePerTurn: 8, energyRecoveryPerTurn: 10 },
+    3: { taijutsuDamageMult: 2.0, selfDamagePerTurn: 12 },
+    4: { taijutsuDamageMult: 2.35, selfDamagePerTurn: 18 },
+    5: { taijutsuDamageMult: 2.7, selfDamagePerTurn: 25 },
+    6: { taijutsuDamageMult: 3.1, selfDamagePerTurn: 35, energyRecoveryPerTurn: 20 },
+    7: { taijutsuDamageMult: 3.7, selfDamagePerTurn: 50 },
+    8: { taijutsuDamageMult: 5.0, selfDamagePerTurn: 100 },
+  } as Record<number, { taijutsuDamageMult: number; selfDamagePerTurn: number; energyRecoveryPerTurn?: number }>,
+
   // ---- Maestria: multiplicador de custo por recurso ----
   masteryCostMultiplier: {
     BASICO: 1.0,

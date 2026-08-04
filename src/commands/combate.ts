@@ -138,6 +138,27 @@ export const combate: Command = {
         ),
     )
     .addSubcommand((s) =>
+      s
+        .setName("portao")
+        .setDescription("Ativa/desativa um Portão Interno (ação bônus)")
+        .addIntegerOption((o) =>
+          o
+            .setName("portao")
+            .setDescription("Portão Interno que deseja abrir")
+            .setRequired(true)
+            .addChoices(
+              { name: "Portão da Abertura", value: 1 },
+              { name: "Portão do Descanso", value: 2 },
+              { name: "Portão da Vida", value: 3 },
+              { name: "Portão da Dor", value: 4 },
+              { name: "Portão do Fechamento", value: 5 },
+              { name: "Portão da Alegria", value: 6 },
+              { name: "Portão da Tristeza", value: 7 },
+              { name: "Portão da Morte", value: 8 },
+            ),
+        ),
+    )
+    .addSubcommand((s) =>
       s.setName("fugir").setDescription("Tenta fugir do combate (ação comum, gasta energia)"),
     ),
   async execute(interaction: ChatInputCommandInteraction) {
@@ -159,6 +180,8 @@ export const combate: Command = {
         return ketsuryuugan(interaction);
       case "sharingan":
         return sharingan(interaction);
+      case "portao":
+        return portao(interaction);
       case "fugir":
         return fugir(interaction);
     }
@@ -1026,6 +1049,73 @@ async function ketsuryuugan(interaction: ChatInputCommandInteraction): Promise<v
     flags.ketsuryuuganActive
       ? `🩸 **${me.name}** ativou o Ketsuryuugan (+${Math.round(BALANCE.ketsuryuuganDodgeBonus * 100)}% de esquiva contra qualquer ataque; gasta ${BALANCE.ketsuryuuganUpkeepPerTurn}% chakra/turno).`
       : `🩸 **${me.name}** desativou o Ketsuryuugan.`,
+  );
+}
+
+async function portao(interaction: ChatInputCommandInteraction): Promise<void> {
+  const { session, me } = await getMyParticipant(interaction);
+  if (!session || !me) {
+    await interaction.reply({ content: "❌ Você não está em combate aqui.", ephemeral: true });
+    return;
+  }
+  if (me.actedBonus) {
+    await interaction.reply({ content: "❌ Ação bônus já usada.", ephemeral: true });
+    return;
+  }
+
+  const gate = interaction.options.getInteger("portao", true);
+  const rules = BALANCE.punhoForteGates[gate];
+  if (!rules) {
+    await interaction.reply({ content: "❌ Esse Portão Interno ainda não está disponível.", ephemeral: true });
+    return;
+  }
+  const gateNames: Record<number, string> = {
+    1: "da Abertura",
+    2: "do Descanso",
+    3: "da Vida",
+    4: "da Dor",
+    5: "do Fechamento",
+    6: "da Alegria",
+    7: "da Tristeza",
+    8: "da Morte",
+  };
+  const currentGate = typeof me.flags.punhoForteGate === "number" ? me.flags.punhoForteGate : 0;
+  if (gate > 1 && currentGate !== gate - 1 && currentGate !== gate) {
+    await interaction.reply({ content: `❌ Abra primeiro o Portão ${gateNames[gate - 1]}.`, ephemeral: true });
+    return;
+  }
+  const gateAbilityIds: Record<number, string> = {
+    1: "tai_portao_abertura",
+    2: "tai_portao_descanso",
+    3: "tai_portao_vida",
+    4: "tai_portao_dor",
+    5: "tai_portao_fechamento",
+    6: "tai_portao_alegria",
+    7: "tai_portao_tristeza",
+    8: "tai_portao_morte",
+  };
+  if (!me.isNpc && me.charId) {
+    const has = await prisma.characterJutsu.findFirst({
+      where: { charId: me.charId, jutsuId: gateAbilityIds[gate] },
+    });
+    if (!has) {
+      await interaction.reply({ content: `❌ Você não aprendeu o Portão ${gateNames[gate]}.`, ephemeral: true });
+      return;
+    }
+  }
+
+  const flags = me.flags;
+  const disabling = flags.punhoForteGate === gate;
+  flags.punhoForteGate = disabling ? undefined : gate;
+  await prisma.combatParticipant.update({
+    where: { id: me.id },
+    data: { flagsJson: JSON.stringify(flags), actedBonus: true },
+  });
+
+  await interaction.reply(
+    disabling
+      ? `💨 **${me.name}** fechou o Portão ${gateNames[gate]}.`
+      : `💨 **${me.name}** abriu o Portão ${gateNames[gate]} (+${Math.round((rules.taijutsuDamageMult - 1) * 100)}% de dano de Taijutsu; perde ${rules.selfDamagePerTurn} HP no início de cada turno).`,
   );
 }
 

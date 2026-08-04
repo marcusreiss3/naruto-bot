@@ -26,6 +26,14 @@ import { ELEMENT_TREES, getNode, type SkillNodeDef } from "../../data/element-tr
 import { BUKIJUTSU_TREE } from "../../data/bukijutsu-tree.js";
 import { IRYO_NINJUTSU_TREE } from "../../data/iryo-ninjutsu-tree.js";
 import { GENJUTSU_TREE } from "../../data/genjutsu-tree.js";
+import { TAIJUTSU_TREE } from "../../data/taijutsu-tree.js";
+import { ARHAT_TREE } from "../../data/arhat-tree.js";
+import { ADAMANTINO_TREE } from "../../data/adamantino-tree.js";
+import { TAIJUTSU_PASSIVES_TREE } from "../../data/taijutsu-passives-tree.js";
+import { ASSASSINATO_NINJA_TREE } from "../../data/assassinato-ninja-tree.js";
+import { PUNHO_GENTIL_TREE } from "../../data/punho-gentil-tree.js";
+import { TAIJUTSU_AGITACAO_TREE } from "../../data/taijutsu-agitacao-tree.js";
+import type { VillageId } from "../village-service.js";
 import { CLAN_TREES } from "../../data/clan-trees/index.js";
 import { getAbility, getClan } from "../../data/index.js";
 import { FUNDAMENTOS } from "../../data/element-trees/fundamentals.js";
@@ -80,6 +88,7 @@ export type NodeStatus = "OWNED" | "BUYABLE" | "LOCKED";
 export interface NodeCombat {
   category: string;
   actionType: string;
+  additionalActionType?: string;
   resource: "chakra" | "energia";
   cost: number; // custo de recurso (%), NAO o custo em pontos da arvore
   shape: Shape;
@@ -132,6 +141,7 @@ function combatOf(node: SkillNodeDef): NodeCombat | undefined {
   return {
     category: ab.category,
     actionType: ab.actionType,
+    additionalActionType: ab.additionalActionType,
     resource: ab.resource,
     cost: ab.cost,
     shape: ab.shape,
@@ -173,6 +183,7 @@ export interface CharSnapshot {
   // o que o gate reqPool/reqAttribute compara. Gastar pontos na árvore não
   // reduz esse valor — só consome o disponível derivado dele.
   attributes: PoolMap;
+  villageId?: VillageId;
 }
 
 // Soma o custo dos nós possuídos, separado por pool.
@@ -237,7 +248,7 @@ function snapFrom(char: {
 }
 
 // Carrega o snapshot autoritativo do personagem (por discordId+guildId).
-export async function loadSnapshot(discordId: string, guildId: string): Promise<CharSnapshot | null> {
+export async function loadSnapshot(discordId: string, guildId: string, villageId?: VillageId): Promise<CharSnapshot | null> {
   const char = await prisma.userCharacter.findUnique({
     where: { discordId_guildId: { discordId, guildId } },
     include: { attributes: true, elements: true, skillNodes: true, clan: true },
@@ -258,7 +269,7 @@ export async function loadSnapshot(discordId: string, guildId: string): Promise<
     snap.mangekyoVariant = variant;
   }
 
-  return snap;
+  return { ...snap, villageId };
 }
 
 // Motivo pelo qual um nó NÃO pode ser comprado agora (null = pode).
@@ -271,6 +282,9 @@ export function lockReason(snap: CharSnapshot, node: SkillNodeDef): string | nul
   }
   if (node.clanId && snap.clanId !== node.clanId) {
     return `Requer o clã ${getClan(node.clanId)?.name ?? node.clanId}.`;
+  }
+  if (node.requiresVillage && snap.villageId !== node.requiresVillage) {
+    return `Requer a vila ${node.requiresVillage === "KIRI" ? "Kirigakure" : node.requiresVillage}.`;
   }
   if (node.requiresCondition && !snap.conditions?.has(node.requiresCondition)) {
     return `Requer condição: ${node.requiresCondition === "TRAUMA" ? "Trauma" : node.requiresCondition}.`;
@@ -370,6 +384,69 @@ export function viewGenjutsuTree(snap: CharSnapshot): NodeView[] {
   });
 }
 
+export function viewTaijutsuTree(snap: CharSnapshot): NodeView[] {
+  return TAIJUTSU_TREE.map((node) => {
+    const combat = combatOf(node); const mechanics = mechanicsOf(node); const visualDescription = visualDescriptionOf(node); const effectiveRequired = effectiveReqPool(node);
+    if (snap.owned.has(node.id)) return { ...node, combat, mechanics, visualDescription, effectiveReqPool: effectiveRequired, status: "OWNED" };
+    const reason = lockReason(snap, node);
+    return reason ? { ...node, combat, mechanics, visualDescription, effectiveReqPool: effectiveRequired, status: "LOCKED", reason } : { ...node, combat, mechanics, visualDescription, effectiveReqPool: effectiveRequired, status: "BUYABLE" };
+  });
+}
+
+export function viewArhatTree(snap: CharSnapshot): NodeView[] {
+  return ARHAT_TREE.map((node) => {
+    const combat = combatOf(node); const mechanics = mechanicsOf(node); const visualDescription = visualDescriptionOf(node); const effectiveRequired = effectiveReqPool(node);
+    if (snap.owned.has(node.id)) return { ...node, combat, mechanics, visualDescription, effectiveReqPool: effectiveRequired, status: "OWNED" };
+    const reason = lockReason(snap, node);
+    return reason ? { ...node, combat, mechanics, visualDescription, effectiveReqPool: effectiveRequired, status: "LOCKED", reason } : { ...node, combat, mechanics, visualDescription, effectiveReqPool: effectiveRequired, status: "BUYABLE" };
+  });
+}
+
+export function viewAdamantinoTree(snap: CharSnapshot): NodeView[] {
+  return ADAMANTINO_TREE.map((node) => {
+    const combat = combatOf(node); const mechanics = mechanicsOf(node); const visualDescription = visualDescriptionOf(node); const effectiveRequired = effectiveReqPool(node);
+    if (snap.owned.has(node.id)) return { ...node, combat, mechanics, visualDescription, effectiveReqPool: effectiveRequired, status: "OWNED" };
+    const reason = lockReason(snap, node);
+    return reason ? { ...node, combat, mechanics, visualDescription, effectiveReqPool: effectiveRequired, status: "LOCKED", reason } : { ...node, combat, mechanics, visualDescription, effectiveReqPool: effectiveRequired, status: "BUYABLE" };
+  });
+}
+
+export function viewTaijutsuPassivesTree(snap: CharSnapshot): NodeView[] {
+  return TAIJUTSU_PASSIVES_TREE.map((node) => {
+    const combat = combatOf(node); const mechanics = mechanicsOf(node); const visualDescription = visualDescriptionOf(node); const effectiveRequired = effectiveReqPool(node);
+    if (snap.owned.has(node.id)) return { ...node, combat, mechanics, visualDescription, effectiveReqPool: effectiveRequired, status: "OWNED" };
+    const reason = lockReason(snap, node);
+    return reason ? { ...node, combat, mechanics, visualDescription, effectiveReqPool: effectiveRequired, status: "LOCKED", reason } : { ...node, combat, mechanics, visualDescription, effectiveReqPool: effectiveRequired, status: "BUYABLE" };
+  });
+}
+
+export function viewAssassinatoNinjaTree(snap: CharSnapshot): NodeView[] {
+  return ASSASSINATO_NINJA_TREE.map((node) => {
+    const combat = combatOf(node); const mechanics = mechanicsOf(node); const visualDescription = visualDescriptionOf(node); const effectiveRequired = effectiveReqPool(node);
+    if (snap.owned.has(node.id)) return { ...node, combat, mechanics, visualDescription, effectiveReqPool: effectiveRequired, status: "OWNED" };
+    const reason = lockReason(snap, node);
+    return reason ? { ...node, combat, mechanics, visualDescription, effectiveReqPool: effectiveRequired, status: "LOCKED", reason } : { ...node, combat, mechanics, visualDescription, effectiveReqPool: effectiveRequired, status: "BUYABLE" };
+  });
+}
+
+export function viewPunhoGentilTree(snap: CharSnapshot): NodeView[] {
+  return PUNHO_GENTIL_TREE.map((node) => {
+    const combat = combatOf(node); const mechanics = mechanicsOf(node); const visualDescription = visualDescriptionOf(node); const effectiveRequired = effectiveReqPool(node);
+    if (snap.owned.has(node.id)) return { ...node, combat, mechanics, visualDescription, effectiveReqPool: effectiveRequired, status: "OWNED" };
+    const reason = lockReason(snap, node);
+    return reason ? { ...node, combat, mechanics, visualDescription, effectiveReqPool: effectiveRequired, status: "LOCKED", reason } : { ...node, combat, mechanics, visualDescription, effectiveReqPool: effectiveRequired, status: "BUYABLE" };
+  });
+}
+
+export function viewTaijutsuAgitacaoTree(snap: CharSnapshot): NodeView[] {
+  return TAIJUTSU_AGITACAO_TREE.map((node) => {
+    const combat = combatOf(node); const mechanics = mechanicsOf(node); const visualDescription = visualDescriptionOf(node); const effectiveRequired = effectiveReqPool(node);
+    if (snap.owned.has(node.id)) return { ...node, combat, mechanics, visualDescription, effectiveReqPool: effectiveRequired, status: "OWNED" };
+    const reason = lockReason(snap, node);
+    return reason ? { ...node, combat, mechanics, visualDescription, effectiveReqPool: effectiveRequired, status: "LOCKED", reason } : { ...node, combat, mechanics, visualDescription, effectiveReqPool: effectiveRequired, status: "BUYABLE" };
+  });
+}
+
 // Mesma logica de viewTree, mas pra arvore de Fundamentos (sem `element`).
 // O no "Primeiro Elemento" mostra o icone do elemento que o CLA concede; cla
 // sem elemento definido (aleatorio/sem cla) mantem o icone generico elements.png.
@@ -414,6 +491,7 @@ export async function buyNode(
   discordId: string,
   guildId: string,
   nodeId: string,
+  villageId?: VillageId,
 ): Promise<BuyResult> {
   const node = getNode(nodeId);
   if (!node) return { ok: false, error: "Habilidade inexistente." };
@@ -425,7 +503,7 @@ export async function buyNode(
     });
     if (!char) return { ok: false, error: "Personagem não encontrado." };
 
-    const snap = snapFrom(char);
+    const snap = { ...snapFrom(char), villageId };
     const reason = lockReason(snap, node);
     if (reason) return { ok: false, error: reason };
 

@@ -8,6 +8,13 @@ const ELEMENTS = [
   { id: "IRYO_NINJUTSU", name: "Iryō Ninjutsu", icon: "", img: "/assets/icons/footer/iryo-ninjutsu.png", color: "#57c99a" },
   { id: "BUKIJUTSU", name: "Bukijutsu", icon: "", img: "/assets/icons/footer/bukijutsu.png", color: "#b7a27a" },
   { id: "GENJUTSU", name: "Genjutsu", icon: "", img: "/assets/icons/footer/genjutsu.png", color: "#9b63c7" },
+  { id: "TAIJUTSU_PASSIVAS", name: "Taijutsu", icon: "", img: "/assets/icons/footer/taijutsu-geral.png", color: "#d8794f" },
+  { id: "ASSASSINATO_NINJA", name: "Assassinato Ninja", icon: "", img: "/assets/icons/footer/assassinato-ninja.png", color: "#7f9ebf" },
+  { id: "PUNHO_GENTIL", name: "Punho Gentil", icon: "", img: "/assets/icons/footer/punho-gentil.png", color: "#8abce8", clanGate: "hyuuga" },
+  { id: "TAIJUTSU_AGITACAO", name: "Taijutsu de Agitação", icon: "", img: "/assets/icons/footer/taijutsu-agitacao.png", color: "#d67e58" },
+  { id: "TAIJUTSU", name: "Punho Forte", icon: "", img: "/assets/icons/footer/taijutsu.png", color: "#d8794f" },
+  { id: "ARHAT", name: "Punho Arhat", icon: "", img: "/assets/icons/footer/arhat.png", color: "#b8694f" },
+  { id: "ADAMANTINO", name: "Punho Adamantino", icon: "", img: "/assets/icons/footer/adamantino.png", color: "#58b879" },
   { id: "FOGO", name: "Fogo", icon: "", img: "/assets/icons/footer/katon.png", color: "#e2492d" },
   { id: "AGUA", name: "Água", icon: "", img: "/assets/icons/footer/suiton.png", color: "#2b7fd4" },
   { id: "VENTO", name: "Vento", icon: "", img: "/assets/icons/footer/futon.png", color: "#2fa36b" },
@@ -537,6 +544,7 @@ async function pull() {
 
 function equipmentAbilityHtml(ability, command) {
   if (!ability) return "";
+  const action = actionLabel(ability);
   const damage = ability.baseDamage
     ? `<span>Dano base: <b>${ability.baseDamage}</b></span>`
     : "";
@@ -544,7 +552,7 @@ function equipmentAbilityHtml(ability, command) {
     <div class="equipment-ability-head"><code>${escHtml(command)}</code><strong>${escHtml(ability.name)}</strong></div>
     <div class="equipment-stats">
       <span>${escHtml(CAT_LABEL[ability.category] || ability.category)}</span>
-      <span>${escHtml(ACT_LABEL[ability.actionType] || ability.actionType)}</span>
+      <span>${escHtml(action)}</span>
       <span>${escHtml(areaText(ability))}</span>
       <span>${escHtml(RES_LABEL[ability.resource] || ability.resource)}: <b>${ability.cost}%</b></span>
       ${damage}
@@ -610,6 +618,9 @@ function buildElemBar() {
   const bar = $("elembar");
   bar.innerHTML = "";
   for (const e of ELEMENTS) {
+    // Punho Gentil continua bloqueado para quem não é Hyuuga, mas fica visível
+    // no footer para que a especialização seja encontrável e o requisito fique claro.
+    const alwaysVisible = e.id === "PUNHO_GENTIL";
     // So aparece o que o personagem tem. FUNDAMENTOS (Ninjutsu) e' sempre
     // desbloqueado; elemento/kekkei genkai que ele nao possui nem aparece;
     // arvore de cla (clanGate) so aparece pra quem e' daquele cla — OU pra
@@ -617,11 +628,11 @@ function buildElemBar() {
     // todo no' de todo cla sem trocar o clanId do personagem).
     const unlocked =
       e.id === "FUNDAMENTOS" ||
-      e.id === "BUKIJUTSU" || e.id === "IRYO_NINJUTSU" || e.id === "GENJUTSU" ||
+      e.id === "BUKIJUTSU" || e.id === "IRYO_NINJUTSU" || e.id === "GENJUTSU" || e.id === "TAIJUTSU_PASSIVAS" || e.id === "ASSASSINATO_NINJA" || e.id === "TAIJUTSU_AGITACAO" || e.id === "TAIJUTSU" || e.id === "ARHAT" || e.id === "ADAMANTINO" ||
       (e.clanGate
         ? state.char.clanId === e.clanGate || (state.trees[e.id] || []).some((n) => n.status === "OWNED")
         : state.char.elements.includes(e.id));
-    if (!unlocked && !showAllTrees) continue;
+    if (!unlocked && !showAllTrees && !alwaysVisible) continue;
     const div = document.createElement("div");
     div.className = "elem" + (!unlocked ? " locked" : "");
     div.style.setProperty("--ec", e.color);
@@ -639,6 +650,13 @@ function buildElemBar() {
     div.dataset.el = e.id;
     bar.appendChild(div);
   }
+}
+
+function actionLabel(ability) {
+  const labels = { COMUM: "Ação comum", BONUS: "Ação bônus", MOVIMENTO: "Ação de movimento", REACAO: "Reação" };
+  const primary = labels[ability.actionType] || ability.actionType;
+  const extra = ability.additionalActionType && (labels[ability.additionalActionType] || ability.additionalActionType);
+  return extra ? `${primary} + ${extra}` : primary;
 }
 
 function renderTree(elId) {
@@ -676,12 +694,24 @@ function renderTree(elId) {
     stage.style.setProperty("--elBgBlend", "normal");
   }
 
-  const maxRow = nodes.reduce((m, n) => Math.max(m, n.row), 0);
+  // A árvore geral de Taijutsu usa coordenadas com pequenos deslocamentos
+  // laterais para desenhar ramos. No eixo vertical, porém, cada degrau precisa
+  // de uma linha inteira: isso impede que ícone e rótulo de nós vizinhos se
+  // misturem visualmente.
+  const layoutRow = (n) => elId === "TAIJUTSU_PASSIVAS" ? Math.round(n.row) : n.row;
+  const maxRow = nodes.reduce((m, n) => Math.max(m, layoutRow(n)), 0);
   const height = TOP_PAD + maxRow * ROW_GAP + 110;
-  wrap.style.width = WIDTH + "px";
+  // Árvores com muitos ramos (Taijutsu) podem ocupar mais que o palco padrão.
+  // Centraliza o conjunto e deixa a rolagem horizontal do palco revelar todos
+  // os caminhos sem cortar os nós das pontas.
+  const minCol = nodes.reduce((m, n) => Math.min(m, n.col), 0);
+  const maxCol = nodes.reduce((m, n) => Math.max(m, n.col), 0);
+  const treeWidth = Math.max(WIDTH, (maxCol - minCol) * COL_GAP + 240);
+  const treeCenterCol = (minCol + maxCol) / 2;
+  wrap.style.width = treeWidth + "px";
   wrap.style.height = height + "px";
 
-  const pos = (n) => ({ x: CENTER_X + n.col * COL_GAP, y: TOP_PAD + n.row * ROW_GAP });
+  const pos = (n) => ({ x: treeWidth / 2 + (n.col - treeCenterCol) * COL_GAP, y: TOP_PAD + layoutRow(n) * ROW_GAP });
   const byId = Object.fromEntries(nodes.map((n) => [n.id, n]));
 
   // arestas: linha reta (galho ligando pai -> filho) — mesmo estilo das árvores
@@ -690,7 +720,7 @@ function renderTree(elId) {
   // (desce reto até a altura do filho, depois vira pro lado) — mesma leitura
   // ortogonal das árvores sem ramo, só que com um cotovelo no meio.
   const svg = $("edges");
-  svg.setAttribute("viewBox", `0 0 ${WIDTH} ${height}`);
+  svg.setAttribute("viewBox", `0 0 ${treeWidth} ${height}`);
   let edges = "";
   for (const n of nodes) {
     const a = pos(n);
@@ -813,7 +843,7 @@ function openModal(n) {
   if (c) {
     meta += `<span class="meta-h">Em combate</span>`;
     meta += chip("Tipo", CAT_LABEL[c.category] || c.category);
-    meta += chip("Ação", ACT_LABEL[c.actionType] || c.actionType);
+    meta += chip("Ação", actionLabel(c));
     meta += chip("Alcance", areaText(c));
     meta += chip(RES_LABEL[c.resource] || c.resource, c.cost + "%");
     if (c.baseDamage) meta += chip("Dano base", c.baseDamage);

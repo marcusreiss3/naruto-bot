@@ -35,6 +35,7 @@ const DEFAULT_DURATIONS: Partial<Record<EffectId, number>> = {
   CHAKRA_DRAIN: E.CHAKRA_DRAIN.defaultDuration,
   HASTE: E.HASTE.defaultDuration,
   EMPOWERED: E.EMPOWERED.defaultDuration,
+  MARKED: 3,
   SHADOW_BOUND: E.SHADOW_BOUND.defaultDuration,
   CRYSTALLIZED: E.CRYSTALLIZED.defaultDuration,
   PRISM: E.PRISM.defaultDuration,
