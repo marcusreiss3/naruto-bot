@@ -123,6 +123,7 @@ export const EFFECT_IDS = [
   "CONFUSION", // confusao
   "ROOT", // enraizado
   "NINJUTSU_BLOCK", // bloqueio mental de ninjutsu
+  "CONTRACT_SEAL", // bloqueia invocacoes e chakra de Bijuu vinculado a contrato
   "DEFENSE_DOWN",
   "FLEE_LOCK", // impedido de fugir do combate
   "WET", // encharcado: conduz eletricidade e abre dano de Agua/Raio
@@ -164,6 +165,7 @@ export const EFFECT_LABELS: Record<EffectId, string> = {
   CONFUSION: "Confusão",
   ROOT: "Imobilização",
   NINJUTSU_BLOCK: "Bloqueio de Ninjutsu",
+  CONTRACT_SEAL: "Selo de Contrato",
   DEFENSE_DOWN: "Defesa Reduzida",
   FLEE_LOCK: "Bloqueio de Fuga",
   WET: "Encharcado",

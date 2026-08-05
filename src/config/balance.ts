@@ -140,6 +140,7 @@ export const BALANCE = {
     CONFUSION: { defaultDuration: 2 },
     ROOT: { defaultDuration: 1 },
     NINJUTSU_BLOCK: { defaultDuration: 2 },
+    CONTRACT_SEAL: { defaultDuration: 2 },
     DEFENSE_DOWN: { dodgeReduction: 0.15 },
     FLEE_LOCK: { defaultDuration: 2 },
     // Encharcado nao causa dano sozinho: e' um marcador que Agua e Raio leem.

@@ -41,6 +41,7 @@ import {
   isAreaShape,
   resolveHit,
   endTurn,
+  skipMovement,
   activeParticipant,
   pickUpWeapon,
   attemptFlee,
@@ -68,11 +69,11 @@ async function sendCombatView(
   interaction: ChatInputCommandInteraction,
   sessionId: string,
   logs: string[],
-  opts?: { followup?: boolean },
+  opts?: { followup?: boolean; movement?: boolean },
 ): Promise<void> {
   const session = await getSessionById(sessionId);
   const guildId = interaction.guildId ?? "global";
-  let payload: { content?: string; embeds?: EmbedBuilder[]; files?: AttachmentBuilder[] };
+  let payload: { content?: string; embeds?: EmbedBuilder[]; files?: AttachmentBuilder[]; components?: ActionRowBuilder<ButtonBuilder>[] };
   if (!session) {
     payload = { content: condenseLogs(logs).slice(0, 1900) || "—" };
   } else {
@@ -84,7 +85,7 @@ async function sendCombatView(
       .setColor(0xe67e22)
       .setDescription(condenseLogs(logs).slice(0, 4000) || "—")
       .setImage("attachment://combate.png");
-    payload = { embeds: [embed], files: [file] };
+    payload = { embeds: [embed], files: [file], components: opts?.movement ? movementRows() : [] };
   }
   if (opts?.followup) await interaction.followUp(payload);
   else if (interaction.deferred || interaction.replied) await interaction.editReply(payload);
@@ -185,6 +186,10 @@ export const combate: Command = {
       case "fugir":
         return fugir(interaction);
     }
+  },
+  async handleButton(interaction: ButtonInteraction) {
+    if (!interaction.customId.startsWith("combate:movimento:")) return;
+    await handleMovementButton(interaction);
   },
 };
 
@@ -314,6 +319,7 @@ async function iniciar(interaction: ChatInputCommandInteraction): Promise<void> 
   await interaction.editReply(
     `⚔️ Combate iniciado em **${scenario.name}** com ${players.length} participante(s)!\nUse \`/mapa\` para ver o grid.`,
   );
+  await sendCombatView(interaction, session.id, ["Escolha seu movimento."], { followup: true, movement: true });
 }
 
 // Resolve por qual CombatParticipant o usuario age agora: o proprio, ou o
@@ -321,7 +327,7 @@ async function iniciar(interaction: ChatInputCommandInteraction): Promise<void> 
 // resolveActingParticipantId em combat-math.ts. `me` vem null tanto se o
 // jogador nao esta em combate quanto se o PROPRIO corpo dele foi capturado
 // (a mente esta em outro lugar, nao pode agir).
-async function getMyParticipant(interaction: ChatInputCommandInteraction) {
+async function getMyParticipant(interaction: ChatInputCommandInteraction | ButtonInteraction) {
   const channelId = interaction.channelId;
   const guildId = interaction.guildId ?? "global";
   const session = await getActiveSession(channelId);
@@ -342,6 +348,56 @@ function ensureMyTurn(session: SessionFull, meId: string): string | null {
   if (!active) return "Sem participante ativo.";
   if (active.id !== meId) return `Não é seu turno. Vez de **${active.name}**.`;
   return null;
+}
+
+function movementRows(): ActionRowBuilder<ButtonBuilder>[] {
+  return [
+    new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder().setCustomId("combate:movimento:cima").setLabel("↑").setStyle(ButtonStyle.Secondary),
+    ),
+    new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder().setCustomId("combate:movimento:esquerda").setLabel("←").setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId("combate:movimento:parado").setLabel("🧍 Não mover").setStyle(ButtonStyle.Primary),
+      new ButtonBuilder().setCustomId("combate:movimento:direita").setLabel("→").setStyle(ButtonStyle.Secondary),
+    ),
+    new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder().setCustomId("combate:movimento:baixo").setLabel("↓").setStyle(ButtonStyle.Secondary),
+    ),
+  ];
+}
+
+async function handleMovementButton(interaction: ButtonInteraction): Promise<void> {
+  const direction = interaction.customId.split(":")[2];
+  const { session, me } = await getMyParticipant(interaction);
+  if (!session || !me) { await interaction.reply({ content: "❌ Você não está neste combate.", ephemeral: true }); return; }
+  const turnErr = ensureMyTurn(session, me.id);
+  if (turnErr) { await interaction.reply({ content: `❌ ${turnErr}`, ephemeral: true }); return; }
+  if (me.actedMove) { await interaction.reply({ content: "❌ Movimento já escolhido nesta rodada.", ephemeral: true }); return; }
+
+  if (direction === "parado") {
+    const result = await skipMovement(session, me.id);
+    if (!result.ok) { await interaction.reply({ content: `❌ ${result.error}`, ephemeral: true }); return; }
+    await interaction.update({ content: `🧍 **${me.name}** permaneceu no lugar. Ações comum e bônus liberadas.`, components: [] });
+    return;
+  }
+
+  const cell = /^([A-Z])(\d+)$/.exec(me.cell);
+  const scenario = getScenarioById(session.scenarioId)!;
+  if (!cell) { await interaction.reply({ content: "❌ Posição inválida.", ephemeral: true }); return; }
+  let row = cell[1]!.charCodeAt(0) - 65;
+  let col = Number(cell[2]);
+  if (direction === "cima") row--;
+  if (direction === "baixo") row++;
+  if (direction === "esquerda") col--;
+  if (direction === "direita") col++;
+  if (row < 0 || row >= scenario.rows || col < 1 || col > scenario.cols) {
+    await interaction.reply({ content: "❌ Você não pode sair do mapa.", ephemeral: true });
+    return;
+  }
+  const dest = `${String.fromCharCode(65 + row)}${col}`;
+  const result = await moveParticipant(session, me.id, dest);
+  if (!result.ok) { await interaction.reply({ content: `❌ ${result.error}`, ephemeral: true }); return; }
+  await interaction.update({ content: `🏃 **${me.name}** moveu-se para **${dest}**. Ações comum e bônus liberadas.`, components: [] });
 }
 
 export async function mover(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -485,7 +541,7 @@ async function moverMissaoGato(interaction: ChatInputCommandInteraction, dest: s
     state = { catCell: spawnCat(scenario, dest), playerCell: dest, turns: 0 };
   }
   // limite de movimento: 2 + floor(taijutsu/5)
-  const limit = moveRange(char.attributes!.taijutsu);
+  const limit = moveRange();
   const d = cellDistance(state.playerCell, dest);
   if (d > limit) {
     await interaction.reply({
@@ -900,7 +956,7 @@ async function fimTurno(interaction: ChatInputCommandInteraction): Promise<void>
   const s2 = await getSessionById(session.id);
   const nextActive = s2 && s2.status === "ACTIVE" ? activeParticipant(s2) : null;
   if (nextActive) logs.push(`➡️ Vez de **${nextActive.name}**.`);
-  await sendCombatView(interaction, session.id, logs);
+  await sendCombatView(interaction, session.id, logs, { movement: Boolean(nextActive && !nextActive.isNpc) });
 }
 
 async function pegarArma(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -1160,6 +1216,6 @@ async function sharingan(interaction: ChatInputCommandInteraction): Promise<void
   }
   const rules = BALANCE.sharingan[tomoe];
   await interaction.reply(
-    `🔴 **${me.name}** ativou o Sharingan de ${tomoe} tomoe (+${Math.round(rules.dodgeBonus * 100)}% de esquiva; gasta ${rules.upkeepPerTurn}% de chakra por turno${tomoe === 3 ? "; copia permanentemente Ninjutsus elementais elegíveis observados" : ""}).`,
+    `🔴 **${me.name}** ativou o Sharingan de ${tomoe} tomoe (+${Math.round(rules.dodgeBonus * 100)}% de esquiva; gasta ${rules.upkeepPerTurn}% de chakra por turno${tomoe === 3 ? "; copia Ninjutsus elementais e estilos de Taijutsu elegíveis observados" : ""}).`,
   );
 }

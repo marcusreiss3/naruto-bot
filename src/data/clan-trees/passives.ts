@@ -82,6 +82,9 @@ export interface ClanPassiveDef {
   // esquiva geral (qualquer ataque, qualquer reação) — ver o mesmo campo em
   // element-trees/passives.ts.
   dodgeBonus?: number;
+  // casas extras na ação de movimento do personagem. Aplicado antes de
+  // lentidão/terreno pelo mesmo agregador das passivas gerais de Taijutsu.
+  moveBonus?: number;
   // ESCAPE HATCH do gate normal de clanId: quando presente, esta passiva
   // vale pra QUALQUER ability desta categoria (ex: "GENJUTSU"), mesmo sem
   // clanId nenhum ou de OUTRO cla/arvore de fundamentos — nao so' as do
@@ -204,6 +207,19 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
     executeBonus: { hpThreshold: 0.3, mult: 1.25 },
     effectDurationBonus: { effectId: "NINJUTSU_BLOCK", bonus: 1 },
   },
+
+  // ------------------------------------------------------------------ LEE
+  // A raiz entrega o bônus pequeno e universal pedido; os ramos seguintes
+  // não empilham dano geral, só melhoram grupos definidos do Punho Forte.
+  { nodeId: "lee_raiz", clanId: "lee", crossCategory: "TAIJUTSU", damageMult: 1.05, maxHpBonus: 0.05 },
+  { nodeId: "lee_folha_furacao", clanId: "lee", abilityIds: ["tai_furacao_folha", "tai_vendaval_folha", "tai_grande_furacao_folha"], damageMult: 1.10 },
+  { nodeId: "lee_entrada_dinamica", clanId: "lee", abilityIds: ["tai_entrada_dinamica", "tai_acao_dinamica", "tai_vento_ascendente_folha"], damageMult: 1.10 },
+  { nodeId: "lee_pesos", clanId: "lee", abilityIds: ["tai_furacao_folha", "tai_entrada_dinamica", "tai_vendaval_folha", "tai_acao_dinamica", "tai_grande_furacao_folha", "tai_vento_ascendente_folha", "tai_luz_rotatoria_folha", "tai_rajada_leoes", "tai_lotus_frontal", "tai_lotus_oculta"], costMult: 0.90 },
+  { nodeId: "lee_lotus", clanId: "lee", abilityIds: ["tai_rajada_leoes", "tai_lotus_frontal", "tai_lotus_oculta"], damageMult: 1.12 },
+  { nodeId: "lee_condicionamento", clanId: "lee", maxHpBonus: 0.05 },
+  { nodeId: "lee_recuperacao", clanId: "lee", hpRegenPerTurn: 2 },
+  { nodeId: "lee_passos", clanId: "lee", moveBonus: 1 },
+  { nodeId: "lee_reflexos", clanId: "lee", dodgeBonus: 0.03 },
 
   // ------------------------------------------------------------ AKIMICHI
   // Diferente de Nara (controle) e Hyuuga (perfuração), o Akimichi é o clã

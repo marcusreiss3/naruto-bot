@@ -24,8 +24,8 @@ import { ARHAT_TREE } from "../src/data/arhat-tree.js";
 import { ADAMANTINO_TREE } from "../src/data/adamantino-tree.js";
 import { TAIJUTSU_PASSIVES_TREE } from "../src/data/taijutsu-passives-tree.js";
 import { ASSASSINATO_NINJA_TREE } from "../src/data/assassinato-ninja-tree.js";
-import { PUNHO_GENTIL_TREE } from "../src/data/punho-gentil-tree.js";
 import { TAIJUTSU_AGITACAO_TREE } from "../src/data/taijutsu-agitacao-tree.js";
+import { FUINJUTSU_TREE } from "../src/data/fuinjutsu-tree.js";
 import { CLAN_STARTING_ELEMENT } from "../src/data/clans/starting-element.js";
 import { getAbility, getClan, CLANS } from "../src/data/index.js";
 import {
@@ -184,6 +184,7 @@ function buildState() {
     FUNDAMENTOS: viewNodes(snap, fundamentos),
     BUKIJUTSU: viewNodes(snap, BUKIJUTSU_TREE),
     GENJUTSU: viewNodes(snap, GENJUTSU_TREE),
+    FUINJUTSU: viewNodes(snap, FUINJUTSU_TREE),
     TAIJUTSU: viewNodes(snap, TAIJUTSU_TREE),
     IRYO_NINJUTSU: viewNodes(snap, IRYO_NINJUTSU_TREE),
     // especializacoes de taijutsu — o mesmo conjunto que skill-tree.ts serve no
@@ -192,7 +193,6 @@ function buildState() {
     ADAMANTINO: viewNodes(snap, ADAMANTINO_TREE),
     TAIJUTSU_PASSIVAS: viewNodes(snap, TAIJUTSU_PASSIVES_TREE),
     ASSASSINATO_NINJA: viewNodes(snap, ASSASSINATO_NINJA_TREE),
-    PUNHO_GENTIL: viewNodes(snap, PUNHO_GENTIL_TREE),
     TAIJUTSU_AGITACAO: viewNodes(snap, TAIJUTSU_AGITACAO_TREE),
   };
   for (const el of Object.keys(ELEMENT_TREES) as Element[]) trees[el] = viewNodes(snap, ELEMENT_TREES[el]);

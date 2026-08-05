@@ -41,6 +41,9 @@ export interface RenderState {
   highlight?: RenderHighlight;
   // celula de origem do preview (marcada com um alvo)
   highlightOrigin?: string;
+  // Mantém o painel dentro da imagem para os usos legados do renderizador.
+  includeStatusPanel?: boolean;
+  showMetadata?: boolean;
 }
 
 const CELLW = 60;
@@ -141,6 +144,37 @@ async function circularToken(input: Buffer, size: number): Promise<Buffer> {
 }
 
 export const MapRenderer = {
+  async renderStatusPanel(entities: RenderEntity[]): Promise<Buffer | null> {
+    const roster = entities.filter((e) => e.kind !== "CAT" && e.kind !== "MARKER" && e.hp !== undefined);
+    if (!roster.length) return null;
+
+    const width = 500;
+    const ROW_H = 32;
+    const height = 18 + roster.length * ROW_H + 10;
+    const parts: string[] = [
+      `<rect width="${width}" height="${height}" rx="8" fill="#11161e"/>`,
+      `<text x="16" y="22" fill="#e6e6e6" font-family="sans-serif" font-size="14" font-weight="bold">Status dos participantes</text>`,
+    ];
+
+    roster.forEach((e, i) => {
+      const cy = 42 + i * ROW_H;
+      const isPlayer = e.kind === "PLAYER";
+      const dead = (e.hp ?? 0) <= 0;
+      const nm = (e.name ?? e.label) + (e.badge ? ` ${e.badge}` : "");
+      parts.push(`<circle cx="16" cy="${cy}" r="6" fill="${e.color}"/>`);
+      parts.push(
+        `<text x="28" y="${cy + 4}" fill="${dead ? "#7d8794" : "#e6e6e6"}" font-family="sans-serif" font-size="13" font-weight="bold">${esc(nm.slice(0, 18))}${dead ? " ☠️" : ""}</text>`,
+      );
+      bar(parts, 166, cy, 120, e.hp ?? 0, e.hpMax ?? 1, "#2ecc71", "#7f1d1d", `${e.hp ?? 0}/${e.hpMax ?? 0}`);
+      if (isPlayer) {
+        bar(parts, 298, cy, 88, e.chakra ?? 0, 100, "#3498db", "#1b3a52", `CK ${Math.round(e.chakra ?? 0)}`);
+        bar(parts, 394, cy, 88, e.energia ?? 0, 100, "#f1c40f", "#5a4a0a", `EN ${Math.round(e.energia ?? 0)}`);
+      }
+    });
+
+    return sharp(Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">${parts.join("")}</svg>`)).png().toBuffer();
+  },
+
   async renderScenario(state: RenderState): Promise<Buffer> {
     const { scenario } = state;
     const rows = scenario.rows;
@@ -148,7 +182,9 @@ export const MapRenderer = {
     // entidades com stats entram no painel inferior
     const roster = state.entities.filter((e) => e.kind !== "CAT" && e.kind !== "MARKER" && e.hp !== undefined);
     const ROW_H = 26;
-    const panelH = roster.length ? 14 + roster.length * ROW_H + 8 : 0;
+    const includeStatusPanel = state.includeStatusPanel ?? true;
+    const showMetadata = state.showMetadata ?? true;
+    const panelH = includeStatusPanel && roster.length ? 14 + roster.length * ROW_H + 8 : 0;
     const width = PAD_LEFT + cols * CELLW + 20;
     const gridH = rows * CELLH;
     const height = PAD_TOP + gridH + 30 + panelH + 16; // grid + legenda + painel
@@ -258,7 +294,7 @@ export const MapRenderer = {
     );
 
     // ----- painel de status (barras na imagem) -----
-    if (roster.length) {
+    if (includeStatusPanel && roster.length) {
       const panelTop = legendY + 12;
       base.push(
         `<rect x="${PAD_LEFT - 4}" y="${panelTop}" width="${gridW + 8}" height="${roster.length * ROW_H + 8}" fill="#11161e" fill-opacity="0.85" rx="6"/>`,
@@ -383,11 +419,14 @@ export const MapRenderer = {
     layers.push(...tokenComposites);
     layers.push({ input: topSvg, top: 0, left: 0 });
 
-    return sharp({
+    const rendered = await sharp({
       create: { width, height, channels: 4, background: { r: 30, g: 37, b: 48, alpha: 255 } },
     })
       .composite(layers)
       .png()
       .toBuffer();
+    return showMetadata
+      ? rendered
+      : sharp(rendered).extract({ left: PAD_LEFT, top: PAD_TOP, width: gridW, height: gridH }).png().toBuffer();
   },
 };

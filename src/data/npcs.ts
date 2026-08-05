@@ -540,6 +540,13 @@ export const NPCS: NpcTemplate[] = [
     abilityIds: ["doton_punho_rochoso"],
   },
   {
+    id: "summon_rei_macaco_enma",
+    name: "Rei Macaco Enma",
+    hpMax: 150,
+    attributes: { taijutsu: 28, ninjutsu: 12 },
+    abilityIds: ["enma_golpe_bastao_adamantino", "enma_prisao_adamantina"],
+  },
+  {
     // Kage Bunshin: 1 de vida sempre (nao usa summon.hpFraction). abilityIds
     // fica vazio de proposito — createSummon() substitui pelo snapshot dos
     // jutsu que o INVOCADOR ja possui (ver Ability.summon.inheritOwnerJutsu).

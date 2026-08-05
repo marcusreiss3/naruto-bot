@@ -70,7 +70,7 @@ export const CLAN_ABILITIES: Ability[] = [
     visualDescription:
       "O terceiro tomoe acompanha os movimentos do adversário e grava permanentemente no arsenal as técnicas elementais que consegue copiar.",
     description:
-      "Completa o Sharingan de três tomoe. Enquanto estiver ativo, concede +10% de esquiva, consome 9% de chakra por turno e aprende permanentemente cada Ninjutsu elemental elegível observado em combate. Não copia técnicas exclusivas de clã, Gelo ou Madeira; exige afinidade com o elemento, além do nível e Ninjutsu mínimos da técnica.",
+      "Completa o Sharingan de três tomoe. Enquanto estiver ativo, concede +10% de esquiva, consome 9% de chakra por turno e aprende permanentemente apenas Ninjutsus de Fogo, Água, Vento, Terra e Raio, além dos jutsus ativos de Punho Forte, Arhat e Adamantino observados em combate. Não copia passivas. Cada cópia exige nível e os pontos do atributo da própria árvore; Ninjutsu elemental ainda exige afinidade.",
   },
   {
     id: "uchiha_mangekyo_sharingan",
@@ -1933,6 +1933,14 @@ export const CLANS: ClanDef[] = [
       "hyuuga_128_palmas",
       "hyuuga_leoes_gemeos",
     ],
+    hooks: {},
+  },
+  {
+    id: "lee",
+    name: "Lee",
+    description: "Clã de Taijutsu puro: disciplina física, velocidade e domínio do Punho Forte.",
+    passiveIds: [],
+    activeIds: [],
     hooks: {},
   },
 

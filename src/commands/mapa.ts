@@ -452,8 +452,16 @@ export const mapa: Command = {
       }
     }
 
-    const png = await MapRenderer.renderScenario({ scenario: renderScenario, round, entities, drops });
-    const file = new AttachmentBuilder(png, { name: "mapa.png" });
+    const png = await MapRenderer.renderScenario({
+      scenario: renderScenario,
+      round,
+      entities,
+      drops,
+      includeStatusPanel: false,
+      showMetadata: false,
+    });
+    const mapFile = new AttachmentBuilder(png, { name: "mapa.png" });
+    const statusPng = await MapRenderer.renderStatusPanel(entities);
 
     const embed = new EmbedBuilder()
       .setTitle(`🗺️ ${renderScenario.name}`)
@@ -461,6 +469,13 @@ export const mapa: Command = {
       .setColor(0x2ecc71)
       .setImage("attachment://mapa.png");
 
-    await interaction.editReply({ embeds: [embed], files: [file] });
+    await interaction.editReply({ embeds: [embed], files: [mapFile] });
+    // O Discord coloca imagens da mesma mensagem em grade. O painel segue em
+    // uma mensagem própria para ficar sempre abaixo do mapa, sem recortes.
+    if (statusPng && interaction.channel?.isTextBased() && "send" in interaction.channel) {
+      const statusFile = new AttachmentBuilder(statusPng, { name: "status.png" });
+      const statusEmbed = new EmbedBuilder().setColor(0x2ecc71).setImage("attachment://status.png");
+      await interaction.channel.send({ embeds: [statusEmbed], files: [statusFile] });
+    }
   },
 };

@@ -29,6 +29,7 @@ const DEFAULT_DURATIONS: Partial<Record<EffectId, number>> = {
   CONFUSION: E.CONFUSION.defaultDuration,
   ROOT: E.ROOT.defaultDuration,
   NINJUTSU_BLOCK: E.NINJUTSU_BLOCK.defaultDuration,
+  CONTRACT_SEAL: E.CONTRACT_SEAL.defaultDuration,
   FLEE_LOCK: E.FLEE_LOCK.defaultDuration,
   WET: E.WET.defaultDuration,
   SHIELD: E.SHIELD.defaultDuration,

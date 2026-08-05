@@ -25,8 +25,8 @@ import { ARHAT_TREE } from "../arhat-tree.js";
 import { ADAMANTINO_TREE } from "../adamantino-tree.js";
 import { TAIJUTSU_PASSIVES_TREE } from "../taijutsu-passives-tree.js";
 import { ASSASSINATO_NINJA_TREE } from "../assassinato-ninja-tree.js";
-import { PUNHO_GENTIL_TREE } from "../punho-gentil-tree.js";
 import { TAIJUTSU_AGITACAO_TREE } from "../taijutsu-agitacao-tree.js";
+import { FUINJUTSU_TREE } from "../fuinjutsu-tree.js";
 
 export type NodeKind = "JUTSU" | "PASSIVE" | "ELEMENT";
 export type NodeRank = "D" | "C" | "B" | "A" | "S";
@@ -426,7 +426,7 @@ export const ELEMENT_TREES: Record<Element, SkillNodeDef[]> = {
 // ELEMENT_TREES (nao pertencem a nenhum elemento), mas entram no indice
 // global — e' aqui que getNode/allNodes/buyNode as acham.
 const NODE_INDEX: Map<string, SkillNodeDef> = new Map(
-  [...Object.values(ELEMENT_TREES).flat(), ...FUNDAMENTOS, ...BUKIJUTSU_TREE, ...IRYO_NINJUTSU_TREE, ...GENJUTSU_TREE, ...TAIJUTSU_TREE, ...ARHAT_TREE, ...ADAMANTINO_TREE, ...TAIJUTSU_PASSIVES_TREE, ...ASSASSINATO_NINJA_TREE, ...PUNHO_GENTIL_TREE, ...TAIJUTSU_AGITACAO_TREE, ...Object.values(CLAN_TREES).flat()].map((n) => [
+  [...Object.values(ELEMENT_TREES).flat(), ...FUNDAMENTOS, ...BUKIJUTSU_TREE, ...IRYO_NINJUTSU_TREE, ...GENJUTSU_TREE, ...FUINJUTSU_TREE, ...TAIJUTSU_TREE, ...ARHAT_TREE, ...ADAMANTINO_TREE, ...TAIJUTSU_PASSIVES_TREE, ...ASSASSINATO_NINJA_TREE, ...TAIJUTSU_AGITACAO_TREE, ...Object.values(CLAN_TREES).flat()].map((n) => [
     n.id,
     n,
   ]),

@@ -165,7 +165,7 @@ const UCHIHA: SkillNodeDef[] = [
     ["uchiha_economia_visual"],
     20,
     15,
-    "Ativa o Sharingan de três tomoe. Concede +10% de esquiva, consome 9% de chakra por turno e aprende permanentemente cada Ninjutsu elemental elegível observado. Não copia técnicas exclusivas de clã, gelo ou madeira; exige afinidade, nível e Ninjutsu mínimos.",
+    "Ativa o Sharingan de três tomoe. Concede +10% de esquiva, consome 9% de chakra por turno e aprende permanentemente apenas Ninjutsus de Fogo, Água, Vento, Terra e Raio, além dos jutsus ativos de Punho Forte, Arhat e Adamantino observados. Não copia passivas. Cada cópia exige nível e pontos no atributo da árvore; Ninjutsu elemental também exige afinidade.",
   ),
   {
     ...UC.jutsu(
@@ -459,6 +459,25 @@ const HYUUGA: SkillNodeDef[] = [
     28,
     "Libera uma grande quantidade de chakra pelos punhos, moldado em duas cabeças de leão. Não pode ser esquivado. Ao acertar, destroça por completo os meridianos do alvo: bloqueia o Ninjutsu dele por 3 rodadas e reduz a defesa dele por 2 rodadas. Exige o Byakugan ativo.",
   ),
+];
+
+// ----------------------------------------------------------------- LEE
+// Clã de Taijutsu puro: não concede jutsus próprios. A árvore compra somente
+// passivas e se divide entre o refinamento do Punho Forte e o condicionamento
+// físico que sustenta esse estilo de luta.
+const L = makeClan("lee", "taijutsu");
+const LEE: SkillNodeDef[] = [
+  L.pass("lee_raiz", "Espírito da Juventude", "🔥", "Fundamento", 0, 0, [], 1, 1, "Passiva sempre ativa: +5% de dano em Taijutsu e +5% de vida máxima.", true),
+
+  L.pass("lee_folha_furacao", "Ritmo da Folha", "🌀", "Punho Forte", -1.25, 1, ["lee_raiz"], 5, 5, "Passiva: Furacão da Folha, Vendaval da Folha e Grande Furacão da Folha causam 10% mais dano."),
+  L.pass("lee_entrada_dinamica", "Entrada Demolidora", "💥", "Punho Forte", -1.25, 2, ["lee_folha_furacao"], 10, 10, "Passiva: Entrada Dinâmica, Ação Dinâmica e Vento Ascendente da Folha causam 10% mais dano."),
+  L.pass("lee_pesos", "Pesos de Treino", "⛓️", "Punho Forte", -1.25, 3, ["lee_entrada_dinamica"], 16, 16, "Passiva: técnicas de Punho Forte custam 10% menos energia."),
+  L.pass("lee_lotus", "Disciplina da Lótus", "🌸", "Punho Forte", -1.25, 4, ["lee_pesos"], 24, 24, "Passiva: Rajada de Leões, Lótus Frontal e Lótus Oculta causam 12% mais dano."),
+
+  L.pass("lee_condicionamento", "Condicionamento Extremo", "❤️", "Corpo", 1.25, 1, ["lee_raiz"], 5, 5, "Passiva: +5% de vida máxima."),
+  L.pass("lee_recuperacao", "Fôlego Inabalável", "💚", "Corpo", 1.25, 2, ["lee_condicionamento"], 10, 10, "Passiva: recupera 2 pontos de vida no início de cada turno."),
+  L.pass("lee_passos", "Passos Acelerados", "💨", "Corpo", 1.25, 3, ["lee_recuperacao"], 16, 16, "Passiva: +1 casa na ação de movimento."),
+  L.pass("lee_reflexos", "Reflexos de Treino", "⚡", "Corpo", 1.25, 4, ["lee_passos"], 24, 24, "Passiva: +3 pontos percentuais de chance de esquiva contra qualquer ataque."),
 ];
 
 // -------------------------------------------------------------- AKIMICHI
@@ -2355,6 +2374,7 @@ export const CLAN_TREES: Record<string, SkillNodeDef[]> = {
   uchiha: UCHIHA,
   nara: NARA,
   hyuuga: HYUUGA,
+  lee: LEE,
   akimichi: AKIMICHI,
   aburame: ABURAME,
   inuzuka: INUZUKA,

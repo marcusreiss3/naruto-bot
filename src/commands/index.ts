@@ -12,6 +12,7 @@ import { admin } from "./admin.js";
 import { aparencia } from "./aparencia.js";
 import { clear } from "./clear.js";
 import { bonecoTreino } from "./boneco-treino.js";
+import { invocacao } from "./invocacao.js";
 import { inventario } from "./inventario.js";
 import { arremessar, atacar, darItem, desequipar, equipar, largarItem, restaurarPergaminho, usarItem } from "./itens.js";
 
@@ -38,6 +39,7 @@ export const commands: Command[] = [
   aparencia,
   clear,
   bonecoTreino,
+  invocacao,
 ];
 
 export const commandMap = new Map<string, Command>(commands.map((c) => [c.data.name, c]));

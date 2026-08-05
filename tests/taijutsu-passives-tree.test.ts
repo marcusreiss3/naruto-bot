@@ -11,7 +11,6 @@ describe("árvore geral de Taijutsu", () => {
     expect(nodes.every(Boolean)).toBe(true);
     expect(TAIJUTSU_PASSIVES_TREE.every((node) => node.kind === "PASSIVE")).toBe(true);
     expect(TAIJUTSU_PASSIVES_TREE.some((node) => node.id.startsWith("tai_nevoa_"))).toBe(false);
-    expect(TAIJUTSU_PASSIVES_TREE.some((node) => node.id.startsWith("tai_gentil_"))).toBe(false);
   });
 
   it("limita a reserva máxima de energia a 150%", () => {

@@ -3,6 +3,7 @@ import { BALANCE } from "../src/config/balance.js";
 import { getAbility, getClan } from "../src/data/index.js";
 import { CLAN_TREES } from "../src/data/clan-trees/index.js";
 import { allNodes } from "../src/data/element-trees/index.js";
+import { TAIJUTSU_AGITACAO_TREE } from "../src/data/taijutsu-agitacao-tree.js";
 import {
   SHARINGAN_ABILITY_BY_TOMOE,
   abilityIdFromSharinganCopyNode,
@@ -110,11 +111,35 @@ describe("Sharingan de três tomoe: cópia", () => {
     expect(abilityIdFromSharinganCopyNode(marker)).toBe(kirin.id);
   });
 
-  it("não copia técnica de clã, habilidade sem elemento, gelo ou madeira", () => {
+  it("também copia somente os estilos permitidos de Taijutsu com os pontos exigidos", () => {
+    const strongFist = getAbility("tai_furacao_folha")!;
+    const strongFistNode = allNodes().find((node) => node.grantsAbilityId === strongFist.id)!;
+    expect(isSharinganCopyable(strongFist)).toBe(true);
+    expect(isSharinganCopyable(getAbility("arhat_palmada_colapso")!)).toBe(true);
+    expect(isSharinganCopyable(getAbility("hyuuga_punho_suave")!)).toBe(false);
+    expect(
+      sharinganCopyRequirementError(
+        strongFist,
+        { level: 99, ninjutsu: 99, elements: [], attributes: { taijutsu: strongFistNode.reqPool - 1 } },
+        { level: strongFistNode.reqLevel, attribute: { key: "taijutsu", value: strongFistNode.reqPool } },
+      ),
+    ).toMatch(/Taijutsu/);
+    expect(
+      sharinganCopyRequirementError(
+        strongFist,
+        { level: 99, ninjutsu: 99, elements: [], attributes: { taijutsu: strongFistNode.reqPool } },
+        { level: strongFistNode.reqLevel, attribute: { key: "taijutsu", value: strongFistNode.reqPool } },
+      ),
+    ).toBeNull();
+    expect(TAIJUTSU_AGITACAO_TREE.every((node) => node.kind === "PASSIVE" || !isSharinganCopyable(getAbility(node.grantsAbilityId!)!))).toBe(true);
+  });
+
+  it("não copia técnica de clã, habilidade sem elemento ou Kekkei Genkai", () => {
     expect(isSharinganCopyable(getAbility("senju_ondas_cortantes")!)).toBe(false);
-    expect(isSharinganCopyable(getAbility("vapor_nevoa_qualificada")!)).toBe(true);
+    expect(isSharinganCopyable(getAbility("vapor_nevoa_qualificada")!)).toBe(false);
     expect(isSharinganCopyable(getAbility("nara_possessao")!)).toBe(false);
     expect(isSharinganCopyable(getAbility("gelo_agulhas")!)).toBe(false);
+    expect(isSharinganCopyable(getAbility("lava_tecnica_balas")!)).toBe(false);
     const suitonSenju = getAbility("senju_ondas_cortantes")!;
     expect(isSharinganCopyable(suitonSenju)).toBe(false);
     expect(isSharinganCopyable({ ...suitonSenju, id: "mokuton_teste", tags: ["mokuton", "madeira"] })).toBe(false);

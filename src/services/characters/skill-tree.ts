@@ -31,8 +31,8 @@ import { ARHAT_TREE } from "../../data/arhat-tree.js";
 import { ADAMANTINO_TREE } from "../../data/adamantino-tree.js";
 import { TAIJUTSU_PASSIVES_TREE } from "../../data/taijutsu-passives-tree.js";
 import { ASSASSINATO_NINJA_TREE } from "../../data/assassinato-ninja-tree.js";
-import { PUNHO_GENTIL_TREE } from "../../data/punho-gentil-tree.js";
 import { TAIJUTSU_AGITACAO_TREE } from "../../data/taijutsu-agitacao-tree.js";
+import { FUINJUTSU_TREE } from "../../data/fuinjutsu-tree.js";
 import type { VillageId } from "../village-service.js";
 import { CLAN_TREES } from "../../data/clan-trees/index.js";
 import { getAbility, getClan } from "../../data/index.js";
@@ -429,8 +429,8 @@ export function viewAssassinatoNinjaTree(snap: CharSnapshot): NodeView[] {
   });
 }
 
-export function viewPunhoGentilTree(snap: CharSnapshot): NodeView[] {
-  return PUNHO_GENTIL_TREE.map((node) => {
+export function viewFuinjutsuTree(snap: CharSnapshot): NodeView[] {
+  return FUINJUTSU_TREE.map((node) => {
     const combat = combatOf(node); const mechanics = mechanicsOf(node); const visualDescription = visualDescriptionOf(node); const effectiveRequired = effectiveReqPool(node);
     if (snap.owned.has(node.id)) return { ...node, combat, mechanics, visualDescription, effectiveReqPool: effectiveRequired, status: "OWNED" };
     const reason = lockReason(snap, node);

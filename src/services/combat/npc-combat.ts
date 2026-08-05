@@ -20,7 +20,8 @@ export async function runNpcTurn(sessionId: string, npcId: string): Promise<stri
 
   const enemies = session.participants.filter((p) => p.teamId !== npc.teamId && p.hpCurrent > 0);
   if (enemies.length === 0) return logs;
-  const target = nearest(npc.cell, enemies);
+  const priority = enemies.find((p) => p.id === npc.flags.priorityTargetId);
+  const target = priority ?? nearest(npc.cell, enemies);
   if (!target) return logs;
 
   const abilities = (JSON.parse(npc.jutsuIdsJson) as string[])
@@ -43,7 +44,7 @@ export async function runNpcTurn(sessionId: string, npcId: string): Promise<stri
 
   // se ja nao esta em alcance, anda ate o limite de movimento em direcao ao alvo
   if (!inRange(npc.cell)) {
-    const move = moveRange(npcAttr(npc, "taijutsu"));
+    const move = moveRange();
     const dest = walkToward(session, npc.cell, target.cell, move);
     if (dest && dest !== npc.cell) {
       const mv = await moveParticipant(session, npc.id, dest);
@@ -62,13 +63,22 @@ export async function runNpcTurn(sessionId: string, npcId: string): Promise<stri
 
   // ataca se houver alvo em alcance
   const npcNow = session.participants.find((p) => p.id === npcId)!;
-  const ability = inRange(npcNow.cell);
-  if (ability) {
+  const available = abilities.filter((a) => cellDist(npcNow.cell, target.cell) <= (a.shape === "MELEE" ? Math.max(1, a.range) : a.range));
+  // Enma só usa a Prisão Adamantina uma vez a cada quatro rodadas, evitando
+  // spam do Imobilizado; nos outros turnos prefere o golpe puro de bastão.
+  const ability = npcNow.flags.summonTemplateId === "summon_rei_macaco_enma"
+    ? (session.round % 4 === 0
+        ? available.find((a) => a.id === "enma_prisao_adamantina") ?? available.find((a) => a.id === "enma_golpe_bastao_adamantino")
+        : available.find((a) => a.id === "enma_golpe_bastao_adamantino") ?? available[0])
+    : inRange(npcNow.cell);
+  if (ability && npcNow.flags.attackEnabled !== false) {
     const res = await useAbility(session, npcId, ability.id, target.cell, target.id);
     logs.push(...res.logs);
     for (const hit of res.hits) {
       logs.push(...(await resolveHit(sessionId, hit, npcId, { reaction: "NONE" })));
     }
+  } else if (npcNow.flags.attackEnabled === false) {
+    logs.push(`🤖 ${npc.name} está sob ordem de não atacar.`);
   } else {
     logs.push(`🤖 ${npc.name} não alcançou ninguém neste turno.`);
   }

@@ -155,7 +155,7 @@ export async function moverRoofCleanup(interaction: ChatInputCommandInteraction,
   const char = await getOrCreateCharacter(interaction.user.id, guildId, interaction.user.username);
   let state = ensureState(ctx.inst.stateJson);
   const from = state.playerCell ?? START_CELL;
-  const limit = moveRange(char.attributes!.taijutsu);
+  const limit = moveRange();
   if (cellDistance(from, dest) > limit) {
     await interaction.reply({
       content: `Fora do alcance de movimento (max ${limit} casas a partir de ${from}).`,

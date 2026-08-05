@@ -8,9 +8,9 @@ const ELEMENTS = [
   { id: "IRYO_NINJUTSU", name: "Iryō Ninjutsu", icon: "", img: "/assets/icons/footer/iryo-ninjutsu.png", color: "#57c99a" },
   { id: "BUKIJUTSU", name: "Bukijutsu", icon: "", img: "/assets/icons/footer/bukijutsu.png", color: "#b7a27a" },
   { id: "GENJUTSU", name: "Genjutsu", icon: "", img: "/assets/icons/footer/genjutsu.png", color: "#9b63c7" },
+  { id: "FUINJUTSU", name: "Fuinjutsu", icon: "", img: "/assets/icons/footer/fuinjutsu.png", color: "#d6a13d" },
   { id: "TAIJUTSU_PASSIVAS", name: "Taijutsu", icon: "", img: "/assets/icons/footer/taijutsu-geral.png", color: "#d8794f" },
   { id: "ASSASSINATO_NINJA", name: "Assassinato Silencioso", icon: "", img: "/assets/icons/footer/assassinato-ninja.png", color: "#7f9ebf" },
-  { id: "PUNHO_GENTIL", name: "Punho Gentil", icon: "", img: "/assets/icons/footer/punho-gentil.png", color: "#8abce8", clanGate: "hyuuga" },
   { id: "TAIJUTSU_AGITACAO", name: "Taijutsu de Agitação", icon: "", img: "/assets/icons/footer/taijutsu-agitacao.png", color: "#d67e58" },
   { id: "TAIJUTSU", name: "Punho Forte", icon: "", img: "/assets/icons/footer/taijutsu.png", color: "#d8794f" },
   { id: "ARHAT", name: "Punho Arhat", icon: "", img: "/assets/icons/footer/arhat.png", color: "#b8694f" },
@@ -35,6 +35,7 @@ const ELEMENTS = [
   { id: "NARA", name: "Nara", icon: "🌑", color: "#5c5c7a", clanGate: "nara" },
   { id: "SENJU", name: "Senju", icon: "🌳", color: "#4f8a55", clanGate: "senju" },
   { id: "HYUUGA", name: "Hyuuga", icon: "👁️", color: "#c9d6e3", clanGate: "hyuuga" },
+  { id: "LEE", name: "Lee", icon: "", color: "#68a83e", clanGate: "lee" },
   { id: "AKIMICHI", name: "Akimichi", icon: "🍖", color: "#d98e3a", clanGate: "akimichi" },
   { id: "ABURAME", name: "Aburame", icon: "🪲", color: "#6f7a35", clanGate: "aburame" },
   { id: "INUZUKA", name: "Inuzuka", icon: "🐕", color: "#a8562e", clanGate: "inuzuka" },
@@ -252,6 +253,7 @@ const CLAN_BACKGROUNDS = {
   NARA: `url('/assets/bg/nara.png?v=${BG_ASSET_VERSION}')`,
   SENJU: `url('/assets/bg/senju.png?v=${BG_ASSET_VERSION}')`,
   HYUUGA: `url('/assets/bg/hyuuga.png?v=${BG_ASSET_VERSION}')`,
+  LEE: `url('/assets/bg/lee.png?v=${BG_ASSET_VERSION}')`,
   AKIMICHI: `url('/assets/bg/akimichi.png?v=${BG_ASSET_VERSION}')`,
   ABURAME: `url('/assets/bg/aburame.png?v=${BG_ASSET_VERSION}')`,
   INUZUKA: `url('/assets/bg/inuzuka.png?v=${BG_ASSET_VERSION}')`,
@@ -651,9 +653,6 @@ function buildElemBar() {
   const bar = $("elembar");
   bar.innerHTML = "";
   for (const e of ELEMENTS) {
-    // Punho Gentil continua bloqueado para quem não é Hyuuga, mas fica visível
-    // no footer para que a especialização seja encontrável e o requisito fique claro.
-    const alwaysVisible = e.id === "PUNHO_GENTIL";
     // So aparece o que o personagem tem. FUNDAMENTOS (Ninjutsu) e' sempre
     // desbloqueado; elemento/kekkei genkai que ele nao possui nem aparece;
     // arvore de cla (clanGate) so aparece pra quem e' daquele cla — OU pra
@@ -661,11 +660,11 @@ function buildElemBar() {
     // todo no' de todo cla sem trocar o clanId do personagem).
     const unlocked =
       e.id === "FUNDAMENTOS" ||
-      e.id === "BUKIJUTSU" || e.id === "IRYO_NINJUTSU" || e.id === "GENJUTSU" || e.id === "TAIJUTSU_PASSIVAS" || e.id === "ASSASSINATO_NINJA" || e.id === "TAIJUTSU_AGITACAO" || e.id === "TAIJUTSU" || e.id === "ARHAT" || e.id === "ADAMANTINO" ||
+      e.id === "BUKIJUTSU" || e.id === "IRYO_NINJUTSU" || e.id === "GENJUTSU" || e.id === "FUINJUTSU" || e.id === "TAIJUTSU_PASSIVAS" || e.id === "ASSASSINATO_NINJA" || e.id === "TAIJUTSU_AGITACAO" || e.id === "TAIJUTSU" || e.id === "ARHAT" || e.id === "ADAMANTINO" ||
       (e.clanGate
         ? state.char.clanId === e.clanGate || (state.trees[e.id] || []).some((n) => n.status === "OWNED")
         : state.char.elements.includes(e.id));
-    if (!unlocked && !showAllTrees && !alwaysVisible) continue;
+    if (!unlocked && !showAllTrees) continue;
     const div = document.createElement("div");
     div.className = "elem" + (!unlocked ? " locked" : "");
     div.style.setProperty("--ec", e.color);

@@ -60,7 +60,7 @@ export const perfil: Command = {
             `Chakra: **${r.chakra.toFixed(0)}%** (${m.chakraMastery})`,
             `Energia: **${r.energia.toFixed(0)}%** (${m.energiaMastery})`,
             `HP: **${char.hpCurrent}/${char.hpMax}**`,
-            `Movimento: **${moveRange(a.taijutsu)}**`,
+            `Movimento: **${moveRange()}**`,
           ].join("\n"),
           inline: true,
         },

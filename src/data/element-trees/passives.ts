@@ -518,6 +518,11 @@ export const PASSIVES: PassiveDef[] = [
   { nodeId: "tai_pass_reflexo_evasivo", dodgeBonus: 0.03 },
   { nodeId: "tai_pass_resistencia_fisica", maxHpBonus: 0.05, hpRegenPerTurn: 2 },
 
+  // ------------------------------------------------ FUINJUTSU
+  { nodeId: "fuin_raiz", crossCategory: "NINJUTSU", abilityIds: ["fuin_selo_cinco_elementos", "fuin_ligacao_pano"], effectChanceBonus: { NINJUTSU_BLOCK: 0.10 } },
+  { nodeId: "fuin_traco_contencao", abilityIds: ["fuin_metodo_selamento_fogo", "fuin_selo_cinco_elementos"], costMult: 0.85 },
+  { nodeId: "fuin_ancora_formula", abilityIds: ["fuin_formacao_cordas_luz", "fuin_ligacao_pano"], effectDurationBonus: { effectId: "ROOT", bonus: 1 } },
+
   // Igual Assassinato Ninja: sem damageMult incondicional a arvore inteira
   // era so' reduzir esquiva do ALVO — nunca aumentava o dano de quem comprou.
   { nodeId: "tai_agitacao_passos", crossCategory: "TAIJUTSU", damageMult: 1.05, dodgePenalty: 0.05 },
@@ -533,13 +538,6 @@ export const PASSIVES: PassiveDef[] = [
   { nodeId: "tai_adamantino_controle", abilityIds: ["adamantino_pe_dor_celestial", "adamantino_impacto_flor_cerejeira", "adamantino_impacto_flor_florescimento", "adamantino_cem_forcas", "adamantino_destruicao_pilar", "adamantino_super_peteleco"], costMult: 0.88 },
   { nodeId: "tai_adamantino_ruptura", abilityIds: ["adamantino_impacto_flor_cerejeira", "adamantino_impacto_flor_florescimento", "adamantino_super_peteleco"], damageMult: 1.10 },
   { nodeId: "tai_adamantino_forca", abilityIds: ["adamantino_pe_dor_celestial", "adamantino_impacto_flor_cerejeira", "adamantino_impacto_flor_florescimento", "adamantino_destruicao_pilar", "adamantino_super_peteleco"], damageMult: 1.08 },
-
-  { nodeId: "tai_gentil_fluxo", abilityIds: ["hyuuga_punho_suave", "hyuuga_64_palmas", "hyuuga_128_palmas"], effectChanceBonus: { NINJUTSU_BLOCK: 0.12 } },
-  { nodeId: "tai_gentil_precisao", abilityIds: ["hyuuga_palma_vacuo", "hyuuga_leoes_gemeos"], rangeBonus: 1, damageMult: 1.12 },
-  { nodeId: "tai_gentil_guarda", abilityIds: ["hyuuga_palma_rotativa"], costMult: 0.85, effectStacksBonus: { SHIELD: 10 } },
-  { nodeId: "tai_gentil_vacuo", abilityIds: ["hyuuga_palma_vacuo"], pushBonus: 1 },
-  { nodeId: "tai_gentil_tenketsu", abilityIds: ["hyuuga_64_palmas", "hyuuga_128_palmas"], costMult: 0.90 },
-  { nodeId: "tai_gentil_leoes", abilityIds: ["hyuuga_leoes_gemeos"], damageMult: 1.08 },
 
   { nodeId: "tai_ken_postura", crossCategory: "KENJUTSU", costMult: 0.90 },
   { nodeId: "tai_ken_fio", crossCategory: "KENJUTSU", damageMult: 1.10 },

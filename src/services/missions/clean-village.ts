@@ -266,7 +266,7 @@ export async function moverCleanVillage(interaction: ChatInputCommandInteraction
 
   let state = ensureState(ctx.inst.stateJson, channelId);
   const from = state.playerCells![channelId]!;
-  const limit = moveRange(char.attributes!.taijutsu);
+  const limit = moveRange();
   if (cellDistance(from, dest) > limit) {
     await interaction.reply({
       content: `Fora do alcance de movimento (max ${limit} casas a partir de ${from}).`,

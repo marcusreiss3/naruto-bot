@@ -14,6 +14,7 @@ const EFFECT_NAMES: Record<EffectId, string> = {
   CONFUSION: "Confusão",
   ROOT: "Imobilização",
   NINJUTSU_BLOCK: "Bloqueio de Ninjutsu",
+  CONTRACT_SEAL: "Selo de Contrato",
   DEFENSE_DOWN: "Defesa reduzida",
   FLEE_LOCK: "Fuga bloqueada",
   WET: "Encharcado",
@@ -156,10 +157,10 @@ export function buildMechanicsSummary(ability: Ability): string {
     );
   }
   if (ability.id === "uchiha_sharingan_3_tomoe") {
-    parts.push("Aprende permanentemente cada Ninjutsu elemental elegível observado em combate.");
+    parts.push("Aprende permanentemente Ninjutsus de Fogo, Água, Vento, Terra e Raio, além dos jutsus ativos de Punho Forte, Arhat e Adamantino observados em combate. Não copia passivas.");
     parts.push("Não copia técnicas exclusivas de clã.");
-    parts.push("Não copia Gelo nem Madeira.");
-    parts.push("A cópia exige afinidade com o elemento, além do nível e Ninjutsu mínimos da técnica.");
+    parts.push("Não copia Kekkei Genkai.");
+    parts.push("A cópia exige afinidade com o elemento, além do nível e Ninjutsu ou Taijutsu mínimos da técnica.");
   }
   if (ability.requiresPet) {
     if (ability.requirements?.clanId === "inuzuka") parts.push("Exige o cão ninja do usuário vivo no campo.");

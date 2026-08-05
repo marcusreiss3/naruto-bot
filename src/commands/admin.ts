@@ -3,7 +3,7 @@ import type { Command } from "./types.js";
 import { prisma } from "../db/client.js";
 import { isAdmin } from "../utils/permissions.js";
 import { ATTRIBUTES, ATTRIBUTE_LABELS, ELEMENTS, MASTERY_LEVELS, RESOURCES, EFFECT_IDS, effectLabel } from "../config/enums.js";
-import type { Attribute, Element } from "../config/enums.js";
+import type { Attribute, Element, EffectId } from "../config/enums.js";
 import { respec } from "../services/characters/attribute-allocator.js";
 import {
   getOrCreateCharacter,
@@ -29,7 +29,6 @@ const attrChoices = ATTRIBUTES.map((a) => ({ name: ATTRIBUTE_LABELS[a], value: a
 const resourceChoices = RESOURCES.map((r) => ({ name: r, value: r }));
 const masteryChoices = MASTERY_LEVELS.map((m) => ({ name: m, value: m }));
 const elementChoices = ELEMENTS.map((e) => ({ name: e, value: e }));
-const effectChoices = EFFECT_IDS.map((e) => ({ name: effectLabel(e), value: e }));
 
 export const admin: Command = {
   data: new SlashCommandBuilder()
@@ -65,7 +64,7 @@ export const admin: Command = {
             .setName("adicionar")
             .setDescription("Adiciona efeito ao participante em combate")
             .addUserOption((o) => o.setName("usuario").setDescription("Usuário").setRequired(true))
-            .addStringOption((o) => o.setName("efeito").setDescription("Efeito").addChoices(...effectChoices).setRequired(true))
+            .addStringOption((o) => o.setName("efeito").setDescription("Efeito").setAutocomplete(true).setRequired(true))
             .addIntegerOption((o) => o.setName("stacks").setDescription("Stacks").setRequired(false))
             .addIntegerOption((o) => o.setName("duracao").setDescription("Duração").setRequired(false)),
         )
@@ -74,7 +73,7 @@ export const admin: Command = {
             .setName("remover")
             .setDescription("Remove efeito")
             .addUserOption((o) => o.setName("usuario").setDescription("Usuário").setRequired(true))
-            .addStringOption((o) => o.setName("efeito").setDescription("Efeito").addChoices(...effectChoices).setRequired(true)),
+            .addStringOption((o) => o.setName("efeito").setDescription("Efeito").setAutocomplete(true).setRequired(true)),
         ),
     )
     .addSubcommandGroup((g) =>
@@ -230,6 +229,8 @@ export const admin: Command = {
       choices = [...CLANS]
         .sort((a, b) => a.name.localeCompare(b.name))
         .map((c) => ({ name: `${c.name} (${c.id})`.slice(0, 100), value: c.id }));
+    } else if (focused.name === "efeito") {
+      choices = EFFECT_IDS.map((e) => ({ name: effectLabel(e), value: e }));
     }
     const filtered = choices
       .filter((c) => c.name.toLowerCase().includes(q) || c.value.toLowerCase().includes(q))
@@ -272,6 +273,10 @@ export const admin: Command = {
         return;
       }
       const effectId = interaction.options.getString("efeito", true);
+      if (!EFFECT_IDS.includes(effectId as EffectId)) {
+        await interaction.editReply("Efeito invalido.");
+        return;
+      }
       if (sub === "adicionar") {
         const stacks = interaction.options.getInteger("stacks") ?? 1;
         const duracao = interaction.options.getInteger("duracao") ?? 2;

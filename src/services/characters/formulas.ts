@@ -5,8 +5,8 @@ export function maxHp(level: number, taijutsu: number): number {
   return Math.round(BALANCE.hpBase + level * BALANCE.hpPerLevel + taijutsu * BALANCE.hpPerTaijutsu);
 }
 
-export function moveRange(taijutsu: number): number {
-  return BALANCE.moveBase + Math.floor(taijutsu / BALANCE.movePerTaijutsuDiv);
+export function moveRange(): number {
+  return BALANCE.moveBase;
 }
 
 export function costAfterMastery(baseCost: number, mastery: MasteryLevel): number {

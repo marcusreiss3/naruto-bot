@@ -571,7 +571,7 @@ export function validateMove(s: SessionFull, participantId: string, dest: string
   }
 
   const passiveMoveBonus = characterPassiveMods(ownedNodes(p)).moveBonus;
-  let move = moveRange(getAttr(p, "taijutsu")) + passiveMoveBonus;
+  let move = moveRange() + passiveMoveBonus;
   move = applySlowToMove(move, p.effects);
   move = applyHasteToMove(move, p.effects);
   // pantano na celula de origem prende: sair dele custa o dobro
@@ -615,6 +615,14 @@ export async function moveParticipant(
     },
   });
   return { ok: true, cost: chk.cost };
+}
+
+export async function skipMovement(s: SessionFull, participantId: string): Promise<MoveResult> {
+  const p = s.participants.find((x) => x.id === participantId);
+  if (!p) return { ok: false, error: "Participante fora do combate." };
+  if (p.actedMove) return { ok: false, error: "Ação de movimento já usada nesta rodada." };
+  await prisma.combatParticipant.update({ where: { id: participantId }, data: { actedMove: true } });
+  return { ok: true, cost: 0 };
 }
 
 // Define a flag de "subido" (altura) de um participante.
@@ -796,8 +804,9 @@ async function offerSharinganCopy(
         level: Number(observer.flags.level ?? 1),
         ninjutsu: attrs.ninjutsu ?? 1,
         elements,
+        attributes: attrs,
       },
-      node ? { level: node.reqLevel, ninjutsu: node.pool === "ninjutsu" ? node.reqPool : undefined } : {},
+      node ? { level: node.reqLevel, attribute: { key: node.pool, value: node.reqPool } } : {},
     );
     if (error) {
       logs.push(`👁️ ${observer.name} observou **${ability.name}**, mas não conseguiu copiá-la: ${error}`);
@@ -878,9 +887,10 @@ export async function useAbility(
       level: Number(actor.flags.level ?? 1),
       ninjutsu: attrs.ninjutsu ?? 1,
       elements,
+      attributes: attrs,
     }, (() => {
       const node = allNodes().find((candidate) => candidate.grantsAbilityId === ability.id);
-      return node ? { level: node.reqLevel, ninjutsu: node.pool === "ninjutsu" ? node.reqPool : undefined } : {};
+      return node ? { level: node.reqLevel, attribute: { key: node.pool, value: node.reqPool } } : {};
     })());
     if (error) return fail(error);
   }
@@ -930,6 +940,12 @@ export async function useAbility(
 
   if (ability.category === "NINJUTSU" && ninjutsuBlocked(actor.effects)) {
     return fail("Você está impedido de usar Ninjutsu (selo/genjutsu).");
+  }
+  // O sistema atual de invocações usa `ability.summon`. Chakra de Bijuu ainda
+  // não tem uma mecânica própria; quando existir, suas abilities devem receber
+  // a tag `bijuu`, que este mesmo selo também bloqueará.
+  if (hasEffect(actor.effects, "CONTRACT_SEAL") && (ability.summon || ability.tags.includes("bijuu"))) {
+    return fail("Seu contrato está selado: você não pode invocar nem usar chakra de Bijuu.");
   }
   if (isStunned(actor.effects)) return fail("Você está atordoado e não pode agir.");
 
