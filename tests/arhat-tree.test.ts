@@ -13,17 +13,25 @@ const IDS = [
 ] as const;
 
 describe("árvore Punho Arhat", () => {
-  it("é indexada, usa pontos de Taijutsu e só contém jutsus ativos", () => {
+  it("é indexada, usa pontos de Taijutsu e contém os jutsus ativos", () => {
     const indexed = new Set(allNodes().map((node) => node.id));
-    expect(ARHAT_TREE.map((node) => node.id)).toEqual(IDS);
-    for (const node of ARHAT_TREE) {
+    const jutsus = ARHAT_TREE.filter((node) => node.kind === "JUTSU");
+    expect(jutsus.map((node) => node.id)).toEqual(IDS);
+    for (const node of jutsus) {
       expect(indexed.has(node.id)).toBe(true);
       expect(node.kind).toBe("JUTSU");
       expect(node.pool).toBe("taijutsu");
       expect(node.grantsAbilityId).toBe(node.id);
       expect(getAbility(node.id)?.category).toBe("TAIJUTSU");
     }
-    expect(ARHAT_TREE.every((node) => node.kind !== "PASSIVE")).toBe(true);
+  });
+
+  it("tem as três passivas de estilo encadeadas a partir de um jutsu próprio", () => {
+    const passivas = ARHAT_TREE.filter((node) => node.kind === "PASSIVE");
+    expect(passivas.map((node) => node.id)).toEqual(["tai_arhat_impacto", "tai_arhat_pressao", "tai_arhat_estabilidade"]);
+    expect(passivas[0]!.requires).toEqual(["arhat_ombro"]);
+    expect(passivas[1]!.requires).toEqual(["tai_arhat_impacto"]);
+    expect(passivas[2]!.requires).toEqual(["tai_arhat_pressao"]);
   });
 
   it("mantém a progressão de impacto e controle", () => {

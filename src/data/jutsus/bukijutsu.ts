@@ -8,8 +8,8 @@ export const BUKIJUTSU_ABILITIES: Ability[] = [
     effects: [{ effectId: "DEFENSE_DOWN", duration: 1, chance: 0.65 }],
     requirements: { manualOnly: true },
     requiredItems: [
-      { itemId: "kunai", amount: 1, consume: true },
-      { itemId: "shuriken", amount: 1, consume: true },
+      { itemId: "kunai", amount: 3, consume: true },
+      { itemId: "shuriken", amount: 3, consume: true },
       { itemId: "fios_aco_ninja", amount: 1 },
     ],
     tags: ["projétil", "fio"],
@@ -21,9 +21,12 @@ export const BUKIJUTSU_ABILITIES: Ability[] = [
     baseDamage: 24, scalingAttribute: "bukijutsu", range: 5, shape: "RADIUS",
     requirements: { manualOnly: true },
     requiredItems: [
+      // Tecnica de PERGAMINHO: o pergaminho existe justamente pra despejar uma
+      // quantidade grande de ferramenta de uma vez — por isso o consumo aqui e'
+      // varias vezes maior que o de uma tecnica de arremesso comum.
       { itemId: "pergaminho_rank_b", amount: 1, exhaustToItemId: "pergaminho_rank_b_gasto" },
-      { itemId: "kunai", amount: 3, consume: true },
-      { itemId: "shuriken", amount: 3, consume: true },
+      { itemId: "kunai", amount: 10, consume: true },
+      { itemId: "shuriken", amount: 10, consume: true },
     ],
     tags: ["projétil", "pergaminho"],
     description: "Dois pergaminhos giram no ar como dragões de fumaça e cercam a área com armas.",
@@ -46,8 +49,8 @@ export const BUKIJUTSU_ABILITIES: Ability[] = [
     requirements: { manualOnly: true },
     requiredItems: [
       { itemId: "corrente_ferro", amount: 1 },
-      { itemId: "kunai", amount: 2, consume: true },
-      { itemId: "shuriken", amount: 2, consume: true },
+      { itemId: "kunai", amount: 6, consume: true },
+      { itemId: "shuriken", amount: 6, consume: true },
     ],
     tags: ["corrente", "fio"],
     description: "A corrente contém o alvo enquanto armas convocadas o atingem antes do impacto contra o chão.",
@@ -100,9 +103,11 @@ export const BUKIJUTSU_ABILITIES: Ability[] = [
     undodgeable: true, oncePerCombat: true,
     requirements: { manualOnly: true },
     requiredItems: [
+      // Pergaminho rank S cobrindo a area inteira numa chuva continua de armas:
+      // o maior consumo do jogo, coerente com o que a descricao promete.
       { itemId: "pergaminho_rank_s", amount: 1, exhaustToItemId: "pergaminho_rank_s_gasto" },
-      { itemId: "kunai", amount: 5, consume: true },
-      { itemId: "shuriken", amount: 5, consume: true },
+      { itemId: "kunai", amount: 20, consume: true },
+      { itemId: "shuriken", amount: 20, consume: true },
     ],
     tags: ["projétil", "pergaminho"],
     description: "O pergaminho se abre acima do campo e cobre uma vasta área com uma chuva contínua de armas.",

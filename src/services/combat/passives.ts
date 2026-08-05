@@ -4,11 +4,16 @@
 // A engine chama isto uma vez por uso de jutsu e consome o resultado em 4 lugares:
 // custo, dano, acumulos de Queimadura e terreno deixado no acerto.
 import { BALANCE } from "../../config/balance.js";
-import type { EffectId, TerrainKind } from "../../config/enums.js";
+import type { Category, EffectId, TerrainKind } from "../../config/enums.js";
 import { getPassive, type PassiveDef } from "../../data/element-trees/passives.js";
 import { getClanPassive, type ClanPassiveDef } from "../../data/clan-trees/passives.js";
 import type { Ability } from "../../data/types.js";
 import { hasEffect, type EffectState } from "./effects.js";
+
+// crossCategory aceita uma categoria ou uma lista (Assassinato Ninja usa
+// [TAIJUTSU, KENJUTSU] pra valer nos dois sem duplicar o no' na arvore).
+const matchesCategory = (spec: Category | Category[] | undefined, category: Category): boolean =>
+  spec !== undefined && (Array.isArray(spec) ? spec.includes(category) : spec === category);
 
 export interface PassiveMods {
   damageMult: number;
@@ -112,7 +117,7 @@ export function passiveMods(
 
     // ESCAPE HATCH: passiva com crossCategory ignora os dois gates abaixo e
     // vale pra qualquer ability da categoria declarada.
-    const crossMatch = p.crossCategory !== undefined && p.crossCategory === ability.category;
+    const crossMatch = matchesCategory(p.crossCategory, ability.category);
     const crossElementMatch = p.crossElement !== undefined && p.crossElement === ability.element;
     const abilityMatch = p.abilityIds?.includes(ability.id) ?? false;
     // passiva elemental (p.element) bate se a ability tiver ESSE elemento —
@@ -137,7 +142,7 @@ export function passiveMods(
     // 2) damageMultScalingAttribute trava por ATRIBUTO de escala — usado
     //    onde nao ha' categoria propria pra discriminar (ex: apice do
     //    Chinoike, so' a Genjutsu Ketsuryuugan entre os genjutsus do clã).
-    const categoryScopeOk = p.crossCategory === undefined || ability.category === p.crossCategory;
+    const categoryScopeOk = p.crossCategory === undefined || matchesCategory(p.crossCategory, ability.category);
     const scaleScopeOk = !p.damageMultScalingAttribute || ability.scalingAttribute === p.damageMultScalingAttribute;
     const scopeOk = categoryScopeOk && scaleScopeOk;
     if (p.damageMult && scopeOk) mods.damageMult *= p.damageMult;
@@ -203,6 +208,7 @@ export function passiveMods(
 
 export interface CharacterPassiveMods {
   ninjutsuDodgeBonus: number;
+  dodgeBonus: number;
   initiativePriority: number;
   // soma de todas as passivas do dono — ver ClanPassiveDef.maxHpBonus/hpRegenPerTurn/
   // chakraRegenPerTurn (ex: Uzumaki, vitalidade e chakra). Elemental (PassiveDef)
@@ -235,6 +241,7 @@ export interface CharacterPassiveMods {
 export function characterPassiveMods(ownedNodeIds: string[]): CharacterPassiveMods {
   const owned = new Set(ownedNodeIds);
   let ninjutsuDodgeBonus = 0;
+  let dodgeBonus = 0;
   let initiativePriority = 0;
   let maxHpBonus = 0;
   let hpRegenPerTurn = 0;
@@ -250,6 +257,7 @@ export function characterPassiveMods(ownedNodeIds: string[]): CharacterPassiveMo
       getPassive(nodeId) ?? getClanPassive(nodeId);
     if (!p) continue;
     ninjutsuDodgeBonus += p.ninjutsuDodgeBonus ?? 0;
+    dodgeBonus += p.dodgeBonus ?? 0;
     initiativePriority += p.initiativePriority ?? 0;
     maxHpBonus += p.maxHpBonus ?? 0;
     hpRegenPerTurn += p.hpRegenPerTurn ?? 0;
@@ -263,6 +271,7 @@ export function characterPassiveMods(ownedNodeIds: string[]): CharacterPassiveMo
   }
   return {
     ninjutsuDodgeBonus,
+    dodgeBonus,
     initiativePriority,
     maxHpBonus,
     hpRegenPerTurn,

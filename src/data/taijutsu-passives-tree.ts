@@ -7,29 +7,40 @@ const passive = (
   extra: Partial<SkillNodeDef> = {},
 ): SkillNodeDef => ({ id, name, kind: "PASSIVE", icon: "🥋", pool, cost: id === "tai_pass_raiz" ? 1 : 2, branch, col, row, requires, reqLevel, reqPool, desc, ...extra });
 
-// Árvore transversal: seus nós fortalecem estilos já aprendidos; ela não
-// substitui as árvores ativas de Punho Forte, Arhat, Adamantino e Hyūga.
+// Árvore de progressão genérica de Taijutsu (vida, energia, mobilidade,
+// esquiva — vale pra qualquer estilo). As passivas específicas de UM estilo
+// (Punho Forte, Arhat, Adamantino) moraram aqui antes, mas foram pra dentro
+// da própria árvore do estilo: ver taijutsu-tree.ts, arhat-tree.ts e
+// adamantino-tree.ts.
+//
+// Tronco central (raiz -> vigor) e depois 3 ramos lado a lado: esquerda e
+// meio com 3 nós cada (10 -> 20 -> 30), direita com só 2 (20 -> 30, sem
+// etapa de nível 10 — pedido assim de propósito). No fim, Maestria Marcial
+// exige os TRÊS topos ao mesmo tempo, fechando a árvore de volta ao centro.
 export const TAIJUTSU_PASSIVES_TREE: SkillNodeDef[] = [
   passive("tai_pass_raiz", "Disciplina Corporal", "Fundamento", "taijutsu", 0, 0, [], 1, 1, "Passiva sempre ativa: +8% de dano em todas as técnicas de Taijutsu."),
-  // Dois ramos principais: corpo à esquerda e reserva/ritmo à direita. Os
-  // estilos saem desses dois lados como sub-ramos, sem abrir uma coluna isolada
-  // para cada categoria.
-  passive("tai_pass_vigor", "Vigor de Combate", "Fundamento", "taijutsu", 0, 1, ["tai_pass_raiz"], 8, 8, "Passiva: sua vida máxima aumenta 10% ao entrar em combate."),
-  passive("tai_pass_corpo_temperado", "Corpo Temperado", "Fundamento", "taijutsu", -1, 2, ["tai_pass_vigor"], 16, 16, "Passiva: sua vida máxima aumenta mais 8% ao entrar em combate."),
-  passive("tai_pass_recuperacao", "Recuperação Marcial", "Fundamento", "taijutsu", -1.2, 3, ["tai_pass_corpo_temperado"], 26, 26, "Passiva: no começo de cada rodada, você recupera 3 de vida, sem ultrapassar sua vida máxima."),
-  passive("tai_pass_reserva", "Reserva Física", "Fundamento", "taijutsu", 1, 2, ["tai_pass_vigor"], 25, 25, "Passiva: sua energia máxima aumenta 25% (até 125%).", { cost: 3 }),
-  passive("tai_pass_reserva_profunda", "Reserva Física Profunda", "Fundamento", "taijutsu", 1, 3, ["tai_pass_reserva"], 42, 42, "Passiva: sua energia máxima ganha mais 25%, chegando ao limite de 150%.", { cost: 4 }),
-  passive("tai_pass_maestria", "Maestria Marcial", "Fundamento", "taijutsu", 0.1, 4, ["tai_pass_reserva_profunda"], 44, 44, "Passiva: +10% de dano em todas as técnicas de Taijutsu."),
-  passive("tai_pass_passada", "Passada Leve", "Mobilidade", "taijutsu", -0.1, 3, ["tai_pass_vigor"], 18, 18, "Passiva: em combate, seu alcance de movimento aumenta em 1 casa."),
+  passive("tai_pass_vigor", "Vigor de Combate", "Fundamento", "taijutsu", 0, 1, ["tai_pass_raiz"], 5, 5, "Passiva sempre ativa: sua vida máxima é 10% maior."),
 
-  passive("tai_forte_ritmo", "Ritmo da Folha", "Punho Forte", "taijutsu", 2.5, 3, ["tai_pass_vigor"], 8, 8, "Passiva: Furacão da Folha, Vendaval da Folha e Grande Furacão da Folha gastam 15% menos energia. Este desconto se combina com outros descontos de custo."),
+  // Esquerda: mobilidade e esquiva.
+  passive("tai_pass_passada", "Passada Leve", "Esquerda", "taijutsu", -1, 2, ["tai_pass_vigor"], 10, 10, "Passiva: em combate, seu alcance de movimento aumenta em 1 casa."),
+  passive("tai_pass_passo_silencioso", "Passo Silencioso", "Esquerda", "taijutsu", -1, 3, ["tai_pass_passada"], 20, 20, "Passiva: seu alcance de movimento aumenta mais 1 casa."),
+  // "Nova skill" pedida: esquiva GERAL (dodgeBonus em
+  // services/combat/passives.ts), nao so' contra Ninjutsu/Genjutsu.
+  passive("tai_pass_reflexo_evasivo", "Reflexo Evasivo", "Esquerda", "taijutsu", -1, 4, ["tai_pass_passo_silencioso"], 30, 30, "Passiva sempre ativa: sua chance de esquiva aumenta em 3 pontos percentuais contra qualquer ataque."),
 
-  passive("tai_arhat_impacto", "Palma de Impacto", "Punho Arhat", "taijutsu", -2.8, 3, ["tai_pass_vigor"], 8, 8, "Passiva: Palmada do Colapso, Ombrada e Palmada Ascendente empurram 1 casa adicional."),
-  passive("tai_arhat_pressao", "Pressão Esmagadora", "Punho Arhat", "taijutsu", -2.8, 4, ["tai_arhat_impacto"], 18, 18, "Passiva: Palma de Compressão e Golpe de Rocha causam 12% mais dano."),
-  passive("tai_arhat_estabilidade", "Base Inabalável", "Punho Arhat", "taijutsu", -2.8, 5, ["tai_arhat_pressao"], 28, 28, "Passiva: Joelhada e Palma de Compressão gastam 12% menos energia. Este desconto se combina com outros descontos de custo."),
+  // Meio: corpo — vida e regeneração.
+  passive("tai_pass_corpo_temperado", "Corpo Temperado", "Meio", "taijutsu", 0, 2, ["tai_pass_vigor"], 10, 10, "Passiva sempre ativa: sua vida máxima é mais 8% maior."),
+  passive("tai_pass_recuperacao", "Recuperação Marcial", "Meio", "taijutsu", 0, 3, ["tai_pass_corpo_temperado"], 20, 20, "Passiva: no começo de cada rodada, você recupera 3 de vida, sem ultrapassar sua vida máxima."),
+  // "Nova skill" pedida: um pouco de vida + um pouco de regen, empilhando
+  // com Vigor/Corpo Temperado/Recuperação Marcial.
+  passive("tai_pass_resistencia_fisica", "Resistência Física", "Meio", "taijutsu", 0, 4, ["tai_pass_recuperacao"], 30, 30, "Passiva sempre ativa: sua vida máxima é mais 5% maior e você recupera mais 2 de vida no início de cada rodada."),
 
-  passive("tai_adamantino_controle", "Controle de Chakra Preciso", "Punho Adamantino", "iryoNinjutsu", 3.8, 3, ["tai_pass_vigor"], 12, 12, "Passiva: técnicas do Punho Adamantino gastam 12% menos energia ou chakra. Este desconto se combina com outros descontos de custo.", { reqAttribute: { attribute: "taijutsu", value: 14 } }),
-  passive("tai_adamantino_ruptura", "Ruptura Concentrada", "Punho Adamantino", "iryoNinjutsu", 3.8, 4, ["tai_adamantino_controle"], 22, 22, "Passiva: Impacto da Flor de Cerejeira, Florescimento e Super Peteleco causam 10% mais dano.", { reqAttribute: { attribute: "taijutsu", value: 24 } }),
-  passive("tai_adamantino_forca", "Força Acumulada", "Punho Adamantino", "iryoNinjutsu", 3.8, 5, ["tai_adamantino_ruptura"], 32, 32, "Passiva: seus golpes de Punho Adamantino causam 8% mais dano; ela se combina com a Sobrecarga de Cem Forças.", { reqAttribute: { attribute: "taijutsu", value: 32 } }),
+  // Direita: só energia, 2 etapas (sem nível 10).
+  passive("tai_pass_reserva", "Reserva Física", "Direita", "taijutsu", 1, 2, ["tai_pass_vigor"], 20, 20, "Passiva: sua energia máxima aumenta 25% (até 125%).", { cost: 3 }),
+  passive("tai_pass_reserva_profunda", "Reserva Física Profunda", "Direita", "taijutsu", 1, 3, ["tai_pass_reserva"], 30, 30, "Passiva: sua energia máxima ganha mais 25%, chegando ao limite de 150%.", { cost: 4 }),
 
+  // Depois de completar as três ramificações, elas convergem de novo.
+  passive("tai_pass_maestria", "Maestria Marcial", "Fundamento", "taijutsu", 0, 5,
+    ["tai_pass_reflexo_evasivo", "tai_pass_resistencia_fisica", "tai_pass_reserva_profunda"],
+    40, 40, "Passiva: +10% de dano em todas as técnicas de Taijutsu."),
 ];

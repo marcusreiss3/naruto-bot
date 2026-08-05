@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Pergaminho das Técnicas — Árvore de Habilidades</title>
-  <link rel="stylesheet" href="/style.css?v=clan-backgrounds-3">
+  <link rel="stylesheet" href="/style.css?v=bg-arhat-1">
 </head>
 <body>
   <!-- Fundo -->
@@ -105,14 +105,19 @@
         </section>
       </aside>
 
+      <!-- O palco nao rola: ele so' ancora o fundo e a moldura HUD. Quem rola e'
+           o .stage-scroll interno, senao o fundo (absolute) rola junto com a
+           arvore e some depois da primeira tela. -->
       <main class="stage">
         <span class="hud-corner tl"></span><span class="hud-corner tr"></span>
         <span class="hud-corner bl"></span><span class="hud-corner br"></span>
-        <div class="tree-title" id="treeTitle">Fogo</div>
-        <button id="copyArsenalBtn" class="copy-arsenal-btn hidden" type="button">👁 Arsenal copiado</button>
-        <div class="canvas-wrap" id="canvasWrap">
-          <svg id="edges" class="edges"></svg>
-          <div id="nodes" class="nodes"></div>
+        <div class="stage-scroll">
+          <div class="tree-title" id="treeTitle">Fogo</div>
+          <button id="copyArsenalBtn" class="copy-arsenal-btn hidden" type="button">👁 Arsenal copiado</button>
+          <div class="canvas-wrap" id="canvasWrap">
+            <svg id="edges" class="edges"></svg>
+            <div id="nodes" class="nodes"></div>
+          </div>
         </div>
       </main>
     </div>
@@ -165,6 +170,6 @@
   <!-- Toast -->
   <div id="toast" class="toast hidden"></div>
 
-  <script src="/app.js?v=punho-gentil-mais-passivas-1"></script>
+  <script src="/app.js?v=bg-arhat-1"></script>
 </body>
 </html>

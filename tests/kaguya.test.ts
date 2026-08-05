@@ -141,7 +141,7 @@ describe("Kaguya: passivas — regeneração óssea, armadura de espinhos e Kenj
 
   it("Fio de Osso só multiplica dano de Kenjutsu (a Dança das Camélias), não os jutsus de osso comuns", () => {
     const mKen = passiveMods(["kaguya_fio_osso"], camelias);
-    expect(mKen.damageMult).toBeCloseTo(1.3);
+    expect(mKen.damageMult).toBeCloseTo(1.5);
     expect(mKen.executeBonus).toEqual({ hpThreshold: 0.3, mult: 1.25 });
 
     const mOsso = passiveMods(["kaguya_fio_osso"], dezDedos); // escala por taijutsu, não kenjutsu

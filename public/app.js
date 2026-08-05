@@ -9,7 +9,7 @@ const ELEMENTS = [
   { id: "BUKIJUTSU", name: "Bukijutsu", icon: "", img: "/assets/icons/footer/bukijutsu.png", color: "#b7a27a" },
   { id: "GENJUTSU", name: "Genjutsu", icon: "", img: "/assets/icons/footer/genjutsu.png", color: "#9b63c7" },
   { id: "TAIJUTSU_PASSIVAS", name: "Taijutsu", icon: "", img: "/assets/icons/footer/taijutsu-geral.png", color: "#d8794f" },
-  { id: "ASSASSINATO_NINJA", name: "Assassinato Ninja", icon: "", img: "/assets/icons/footer/assassinato-ninja.png", color: "#7f9ebf" },
+  { id: "ASSASSINATO_NINJA", name: "Assassinato Silencioso", icon: "", img: "/assets/icons/footer/assassinato-ninja.png", color: "#7f9ebf" },
   { id: "PUNHO_GENTIL", name: "Punho Gentil", icon: "", img: "/assets/icons/footer/punho-gentil.png", color: "#8abce8", clanGate: "hyuuga" },
   { id: "TAIJUTSU_AGITACAO", name: "Taijutsu de Agitação", icon: "", img: "/assets/icons/footer/taijutsu-agitacao.png", color: "#d67e58" },
   { id: "TAIJUTSU", name: "Punho Forte", icon: "", img: "/assets/icons/footer/taijutsu.png", color: "#d8794f" },
@@ -52,7 +52,9 @@ const ELEMENTS = [
   // ---- Kumo ----
   { id: "CHINOIKE", name: "Chinoike", icon: "🩸", color: "#8c2f2f", clanGate: "chinoike" },
   { id: "RAIKAGE", name: "Raikage", icon: "⚡", color: "#f0c419", clanGate: "raikage" },
-  { id: "YOTSUKI", name: "Yotsuki", icon: "🐝", color: "#d9c419", clanGate: "yotsuki" },
+  // azul eletrico (nao o amarelo de Raio/Raikage): o Yotsuki e' cla de Raio,
+  // mas pedido explicito pra diferenciar pelo azul do relampago.
+  { id: "YOTSUKI", name: "Yotsuki", icon: "🐝", color: "#4fb8ff", clanGate: "yotsuki" },
   // ---- Iwa ----
   { id: "KAMIZURU", name: "Kamizuru", icon: "🐝", color: "#d9a441", clanGate: "kamizuru" },
   { id: "ONOKI", name: "Onoki", icon: "🗿", color: "#8a7a5a", clanGate: "onoki" },
@@ -217,42 +219,57 @@ const ATTR_LABEL = {
 // pra comprar nada de fora do próprio clã/elemento (o servidor recusa).
 let showAllTrees = false;
 // Imagem de fundo por elemento (public/assets/bg). Ausente = sem imagem, só o gradiente.
-const BG_ASSET_VERSION = "20260804-h";
+const BG_ASSET_VERSION = "20260805-d";
 const ELEMENT_BG = {
-  FUNDAMENTOS: "url('/assets/bg/ninjutsu.webp')",
-  IRYO_NINJUTSU: `url('/assets/bg/iryo-ninjutsu.webp?v=${BG_ASSET_VERSION}')`,
-  BUKIJUTSU: `url('/assets/bg/bukijutsu.webp?v=${BG_ASSET_VERSION}')`,
-  GENJUTSU: `url('/assets/bg/genjutsu.webp?v=${BG_ASSET_VERSION}')`,
-  FOGO: "url('/assets/bg/fogo.webp')",
-  AGUA: "url('/assets/bg/agua.webp')",
-  VENTO: "url('/assets/bg/vento.webp')",
-  TERRA: "url('/assets/bg/terra.webp')",
-  RAIO: "url('/assets/bg/raio.webp')",
+  FUNDAMENTOS: `url('/assets/bg/ninjutsu.png?v=${BG_ASSET_VERSION}')`,
+  IRYO_NINJUTSU: `url('/assets/bg/iryo-ninjutsu.png?v=${BG_ASSET_VERSION}')`,
+  BUKIJUTSU: `url('/assets/bg/bukijutsu.png?v=${BG_ASSET_VERSION}')`,
+  GENJUTSU: `url('/assets/bg/genjutsu.png?v=${BG_ASSET_VERSION}')`,
+  // taijutsu passiva (arvore central) + os 4 estilos de luta especificos
+  TAIJUTSU_PASSIVAS: `url('/assets/bg/taijutsu.png?v=${BG_ASSET_VERSION}')`,
+  TAIJUTSU: `url('/assets/bg/punho-forte.png?v=${BG_ASSET_VERSION}')`,
+  ARHAT: `url('/assets/bg/punho-arhat.png?v=${BG_ASSET_VERSION}')`,
+  ADAMANTINO: `url('/assets/bg/punho-adamantino.png?v=${BG_ASSET_VERSION}')`,
+  TAIJUTSU_AGITACAO: `url('/assets/bg/taijutsu-agitacao.png?v=${BG_ASSET_VERSION}')`,
+  ASSASSINATO_NINJA: `url('/assets/bg/assassinato-silencioso.png?v=${BG_ASSET_VERSION}')`,
+  FOGO: `url('/assets/bg/fogo.png?v=${BG_ASSET_VERSION}')`,
+  AGUA: `url('/assets/bg/agua.png?v=${BG_ASSET_VERSION}')`,
+  VENTO: `url('/assets/bg/vento.png?v=${BG_ASSET_VERSION}')`,
+  TERRA: `url('/assets/bg/terra.png?v=${BG_ASSET_VERSION}')`,
+  RAIO: `url('/assets/bg/raio.png?v=${BG_ASSET_VERSION}')`,
+  // kekkei genkai — antes sem fundo (caíam no "none"), a arte nova cobre todas.
+  GELO: `url('/assets/bg/gelo.png?v=${BG_ASSET_VERSION}')`,
+  CRISTAL: `url('/assets/bg/cristal.png?v=${BG_ASSET_VERSION}')`,
+  VAPOR: `url('/assets/bg/vapor.png?v=${BG_ASSET_VERSION}')`,
+  CALOR: `url('/assets/bg/calor.png?v=${BG_ASSET_VERSION}')`,
+  LAVA: `url('/assets/bg/lava.png?v=${BG_ASSET_VERSION}')`,
+  EXPLOSAO: `url('/assets/bg/explosao.png?v=${BG_ASSET_VERSION}')`,
+  POEIRA: `url('/assets/bg/poeira.png?v=${BG_ASSET_VERSION}')`,
 };
 const CLAN_BG = `url('/assets/bg/clas-v2.webp?v=${BG_ASSET_VERSION}')`;
 const CLAN_BACKGROUNDS = {
-  UCHIHA: `url('/assets/bg/uchiha-v2.webp?v=${BG_ASSET_VERSION}')`,
-  NARA: `url('/assets/bg/nara-v2.webp?v=${BG_ASSET_VERSION}')`,
-  SENJU: `url('/assets/bg/senju.webp?v=${BG_ASSET_VERSION}')`,
-  HYUUGA: `url('/assets/bg/hyuuga-fixed.webp?v=${BG_ASSET_VERSION}')`,
-  AKIMICHI: `url('/assets/bg/akimichi.webp?v=${BG_ASSET_VERSION}')`,
-  ABURAME: `url('/assets/bg/aburame.webp?v=${BG_ASSET_VERSION}')`,
-  INUZUKA: `url('/assets/bg/inuzuka.webp?v=${BG_ASSET_VERSION}')`,
-  UZUMAKI: `url('/assets/bg/uzumaki.webp?v=${BG_ASSET_VERSION}')`,
-  SARUTOBI: `url('/assets/bg/sarutobi.webp?v=${BG_ASSET_VERSION}')`,
-  HATAKE: `url('/assets/bg/hatake.webp?v=${BG_ASSET_VERSION}')`,
-  YAMANAKA: `url('/assets/bg/yamanaka.webp?v=${BG_ASSET_VERSION}')`,
-  KAMAITACHI: `url('/assets/bg/kamaitachi.webp?v=${BG_ASSET_VERSION}')`,
-  HOSHIGAKI: `url('/assets/bg/hoshigaki.webp?v=${BG_ASSET_VERSION}')`,
-  HOZUKI: `url('/assets/bg/hozuki.webp?v=${BG_ASSET_VERSION}')`,
-  KAGUYA: `url('/assets/bg/kaguya.webp?v=${BG_ASSET_VERSION}')`,
-  YUKI: `url('/assets/bg/yuki.webp?v=${BG_ASSET_VERSION}')`,
-  CHINOIKE: `url('/assets/bg/chinoike.webp?v=${BG_ASSET_VERSION}')`,
-  RAIKAGE: `url('/assets/bg/raikage.webp?v=${BG_ASSET_VERSION}')`,
-  YOTSUKI: `url('/assets/bg/yotsuki.webp?v=${BG_ASSET_VERSION}')`,
-  KAMIZURU: `url('/assets/bg/kamizuru.webp?v=${BG_ASSET_VERSION}')`,
-  ONOKI: `url('/assets/bg/onoki.webp?v=${BG_ASSET_VERSION}')`,
-  BAKUREI: `url('/assets/bg/bakurei.webp?v=${BG_ASSET_VERSION}')`,
+  UCHIHA: `url('/assets/bg/uchiha.png?v=${BG_ASSET_VERSION}')`,
+  NARA: `url('/assets/bg/nara.png?v=${BG_ASSET_VERSION}')`,
+  SENJU: `url('/assets/bg/senju.png?v=${BG_ASSET_VERSION}')`,
+  HYUUGA: `url('/assets/bg/hyuuga.png?v=${BG_ASSET_VERSION}')`,
+  AKIMICHI: `url('/assets/bg/akimichi.png?v=${BG_ASSET_VERSION}')`,
+  ABURAME: `url('/assets/bg/aburame.png?v=${BG_ASSET_VERSION}')`,
+  INUZUKA: `url('/assets/bg/inuzuka.png?v=${BG_ASSET_VERSION}')`,
+  UZUMAKI: `url('/assets/bg/uzumaki.png?v=${BG_ASSET_VERSION}')`,
+  SARUTOBI: `url('/assets/bg/sarutobi.png?v=${BG_ASSET_VERSION}')`,
+  HATAKE: `url('/assets/bg/hatake.png?v=${BG_ASSET_VERSION}')`,
+  YAMANAKA: `url('/assets/bg/yamanaka.png?v=${BG_ASSET_VERSION}')`,
+  KAMAITACHI: `url('/assets/bg/kamaitachi.png?v=${BG_ASSET_VERSION}')`,
+  HOSHIGAKI: `url('/assets/bg/hoshigaki.png?v=${BG_ASSET_VERSION}')`,
+  HOZUKI: `url('/assets/bg/hozuki.png?v=${BG_ASSET_VERSION}')`,
+  KAGUYA: `url('/assets/bg/kaguya.png?v=${BG_ASSET_VERSION}')`,
+  YUKI: `url('/assets/bg/yuki.png?v=${BG_ASSET_VERSION}')`,
+  CHINOIKE: `url('/assets/bg/chinoike.png?v=${BG_ASSET_VERSION}')`,
+  RAIKAGE: `url('/assets/bg/raikage.png?v=${BG_ASSET_VERSION}')`,
+  YOTSUKI: `url('/assets/bg/yotsuki.png?v=${BG_ASSET_VERSION}')`,
+  KAMIZURU: `url('/assets/bg/kamizuru.png?v=${BG_ASSET_VERSION}')`,
+  ONOKI: `url('/assets/bg/onoki.png?v=${BG_ASSET_VERSION}')`,
+  BAKUREI: `url('/assets/bg/bakurei.png?v=${BG_ASSET_VERSION}')`,
 };
 // Glossário de efeitos: destaca o termo na descrição e explica no hover.
 // A descrição vem do servidor como texto puro; o realce é feito aqui por regex,
@@ -279,7 +296,10 @@ const GLOSSARY = [
   { re: "Confuso|Confusão", tip: "Confusão: enquanto durar, o alvo confuso ataca alguém aleatório entre todos os vivos em vez de escolher — pode até acertar o próprio time." },
   { re: "Aceleração|Acelerado", tip: "Aceleração: concede +2 de movimento, +10 pontos percentuais de Esquiva e +25 pontos percentuais de chance de fuga. Quem acertar o portador corpo a corpo sofre 8 de dano." },
   { re: "Desarme", tip: "Desarme: o alvo derruba a arma equipada e precisa recuperá-la antes de voltar a usá-la." },
-  { re: "Sobrecarga", tip: "Sobrecarga: aumenta temporariamente o dano. A força do aumento, as técnicas afetadas e a duração aparecem em Efeitos e regras." },
+  // (?! de Cem Forças): "Sobrecarga de Cem Forças" e' o NOME de uma habilidade
+  // do Punho Adamantino, nao o efeito — citar ela numa descricao nao deve virar
+  // tooltip do efeito. Ver a mesma trava em "Colapso" no fim da lista.
+  { re: "Sobrecarga(?! de Cem Forças)", tip: "Sobrecarga: aumenta temporariamente o dano. A força do aumento, as técnicas afetadas e a duração aparecem em Efeitos e regras." },
   // ---- exclusivo do clã Nara ----
   { re: "Vínculo de Sombra", tip: "Vínculo de Sombra: sem dano, mas o alvo não pode se mover nem reagir (Esquivar/Bloquear/Aparar) enquanto durar — o corpo dele copia o do usuário. Só uma Esquiva bem-sucedida ANTES do vínculo prender evita o efeito." },
   // ---- kekkei genkai: Cristal ----
@@ -298,7 +318,10 @@ const GLOSSARY = [
   { re: "defletiu|redireciona(?:r)?", tip: "Explosão Defensiva: contra um projétil (arma arremessada), apara e devolve o golpe inteiro no atacante em vez de só reduzir o dano." },
   // ---- kekkei genkai: Poeira ----
   { re: "Desintegração", tip: "Desintegração: causa 6 de dano por rodada e remove 10 pontos de Barreira por acúmulo a cada rodada. Ao juntar 3 acúmulos, a Barreira restante é zerada de uma vez e o alvo fica com Defesa Reduzida." },
-  { re: "colapsou|colapso", tip: "Colapso: a Desintegração acumulada zerou toda a Barreira do alvo de uma vez e aplicou Defesa Reduzida." },
+  // (?<!Palmada do ): "Palmada do Colapso" e' o NOME do jutsu raiz do Punho
+  // Arhat, nao o efeito Colapso (que e' de Poeira). Sem essa trava, citar a
+  // habilidade numa descricao virava tooltip do efeito errado.
+  { re: "colapsou|(?<!Palmada do )colapso", tip: "Colapso: a Desintegração acumulada zerou toda a Barreira do alvo de uma vez e aplicou Defesa Reduzida." },
 ];
 const GLOSSARY_RE = new RegExp("(" + GLOSSARY.map((g) => g.re).join("|") + ")", "gi");
 
@@ -385,7 +408,11 @@ const glow = (hex) => {
 // ("Transformação Misturada da Besta Humana — Lobo de Três Cabeças"). A
 // primeira tentativa (118, clamp 3) ainda deixava só ~10px de folga —
 // pouco demais na prática. Agora sobra ~35px mesmo no pior caso.
-const CENTER_X = 360, COL_GAP = 150, ROW_GAP = 132, TOP_PAD = 60, WIDTH = 720;
+// Escala do desenho da árvore (+20% sobre o original). Anda junto com o tamanho
+// do nó e do rótulo no CSS (.node / .node .lbl): mudar só um lado desencontra o
+// espaçamento dos ícones. Não tem relação com o fundo, que é dimensionado pela
+// largura do palco.
+const CENTER_X = 432, COL_GAP = 180, ROW_GAP = 158, TOP_PAD = 72, WIDTH = 864;
 
 let state = null;      // resposta de /api/state
 let activeEl = null;   // elemento em exibição
@@ -509,7 +536,13 @@ let lastSig = "";
 const sigOf = (s) => JSON.stringify([s.char, s.trees]);
 
 async function boot() {
-  state = await fetchState();
+  try {
+    state = await fetchState();
+  } catch {
+    // Permite visualizar a tela de login mesmo quando o HTML está sendo
+    // servido sem o backend/API do bot.
+    return show("login");
+  }
   if (!state.authenticated) return show("login");
   if (!state.hasChar) return show("nochar");
   show("app");
@@ -682,12 +715,14 @@ function renderTree(elId) {
   }
   if (stage) {
     const isClanTree = Boolean(meta?.clanGate);
-    const usesIllustratedBackground = isClanTree || ["IRYO_NINJUTSU", "BUKIJUTSU", "GENJUTSU"].includes(elId);
     stage.style.setProperty("--elBg", ELEMENT_BG[elId] || CLAN_BACKGROUNDS[elId] || (isClanTree ? CLAN_BG : "none"));
-    stage.style.setProperty("--elBgOpacity", usesIllustratedBackground ? ".24" : ".14");
+    // Padrão único para toda árvore. A arte já é desenhada escura, com o centro
+    // quase preto e o personagem na margem direita, então não precisa apanhar de
+    // opacidade pra árvore continuar legível — os nós ficam sobre o preto.
+    stage.style.setProperty("--elBgOpacity", ".62");
     // Fundos panorâmicos usam sempre a largura do palco como referência. O
     // antigo `cover` recalculava o zoom conforme a altura de cada árvore.
-    stage.style.setProperty("--elBgSize", usesIllustratedBackground ? "100% auto" : "cover");
+    stage.style.setProperty("--elBgSize", "100% auto");
     // A arte de cada clã já carrega sua própria paleta. Tingir com uma cor de
     // fundo preenchia também as áreas escuras e criava um véu claro no palco.
     stage.style.setProperty("--elBgTint", "transparent");
@@ -701,17 +736,21 @@ function renderTree(elId) {
   const layoutRow = (n) => elId === "TAIJUTSU_PASSIVAS" ? Math.round(n.row) : n.row;
   const maxRow = nodes.reduce((m, n) => Math.max(m, layoutRow(n)), 0);
   const height = TOP_PAD + maxRow * ROW_GAP + 110;
-  // Árvores com muitos ramos (Taijutsu) podem ocupar mais que o palco padrão.
-  // Centraliza o conjunto e deixa a rolagem horizontal do palco revelar todos
-  // os caminhos sem cortar os nós das pontas.
-  const minCol = nodes.reduce((m, n) => Math.min(m, n.col), 0);
-  const maxCol = nodes.reduce((m, n) => Math.max(m, n.col), 0);
-  const treeWidth = Math.max(WIDTH, (maxCol - minCol) * COL_GAP + 240);
-  const treeCenterCol = (minCol + maxCol) / 2;
+  // A coluna é a do arquivo de dados. O desenho de cada árvore é escrito à mão
+  // lá e é isso que dá a leitura de tronco central com ramos simétricos; calcular
+  // posição a partir dos `requires` desmanchava esse desenho. Coluna 0 fica no
+  // meio do palco, sob o título.
+  const alcance = nodes.reduce((m, n) => Math.max(m, Math.abs(n.col)), 0);
+  const treeWidth = Math.max(WIDTH, alcance * 2 * COL_GAP + 240);
   wrap.style.width = treeWidth + "px";
   wrap.style.height = height + "px";
+  // Árvore mais larga que o palco não pode ser centralizada pelo `margin:auto`,
+  // e abriria encostada na esquerda, com a raiz fora do eixo do título. Abre
+  // rolada até o meio, mostrando o mesmo tanto dos dois lados.
+  const rolagem = document.querySelector(".stage-scroll");
+  if (rolagem) rolagem.scrollLeft = Math.max(0, (treeWidth - rolagem.clientWidth) / 2);
 
-  const pos = (n) => ({ x: treeWidth / 2 + (n.col - treeCenterCol) * COL_GAP, y: TOP_PAD + layoutRow(n) * ROW_GAP });
+  const pos = (n) => ({ x: treeWidth / 2 + n.col * COL_GAP, y: TOP_PAD + layoutRow(n) * ROW_GAP });
   const byId = Object.fromEntries(nodes.map((n) => [n.id, n]));
 
   // arestas: linha reta (galho ligando pai -> filho) — mesmo estilo das árvores

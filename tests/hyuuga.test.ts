@@ -171,13 +171,16 @@ describe("Hyuuga: pool por atributo — o olho paga com Dōjutsu, o punho com Ta
 describe("Hyuuga: passivas — atravessa defesa, sela chakra", () => {
   const punho = getAbility("hyuuga_punho_suave")!;
 
-  it("nenhuma passiva de Hyuuga multiplica dano (o clã ganha por perfurar defesa, não por rajada)", () => {
-    for (const p of CLAN_PASSIVES.filter((p) => p.clanId === "hyuuga")) {
-      expect("damageMult" in p).toBe(false);
-    }
+  // O cla continua ganhando por perfurar defesa e selar chakra — mas isso
+  // sozinho o deixava em ultimo lugar de dano entre os clas ofensivos, entao
+  // a RAIZ tambem multiplica. O apice segue sem multiplicador (e' perfuracao
+  // + execucao), pra nao empilhar dois.
+  it("só a raiz multiplica dano; o ápice continua sendo perfuração + execução", () => {
+    const comDano = CLAN_PASSIVES.filter((p) => p.clanId === "hyuuga" && "damageMult" in p);
+    expect(comDano.map((p) => p.nodeId)).toEqual(["hyuuga_raiz"]);
   });
 
-  it("Olhos Brancos corta 10% do custo e soma 10 pontos de chance de Bloqueio de Ninjutsu", () => {
+  it("Olhos Brancos dá +45% de dano, corta 10% do custo e soma 10 pontos de chance de Bloqueio de Ninjutsu", () => {
     const m = passiveMods(["hyuuga_raiz"], punho);
     expect(m.costMult).toBeCloseTo(0.9);
     expect(m.effectChanceBonus.NINJUTSU_BLOCK).toBeCloseTo(0.1);

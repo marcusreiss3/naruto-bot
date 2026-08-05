@@ -289,10 +289,16 @@ export function buildVisualDescription(description: string, authoredVisual?: str
     }
 
     sentence = sentence.replace(
-      /,\s*(?:com \d+%|aplicando|causando|concedendo|empurrando|puxando|e aplica|e causa|e concede|e empurra|e puxa)\b.*$/i,
+      /,\s*(?:com \d+%|aplicando|causando|concedendo|empurrando|puxando|arremessando|lançando|e aplica|e causa|e concede|e empurra|e puxa|e arremessa|e lança)\b.*$/i,
       ".",
     );
-    sentence = sentence.replace(/\s+que (?:empurra|puxa|aplica|causa|concede)\b.*$/i, ".");
+    // "arremessa/lança/atordoa/reduz" faltavam aqui: sem eles, uma frase como
+    // "Palma voltada para cima que arremessa o alvo 4 casas" passava inteira
+    // pro jogador e repetia o que ja' aparece em "Efeitos e regras".
+    sentence = sentence.replace(
+      /\s+que (?:empurra|puxa|aplica|causa|concede|arremessa|lança|atordoa|reduz)\b.*$/i,
+      ".",
+    );
     sentence = sentence.replace(/\s+por \d+\s+(?:rodada|rodadas|turno|turnos)\b/gi, "");
 
     if (!MECHANICAL_SENTENCE.test(sentence)) visual.push(sentence);

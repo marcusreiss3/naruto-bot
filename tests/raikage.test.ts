@@ -166,9 +166,9 @@ describe("Raikage: Deslocamento Instantâneo e Armadura de Raio — buffs de Ace
 describe("Raikage: passivas — dano de graça na raiz, ápice de execução (sem multiplicador extra)", () => {
   const lariat = getAbility("raikage_lariat")!;
 
-  it("Sangue de Raikage dá +15% de dano e corta 10% de custo", () => {
+  it("Sangue de Raikage dá +30% de dano e corta 10% de custo", () => {
     const m = passiveMods(["raikage_raiz"], lariat);
-    expect(m.damageMult).toBeCloseTo(1.15);
+    expect(m.damageMult).toBeCloseTo(1.3);
     expect(m.costMult).toBeCloseTo(0.9);
   });
 

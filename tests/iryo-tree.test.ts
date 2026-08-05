@@ -7,16 +7,18 @@ import { empoweredDamageMult, type EffectState } from "../src/services/combat/ef
 describe("Iryō Ninjutsu", () => {
   it("expõe as sete técnicas na árvore usando a bolsa de Iryō", () => {
     const nodes = allNodes().filter((node) => node.id.startsWith("iryo_") && node.id !== "iryo_cura_basica" && node.id !== "iryo_remover_veneno" && node.id !== "iryo_estancar_sangramento" && node.id !== "iryo_clareza" && node.id !== "iryo_cura_avancada");
-    expect(nodes).toHaveLength(20);
+    // 20 -> 16: os 4 nós de desconto viraram 1 (Refino do Fluxo) e o +1 de
+    // alcance da Anatomia foi absorvido pela Triagem Rápida.
+    expect(nodes).toHaveLength(16);
     expect(nodes.every((node) => node.pool === "iryoNinjutsu")).toBe(true);
     expect(nodes.filter((node) => node.kind === "JUTSU").every((node) => getAbility(node.grantsAbilityId!))).toBe(true);
   });
 
   it("separa cura, purificação e combate médico após a Palma Mística", () => {
     const nodes = allNodes();
-    expect(nodes.filter((node) => node.branch === "Cura" && node.kind === "PASSIVE")).toHaveLength(4);
-    expect(nodes.filter((node) => node.branch === "Purificação" && node.kind === "PASSIVE")).toHaveLength(3);
-    expect(nodes.filter((node) => node.branch === "Combate Médico" && node.kind === "PASSIVE")).toHaveLength(3);
+    expect(nodes.filter((node) => node.branch === "Cura" && node.kind === "PASSIVE")).toHaveLength(2);
+    expect(nodes.filter((node) => node.branch === "Purificação" && node.kind === "PASSIVE")).toHaveLength(2);
+    expect(nodes.filter((node) => node.branch === "Combate Médico" && node.kind === "PASSIVE")).toHaveLength(2);
   });
 
   it("reduz condições intermediárias sem removê-las por completo", () => {
@@ -47,7 +49,9 @@ describe("Iryō Ninjutsu", () => {
     const apex = getAbility("iryo_regeneracao")!;
     expect(apex.baseHeal).toBe(62);
     expect(apex.cleanses).toEqual(["BLEED", "BURN"]);
-    expect(passiveMods(["iryo_mitose_acelerada"], apex).costMult).toBe(0.85);
+    // O desconto agora e' um unico no' geral (-12%), nao mais um exclusivo da
+    // Regeneracao nem uma pilha de 4 nos.
+    expect(passiveMods(["iryo_antidoto_eficiente"], apex).costMult).toBeCloseTo(0.88);
   });
 
   it("Bisturi de Chakra concede +20% somente a Taijutsu", () => {

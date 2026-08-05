@@ -186,17 +186,22 @@ describe("Inuzuka: técnicas que precisam do cão vivo em campo (requiresPet)", 
   });
 });
 
-describe("Inuzuka: passivas — vínculo com a matilha, não dano de graça", () => {
+describe("Inuzuka: passivas — vínculo com a matilha, que agora também dá dano", () => {
   const cao = getAbility("inuzuka_cao_ninja")!;
 
-  it("nenhuma passiva de Inuzuka multiplica dano bruto", () => {
-    for (const p of CLAN_PASSIVES.filter((p) => p.clanId === "inuzuka")) {
-      expect("damageMult" in p).toBe(false);
-    }
+  // O dano bruto entrou na RAIZ (era 1.00x) porque a arvore custa 46 PN — a
+  // segunda mais cara — com 5 jutsus de dano, e entregava menos que arvores
+  // de metade do preco. Isso furava a regra "arvore cara entrega dano" que o
+  // resto de clan-trees/passives.ts segue. O apice continua sem multiplicador:
+  // ele e' execucao + Atordoar, pra nao empilhar dois multiplicadores.
+  it("só a raiz multiplica dano bruto; o ápice continua sendo execução", () => {
+    const comDano = CLAN_PASSIVES.filter((p) => p.clanId === "inuzuka" && "damageMult" in p);
+    expect(comDano.map((p) => p.nodeId)).toEqual(["inuzuka_raiz"]);
   });
 
-  it("Vínculo de Matilha corta 10% do custo e soma 30% de vida na invocação do cão", () => {
+  it("Vínculo de Matilha dá +50% de dano, corta 10% do custo e soma 30% de vida na invocação do cão", () => {
     const m = passiveMods(["inuzuka_raiz"], cao);
+    expect(m.damageMult).toBeCloseTo(1.5);
     expect(m.costMult).toBeCloseTo(0.9);
     expect(m.summonHpBonus).toBeCloseTo(0.3);
   });

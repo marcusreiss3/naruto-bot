@@ -1,6 +1,11 @@
 // Otimiza os fundos de public/assets/bg: reduz p/ <=1920px de largura e reencoda
-// em webp q72. Os fundos aparecem a opacity .13 no site -> qualidade alta e' desperdicio.
-// O PNG/JPG original vai p/ public/assets/bg/_orig (git-ignored) -> reversivel/idempotente.
+// em webp near-lossless. O PNG/JPG original vai p/ public/assets/bg/_orig
+// (git-ignored) -> reversivel/idempotente.
+//
+// NAO baixe a qualidade aqui. A versao antiga usava q72 porque o fundo aparecia
+// a opacity .13; hoje aparece a .62 e a arte e' quase toda sombra, onde webp com
+// perda erra ate' ~50 niveis e vira banding visivel. Near-lossless erra 1 e
+// ainda sai menor que o PNG de origem.
 //
 // Uso: npm run bg   (rode depois de jogar um fundo novo na pasta)
 import sharp from "sharp";
@@ -19,11 +24,12 @@ for (const f of files) {
   const base = f.replace(/\.(png|jpe?g)$/i, "");
   const webp = path.join(DIR, `${base}.webp`);
   const before = (await stat(src)).size;
-  const out = await sharp(src)
+  // Grava direto. Passar por toBuffer() e reabrir com sharp() reencodava o webp
+  // uma segunda vez, com as opcoes padrao (lossy) — as opcoes acima iam pro lixo.
+  await sharp(src)
     .resize({ width: MAXW, withoutEnlargement: true })
-    .webp({ quality: 72 })
-    .toBuffer();
-  await sharp(out).toFile(webp);
+    .webp({ nearLossless: true, quality: 90 })
+    .toFile(webp);
   const after = (await stat(webp)).size;
   // move o original pesado p/ _orig (sai da pasta servida e do git)
   await rename(src, path.join(ORIG, f));

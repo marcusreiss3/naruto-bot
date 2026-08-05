@@ -1,0 +1,402 @@
+================================================================================
+                    PATCH NOTES — NARUTO RP BOT
+                  Site de árvores + Balanceamento geral
+                              05/08/2026
+================================================================================
+
+
+--------------------------------------------------------------------------------
+RESUMO
+--------------------------------------------------------------------------------
+
+Esta atualização começou como uma correção visual no site das árvores de
+habilidade e terminou como um rebalanceamento completo do jogo.
+
+No SITE: os fundos das árvores agora ficam fixos e acompanham a rolagem sem
+sumir nem esticar, o filtro escuro por cima foi reduzido, e toda a arte de
+fundo foi trocada por um padrão novo em alta qualidade (44 imagens). Ícones,
+textos e títulos cresceram ~20%. Foram ligados 26 ícones novos para Taijutsu,
+Taijutsu de Agitação e Assassinato Silencioso.
+
+Nas ÁRVORES: o espaçamento vertical foi padronizado em 86 nós de elementais e
+kekkei genkai, o layout autoral de 16 árvores de clã foi restaurado, e quatro
+árvores foram redesenhadas do zero — Taijutsu Passivas, Assassinato Silencioso
+(renomeado de "Assassinato Ninja"), Punho Adamantino e Iryō Ninjutsu.
+
+Nas DESCRIÇÕES: varredura em todo o jogo para eliminar texto preguiçoso,
+redundância com o bloco "Efeitos e regras", e menção a efeito ou mecânica na
+descrição visual. Nenhuma descrição inventa mais o que um golpe faz.
+
+No BALANCEAMENTO: a hierarquia pedida foi implementada e medida —
+BUKIJUTSU < ELEMENTAL ~ CLÃ < KEKKEI GENKAI. Bukijutsu passou a abrir no
+nível 1, os estilos de luta tiveram o dano cortado para ficar abaixo do
+kekkei genkai, e os clãs ofensivos ganharam multiplicador de dano escalado
+pelo custo da árvore. Punho Forte saiu de 400% de buff e nível acima do teto.
+
+Resultado final: entre 2.9 e 6.1 golpes para matar em todas as faixas de
+nível, contra uma referência saudável de 3 a 4.
+
+
+--------------------------------------------------------------------------------
+1. SITE — FUNDO E VISUAL
+--------------------------------------------------------------------------------
+
+[CORREÇÃO] Fundo das árvores sumia ao rolar
+    Em árvores compridas (Akimichi, por exemplo) o fundo acabava no meio da
+    página e o resto ficava preto. A causa era a página inteira rolar junto
+    com o fundo, em vez de só o conteúdo.
+    Agora o palco (.stage) fica parado ancorando o fundo, e só o conteúdo
+    interno (.stage-scroll) rola. O fundo acompanha a rolagem sem esticar,
+    sem encolher por árvore e sem cortar detalhe da arte.
+
+[NOVO] Arte de fundo nova em todas as árvores
+    44 imagens instaladas: 24 clãs, 12 elementais e kekkei genkai, ninjutsu,
+    e 7 estilos de luta. Punho Forte e Punho Arhat foram substituídos depois
+    por versões novas.
+
+[MUDANÇA] Filtro escuro sobre o fundo reduzido
+    Aplicado como padrão único para TODAS as árvores, sem exceção para
+    elementais. Nenhuma imagem teve qualidade reduzida.
+
+[CORREÇÃO] Qualidade das imagens
+    O script de otimização estava re-encodando as imagens duas vezes com
+    perda. Foi corrigido para near-lossless: o erro máximo por pixel caiu de
+    50 para 1. As versões degradadas foram apagadas.
+
+[MUDANÇA] Escala geral +20%
+    Ícones dos nós, textos das etiquetas e título da árvore cresceram cerca
+    de 20%, sem alterar o fundo.
+
+[NOVO] 26 ícones ligados
+    Taijutsu (11/11), Assassinato Silencioso (9/9) e Taijutsu de Agitação
+    receberam arte própria em cada nó.
+
+[MUDANÇA] Cor da árvore do clã Yotsuki
+    De amarelo para azul-relâmpago (#4fb8ff).
+
+
+--------------------------------------------------------------------------------
+2. ÁRVORES — LAYOUT E ORGANIZAÇÃO
+--------------------------------------------------------------------------------
+
+[CORREÇÃO] Habilidades sumidas
+    Taijutsu, Assassinato Ninja, Punho Gentil, Taijutsu de Agitação e Punho
+    Arhat estavam com skills faltando na exibição. Corrigido.
+
+[CORREÇÃO] Layout autoral restaurado em 16 árvores de clã
+    Um algoritmo de posicionamento automático havia quebrado a estrutura
+    original (coluna central única abrindo em ramificações). O algoritmo foi
+    removido e as posições autorais voltaram, agora com os ícones no tamanho
+    novo.
+
+[MUDANÇA] Espaçamento vertical padronizado
+    86 nós de árvores elementais e kekkei genkai foram alinhados ao padrão já
+    usado por clãs, iryō, genjutsu, bukijutsu e ninjutsu.
+    Nenhum requisito, nível ou custo foi alterado — só posição.
+
+[MUDANÇA] Ajustes pontuais de posição
+    - Genjutsu: "Visão do Inferno" movida para a coluna do meio, sem criar
+      linhas novas.
+    - Bukijutsu: "Clone da Sombra" e "Cadeia do Desastre" trocadas de lugar;
+      "Maestria de Arremesso" movida para a intersecção das linhas.
+    - Água: curva desnecessária removida.
+    - Senju: ramificação de água reordenada em duas linhas distintas
+      (água e iryō), seguindo a ordem de nível 10 → 12 → 14 e 14 → 25 → 28.
+
+
+--------------------------------------------------------------------------------
+3. TAIJUTSU E ESTILOS DE LUTA
+--------------------------------------------------------------------------------
+
+[REDESENHO] Árvore Taijutsu Passivas
+    Disciplina Corporal agora leva a Vigor de Combate, que abre em três
+    ramificações (esquerda, meio, direita) convergindo em Maestria Marcial
+    no nível 40.
+
+[REDESENHO] Assassinato Silencioso (antigo "Assassinato Ninja")
+    Renomeada. Reescrita como um tronco principal único que abre em no máximo
+    2 a 3 ramificações, em vez do emaranhado anterior.
+
+[MUDANÇA] Buffs de Assassinato valem para KENJUTSU
+    Todas as habilidades que buffavam apenas TAIJUTSU passaram a valer também
+    para KENJUTSU. Marca do Alvo agora marca e concede +10% em acertos de
+    kenjutsu também.
+
+[MUDANÇA] Passivas de estilo movidas para a árvore certa
+    Passivas específicas de um estilo (ex: Controle de Chakra Preciso) saíram
+    da árvore genérica e foram para a árvore do estilo que elas buffam, com
+    pré-requisito baseado numa habilidade da própria árvore.
+
+[REDESENHO] Punho Adamantino — árvore refeita do zero
+    Super Peteleco agora é a PRIMEIRA habilidade da árvore (nível 2, rank D),
+    não uma das últimas. A ordem passou a seguir complexidade da técnica, não
+    poder bruto:
+        Super Peteleco (nv 2)
+          -> Pé da Dor Celestial (nv 8)
+          -> Impacto da Flor de Cerejeira (nv 16)
+          -> Destruição do Pilar de Pedra (nv 24)
+          -> Flor de Cerejeira: Florescimento (nv 30)
+          -> Técnica das Cem Forças (nv 34)
+    As três passivas do estilo saem do Super Peteleco em coluna paralela.
+    Nenhuma habilidade ou passiva foi adicionada ou removida.
+
+[CORREÇÃO] Punho Forte fora de escala
+    Tinha buff de 400% de dano, dano base de 240 e skills exigindo nível
+    acima do teto do jogo.
+        - Nível máximo do jogo fixado em 50; todas as skills recomprimidas
+          para caber abaixo disso.
+        - Os 8 portões refeitos: agora vão de 1.10x (1º) a 2.00x (8º).
+        - O 8º portão custa 100 de vida por turno.
+
+[NERF] Dano dos estilos de luta
+    Estava acima do kekkei genkai, o que não fazia sentido na hierarquia.
+    Cortes principais (dano / custo):
+        Luz Rotatória ........... 27 / 36
+        Rajada de Leões ......... 24 / 32
+        Lótus Frontal ........... 33 / 44
+        Lótus Oculta ............ 36 / 48
+        Pavão ................... 38 / 54
+        Tigre ................... 38 / 54
+        Elefante ................ 37 / 52
+        Guy Noturno ............. 40 / 56
+        Palma de Compressão ..... 24 / 32   (Arhat)
+        Golpe de Rocha .......... 30 / 40   (Arhat)
+    O custo caiu junto com o dano, para não ficar fraco E caro.
+
+NOTA: energia e chakra são tratados como recursos de mesmo valor no
+balanceamento. Ser corpo a corpo NÃO conta como desvantagem compensatória.
+
+
+--------------------------------------------------------------------------------
+4. IRYŌ NINJUTSU
+--------------------------------------------------------------------------------
+
+[MUDANÇA] Passivas reduzidas de 11 para 6
+    A árvore tinha 11 passivas para 9 jutsus. As redundantes foram fundidas e
+    nerfadas na fusão.
+    - "Canalização Econômica" removida (sobreposta por Refino do Fluxo).
+    - "Refino do Fluxo" (iryo_antidoto_eficiente) unificada em -12%.
+
+
+--------------------------------------------------------------------------------
+5. BUKIJUTSU E ITENS
+--------------------------------------------------------------------------------
+
+[MUDANÇA] Bukijutsu abre no nível 1
+    Por ser a categoria mais fraca, ela precisa liberar mais cedo. O primeiro
+    jutsu (Moinho de Vento) agora é nível 1, as entradas de ramificação são
+    nível 2, e os jutsus seguintes ficam em 1 / 4 / 6.
+
+[MUDANÇA] Consumo de kunai e shuriken aumentado
+    Técnicas de pergaminho passaram a consumir bem mais munição:
+        Cadeia do Desastre Celestial .... 20 kunai + 20 shuriken
+        Dragões Gêmeos Ascendentes ...... 10 + 10
+        Meteoro Anexado ................. 6 + 6
+        Moinho de Vento ................. 3 + 3
+    Clone da Sombra de Shuriken ficou inalterado.
+
+[REMOÇÃO] Pergaminho Rank D e Rank C
+    Não eram usados por nenhuma skill. O catálogo agora tem apenas B, A e S
+    (valores 280 / 500 / 900).
+
+
+--------------------------------------------------------------------------------
+6. DESCRIÇÕES
+--------------------------------------------------------------------------------
+
+[MUDANÇA] Varredura de qualidade em todo o jogo
+    Regras aplicadas:
+    - A descrição normal é o VISUAL do golpe. Ela não cita efeito, regra nem
+      mecânica — isso é papel do bloco "Efeitos e regras".
+    - Sem redundância: nada que o bloco de regras já diga.
+    - Sem texto preguiçoso. Todas as descrições do Punho Arhat foram
+      reescritas; "Oito Trigramas: 128 Palmas" não é mais descrito como
+      "versão em dobro de velocidade das 64 Palmas".
+    - Nunca inventar o que um golpe faz. Onde não havia informação canônica
+      suficiente, a descrição ficou no visual em vez de supor mecânica.
+    - Sem cláusulas explicativas óbvias ou redundantes.
+
+[CORREÇÃO] Tooltip de Colapso em Palma de Impacto
+    O efeito Colapso existe, mas o tooltip aparecia indevidamente na descrição
+    dessa skill. Removido apenas dela.
+
+[CORREÇÃO] Colisões de glossário
+    "colapsou" não dispara mais o tooltip de "Palmada do Colapso", e
+    "Sobrecarga" não colide mais com "Sobrecarga de Cem Forças".
+
+
+--------------------------------------------------------------------------------
+7. BALANCEAMENTO — CLÃS
+--------------------------------------------------------------------------------
+
+CONTEXTO: a comparação entre categorias é decidida pela camada de PASSIVAS,
+não pelo dano base. Elementais e kekkei genkai têm ~2.0x de multiplicador;
+os clãs tinham 1.09x na média, o que os deixava como o piso do jogo mesmo
+tendo dano base competitivo.
+
+[BUFF] Multiplicador de dano dos clãs ofensivos
+    Escalado pelo custo total da árvore em PN (árvore cara entrega mais dano).
+    Nenhuma passiva nova foi criada — só os valores das já existentes:
+
+        Clã            PN     Antes    Agora
+        akimichi       49     1.30x -> 1.60x
+        inuzuka        46     1.00x -> 1.50x   (não tinha nenhum)
+        kaguya         38     1.30x -> 1.50x
+        hyuuga         37     1.00x -> 1.45x   (não tinha nenhum)
+        raikage        35     1.15x -> 1.30x
+        hoshigaki      34     1.15x -> 1.45x
+        chinoike       29     1.15x -> 1.40x
+        kamaitachi     26     1.15x -> 1.40x
+
+    INUZUKA: era a segunda árvore mais cara do jogo (46 PN) com 5 jutsus de
+    dano, entregando 1.00x — menos que árvores pela metade do preço.
+
+    HYUUGA: o clã era 1.00x por decisão de design (ganhava por atravessar
+    defesa, não por dano bruto). Medido depois do rebalanceamento, isso o
+    deixou em último lugar com pico 36 contra 41-70 dos outros. Perfuração
+    vale contra Terra e contra escudo, mas não cobre 40% menos dano contra o
+    resto do jogo. Ele mantém ignorar Barreira, execução e Bloqueio de
+    Ninjutsu — o multiplicador só o recolocou na curva.
+
+[NERF] Raikage
+    Estava entregando o maior dano entre clãs (pico 70) sem ser o que mais
+    gasta ponto, e ainda com o kit mais largo do grupo: 7 jutsus, 4 tipos de
+    efeito e 2 utilidades por 35 PN.
+        - Bomba Liger: dano base 48 -> 42. Era o maior de todos os clãs, e
+          ainda por cima Inevitável (não dá para bloquear, aparar nem
+          esquivar). 42 alinha com Inuzuka, Hoshigaki e Kamaitachi.
+          Custo mantido em 58 (a fórmula sugere 57 para o novo perfil).
+        - Passiva da raiz: 1.45x -> 1.30x, abaixo do Hoshigaki (34 PN, 1.45x)
+          de propósito — kit largo se paga com multiplicador menor.
+    Pico final: 70 -> 55 (68 contra alvo ferido).
+
+CLÃS DE SUPORTE não receberam multiplicador e continuam sem nenhum: Nara,
+Aburame, Uzumaki, Kamizuru e Hozuki. Eles ganham por controle e dreno.
+
+
+--------------------------------------------------------------------------------
+8. NÚMEROS FINAIS
+--------------------------------------------------------------------------------
+
+DANO REAL (arsenal médio, já com passivas aplicadas)
+
+  Nível   Bukijutsu   Elemental      Clã     Estilo    Kekkei Genkai
+  nv 10       25.9        23.1       30.4      22.1        30.1
+  nv 20       33.2        34.4       34.8      26.2        38.2
+  nv 30       36.4        40.5       38.4      31.3        57.7
+  nv 45       36.4        44.1       39.1      35.4        62.4
+
+MELHOR GOLPE DISPONÍVEL (com passivas, sem transformação)
+
+  Nível   Bukijutsu   Elemental      Clã     Estilo    Kekkei Genkai
+  nv 10       29.9        24.3       33.2      23.0        34.4
+  nv 20       38.1        41.5       45.0      29.8        47.7
+  nv 30       50.3        52.5       53.3      41.3        75.1
+  nv 45       50.3        63.1       55.3      46.2        82.9
+
+CUSTO / DANO REAL (menor = mais eficiente)
+
+  Nível   Bukijutsu   Elemental      Clã     Estilo    Kekkei Genkai
+  nv 10       0.92        0.90       0.77      1.08        1.11
+  nv 20       1.05        0.72       0.82      1.09        0.99
+  nv 30       1.09        0.70       0.86      1.05        0.70
+  nv 45       1.09        0.73       0.85      0.97        0.70
+
+GOLPES ATÉ MATAR (referência saudável: 3 a 4)
+
+  Nível    HP   Bukijutsu  Elemental    Clã    Estilo   Kekkei Genkai
+  nv 5    120      4.3        5.4       5.0      -          4.6
+  nv 10   140      4.7        5.8       4.1     6.1         4.1
+  nv 20   180      4.7        4.3       3.8     6.0         3.8
+  nv 30   220      4.4        4.2       4.0     5.3         2.9
+  nv 45   280      5.6        4.4       4.8     6.1         3.4
+
+TRANSFORMAÇÕES (não entram nas tabelas acima)
+    EMPOWERED (Cem Forças, Pílula Secreta, Bisturi) ... 1.60x por 3 rodadas
+    8º Portão .......................... 2.00x em Taijutsu, 100 de vida/turno
+
+    Com transformação no nível 45, o pico muda:
+        Estilo de luta ..... 46.2 -> 92.5
+        Clã ................ 55.3 -> 88.5
+    Elemental, bukijutsu e kekkei genkai não têm equivalente.
+
+
+--------------------------------------------------------------------------------
+9. PONTO FORTE E FRACO DE CADA CATEGORIA
+--------------------------------------------------------------------------------
+
+BUKIJUTSU
+  + Único que abre no nível 1; o mais forte do jogo até por volta do nv 15.
+  + Multiplicador honesto de 1.32x, sem depender de montar jogada.
+  - Pior custo/dano do jogo (1.70 na faixa 20-29).
+  - A árvore acaba no nível 30: fica parado em 50.3 enquanto o resto sobe.
+  - Consome kunai e shuriken de verdade, custo que não aparece em tabela.
+
+ELEMENTAL
+  + Melhor custo-benefício sustentado (0.70 a 0.73).
+  + Fogo, Vento e Terra fecham 2.02x de passiva; maior alcance médio.
+  - Água (1.44x) e Raio (1.15x) quase não funcionam no seco: só chegam a
+    2.04x contra alvo Encharcado. Dependem de montar a jogada antes.
+
+CLÃ
+  + Segundo maior pico e o mais eficiente do início ao meio de jogo.
+  + Cada clã tem ferramenta exclusiva de controle além do dano.
+  - Você não escolhe: nasce com ele.
+  - Variação interna grande (pico 41 a 64 entre os clãs ofensivos).
+
+ESTILO DE LUTA
+  + O mais denso em passivas (12 a 14 por árvore).
+  + Único que roda em energia: não disputa o pool de chakra dos ninjutsus.
+  + Com o 8º Portão aberto, é o maior dano do jogo (92.5).
+  - Menor dano de pico sem transformação.
+  - Só abre no nível 6, contra 1 de todo o resto.
+  - Metade das árvores do grupo (Agitação, Punho Gentil, Assassinato
+    Silencioso) não tem nenhum jutsu de dano — são suporte puro.
+
+KEKKEI GENKAI
+  + Teto absoluto do jogo (82.9 de pico, 93 no Monte Huaguo).
+  + 2.03x liso nas sete árvores, e os efeitos mais fortes.
+  - Caríssimo cedo: 1.47 de custo/dano na faixa 1-9, o pior do jogo.
+  - O mais raro de conseguir.
+
+
+--------------------------------------------------------------------------------
+10. PENDÊNCIAS — OLHAR DEPOIS
+--------------------------------------------------------------------------------
+
+[ ] KAMAITACHI — razão pico/PN de 2.26, contra 1.26 a 1.79 do resto dos clãs.
+    26 PN (a árvore mais barata do grupo) entregando 59 de pico, quase o mesmo
+    que Inuzuka por 46 PN. Contrapeso: é uma árvore magra de verdade — 4
+    jutsus, 1 tipo de efeito (Sangramento), zero utilidade, e ainda exige o
+    nível para destravar as coisas. Decidido deixar como está por ora.
+
+[ ] PUNHO ADAMANTINO sem ícones — 0 de 9 nós têm arte. Nenhuma pasta de
+    ícones foi fornecida para essa árvore.
+
+[ ] ESTILOS DE LUTA só abrem no nível 6, enquanto todas as outras categorias
+    abrem no nível 1.
+
+[ ] KEKKEI GENKAI no nível 30 mata em 2.9 golpes, abaixo da faixa saudável
+    de 3 a 4, e no fim de jogo é ao mesmo tempo o mais forte e o mais
+    eficiente (0.70 de custo/dano). O freio econômico dele some depois do
+    nível 30.
+
+[ ] KAGUYA e CHINOIKE guardam a passiva de dano no ápice da árvore, então
+    ficam cerca de 20% atrás dos outros clãs no início. É posição de nó, não
+    valor.
+
+[ ] BUKIJUTSU não tem conteúdo acima do nível 30.
+
+
+--------------------------------------------------------------------------------
+NOTAS TÉCNICAS
+--------------------------------------------------------------------------------
+
+- Typecheck limpo (tsc --noEmit).
+- Suíte de testes: 863 passando, 9 falhando. As 9 falhas são anteriores a
+  esta atualização e não foram introduzidas por ela (combat-math x3, hyuuga,
+  inventory x2, npc-ai, passives, yuki-icons).
+- Todas as descrições de nó que citam porcentagem foram atualizadas junto com
+  os valores, para que o site não mostre número diferente do que a engine usa.
+
+================================================================================

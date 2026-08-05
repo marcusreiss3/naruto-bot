@@ -20,6 +20,12 @@ import { BUKIJUTSU_TREE } from "../src/data/bukijutsu-tree.js";
 import { IRYO_NINJUTSU_TREE } from "../src/data/iryo-ninjutsu-tree.js";
 import { GENJUTSU_TREE } from "../src/data/genjutsu-tree.js";
 import { TAIJUTSU_TREE } from "../src/data/taijutsu-tree.js";
+import { ARHAT_TREE } from "../src/data/arhat-tree.js";
+import { ADAMANTINO_TREE } from "../src/data/adamantino-tree.js";
+import { TAIJUTSU_PASSIVES_TREE } from "../src/data/taijutsu-passives-tree.js";
+import { ASSASSINATO_NINJA_TREE } from "../src/data/assassinato-ninja-tree.js";
+import { PUNHO_GENTIL_TREE } from "../src/data/punho-gentil-tree.js";
+import { TAIJUTSU_AGITACAO_TREE } from "../src/data/taijutsu-agitacao-tree.js";
 import { CLAN_STARTING_ELEMENT } from "../src/data/clans/starting-element.js";
 import { getAbility, getClan, CLANS } from "../src/data/index.js";
 import {
@@ -180,6 +186,14 @@ function buildState() {
     GENJUTSU: viewNodes(snap, GENJUTSU_TREE),
     TAIJUTSU: viewNodes(snap, TAIJUTSU_TREE),
     IRYO_NINJUTSU: viewNodes(snap, IRYO_NINJUTSU_TREE),
+    // especializacoes de taijutsu — o mesmo conjunto que skill-tree.ts serve no
+    // bot real. Faltando aqui, a arvore abria vazia so' na demo.
+    ARHAT: viewNodes(snap, ARHAT_TREE),
+    ADAMANTINO: viewNodes(snap, ADAMANTINO_TREE),
+    TAIJUTSU_PASSIVAS: viewNodes(snap, TAIJUTSU_PASSIVES_TREE),
+    ASSASSINATO_NINJA: viewNodes(snap, ASSASSINATO_NINJA_TREE),
+    PUNHO_GENTIL: viewNodes(snap, PUNHO_GENTIL_TREE),
+    TAIJUTSU_AGITACAO: viewNodes(snap, TAIJUTSU_AGITACAO_TREE),
   };
   for (const el of Object.keys(ELEMENT_TREES) as Element[]) trees[el] = viewNodes(snap, ELEMENT_TREES[el]);
   for (const clanId of Object.keys(CLAN_TREES)) trees[clanId.toUpperCase()] = viewNodes(snap, CLAN_TREES[clanId]);

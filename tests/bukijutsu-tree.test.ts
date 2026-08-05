@@ -81,8 +81,9 @@ describe("árvore de Bukijutsu", () => {
     const dragons = getAbility("buki_dragoes_gemeos")!;
     const text = buildMechanicsSummary(dragons);
     expect(text).toMatch(/Gasta 1x Pergaminho Rank B/);
-    expect(text).toMatch(/Consome 3x Kunai/);
-    expect(text).toMatch(/Consome 3x Kunai e 3x Shuriken/);
+    // técnica de pergaminho: consumo alto de propósito (o pergaminho existe
+    // pra despejar muita ferramenta de uma vez).
+    expect(text).toMatch(/Consome 10x Kunai e 10x Shuriken/);
 
     const swallow = getAbility("buki_voo_andorinha")!;
     expect(buildMechanicsSummary(swallow)).toMatch(/Lâmina de Chakra equipada/);

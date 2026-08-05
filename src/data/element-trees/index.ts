@@ -152,92 +152,92 @@ function make(element: Element) {
 const F = make("FOGO");
 const FOGO: SkillNodeDef[] = [
   F.pass("fogo_raiz", "Chama Interior", "🔥", "Raiz", 0, 0, [], 1, 1, "Passiva sempre ativa: todos os seus jutsus de Fogo causam +30% de dano.", true),
-  F.jutsu("fogo_grande_bola", "Grande Bola de Fogo", "☄️", "C", "Brasa", 0, 2, ["fogo_raiz"], 1, 3, "O usuário concentra chakra na boca e cospe uma esfera de fogo que avança em cone, iluminando o campo com uma explosão de chamas."),
-  F.jutsu("fogo_flor_fenix", "Flor de Fogo Fênix", "🌸", "C", "Brasa", 0, 4, ["fogo_grande_bola"], 5, 5, "Várias pequenas bolas de fogo florescem ao redor do usuário e voam em trajetórias diferentes, fechando os caminhos de fuga do alvo."),
-  F.pass("fogo_brasas", "Brasas Persistentes", "♨️", "Brasa", 1, 4, ["fogo_flor_fenix"], 8, 8, "Passiva: todo acerto seu de Fogo aplica 1 acúmulo de Queimadura a mais."),
-  F.pass("fogo_combustao", "Combustão", "💥", "Brasa", 1, 5, ["fogo_brasas"], 15, 12, "Passiva: a Queimadura explode com 4 acúmulos em vez de 5, e a explosão causa 60 de dano em vez de 40."),
-  F.jutsu("fogo_dragao", "Fogo do Dragão", "🐉", "B", "Cerco", 0, 6, ["fogo_flor_fenix"], 12, 10, "Lança um jato de fogo em linha reta que deixa um rastro de chamas no caminho. Aplica 3 acúmulos de Queimadura."),
-  F.pass("fogo_pavio", "Pavio", "🧨", "Cerco", -1, 6, ["fogo_dragao"], 12, 10, "Passiva: as casas atingidas pelos seus jutsus de Fogo ficam em chamas por 2 rodadas e queimam quem passar por elas."),
-  F.jutsu("fogo_cinzas", "Cinzas Ardentes", "🌫️", "A", "Cerco", -1, 7, ["fogo_pavio"], 22, 16, "Solta uma cortina de cinzas que bloqueia a visão e depois detona, aplicando 3 acúmulos de Queimadura em área."),
-  F.jutsu("fogo_grande_dragao", "Grande Dragão de Fogo", "🐲", "A", "Conflagração", 0, 8, ["fogo_dragao"], 25, 18, "Um dragão colossal de chamas avança em linha reta, cobrindo o caminho com uma torrente de fogo e iluminando tudo ao redor."),
-  F.pass("fogo_folego", "Fôlego do Dragão", "🌬️", "Conflagração", 1, 8, ["fogo_grande_dragao"], 25, 18, "Passiva: seus jutsus de Fogo causam +55% de dano."),
-  F.jutsu("fogo_bomba_dragao", "Bomba do Dragão Flamejante", "🔱", "A", "Conflagração", 1, 9, ["fogo_folego"], 28, 20, "Dragão de fogo que se divide em 3 direções e cerca o alvo. Aplica 2 acúmulos de Queimadura."),
-  F.jutsu("fogo_corrida", "Corrida de Fogo", "⭕", "B", "Cerco", 0, 10, ["fogo_grande_dragao"], 25, 18, "Um anel de fogo se fecha ao redor do alvo, cercando-o com chamas altas e contínuas que transformam o espaço numa muralha ardente."),
-  F.pass("fogo_sopro", "Sopro Eficiente", "💨", "Brasa", 0, 11, ["fogo_corrida"], 25, 18, "Passiva: seus jutsus de Fogo em cone custam 20% menos chakra."),
-  F.jutsu("fogo_aniquilador", "Grande Fogo Aniquilador", "🌋", "S", "Ápice", 0, 12, ["fogo_sopro"], 35, 24, "Uma muralha de chamas se espalha em cone gigante, transformando tudo à frente do usuário num mar de fogo e vapor escaldante."),
+  F.jutsu("fogo_grande_bola", "Grande Bola de Fogo", "☄️", "C", "Brasa", 0, 1, ["fogo_raiz"], 1, 3, "O usuário concentra chakra na boca e cospe uma esfera de fogo que avança em cone, iluminando o campo com uma explosão de chamas."),
+  F.jutsu("fogo_flor_fenix", "Flor de Fogo Fênix", "🌸", "C", "Brasa", 0, 2, ["fogo_grande_bola"], 5, 5, "Várias pequenas bolas de fogo florescem ao redor do usuário e voam em trajetórias diferentes, fechando os caminhos de fuga do alvo."),
+  F.pass("fogo_brasas", "Brasas Persistentes", "♨️", "Brasa", 1, 2, ["fogo_flor_fenix"], 8, 8, "Passiva: todo acerto seu de Fogo aplica 1 acúmulo de Queimadura a mais."),
+  F.pass("fogo_combustao", "Combustão", "💥", "Brasa", 1, 3, ["fogo_brasas"], 15, 12, "Passiva: a Queimadura explode com 4 acúmulos em vez de 5, e a explosão causa 60 de dano em vez de 40."),
+  F.jutsu("fogo_dragao", "Fogo do Dragão", "🐉", "B", "Cerco", 0, 4, ["fogo_flor_fenix"], 12, 10, "Lança um jato de fogo em linha reta que deixa um rastro de chamas no caminho. Aplica 3 acúmulos de Queimadura."),
+  F.pass("fogo_pavio", "Pavio", "🧨", "Cerco", -1, 4, ["fogo_dragao"], 12, 10, "Passiva: as casas atingidas pelos seus jutsus de Fogo ficam em chamas por 2 rodadas e queimam quem passar por elas."),
+  F.jutsu("fogo_cinzas", "Cinzas Ardentes", "🌫️", "A", "Cerco", -1, 5, ["fogo_pavio"], 22, 16, "Solta uma cortina de cinzas que bloqueia a visão e depois detona, aplicando 3 acúmulos de Queimadura em área."),
+  F.jutsu("fogo_grande_dragao", "Grande Dragão de Fogo", "🐲", "A", "Conflagração", 0, 6, ["fogo_dragao"], 25, 18, "Um dragão colossal de chamas avança em linha reta, cobrindo o caminho com uma torrente de fogo e iluminando tudo ao redor."),
+  F.pass("fogo_folego", "Fôlego do Dragão", "🌬️", "Conflagração", 1, 6, ["fogo_grande_dragao"], 25, 18, "Passiva: seus jutsus de Fogo causam +55% de dano."),
+  F.jutsu("fogo_bomba_dragao", "Bomba do Dragão Flamejante", "🔱", "A", "Conflagração", 1, 7, ["fogo_folego"], 28, 20, "Dragão de fogo que se divide em 3 direções e cerca o alvo. Aplica 2 acúmulos de Queimadura."),
+  F.jutsu("fogo_corrida", "Corrida de Fogo", "⭕", "B", "Cerco", 0, 8, ["fogo_grande_dragao"], 25, 18, "Um anel de fogo se fecha ao redor do alvo, cercando-o com chamas altas e contínuas que transformam o espaço numa muralha ardente."),
+  F.pass("fogo_sopro", "Sopro Eficiente", "💨", "Brasa", 0, 9, ["fogo_corrida"], 25, 18, "Passiva: seus jutsus de Fogo em cone custam 20% menos chakra."),
+  F.jutsu("fogo_aniquilador", "Grande Fogo Aniquilador", "🌋", "S", "Ápice", 0, 10, ["fogo_sopro"], 35, 24, "Uma muralha de chamas se espalha em cone gigante, transformando tudo à frente do usuário num mar de fogo e vapor escaldante."),
 ];
 
 // ---------------------------------------------------------------- TERRA
 const T = make("TERRA");
 const TERRA: SkillNodeDef[] = [
   T.pass("terra_raiz", "Pele de Pedra", "🪨", "Raiz", 0, 0, [], 1, 1, "Passiva sempre ativa: seus jutsus de Terra causam +30% de dano e, toda vez que você defende, você ganha +1 de Barreira.", true),
-  T.jutsu("terra_parede", "Parede de Terra", "🧱", "C", "Muralha", 0, 2, ["terra_raiz"], 5, 4, "Ergue um muro de terra que bloqueia a passagem e a linha de visão dos ataques. Também te dá Barreira."),
-  T.pass("terra_firme", "Terreno Firme", "⛰️", "Muralha", -1, 2, ["terra_parede"], 12, 8, "Passiva: os muros, cúpulas e pântanos que você cria duram 1 rodada a mais."),
-  T.jutsu("terra_cupula", "Prisão Cúpula de Terra", "🛖", "A", "Muralha", -1, 3, ["terra_firme"], 22, 16, "Fecha o alvo numa cúpula de terra: ele fica preso ao chão e perde chakra a cada turno."),
-  T.jutsu("terra_punho", "Punho Rochoso", "👊", "C", "Colosso", 0, 4, ["terra_parede"], 6, 4, "Cobre o punho de pedra e golpeia corpo a corpo. Você ganha Barreira no turno."),
-  T.jutsu("terra_clone", "Clone de Terra", "🧍", "B", "Colosso", 1, 4, ["terra_punho"], 12, 8, "Cria um clone de terra que luta ao seu lado e explode em pedras quando morre, ferindo quem está perto."),
-  T.pass("terra_barro", "Vínculo de Barro", "🧎", "Colosso", 1, 5, ["terra_clone"], 18, 12, "Passiva: seus clones e invocações nascem com +25% de vida."),
-  T.jutsu("terra_decapitacao", "Decapitação Subterrânea", "🕳️", "B", "Aprisionamento", 0, 6, ["terra_punho"], 12, 8, "Você mergulha no solo e puxa o alvo para baixo da terra: ele fica preso ao chão, atordoado e sem poder fugir."),
-  T.pass("terra_peso", "Peso da Montanha", "🏔️", "Aprisionamento", -1, 6, ["terra_decapitacao"], 18, 12, "Passiva: seus jutsus de Terra causam +55% de dano, e prender alguém ao chão dura 1 rodada a mais."),
-  T.jutsu("terra_pantano", "Pântano do Submundo", "🟫", "A", "Aprisionamento", -1, 7, ["terra_peso"], 25, 18, "Transforma a área num pântano que fica no mapa: quem estiver dentro fica preso ao chão e mais lento."),
-  T.jutsu("terra_dragao", "Projétil do Dragão de Terra", "🐉", "B", "Colosso", 0, 8, ["terra_decapitacao"], 12, 10, "Invoca um dragão de terra que cospe projéteis de lama em linha. Deixa o alvo mais lento."),
-  T.jutsu("terra_biscoito", "Biscoito de Terra Sepulcral", "🥮", "B", "Terraplanagem", 1, 8, ["terra_dragao"], 15, 12, "Arranca um pedaço gigante do chão e arremessa: causa dano em área, empurra os alvos 1 casa e o bloco vira um obstáculo onde cair."),
-  T.jutsu("terra_golem", "Golem Defensor", "🗿", "S", "Ápice", 0, 10, ["terra_dragao"], 35, 24, "Invoca um golem gigante que dá Barreira aos aliados e ataca sozinho. Gasta muito chakra."),
+  T.jutsu("terra_parede", "Parede de Terra", "🧱", "C", "Muralha", 0, 1, ["terra_raiz"], 5, 4, "Ergue um muro de terra que bloqueia a passagem e a linha de visão dos ataques. Também te dá Barreira."),
+  T.pass("terra_firme", "Terreno Firme", "⛰️", "Muralha", -1, 1, ["terra_parede"], 12, 8, "Passiva: os muros, cúpulas e pântanos que você cria duram 1 rodada a mais."),
+  T.jutsu("terra_cupula", "Prisão Cúpula de Terra", "🛖", "A", "Muralha", -1, 2, ["terra_firme"], 22, 16, "Fecha o alvo numa cúpula de terra: ele fica preso ao chão e perde chakra a cada turno."),
+  T.jutsu("terra_punho", "Punho Rochoso", "👊", "C", "Colosso", 0, 3, ["terra_parede"], 6, 4, "Cobre o punho de pedra e golpeia corpo a corpo. Você ganha Barreira no turno."),
+  T.jutsu("terra_clone", "Clone de Terra", "🧍", "B", "Colosso", 1, 3, ["terra_punho"], 12, 8, "Cria um clone de terra que luta ao seu lado e explode em pedras quando morre, ferindo quem está perto."),
+  T.pass("terra_barro", "Vínculo de Barro", "🧎", "Colosso", 1, 4, ["terra_clone"], 18, 12, "Passiva: seus clones e invocações nascem com +25% de vida."),
+  T.jutsu("terra_decapitacao", "Decapitação Subterrânea", "🕳️", "B", "Aprisionamento", 0, 5, ["terra_punho"], 12, 8, "Você mergulha no solo e puxa o alvo para baixo da terra: ele fica preso ao chão, atordoado e sem poder fugir."),
+  T.pass("terra_peso", "Peso da Montanha", "🏔️", "Aprisionamento", -1, 5, ["terra_decapitacao"], 18, 12, "Passiva: seus jutsus de Terra causam +55% de dano, e prender alguém ao chão dura 1 rodada a mais."),
+  T.jutsu("terra_pantano", "Pântano do Submundo", "🟫", "A", "Aprisionamento", -1, 6, ["terra_peso"], 25, 18, "Transforma a área num pântano que fica no mapa: quem estiver dentro fica preso ao chão e mais lento."),
+  T.jutsu("terra_dragao", "Projétil do Dragão de Terra", "🐉", "B", "Colosso", 0, 7, ["terra_decapitacao"], 12, 10, "Invoca um dragão de terra que cospe projéteis de lama em linha. Deixa o alvo mais lento."),
+  T.jutsu("terra_biscoito", "Biscoito de Terra Sepulcral", "🥮", "B", "Terraplanagem", 1, 7, ["terra_dragao"], 15, 12, "O usuário enfia as mãos no solo e arranca um amontoado de terra do tamanho de uma casa, ergue o bloco acima da cabeça e o despeja sobre os alvos."),
+  T.jutsu("terra_golem", "Golem Defensor", "🗿", "S", "Ápice", 0, 8, ["terra_dragao"], 35, 24, "O chão se levanta em blocos que se encaixam uns nos outros até um gigante de pedra ficar de pé entre o usuário e o inimigo."),
 ];
 
 // ---------------------------------------------------------------- ÁGUA
 const A = make("AGUA");
 const AGUA: SkillNodeDef[] = [
   A.pass("agua_raiz", "Fluxo Constante", "💧", "Raiz", 0, 0, [], 1, 1, "Passiva sempre ativa: seus jutsus de Água custam 15% menos chakra e causam +15% de dano.", true),
-  A.jutsu("agua_choro", "Choro Celestial", "🩸", "D", "Lâmina", 0, 2, ["agua_raiz"], 1, 1, "Agulhas de água caem de surpresa sobre o alvo e não podem ser esquivadas. Deixa o alvo levemente Encharcado."),
-  A.jutsu("agua_ondas", "Ondas Furiosas", "🌊", "C", "Maré", 0, 4, ["agua_choro"], 5, 4, "Uma massa turbulenta de água avança e se abre à frente do usuário como uma maré violenta."),
-  A.jutsu("agua_clone", "Clone de Água", "🌫️", "B", "Névoa", -1, 4, ["agua_ondas"], 12, 8, "A água se ergue e assume uma cópia líquida do usuário, com corpo translúcido e movimentos fluidos."),
-  A.pass("agua_correnteza", "Correnteza", "💫", "Maré", 1, 4, ["agua_ondas"], 12, 8, "Passiva: seus empurrões e puxões de Água movem o alvo 1 casa a mais."),
-  A.jutsu("agua_prisao", "Prisão de Água", "🫧", "B", "Maré", 1, 5, ["agua_correnteza"], 15, 12, "Prende o alvo dentro de uma esfera de água: ele fica preso ao chão, Encharcado e não consegue fugir."),
-  A.jutsu("agua_trombeta", "Trombeta de Água", "🎺", "C", "Corrente", 0, 6, ["agua_ondas"], 6, 4, "Dispara um jato de água pressurizada. Deixa o alvo Encharcado."),
-  A.pass("agua_condutora", "Maré Condutora", "⚡", "Corrente", -1, 6, ["agua_trombeta"], 18, 12, "Passiva: seus jutsus de Água causam +25% de dano, e o estado Encharcado que você aplica dura 1 rodada a mais."),
-  A.jutsu("agua_cachoeira", "Grande Cachoeira Explosiva", "🏞️", "A", "Corrente", -1, 7, ["agua_condutora"], 25, 18, "Uma parede colossal de água desaba sobre o campo com a força de uma cachoeira liberada de uma só vez."),
-  A.jutsu("agua_amarra", "Amarra de Água", "🌀", "C", "Corrente", 0, 8, ["agua_trombeta"], 6, 4, "Tentáculos de água que puxam o alvo para perto de você e o deixam mais lento."),
-  A.jutsu("agua_louva", "Louva-a-deus de Água", "🦗", "C", "Lâmina", 1, 8, ["agua_amarra"], 8, 6, "Garras de água que aumentam o alcance dos seus golpes. Causa Sangramento."),
-  A.pass("agua_fio", "Fio d'Água", "🪡", "Lâmina", 1, 9, ["agua_louva"], 18, 12, "Passiva: seus jutsus de Água causam +50% de dano contra alvos Encharcados."),
-  A.jutsu("agua_dragao", "Dragão de Água", "🐉", "B", "Corrente", 0, 10, ["agua_amarra"], 12, 10, "Dragão de água em linha reta: empurra o alvo e o deixa Encharcado. É o ataque principal do elemento."),
-  A.jutsu("agua_muralha", "Técnica da Muralha de Água", "🛡️", "B", "Defesa", 1, 10, ["agua_louva"], 14, 12, "Uma coluna circular de água se ergue e protege o usuário."),
-  A.jutsu("agua_onda", "Grande Onda Explosiva", "🌊", "S", "Ápice", 0, 12, ["agua_dragao"], 35, 24, "Inunda o mapa inteiro: todo o terreno vira água e todos ficam Encharcados. Gasta muito chakra."),
+  A.jutsu("agua_choro", "Choro Celestial", "🩸", "D", "Lâmina", 0, 1, ["agua_raiz"], 1, 1, "Agulhas de água caem de surpresa sobre o alvo e não podem ser esquivadas. Deixa o alvo levemente Encharcado."),
+  A.jutsu("agua_ondas", "Ondas Furiosas", "🌊", "C", "Maré", 0, 2, ["agua_choro"], 5, 4, "Uma massa turbulenta de água avança e se abre à frente do usuário como uma maré violenta."),
+  A.jutsu("agua_clone", "Clone de Água", "🌫️", "B", "Névoa", -1, 2, ["agua_ondas"], 12, 8, "A água se ergue e assume uma cópia líquida do usuário, com corpo translúcido e movimentos fluidos."),
+  A.pass("agua_correnteza", "Correnteza", "💫", "Maré", 1, 2, ["agua_ondas"], 12, 8, "Passiva: seus empurrões e puxões de Água movem o alvo 1 casa a mais."),
+  A.jutsu("agua_prisao", "Prisão de Água", "🫧", "B", "Maré", 1, 3, ["agua_correnteza"], 15, 12, "Prende o alvo dentro de uma esfera de água: ele fica preso ao chão, Encharcado e não consegue fugir."),
+  A.jutsu("agua_trombeta", "Trombeta de Água", "🎺", "C", "Corrente", 0, 4, ["agua_ondas"], 6, 4, "Dispara um jato de água pressurizada. Deixa o alvo Encharcado."),
+  A.pass("agua_condutora", "Maré Condutora", "⚡", "Corrente", -1, 4, ["agua_trombeta"], 18, 12, "Passiva: seus jutsus de Água causam +25% de dano, e o estado Encharcado que você aplica dura 1 rodada a mais."),
+  A.jutsu("agua_cachoeira", "Grande Cachoeira Explosiva", "🏞️", "A", "Corrente", -1, 5, ["agua_condutora"], 25, 18, "Uma parede colossal de água desaba sobre o campo com a força de uma cachoeira liberada de uma só vez."),
+  A.jutsu("agua_amarra", "Amarra de Água", "🌀", "C", "Corrente", 0, 6, ["agua_trombeta"], 6, 4, "Tentáculos de água que puxam o alvo para perto de você e o deixam mais lento."),
+  A.jutsu("agua_louva", "Louva-a-deus de Água", "🦗", "C", "Lâmina", 1, 6, ["agua_amarra"], 8, 6, "A água escorre pelos braços e endurece em duas lâminas curvas, compridas como as patas dianteiras de um louva-a-deus."),
+  A.pass("agua_fio", "Fio d'Água", "🪡", "Lâmina", 1, 7, ["agua_louva"], 18, 12, "Passiva: seus jutsus de Água causam +50% de dano contra alvos Encharcados."),
+  A.jutsu("agua_dragao", "Dragão de Água", "🐉", "B", "Corrente", 0, 8, ["agua_amarra"], 12, 10, "Dragão de água em linha reta: empurra o alvo e o deixa Encharcado. É o ataque principal do elemento."),
+  A.jutsu("agua_muralha", "Técnica da Muralha de Água", "🛡️", "B", "Defesa", 1, 8, ["agua_louva"], 14, 12, "Uma coluna circular de água se ergue e protege o usuário."),
+  A.jutsu("agua_onda", "Grande Onda Explosiva", "🌊", "S", "Ápice", 0, 9, ["agua_dragao"], 35, 24, "Inunda o mapa inteiro: todo o terreno vira água e todos ficam Encharcados. Gasta muito chakra."),
 ];
 
 // ---------------------------------------------------------------- VENTO
 const V = make("VENTO");
 const VENTO: SkillNodeDef[] = [
   V.pass("vento_raiz", "Fio de Navalha", "🌪️", "Raiz", 0, 0, [], 1, 1, "Passiva sempre ativa: seus jutsus de Vento causam +30% de dano e cortam 20% da redução de quem bloqueia ou apara.", true),
-  V.jutsu("vento_palma", "Palma do Vendaval Violento", "🖐️", "C", "Corte", 0, 2, ["vento_raiz"], 1, 3, "Rajada de vento comprimido em cone que empurra os alvos para trás e corta na passagem, causando Sangramento."),
-  V.jutsu("vento_bestial", "Palma da Onda Bestial", "🌊", "B", "Corte", 1, 2, ["vento_palma"], 12, 10, "Uma onda cortante avança em leque pelo campo."),
-  V.pass("vento_corte", "Corte Profundo", "🩸", "Corte", 1, 3, ["vento_bestial"], 18, 12, "Passiva: seus jutsus de Vento causam +55% de dano, e seu Sangramento dura 1 rodada a mais."),
-  V.jutsu("vento_destruicao", "Grande Destruição", "💨", "C", "Vendaval", 0, 4, ["vento_palma"], 5, 5, "Rajada frontal forte que empurra o alvo 3 casas para trás."),
-  V.jutsu("vento_danca", "Dança da Dispersão de Flor", "🌸", "B", "Dispersão", 1, 4, ["vento_destruicao"], 12, 10, "Turbilhão de pétalas: causa dano em área, empurra os alvos 2 casas e cega quem for atingido, reduzindo a defesa deles."),
-  V.pass("vento_vacuo", "Vácuo Cortante", "🌀", "Vendaval", -1, 4, ["vento_destruicao"], 18, 12, "Passiva: alvo empurrado contra uma parede ou obstáculo toma +15 de dano de impacto."),
-  V.pass("vento_brasa", "Vento em Brasa", "🔥", "Vendaval", -1, 5, ["vento_vacuo"], 18, 12, "Passiva: quando seu vento passa por chamas, ele espalha o fogo: causa dano extra e passa 1 acúmulo de Queimadura para quem estiver ao lado. (Combo Fogo → Vento)"),
-  V.jutsu("vento_lamina", "Lâmina de Vento", "🗡️", "B", "Precisão", 0, 6, ["vento_destruicao"], 12, 10, "Lâmina de vento invisível que não pode ser esquivada. Causa Sangramento."),
-  V.jutsu("vento_cortante", "Vento Cortante", "✂️", "B", "Lâmina Fantasma", -1, 6, ["vento_lamina"], 14, 12, "Rajada afiada focada em um único alvo: não pode ser esquivada, causa dano alto e 2 acúmulos de Sangramento."),
-  V.pass("vento_alcance", "Alcance Estendido", "📏", "Precisão", 1, 6, ["vento_lamina"], 18, 12, "Passiva: +2 casas de alcance nos seus jutsus de Vento em linha reta."),
-  V.jutsu("vento_pressao", "Pressão Danosa", "🌀", "A", "Precisão", 1, 7, ["vento_alcance"], 22, 16, "Furacão que explode numa área grande e reduz a defesa de todos os atingidos."),
-  V.jutsu("vento_vacuo_ondas", "Ondas Consecutivas do Vácuo", "🌬️", "S", "Ápice", 0, 8, ["vento_lamina"], 35, 24, "Dispara várias ondas de vácuo seguidas e atinge vários alvos. É Inevitável. Gasta muito chakra."),
+  V.jutsu("vento_palma", "Palma do Vendaval Violento", "🖐️", "C", "Corte", 0, 1, ["vento_raiz"], 1, 3, "O chakra vira vento entre as palmas e o usuário bate as mãos uma na outra: o ar comprimido escapa de uma vez, numa rajada que sai rasante e violenta."),
+  V.jutsu("vento_bestial", "Palma da Onda Bestial", "🌊", "B", "Corte", 1, 1, ["vento_palma"], 12, 10, "Um balançar largo dos braços solta uma onda de chakra afiada, que se abre em leque enquanto avança pelo campo."),
+  V.pass("vento_corte", "Corte Profundo", "🩸", "Corte", 1, 2, ["vento_bestial"], 18, 12, "Passiva: seus jutsus de Vento causam +55% de dano, e seu Sangramento dura 1 rodada a mais."),
+  V.jutsu("vento_destruicao", "Grande Destruição", "💨", "C", "Vendaval", 0, 3, ["vento_palma"], 5, 5, "O usuário enche o peito e sopra uma parede de ar que varre tudo pela frente, levantando poeira e arrancando o inimigo do lugar onde estava."),
+  V.jutsu("vento_danca", "Dança da Dispersão de Flor", "🌸", "B", "Dispersão", 1, 3, ["vento_destruicao"], 12, 10, "Um turbilhão de pétalas sobe em espiral e gira cada vez mais rápido em volta dos alvos, até ninguém enxergar mais nada além do rodopio."),
+  V.pass("vento_vacuo", "Vácuo Cortante", "🌀", "Vendaval", -1, 3, ["vento_destruicao"], 18, 12, "Passiva: alvo empurrado contra uma parede ou obstáculo toma +15 de dano de impacto."),
+  V.pass("vento_brasa", "Vento em Brasa", "🔥", "Vendaval", -1, 4, ["vento_vacuo"], 18, 12, "Passiva: quando seu vento passa por chamas, ele espalha o fogo: causa dano extra e passa 1 acúmulo de Queimadura para quem estiver ao lado. (Combo Fogo → Vento)"),
+  V.jutsu("vento_lamina", "Lâmina de Vento", "🗡️", "B", "Precisão", 0, 5, ["vento_destruicao"], 12, 10, "O ar se afina até virar um fio invisível: não há o que ver chegando, só o corte que já passou."),
+  V.jutsu("vento_cortante", "Vento Cortante", "✂️", "B", "Lâmina Fantasma", -1, 5, ["vento_lamina"], 14, 12, "O chakra de vento sai concentrado numa rajada tão afiada e veloz que atravessa a vítima antes de ela conseguir reagir."),
+  V.pass("vento_alcance", "Alcance Estendido", "📏", "Precisão", 1, 5, ["vento_lamina"], 18, 12, "Passiva: +2 casas de alcance nos seus jutsus de Vento em linha reta."),
+  V.jutsu("vento_pressao", "Pressão Danosa", "🌀", "A", "Precisão", 1, 6, ["vento_alcance"], 22, 16, "Furacão que explode numa área grande e reduz a defesa de todos os atingidos."),
+  V.jutsu("vento_vacuo_ondas", "Ondas Consecutivas do Vácuo", "🌬️", "S", "Ápice", 0, 7, ["vento_lamina"], 35, 24, "Dispara várias ondas de vácuo seguidas e atinge vários alvos. É Inevitável. Gasta muito chakra."),
 ];
 
 // ---------------------------------------------------------------- RAIO
 const R = make("RAIO");
 const RAIO: SkillNodeDef[] = [
   R.pass("raio_raiz", "Sinapse Acelerada", "⚡", "Raiz", 0, 0, [], 1, 1, "Passiva sempre ativa: você esquiva mais de Ninjutsu e age mais cedo na ordem do turno.", true),
-  R.jutsu("raio_esfera", "Esfera de Relâmpago", "🔵", "C", "Descarga", 0, 2, ["raio_raiz"], 1, 3, "Cria esferas de relâmpago e lança numa área pequena. 25% de chance de Atordoar."),
-  R.jutsu("raio_ataque", "Ataque de Raio", "🔌", "C", "Corrente", -1, 2, ["raio_esfera"], 5, 4, "Dispara um fluxo elétrico contínuo em linha longa que atravessa obstáculos, árvores e fumaça. Pode Atordoar."),
-  R.pass("raio_sobrecarga", "Sobrecarga", "🔋", "Descarga", 1, 2, ["raio_esfera"], 12, 10, "Passiva: +20% de chance dos seus jutsus de Raio Atordoarem o alvo."),
-  R.jutsu("raio_pilares", "Prisão dos Quatro Pilares", "🏛️", "A", "Descarga", 1, 3, ["raio_sobrecarga"], 22, 16, "Ergue 4 pilares de pedra em volta do alvo e eletrocuta: Atordoamento longo, alvo preso ao chão e sem poder fugir."),
-  R.jutsu("raio_clone", "Clone de Raio", "👥", "B", "Descarga", 0, 4, ["raio_esfera"], 12, 8, "Invoca um clone elétrico. Quando é ferido, ele se desfaz numa descarga e Atordoa quem o atacou."),
-  R.jutsu("raio_armadura", "Armadura do Ataque Relâmpago", "🛡️", "B", "Tempestade", -1, 4, ["raio_clone"], 12, 10, "Cobre seu corpo com uma descarga elétrica: você fica mais rápido, esquiva mais, recebe +25 pontos percentuais na chance de fuga, eletrocuta quem encostar e se solta de amarras e armadilhas de metal."),
-  R.pass("raio_nuvens", "Nuvens de Tempestade", "⛈️", "Tempestade", -1, 5, ["raio_armadura"], 25, 18, "Passiva: libera o uso do Kirin sem depender de chamas no campo, e alvos Encharcados passam a tomar +75% de dano de Raio."),
-  R.jutsu("raio_assassinato", "Assassinato Eletromagnético", "🧲", "B", "Perfuração", 0, 6, ["raio_clone"], 15, 12, "Envia eletricidade através de um condutor (água ou metal): atinge em cadeia todos os alvos Encharcados e os Atordoa com certeza."),
-  R.pass("raio_perfurante", "Ponta Perfurante", "📍", "Perfuração", 1, 6, ["raio_assassinato"], 20, 14, "Passiva: seus jutsus de Raio ignoram a Barreira do alvo e causam +25% de dano em quem estiver abaixo de 30% de vida."),
-  R.jutsu("raio_pararaios", "Para-Raios", "🗼", "A", "Perfuração", 1, 7, ["raio_perfurante"], 22, 16, "Você ergue o braço e descarrega um raio que percorre o seu corpo até o alvo em um único impacto."),
-  R.jutsu("raio_kirin", "Kirin", "🌩️", "S", "Ápice", 0, 8, ["raio_assassinato"], 35, 24, "Guia um raio de verdade das nuvens de tempestade: causa dano enorme em área e é Inevitável. Precisa de nuvens de tempestade (criadas por jutsus de Fogo) e só pode ser usado 1 vez por combate."),
+  R.jutsu("raio_esfera", "Esfera de Relâmpago", "🔵", "C", "Descarga", 0, 1, ["raio_raiz"], 1, 3, "Bolas de relâmpago se formam girando em volta das mãos do usuário e saem disparadas uma atrás da outra contra o inimigo."),
+  R.jutsu("raio_ataque", "Ataque de Raio", "🔌", "C", "Corrente", -1, 1, ["raio_esfera"], 5, 4, "Dispara um fluxo elétrico contínuo em linha longa que atravessa obstáculos, árvores e fumaça. Pode Atordoar."),
+  R.pass("raio_sobrecarga", "Sobrecarga", "🔋", "Descarga", 1, 1, ["raio_esfera"], 12, 10, "Passiva: +20% de chance dos seus jutsus de Raio Atordoarem o alvo."),
+  R.jutsu("raio_pilares", "Prisão dos Quatro Pilares", "🏛️", "A", "Descarga", 1, 2, ["raio_sobrecarga"], 22, 16, "Ergue 4 pilares de pedra em volta do alvo e eletrocuta: Atordoamento longo, alvo preso ao chão e sem poder fugir."),
+  R.jutsu("raio_clone", "Clone de Raio", "👥", "B", "Descarga", 0, 3, ["raio_esfera"], 12, 8, "Invoca um clone elétrico. Quando é ferido, ele se desfaz numa descarga e Atordoa quem o atacou."),
+  R.jutsu("raio_armadura", "Armadura do Ataque Relâmpago", "🛡️", "B", "Tempestade", -1, 3, ["raio_clone"], 12, 10, "O chakra acumulado se solta de uma vez e envolve o corpo inteiro numa casca de eletricidade crepitante, que salta para qualquer metal por perto — corrente, shuriken, fio de aço."),
+  R.pass("raio_nuvens", "Nuvens de Tempestade", "⛈️", "Tempestade", -1, 4, ["raio_armadura"], 25, 18, "Passiva: libera o uso do Kirin sem depender de chamas no campo, e alvos Encharcados passam a tomar +75% de dano de Raio."),
+  R.jutsu("raio_assassinato", "Assassinato Eletromagnético", "🧲", "B", "Perfuração", 0, 5, ["raio_clone"], 15, 12, "Envia eletricidade através de um condutor (água ou metal): atinge em cadeia todos os alvos Encharcados e os Atordoa com certeza."),
+  R.pass("raio_perfurante", "Ponta Perfurante", "📍", "Perfuração", 1, 5, ["raio_assassinato"], 20, 14, "Passiva: seus jutsus de Raio ignoram a Barreira do alvo e causam +25% de dano em quem estiver abaixo de 30% de vida."),
+  R.jutsu("raio_pararaios", "Para-Raios", "🗼", "A", "Perfuração", 1, 6, ["raio_perfurante"], 22, 16, "Você ergue o braço e descarrega um raio que percorre o seu corpo até o alvo em um único impacto."),
+  R.jutsu("raio_kirin", "Kirin", "🌩️", "S", "Ápice", 0, 7, ["raio_assassinato"], 35, 24, "Guia um raio de verdade das nuvens de tempestade: causa dano enorme em área e é Inevitável. Precisa de nuvens de tempestade (criadas por jutsus de Fogo) e só pode ser usado 1 vez por combate."),
 ];
 
 // ---------------------------------------------------------------- CRISTAL (KG)
@@ -249,20 +249,20 @@ const RAIO: SkillNodeDef[] = [
 const C = make("CRISTAL");
 const CRISTAL: SkillNodeDef[] = [
   C.pass("cristal_raiz", "Estrutura Cristalina", "💎", "Raiz", 0, 0, [], 1, 1, "Passiva sempre ativa: todos os seus jutsus de Cristal causam +35% de dano.", true),
-  C.jutsu("cristal_shuriken", "Shuriken de Cristal", "❇️", "C", "Agulha", 0, 2, ["cristal_raiz"], 1, 4, "Lança agulhas de cristal afiadas em linha. Ao acertar, os cristais se fixam no corpo do alvo (Cristalizado) e podem prendê-lo no lugar."),
-  C.jutsu("cristal_espinhos", "Espinhos Crescentes de Cristal", "🌵", "B", "Agulha", -1, 2, ["cristal_shuriken"], 8, 8, "Faz espinhos de cristal crescerem continuamente na direção do alvo. Cravam 1 acúmulo de Cristalizado e deixam o caminho bloqueado."),
-  C.pass("cristal_estilhaco", "Faceta Cortante", "🔷", "Agulha", -1, 3, ["cristal_espinhos"], 14, 12, "Passiva: cada acerto seu de Cristal crava 1 acúmulo de Cristalizado a mais. Na prática, o casulo fecha em 2 golpes em vez de 4."),
-  C.jutsu("cristal_prisao", "Prisão Cristal de Jade", "⛓️", "B", "Casulo", 0, 4, ["cristal_shuriken"], 10, 10, "Envolve o adversário em cristais: crava 2 acúmulos, prende no lugar e impede a fuga. Só funciona em uma única vítima."),
-  C.jutsu("cristal_clone", "Clone Cristal de Jade", "🪞", "B", "Espelho", 1, 4, ["cristal_prisao"], 12, 10, "Ergue um espelho hexagonal de cristal que reflete sua imagem e cria um clone. Ao ser destruído, ele se despedaça e crava cristais em quem estiver ao lado."),
-  C.jutsu("cristal_barragem", "Barragem de Cristais de Jade", "💠", "B", "Casulo", 0, 5, ["cristal_prisao"], 15, 12, "Dispara uma enxurrada de cristais resistentes em linha reta. Os estilhaços rasgam o alvo e o deixam Sangrando."),
-  C.pass("cristal_rede", "Rede Cristalina", "🕸️", "Espelho", 1, 5, ["cristal_clone"], 18, 14, "Passiva: as paredes e prisões de cristal que você cria duram 1 rodada a mais, e o seu Cristalizado também."),
-  C.jutsu("cristal_danca", "Dança Selvagem da Shuriken Hexagonal", "🌟", "A", "Faceta", -1, 6, ["cristal_estilhaco"], 22, 18, "Dispara uma nuvem de shurikens hexagonais contra vários inimigos de uma vez. São tantas que não há como desviar."),
-  C.jutsu("cristal_shuriken_gigante", "Shuriken Gigante Hexagonal", "❄️", "A", "Faceta", -1, 7, ["cristal_danca"], 26, 20, "Forma uma shuriken imensa com o desenho de um floco de neve e a arremessa. É Inevitável e corta tudo na linha."),
-  C.jutsu("cristal_dragao", "Dragão Cadente do Cristal Destruidor", "🐉", "A", "Casulo", 0, 6, ["cristal_barragem"], 25, 20, "Cristaliza a matéria da área e a molda num dragão. Ele cristaliza o chakra de quem atinge: os alvos ficam sem poder usar Ninjutsu por 2 rodadas."),
-  C.pass("cristal_refracao", "Refração", "🔮", "Prisma", 1, 6, ["cristal_rede"], 22, 16, "Passiva: a luz presa nas facetas atrapalha a mira de quem lança Ninjutsu em você. Ganha 8 pontos percentuais de esquiva contra Ninjutsu."),
-  C.jutsu("cristal_fio_luz", "Fio de Luz", "🌈", "A", "Prisma", 1, 7, ["cristal_refracao"], 28, 22, "Forma um prisma de luz ao seu redor. Por 2 rodadas o Ninjutsu recebido cai 60% e parte volta no atacante. Em troca, você fica totalmente imóvel e o corpo a corpo passa inteiro."),
-  C.pass("cristal_faceta", "Faceta Perfeita", "✨", "Ápice", 0, 7, ["cristal_dragao"], 30, 22, "Passiva: seus jutsus de Cristal causam +50% de dano."),
-  C.jutsu("cristal_oito_paredes", "Oito Paredes de Cristal de Jade", "🏯", "S", "Ápice", 0, 8, ["cristal_faceta"], 38, 28, "Fecha uma área imensa em oito paredes de cristal. Crava 3 acúmulos de Cristalizado em todos os atingidos, o bastante para selar quem já tiver um cristal no corpo. Gasta quase todo o chakra."),
+  C.jutsu("cristal_shuriken", "Shuriken de Cristal", "❇️", "C", "Agulha", 0, 1, ["cristal_raiz"], 1, 4, "Lança agulhas de cristal afiadas em linha. Ao acertar, os cristais se fixam no corpo do alvo (Cristalizado) e podem prendê-lo no lugar."),
+  C.jutsu("cristal_espinhos", "Espinhos Crescentes de Cristal", "🌵", "B", "Agulha", -1, 1, ["cristal_shuriken"], 8, 8, "Faz espinhos de cristal crescerem continuamente na direção do alvo. Cravam 1 acúmulo de Cristalizado e deixam o caminho bloqueado."),
+  C.pass("cristal_estilhaco", "Faceta Cortante", "🔷", "Agulha", -1, 2, ["cristal_espinhos"], 14, 12, "Passiva: cada acerto seu de Cristal crava 1 acúmulo de Cristalizado a mais. Na prática, o casulo fecha em 2 golpes em vez de 4."),
+  C.jutsu("cristal_prisao", "Prisão Cristal de Jade", "⛓️", "B", "Casulo", 0, 3, ["cristal_shuriken"], 10, 10, "Envolve o adversário em cristais: crava 2 acúmulos, prende no lugar e impede a fuga. Só funciona em uma única vítima."),
+  C.jutsu("cristal_clone", "Clone Cristal de Jade", "🪞", "B", "Espelho", 1, 3, ["cristal_prisao"], 12, 10, "Ergue um espelho hexagonal de cristal que reflete sua imagem e cria um clone. Ao ser destruído, ele se despedaça e crava cristais em quem estiver ao lado."),
+  C.jutsu("cristal_barragem", "Barragem de Cristais de Jade", "💠", "B", "Casulo", 0, 4, ["cristal_prisao"], 15, 12, "Dispara uma enxurrada de cristais resistentes em linha reta. Os estilhaços rasgam o alvo e o deixam Sangrando."),
+  C.pass("cristal_rede", "Rede Cristalina", "🕸️", "Espelho", 1, 4, ["cristal_clone"], 18, 14, "Passiva: as paredes e prisões de cristal que você cria duram 1 rodada a mais, e o seu Cristalizado também."),
+  C.jutsu("cristal_danca", "Dança Selvagem da Shuriken Hexagonal", "🌟", "A", "Faceta", -1, 5, ["cristal_estilhaco"], 22, 18, "Dispara uma nuvem de shurikens hexagonais contra vários inimigos de uma vez. São tantas que não há como desviar."),
+  C.jutsu("cristal_shuriken_gigante", "Shuriken Gigante Hexagonal", "❄️", "A", "Faceta", -1, 6, ["cristal_danca"], 26, 20, "Forma uma shuriken imensa com o desenho de um floco de neve e a arremessa. É Inevitável e corta tudo na linha."),
+  C.jutsu("cristal_dragao", "Dragão Cadente do Cristal Destruidor", "🐉", "A", "Casulo", 0, 5, ["cristal_barragem"], 25, 20, "Cristaliza a matéria da área e a molda num dragão. Ele cristaliza o chakra de quem atinge: os alvos ficam sem poder usar Ninjutsu por 2 rodadas."),
+  C.pass("cristal_refracao", "Refração", "🔮", "Prisma", 1, 5, ["cristal_rede"], 22, 16, "Passiva: a luz presa nas facetas atrapalha a mira de quem lança Ninjutsu em você. Ganha 8 pontos percentuais de esquiva contra Ninjutsu."),
+  C.jutsu("cristal_fio_luz", "Fio de Luz", "🌈", "A", "Prisma", 1, 6, ["cristal_refracao"], 28, 22, "Forma um prisma de luz ao seu redor. Por 2 rodadas o Ninjutsu recebido cai 60% e parte volta no atacante. Em troca, você fica totalmente imóvel e o corpo a corpo passa inteiro."),
+  C.pass("cristal_faceta", "Faceta Perfeita", "✨", "Ápice", 0, 6, ["cristal_dragao"], 30, 22, "Passiva: seus jutsus de Cristal causam +50% de dano."),
+  C.jutsu("cristal_oito_paredes", "Oito Paredes de Cristal de Jade", "🏯", "S", "Ápice", 0, 7, ["cristal_faceta"], 38, 28, "Fecha uma área imensa em oito paredes de cristal. Crava 3 acúmulos de Cristalizado em todos os atingidos, o bastante para selar quem já tiver um cristal no corpo. Gasta quase todo o chakra."),
 ];
 
 // ----------------------------------------------------------------- VAPOR (KG)
@@ -280,8 +280,8 @@ const VAPOR: SkillNodeDef[] = [
   VP.pass("vapor_condensacao", "Condensação", "💧", "Névoa", 1, 3, ["vapor_nevoa"], 13, 11, "Passiva: a Corrosão que você aplica dura 1 rodada a mais."),
   VP.jutsu("vapor_chute", "Chute em Propulsão", "🦵", "A", "Propulsão", 0, 4, ["vapor_punho"], 16, 15, "Versão aprimorada do Punho em Propulsão: mais velocidade e poder de impacto usando a força das pernas junto da propulsão do estilo Ebulição. Crava Corrosão com força total."),
   VP.pass("vapor_pressurizacao", "Pressurização", "🌡️", "Propulsão", -1, 4, ["vapor_punho"], 14, 12, "Passiva: seus golpes corpo a corpo de Vapor custam 15% menos chakra."),
-  VP.pass("vapor_instinto_termal", "Instinto Térmico", "🔥", "Propulsão", -1, 6, ["vapor_pressurizacao"], 20, 16, "Passiva: seus golpes de Vapor perfuram 20% da redução de quem bloqueia ou apara."),
-  VP.pass("vapor_ebulicao_total", "Ebulição Total", "♨️", "Ápice", 0, 7, ["vapor_chute"], 30, 22, "Passiva: seus jutsus de Vapor causam +50% de dano."),
+  VP.pass("vapor_instinto_termal", "Instinto Térmico", "🔥", "Propulsão", -1, 5, ["vapor_pressurizacao"], 20, 16, "Passiva: seus golpes de Vapor perfuram 20% da redução de quem bloqueia ou apara."),
+  VP.pass("vapor_ebulicao_total", "Ebulição Total", "♨️", "Ápice", 0, 6, ["vapor_chute"], 30, 22, "Passiva: seus jutsus de Vapor causam +50% de dano."),
 ];
 
 // ----------------------------------------------------------------- CALOR (KG)
@@ -298,8 +298,8 @@ const CALOR: SkillNodeDef[] = [
   CL.pass("calor_ressecamento", "Ressecamento", "🏜️", "Calor", 1, 3, ["calor_disparo"], 13, 11, "Passiva: a Desidratação que você aplica dura 1 rodada a mais."),
   CL.jutsu("calor_assassinato", "Assassinato de Calor Extremo", "☀️", "A", "Miragem", 0, 4, ["calor_esfera"], 16, 15, "Envolve a área ao redor do alvo num calor imenso, causando queimaduras graves em todos que estiverem perto."),
   CL.pass("calor_ondas_termicas", "Ondas Térmicas", "🌫️", "Calor", -1, 4, ["calor_esfera"], 14, 12, "Passiva: seus jutsus de Calor em área custam 15% menos chakra."),
-  CL.pass("calor_pele_rachada", "Pele Rachada", "🏔️", "Calor", -1, 6, ["calor_ondas_termicas"], 20, 16, "Passiva: seus jutsus de Calor perfuram 20% da redução de quem bloqueia ou apara."),
-  CL.pass("calor_combustao_interna", "Combustão Interna", "🔥", "Ápice", 0, 7, ["calor_assassinato"], 30, 22, "Passiva: seus jutsus de Calor causam +50% de dano."),
+  CL.pass("calor_pele_rachada", "Pele Rachada", "🏔️", "Calor", -1, 5, ["calor_ondas_termicas"], 20, 16, "Passiva: seus jutsus de Calor perfuram 20% da redução de quem bloqueia ou apara."),
+  CL.pass("calor_combustao_interna", "Combustão Interna", "🔥", "Ápice", 0, 6, ["calor_assassinato"], 30, 22, "Passiva: seus jutsus de Calor causam +50% de dano."),
 ];
 
 // ----------------------------------------------------------------- LAVA (KG)
@@ -319,9 +319,9 @@ const LAVA: SkillNodeDef[] = [
   LV.pass("lava_calor_residual", "Calor Residual", "♨️", "Lava", 1, 3, ["lava_balas"], 13, 11, "Passiva: o Magma que você aplica dura 1 rodada a mais."),
   LV.jutsu("lava_rio", "Rio de Rochas Flamejantes", "🪨", "A", "Vulcão", 0, 4, ["lava_solucao"], 16, 15, "Expele um rio de lava que se solidifica em múltiplos pedregulhos disparados com força tremenda, empurrando o alvo e cravando Magma."),
   LV.pass("lava_crosta", "Crosta Endurecida", "🧱", "Lava", -1, 4, ["lava_solucao"], 14, 12, "Passiva: seus jutsus de Lava em linha reta custam 15% menos chakra."),
-  LV.pass("lava_pele_basaltica", "Pele Basáltica", "🪨", "Lava", -1, 6, ["lava_crosta"], 20, 16, "Passiva: seus jutsus de Lava perfuram 20% da redução de quem bloqueia ou apara."),
-  LV.pass("lava_apice", "Coração do Vulcão", "🔥", "Ápice", 0, 7, ["lava_rio"], 30, 22, "Passiva: seus jutsus de Lava causam +50% de dano."),
-  LV.jutsu("lava_huaguo", "Monte Huaguo", "🌺", "S", "Ápice", 0, 8, ["lava_apice"], 38, 28, "Cria um pequeno vulcão que explode violentamente, espalhando rocha derretida em todas as direções como uma flor gigante — o bastante para endurecer na hora qualquer Magma já acumulado no alvo."),
+  LV.pass("lava_pele_basaltica", "Pele Basáltica", "🪨", "Lava", -1, 5, ["lava_crosta"], 20, 16, "Passiva: seus jutsus de Lava perfuram 20% da redução de quem bloqueia ou apara."),
+  LV.pass("lava_apice", "Coração do Vulcão", "🔥", "Ápice", 0, 6, ["lava_rio"], 30, 22, "Passiva: seus jutsus de Lava causam +50% de dano."),
+  LV.jutsu("lava_huaguo", "Monte Huaguo", "🌺", "S", "Ápice", 0, 7, ["lava_apice"], 38, 28, "Cria um pequeno vulcão que explode violentamente, espalhando rocha derretida em todas as direções como uma flor gigante — o bastante para endurecer na hora qualquer Magma já acumulado no alvo."),
 ];
 
 // -------------------------------------------------------------- EXPLOSAO (KG)
@@ -340,9 +340,9 @@ const EXPLOSAO: SkillNodeDef[] = [
   EX.pass("explosao_polvora", "Pólvora Refinada", "⚫", "Explosão", 1, 3, ["explosao_defensiva"], 13, 11, "Passiva: seus jutsus de Explosão têm 15 pontos percentuais a mais de chance de plantar Minado."),
   EX.jutsu("explosao_impacto", "Técnica da Explosão: Impacto", "👊", "A", "Onda de Choque", 0, 4, ["explosao_cortina"], 16, 15, "Desfere um soco no solo e libera chakra explosivo numa onda de choque, lançando detritos que ferem os oponentes na área e os deixam sem equilíbrio."),
   EX.pass("explosao_fragmentacao", "Fragmentação", "💢", "Explosão", -1, 4, ["explosao_cortina"], 14, 12, "Passiva: seus jutsus de Explosão em área custam 15% menos chakra."),
-  EX.pass("explosao_blindagem", "Blindagem Explosiva", "🛡️", "Explosão", -1, 6, ["explosao_fragmentacao"], 20, 16, "Passiva: o dano dos seus jutsus de Explosão ignora a Barreira do alvo."),
-  EX.pass("explosao_apice", "Estilo Explosão Pleno", "🔥", "Ápice", 0, 7, ["explosao_impacto"], 30, 22, "Passiva: seus jutsus de Explosão causam +50% de dano."),
-  EX.jutsu("explosao_mina", "Técnica do Punho de Mina Terrestre", "⛏️", "S", "Ápice", 0, 8, ["explosao_apice"], 38, 28, "Usa o Estilo Explosão para plantar uma carga no ponto de contato físico. O golpe inicial já dói, mas duas rodadas depois uma explosão enorme detona no local."),
+  EX.pass("explosao_blindagem", "Blindagem Explosiva", "🛡️", "Explosão", -1, 5, ["explosao_fragmentacao"], 20, 16, "Passiva: o dano dos seus jutsus de Explosão ignora a Barreira do alvo."),
+  EX.pass("explosao_apice", "Estilo Explosão Pleno", "🔥", "Ápice", 0, 6, ["explosao_impacto"], 30, 22, "Passiva: seus jutsus de Explosão causam +50% de dano."),
+  EX.jutsu("explosao_mina", "Técnica do Punho de Mina Terrestre", "⛏️", "S", "Ápice", 0, 7, ["explosao_apice"], 38, 28, "Usa o Estilo Explosão para plantar uma carga no ponto de contato físico. O golpe inicial já dói, mas duas rodadas depois uma explosão enorme detona no local."),
 ];
 
 // -------------------------------------------------------------- POEIRA (KG)
@@ -399,7 +399,7 @@ const GELO: SkillNodeDef[] = [
   GL.pass("gelo_raiz", "Sangue de Gelo", "❄️", "Raiz", 0, 0, [], 1, 1, "Passiva sempre ativa: todos os seus jutsus de Gelo causam +35% de dano.", true),
   GL.jutsu("gelo_agulhas", "Agulhas de Gelo", "🧊", "C", "Gelo", 0, 1, ["gelo_raiz"], 4, 4, "Congela a umidade do ar em agulhas afiadas e as dispara em linha reta contra o alvo, cortando fundo."),
   GL.jutsu("gelo_espelho", "Espelho Demoníaco de Gelo Fino", "🪞", "B", "Gelo", 0, 2, ["gelo_agulhas"], 9, 8, "Cria um único espelho de gelo fino e ataca de dentro dele com agulhas em vários ângulos ao mesmo tempo. O alvo, distraído tentando achar de onde vem o golpe, baixa a guarda."),
-  GL.jutsu("gelo_domo", "Domo de Iceberg", "🏔️", "B", "Defesa", 1, 2, ["gelo_agulhas"], 9, 8, "Ergue rapidamente uma cúpula de gelo ao seu redor: ganha Barreira na hora, e qualquer inimigo que já estiver corpo a corpo fica preso lá dentro com você, sem conseguir sair. A prisão dura enquanto a Barreira aguentar — se ela quebrar antes, quem estava preso se solta na hora."),
+  GL.jutsu("gelo_domo", "Domo de Iceberg", "🏔️", "B", "Defesa", 1, 2, ["gelo_agulhas"], 9, 8, "A umidade do ar congela num estalo e sobe em placas que se fecham por cima, trancando o usuário e quem estiver ao lado dele sob uma abóbada de gelo."),
   GL.pass("gelo_presenca", "Presença Silenciosa", "🌫️", "Gelo", 0, 3, ["gelo_espelho"], 13, 11, "Passiva sempre ativa: os espelhos e reflexos gélidos confundem qualquer um. Seus jutsus de Gelo têm +15 pontos percentuais de chance de deixar o alvo com a guarda baixa (Defesa Reduzida), e a Lentidão que você aplica dura 1 rodada a mais."),
   GL.pass("gelo_reflexos", "Reflexos Gélidos", "💠", "Defesa", 1, 3, ["gelo_domo"], 13, 11, "Passiva sempre ativa: anos refletindo o próprio corpo no gelo afiam os reflexos. +8 pontos percentuais de esquiva contra qualquer jutsu de Ninjutsu, e seus jutsus de Gelo custam 10% menos chakra."),
   GL.jutsu("gelo_chuva_agulhas", "Chuva de Agulhas Geladas", "🌨️", "A", "Gelo", 0, 4, ["gelo_presenca"], 18, 15, "Multiplica os espelhos e enche a área de agulhas de gelo caindo de todos os ângulos, deixando quem for atingido mais lento pelo frio nos ferimentos."),
@@ -778,6 +778,38 @@ const NODE_ICONS: Record<string, string> = {
   gen_dominio_do_medo: "genjutsu/dominio-do-medo.png",
   gen_dominio_mundo_obscuro: "genjutsu/dominio-do-mundo-obscuro.png",
   gen_visao_inferno: "genjutsu/ilusao-demoniaca-visao-do-inferno.png",
+
+  // ---- Taijutsu (árvore geral de passivas) ----
+  tai_pass_raiz: "taijutsu/disciplina-corporal.png",
+  tai_pass_vigor: "taijutsu/vigor-de-combate.png",
+  tai_pass_passada: "taijutsu/passada-leve.png",
+  tai_pass_passo_silencioso: "taijutsu/passo-silencioso.png",
+  tai_pass_reflexo_evasivo: "taijutsu/reflexo-evasivo.png",
+  tai_pass_corpo_temperado: "taijutsu/corpo-temperado.png",
+  tai_pass_recuperacao: "taijutsu/recuperacao-marcial.png",
+  tai_pass_resistencia_fisica: "taijutsu/resistencia-fisica.png",
+  tai_pass_reserva: "taijutsu/reserva-fisica.png",
+  tai_pass_reserva_profunda: "taijutsu/reserva-fisica-profunda.png",
+  tai_pass_maestria: "taijutsu/maestria-marcial.png",
+
+  // ---- Taijutsu de Agitação ----
+  tai_agitacao_passos: "taijutsu-agitacao/passos-irregulares.png",
+  tai_agitacao_finta: "taijutsu-agitacao/finta-instintiva.png",
+  tai_agitacao_ritmo: "taijutsu-agitacao/ritmo-caotico.png",
+  tai_ken_postura: "taijutsu-agitacao/postura-da-lamina.png",
+  tai_ken_fio: "taijutsu-agitacao/fio-de-aco.png",
+  tai_ken_geometria: "taijutsu-agitacao/geometria-do-corte.png",
+
+  // ---- Assassinato Silencioso ----
+  tai_ocultacao_nevoa: "assassinato-silencioso/tecnica-de-ocultacao-da-nevoa.png",
+  tai_nevoa_primeiro_golpe: "assassinato-silencioso/primeiro-golpe.png",
+  tai_nevoa_ponto_cego: "assassinato-silencioso/ponto-cego.png",
+  tai_nevoa_ofuscante: "assassinato-silencioso/nevoa-ofuscante.png",
+  tai_nevoa_danca: "assassinato-silencioso/danca-da-nevoa.png",
+  tai_nevoa_marca: "assassinato-silencioso/marca-do-alvo.png",
+  tai_nevoa_misericordia: "assassinato-silencioso/golpe-de-misericordia.png",
+  tai_nevoa_saque: "assassinato-silencioso/saque-relampago.png",
+  tai_nevoa_corte: "assassinato-silencioso/corte-decisivo.png",
 };
 for (const [id, file] of Object.entries(NODE_ICONS)) {
   const n = NODE_INDEX.get(id);

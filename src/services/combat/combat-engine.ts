@@ -1451,7 +1451,12 @@ export async function resolveHit(
           // Agitação: fintas e ritmo corporal tiram leitura do alvo. A
           // penalidade pertence ao golpe do atacante, não ao defensor.
           -(atkMods?.dodgePenalty ?? 0) +
-          (physical ? 0 : defenseMods.ninjutsuDodgeBonus) -
+          (physical ? 0 : defenseMods.ninjutsuDodgeBonus) +
+          // esquiva geral (ex: Reflexo Evasivo do Taijutsu): soma sempre,
+          // vale contra qualquer ataque e qualquer reação escolhida —
+          // inclusive Substituição/Hidratação, que já chegam aqui via
+          // reactAb.reactionDodgeBonus acima.
+          defenseMods.dodgeBonus -
           // cada acumulo de cristal trava mais um pouco o corpo do alvo
           crystalDodgePenalty(target.effects),
       });
@@ -1558,7 +1563,7 @@ export async function resolveHit(
     }
     hitIds.add(target.id);
     await setFlag(attacker.id, "attackedTargetIds", [...hitIds]);
-    if (ability.category === "TAIJUTSU" && hasActiveKind(s.terrain, "SMOKE", s.round) && ownedNodes(attacker).includes("tai_nevoa_danca")) {
+    if ((ability.category === "TAIJUTSU" || ability.category === "KENJUTSU") && hasActiveKind(s.terrain, "SMOKE", s.round) && ownedNodes(attacker).includes("tai_nevoa_danca")) {
       await applyEffect(attacker.id, "HASTE", 1, 1);
       logs.push(`🌫️ ${attacker.name} dançou pela névoa e recebeu Aceleração.`);
     }

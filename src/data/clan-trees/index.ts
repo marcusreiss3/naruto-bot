@@ -335,7 +335,7 @@ const HYUUGA: SkillNodeDef[] = [
     [],
     1,
     1,
-    "Passiva sempre ativa: mesmo sem o Byakugan ativado, a visão periférica quase total do clã já ajuda a mirar nos tenketsu certos. Seus jutsus de clã custam 10% menos recurso e têm +10 pontos percentuais de chance de aplicar Bloqueio de Ninjutsu.",
+    "Passiva sempre ativa: mesmo sem o Byakugan ativado, a visão periférica quase total do clã já ajuda a mirar nos tenketsu certos. Seus jutsus de clã causam +45% de dano, custam 10% menos recurso e têm +10 pontos percentuais de chance de aplicar Bloqueio de Ninjutsu.",
     true,
     undefined,
     // a porta de entrada do clã e' o OLHO, nao o punho: raiz e Byakugan saem
@@ -432,7 +432,7 @@ const HYUUGA: SkillNodeDef[] = [
     ["hyuuga_64_palmas"],
     19,
     19,
-    "Versão em dobro de velocidade das 64 Palmas: 80% de chance de bloquear o Ninjutsu do alvo por 2 rodadas e 50% de chance de deixá-lo mais lento por 2 rodadas. Exige o Byakugan ativo.",
+    "O usuário dobra a contagem das 64 Palmas sem perder o ritmo: as mãos somem no ar e cada par de golpes fecha um novo ponto de chakra antes que o adversário registre o anterior. Exige o Byakugan ativo.",
   ),
   H.pass(
     "hyuuga_apice",
@@ -483,7 +483,7 @@ const AKIMICHI: SkillNodeDef[] = [
     [],
     1,
     1,
-    "Passiva sempre ativa: gerações de Akimichi acumulando calorias em força. Seus jutsus de clã causam +30% de dano e empurram o alvo 1 casa a mais.",
+    "Passiva sempre ativa: gerações de Akimichi acumulando calorias em força. Seus jutsus de clã causam +60% de dano e empurram o alvo 1 casa a mais.",
     true,
   ),
   K.jutsu(
@@ -718,7 +718,7 @@ const ABURAME: SkillNodeDef[] = [
     ["aburame_nuvem_veneno"],
     18,
     14,
-    "Concentra uma quantidade enorme de rinkaichū numa área fechada: quem estiver dentro não consegue fugir por 3 rodadas, com 75% de chance de ficar com Veneno por 4 rodadas e 85% de chance de perder 10% de chakra por turno por 3 rodadas.",
+    "O usuário concentra uma quantidade enorme de rinkaichū numa área fechada, até o ar dentro dela ficar escuro de inseto. Quem estiver lá dentro fica cercado por todos os lados enquanto o enxame trabalha.",
   ),
   AB.jutsu(
     "aburame_mordida",
@@ -731,7 +731,7 @@ const ABURAME: SkillNodeDef[] = [
     ["aburame_parede"],
     21,
     16,
-    "Planta uma leva de kidaichū na pele do alvo: eles se enterram na hora e passam a devorar carne e chakra, crescendo enquanto se alimentam — o hospedeiro sangra por 3 rodadas, com 85% de chance de perder 10% de chakra por turno pelo mesmo período.",
+    "O usuário deposita um punhado de kidaichū na pele do alvo. Os insetos se enterram na hora e começam a devorar carne e chakra por dentro, engordando a cada mordida enquanto o hospedeiro é corroído de dentro para fora.",
   ),
   AB.pass(
     "aburame_apice",
@@ -787,7 +787,7 @@ const INUZUKA: SkillNodeDef[] = [
     [],
     1,
     1,
-    "Passiva sempre ativa: o vínculo com o cão desde filhote apura os sentidos do usuário. Seus jutsus de clã custam 10% menos recurso, e a invocação do seu cão ninja tem +30% de vida.",
+    "Passiva sempre ativa: o vínculo com o cão desde filhote apura os sentidos do usuário. Seus jutsus de clã causam +50% de dano e custam 10% menos recurso, e a invocação do seu cão ninja tem +30% de vida.",
     true,
   ),
   IZ.jutsu(
@@ -816,7 +816,7 @@ const INUZUKA: SkillNodeDef[] = [
     ["inuzuka_raiz"],
     5,
     5,
-    "Assume uma postura animal, ficando Acelerado por 3 rodadas: o movimento aumenta em 2 casas, a esquiva em 10 pontos percentuais e a chance de fuga em 25 pontos percentuais. As unhas afiadas devolvem 8 de dano em quem acertar você corpo a corpo.",
+    "O usuário cai sobre as quatro patas numa postura animal: as unhas crescem e afinam, as pupilas se fecham numa fenda e o faro fica aguçado o bastante para rastrear o inimigo pelo cheiro.",
   ),
   IZ.jutsu(
     "inuzuka_clone_besta",
@@ -1126,7 +1126,7 @@ const HOSHIGAKI: SkillNodeDef[] = [
     [],
     1,
     1,
-    "Passiva sempre ativa: o sangue predador do clã Hoshigaki potencializa cada golpe. Seus jutsus de clã causam +15% de dano e custam 10% menos recurso.",
+    "Passiva sempre ativa: o sangue predador do clã Hoshigaki potencializa cada golpe. Seus jutsus de clã causam +45% de dano e custam 10% menos recurso.",
     true,
   ),
   HG.jutsu(
@@ -1463,7 +1463,7 @@ const KAGUYA: SkillNodeDef[] = [
     ["kaguya_camelias"],
     16,
     13,
-    "Passiva sempre ativa: a espada viva de osso nunca cega. Seus golpes de Kenjutsu causam +30% de dano e mais 25% em quem estiver abaixo de 30% de vida.",
+    "Passiva sempre ativa: a espada viva de osso nunca cega. Seus golpes de Kenjutsu causam +50% de dano e mais 25% em quem estiver abaixo de 30% de vida.",
     false,
     undefined,
     "kenjutsu",
@@ -1647,7 +1647,7 @@ const CHINOIKE: SkillNodeDef[] = [
     ["chinoike_genjutsu_ketsuryuugan", "chinoike_sangue_fervente"],
     17,
     14,
-    "Passiva: o domínio total do Ketsuryuugan chega ao ápice. Sua Genjutsu Ketsuryuugan causa +15% de dano, e mais 25% em quem estiver abaixo de 30% de vida.",
+    "Passiva: o domínio total do Ketsuryuugan chega ao ápice. Sua Genjutsu Ketsuryuugan causa +40% de dano, e mais 25% em quem estiver abaixo de 30% de vida.",
   ),
   CI.jutsu(
     "chinoike_dragao_sangue",
@@ -1686,7 +1686,7 @@ const KAMAITACHI: SkillNodeDef[] = [
     [],
     1,
     1,
-    "Passiva sempre ativa: a mestria do clã com o leque gigante potencializa cada golpe. Seus jutsus de clã causam +15% de dano e custam 10% menos recurso.",
+    "Passiva sempre ativa: a mestria do clã com o leque gigante potencializa cada golpe. Seus jutsus de clã causam +40% de dano e custam 10% menos recurso.",
     true,
   ),
   KM.jutsu(
@@ -1925,7 +1925,7 @@ const RAIKAGE: SkillNodeDef[] = [
     [],
     1,
     1,
-    "Passiva sempre ativa: a força descomunal da linhagem dos Raikage potencializa cada golpe. Seus jutsus de clã causam +15% de dano e custam 10% menos recurso.",
+    "Passiva sempre ativa: a força descomunal da linhagem dos Raikage potencializa cada golpe. Seus jutsus de clã causam +30% de dano e custam 10% menos recurso.",
     true,
   ),
   RK.jutsu(
@@ -2160,15 +2160,15 @@ const SENJU: SkillNodeDef[] = [
 
   SJ.pass("senju_dominio_suiton", "Domínio Suiton", "🌊", "Estilo Água", -1, 3, ["senju_heranca", "agua_raiz"], 10, 8,
     "Passiva: seus jutsus de Água causam 10% mais dano."),
-  SJ.pass("senju_dragao_mare", "Dragão da Maré", "🐉", "Estilo Água", -0.5, 4, ["senju_dominio_suiton", "agua_dragao"], 14, 10,
+  SJ.pass("senju_dragao_mare", "Dragão da Maré", "🐉", "Estilo Água", -1, 5, ["senju_dominio_suiton", "agua_dragao"], 14, 10,
     "Passiva: o Dragão de Água causa 15% mais dano e alcança 1 casa adicional."),
-  SJ.pass("senju_muralha", "Muralha Inabalável", "🛡️", "Estilo Água", -0.5, 5, ["senju_dominio_suiton", "agua_muralha"], 14, 12,
+  SJ.pass("senju_muralha", "Muralha Inabalável", "🛡️", "Estilo Água", -2, 5, ["senju_dominio_suiton", "agua_muralha"], 14, 12,
     "Passiva: a Técnica da Muralha de Água concede 12 pontos adicionais de Barreira e gasta 10% menos chakra."),
-  SJ.pass("senju_cachoeira", "Grande Cachoeira Devastadora", "🏞️", "Estilo Água", -1.5, 5, ["senju_dragao_mare", "agua_cachoeira"], 25, 18,
+  SJ.pass("senju_cachoeira", "Grande Cachoeira Devastadora", "🏞️", "Estilo Água", -1, 6, ["senju_dragao_mare", "agua_cachoeira"], 25, 18,
     "Passiva: a Grande Cachoeira Explosiva causa 15% mais dano, alcança 1 casa adicional e empurra os alvos 1 casa a mais."),
-  SJ.pass("senju_chuva", "Chuva Celestial", "🌧️", "Estilo Água", -1.5, 4, ["senju_dominio_suiton", "agua_choro"], 12, 10,
+  SJ.pass("senju_chuva", "Chuva Celestial", "🌧️", "Estilo Água", -1, 4, ["senju_dominio_suiton", "agua_choro"], 12, 10,
     "Passiva: o Choro Celestial causa 15% mais dano, gasta 10% menos chakra e deixa o alvo Encharcado por 1 rodada a mais."),
-  SJ.jutsu("senju_ondas_cortantes", "Ondas de Águas Cortantes", "🌊", "A", "Estilo Água", -1.5, 6,
+  SJ.jutsu("senju_ondas_cortantes", "Ondas de Águas Cortantes", "🌊", "A", "Estilo Água", -1, 7,
     ["senju_cachoeira", "senju_chuva"], 28, 20,
     "Ondas finas e afiadas avançam em leque, cortando vários inimigos. Tem 70% de chance de causar Sangramento por 2 rodadas.",
     undefined, "ninjutsu", 6),

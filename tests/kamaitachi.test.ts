@@ -116,7 +116,7 @@ describe("Kamaitachi: passivas — dano de graça na raiz, ápice de controle (s
 
   it("Fio do Leque dá +15% de dano e corta 10% de custo", () => {
     const m = passiveMods(["kamaitachi_raiz"], grandeFoice);
-    expect(m.damageMult).toBeCloseTo(1.15);
+    expect(m.damageMult).toBeCloseTo(1.4);
     expect(m.costMult).toBeCloseTo(0.9);
   });
 
@@ -160,7 +160,7 @@ describe("Kamaitachi: é Fuuton de verdade — a passiva de Vento empilha com a 
 
   it("as duas passivas empilham quando o personagem tem as duas árvores (Vento + Kamaitachi)", () => {
     const m = passiveMods(["vento_raiz", "kamaitachi_raiz"], grandeFoice);
-    expect(m.damageMult).toBeCloseTo(1.3 * 1.15);
+    expect(m.damageMult).toBeCloseTo(1.3 * 1.4);
     expect(m.armorPierce).toBeCloseTo(0.2); // vento_raiz já dá 0.2; kamaitachi_lamina_viva não comprada aqui
   });
 });

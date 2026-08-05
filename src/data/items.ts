@@ -158,8 +158,11 @@ export const ITEMS: ItemDef[] = [
     stackable: false,
     actions: [],
   },
-  ...(["D", "C", "B", "A", "S"] as const).flatMap((rank, index) => {
-    const values = [80, 150, 280, 500, 900];
+  // So' B, A e S: as tecnicas de pergaminho da arvore de Bukijutsu comecam no
+  // rank B (Dragoes Gemeos), entao pergaminho D e C nao eram usados por skill
+  // nenhuma — eram item morto na loja.
+  ...(["B", "A", "S"] as const).flatMap((rank, index) => {
+    const values = [280, 500, 900];
     const activeId = `pergaminho_rank_${rank.toLowerCase()}`;
     return [
       { id: activeId, name: `Pergaminho Rank ${rank}`, description: `Pergaminho de Bukijutsu Rank ${rank}. Após ser usado, fica gasto até ser restaurado.`, category: "NINJA_TOOL" as const, stackable: false, actions: [], ryoValue: values[index] },

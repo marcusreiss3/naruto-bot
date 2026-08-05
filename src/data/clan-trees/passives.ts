@@ -11,9 +11,12 @@ import type { Attribute, Category, EffectId, Element, Shape } from "../../config
 export interface ClanPassiveDef {
   nodeId: string;
   clanId: string;
-  // multiplica o dano dos jutsus de clã (1.3 = +30%) — Akimichi e' o unico
-  // clã que ganha dano de graça igual os elementos; Nara/Hyuuga ganham por
-  // controle/perfuracao, nao por multiplicador bruto.
+  // multiplica o dano dos jutsus de clã (1.3 = +30%). Todo clã OFENSIVO tem
+  // um, escalado pelo custo total da arvore em PN (arvore cara entrega mais
+  // dano — ver "Custo total vs dano" na skill jutsu-authoring), e descontado
+  // quando o clã ja' paga em largura de kit (Raikage). Clã de SUPORTE puro
+  // (Nara, Aburame, Uzumaki, Kamizuru, Hozuki) segue sem nenhum: eles ganham
+  // por controle/dreno, nao por multiplicador bruto.
   damageMult?: number;
   // restringe damageMult + ignoresShield + executeBonus deste no' a
   // abilities que escalam por UM atributo especifico. Use SO' quando nao
@@ -76,13 +79,18 @@ export interface ClanPassiveDef {
   // element-trees/passives.ts (ver characterPassiveMods() em
   // services/combat/passives.ts, que le os dois catalogos sem distinguir).
   ninjutsuDodgeBonus?: number;
+  // esquiva geral (qualquer ataque, qualquer reação) — ver o mesmo campo em
+  // element-trees/passives.ts.
+  dodgeBonus?: number;
   // ESCAPE HATCH do gate normal de clanId: quando presente, esta passiva
   // vale pra QUALQUER ability desta categoria (ex: "GENJUTSU"), mesmo sem
   // clanId nenhum ou de OUTRO cla/arvore de fundamentos — nao so' as do
   // proprio dono. Pedido explicito do Chinoike: os olhos de sangue leem
   // qualquer ilusao que o personagem conjure, nao so' a Genjutsu Ketsuryuugan
   // do proprio cla. Ver passiveMods() em services/combat/passives.ts.
-  crossCategory?: Category;
+  // aceita array quando a passiva precisa valer pra mais de uma categoria —
+  // ver o mesmo campo em element-trees/passives.ts.
+  crossCategory?: Category | Category[];
   // abre o alcance para qualquer tecnica do elemento indicado.
   crossElement?: Element;
   // restringe a passiva a tecnicas especificas, mesmo fora do proprio cla.
@@ -157,15 +165,26 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
   },
 
   // -------------------------------------------------------------- HYUUGA
-  // O clã não ganha dano de graça igual os elementos — ganha por ATRAVESSAR
-  // defesa (perfura Barreira, ignora escudo) e por SELAR chakra (Bloqueio de
-  // Ninjutsu), porque o Punho Suave sempre foi descrito como "atinge por
-  // dentro" no material de origem. A raiz é passiva (percepção do clã, ativa
-  // mesmo sem o Byakugan ligado); o ápice é o pagamento do Punho Suave: ele
-  // ignora Barreira e finaliza melhor alvos já feridos.
+  // O clã ganha por ATRAVESSAR defesa (perfura Barreira, ignora escudo) e por
+  // SELAR chakra (Bloqueio de Ninjutsu), porque o Punho Suave sempre foi
+  // descrito como "atinge por dentro" no material de origem. A raiz é passiva
+  // (percepção do clã, ativa mesmo sem o Byakugan ligado); o ápice é o
+  // pagamento do Punho Suave: ele ignora Barreira e finaliza melhor alvos já
+  // feridos. Essas três coisas seguem sendo a identidade — o que mudou é que
+  // elas deixaram de ser o UNICO pagamento: a raiz agora também multiplica
+  // dano (ver a nota nela), porque sem isso o clã ficava em último lugar.
   {
     nodeId: "hyuuga_raiz",
     clanId: "hyuuga",
+    // 1.45 (37 PN, na curva do Raikage/Kaguya). O cla passou muito tempo em
+    // 1.00x apostando so' em ATRAVESSAR defesa (ignoresShield + execucao +
+    // Bloqueio de Ninjutsu) — ver o comentario acima. Medido depois do
+    // rebalanceamento dos clas de dano, isso deixou o Hyuuga com pico 36
+    // contra 41-70 dos outros: ultimo lugar. Perfuracao vale contra Terra e
+    // contra quem usa escudo, mas nao cobre 40% de dano a menos contra o
+    // resto do jogo. A identidade continua nos outros tres campos; o
+    // multiplicador so' o poe na curva.
+    damageMult: 1.45,
     costMult: 0.9,
     effectChanceBonus: { NINJUTSU_BLOCK: 0.1 },
   },
@@ -196,7 +215,10 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
   {
     nodeId: "akimichi_raiz",
     clanId: "akimichi",
-    damageMult: 1.3,
+    // 1.60: arvore mais cara do jogo (49 PN) e o cla explicitamente de dano
+    // bruto, entao ele encabeca a curva de dano de cla. Ver a nota de
+    // rebalanceamento no fim do arquivo.
+    damageMult: 1.6,
     pushBonus: 1,
   },
 
@@ -232,6 +254,11 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
   {
     nodeId: "inuzuka_raiz",
     clanId: "inuzuka",
+    // 1.50 novo: a arvore custa 46 PN (2a mais cara) e tem 5 jutsus de dano,
+    // mas entregava 1.00x — furava a relacao "arvore cara entrega dano" que o
+    // resto do arquivo segue. O bonus entra no VINCULO (raiz) porque e' a
+    // matilha atacando junto, nao forca bruta do ninja sozinho.
+    damageMult: 1.5,
     costMult: 0.9,
     summonHpBonus: 0.3,
   },
@@ -320,7 +347,7 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
   {
     nodeId: "hoshigaki_raiz",
     clanId: "hoshigaki",
-    damageMult: 1.15,
+    damageMult: 1.45, // 34 PN
     costMult: 0.9,
   },
   {
@@ -412,7 +439,7 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
     nodeId: "kaguya_fio_osso",
     clanId: "kaguya",
     crossCategory: "KENJUTSU",
-    damageMult: 1.3,
+    damageMult: 1.5, // 38 PN
     executeBonus: { hpThreshold: 0.3, mult: 1.25 },
   },
   {
@@ -457,7 +484,7 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
   {
     nodeId: "chinoike_apice",
     clanId: "chinoike",
-    damageMult: 1.15, // rebalanceado: arvore do Chinoike e' barata (29 PN); ver
+    damageMult: 1.4, // arvore barata (29 PN), entao fica na base da curva; ver
     // "Custo total vs dano" na skill jutsu-authoring.
     damageMultScalingAttribute: "genjutsu",
     executeBonus: { hpThreshold: 0.3, mult: 1.25 },
@@ -471,7 +498,7 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
   {
     nodeId: "kamaitachi_raiz",
     clanId: "kamaitachi",
-    damageMult: 1.15,
+    damageMult: 1.4, // 26 PN
     costMult: 0.9,
   },
   {
@@ -536,7 +563,9 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
   {
     nodeId: "raikage_raiz",
     clanId: "raikage",
-    damageMult: 1.15,
+    damageMult: 1.3, // 35 PN — abaixo do Hoshigaki (34 PN, 1.45x) de proposito:
+    // o Raikage entrega 7 jutsus, 4 tipos de efeito e 2 utilidades pelo mesmo
+    // preco, entao paga o kit largo com multiplicador menor.
     costMult: 0.9,
   },
   {
@@ -738,16 +767,18 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
   // --------------------------------------------------------- IRYO NINJUTSU
   // Árvore genérica: crossCategory permite que os nós funcionem sem exigir
   // um clã específico, como já acontece com Bukijutsu acima.
-  { nodeId: "iryo_cura_economica", clanId: "iryo", crossCategory: "IRYO_NINJUTSU", costMult: 0.9 },
+  // Desconto de custo do Iryo: eram 4 nos (1 geral + 3 amarrados a tecnicas
+  // especificas), que empilhavam ate' -23,5% numa tecnica so'. Virou UM no'
+  // geral de -12% em tudo — teto bem menor e sem nada escondido.
+  { nodeId: "iryo_antidoto_eficiente", clanId: "iryo", crossCategory: "IRYO_NINJUTSU", costMult: 0.88 },
   { nodeId: "iryo_cura_precisa", clanId: "iryo", crossCategory: "IRYO_NINJUTSU", healMult: 1.1 },
   { nodeId: "iryo_cura_critica", clanId: "iryo", crossCategory: "IRYO_NINJUTSU", criticalHealBonus: { hpThreshold: 0.35, mult: 1.2 } },
-  { nodeId: "iryo_mitose_acelerada", clanId: "iryo", abilityIds: ["iryo_regeneracao"], costMult: 0.85 },
-  { nodeId: "iryo_antidoto_eficiente", clanId: "iryo", abilityIds: ["iryo_desintoxicacao", "iryo_mosquitos"], costMult: 0.85 },
-  { nodeId: "iryo_hemostasia_precisa", clanId: "iryo", abilityIds: ["iryo_hemostatica", "iryo_yin"], costMult: 0.85 },
-  { nodeId: "iryo_triagem_rapida", clanId: "iryo", abilityIds: ["iryo_desintoxicacao", "iryo_hemostatica", "iryo_mosquitos", "iryo_yin"], rangeBonus: 1 },
+  // Triagem Rapida absorveu o +1 de alcance da antiga "Anatomia de Combate"
+  // (que so' valia no Choque): a lista abaixo e' a UNIAO exata das duas, sem
+  // ganhar escopo novo.
+  { nodeId: "iryo_triagem_rapida", clanId: "iryo", abilityIds: ["iryo_desintoxicacao", "iryo_hemostatica", "iryo_mosquitos", "iryo_yin", "iryo_choque_desorientacao"], rangeBonus: 1 },
   { nodeId: "iryo_lamina_estavel", clanId: "iryo", abilityIds: ["iryo_bisturi"], effectDurationBonus: { effectId: "EMPOWERED", bonus: 1 } },
   { nodeId: "iryo_sinapses_caoticas", clanId: "iryo", abilityIds: ["iryo_choque_desorientacao"], effectDurationBonus: { effectId: "CONFUSION", bonus: 1 } },
-  { nodeId: "iryo_anatomia_combate", clanId: "iryo", abilityIds: ["iryo_choque_desorientacao"], rangeBonus: 1, costMult: 0.9 },
 ];
 
 const CLAN_PASSIVE_INDEX: Map<string, ClanPassiveDef> = new Map(CLAN_PASSIVES.map((p) => [p.nodeId, p]));

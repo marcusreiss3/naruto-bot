@@ -21,7 +21,10 @@ export interface PassiveDef {
   // Necessario pra arvores sem natureza de chakra (Genjutsu, Iryo): elas nao
   // tem `element` na Ability pra comparar. Ver passiveMods() em
   // services/combat/passives.ts.
-  crossCategory?: Category;
+  // Aceita um array quando a mesma passiva precisa valer pra mais de uma
+  // categoria (ex: Assassinato Ninja, onde os buffs valem tanto pra Taijutsu
+  // quanto pra Kenjutsu).
+  crossCategory?: Category | Category[];
   // restringe a passiva a tecnicas ESPECIFICAS (por id), mesmo dentro da
   // categoria aberta por crossCategory — mesmo campo que ClanPassiveDef ja'
   // usa. Ex: um desconto de custo que so' vale pras 2 tecnicas do ramo
@@ -54,6 +57,12 @@ export interface PassiveDef {
   executeBonus?: { hpThreshold: number; mult: number };
   // modificadores do personagem, independentes do elemento do golpe recebido
   ninjutsuDodgeBonus?: number;
+  // igual ninjutsuDodgeBonus, mas vale contra QUALQUER ataque recebido —
+  // físico ou não, e independente da reação escolhida (reflexo puro,
+  // Substituição, Hidratação...). Mesmo raciocínio do Byakugan/Ketsuryuugan
+  // em combat-engine.ts: soma direto na chance final, não é amarrado a
+  // nenhuma técnica específica.
+  dodgeBonus?: number;
   initiativePriority?: number;
   // multiplica o custo de recurso dos jutsus do elemento (0.8 = -20%)
   costMult?: number;
@@ -505,10 +514,15 @@ export const PASSIVES: PassiveDef[] = [
   { nodeId: "tai_pass_reserva_profunda", maxEnergyBonus: 0.25 },
   { nodeId: "tai_pass_maestria", crossCategory: "TAIJUTSU", damageMult: 1.10 },
   { nodeId: "tai_pass_passada", moveBonus: 1 },
+  { nodeId: "tai_pass_passo_silencioso", moveBonus: 1 },
+  { nodeId: "tai_pass_reflexo_evasivo", dodgeBonus: 0.03 },
+  { nodeId: "tai_pass_resistencia_fisica", maxHpBonus: 0.05, hpRegenPerTurn: 2 },
 
-  { nodeId: "tai_agitacao_passos", crossCategory: "TAIJUTSU", dodgePenalty: 0.05 },
-  { nodeId: "tai_agitacao_finta", crossCategory: "TAIJUTSU", dodgePenalty: 0.04 },
-  { nodeId: "tai_agitacao_ritmo", crossCategory: "TAIJUTSU", dodgePenalty: 0.03 },
+  // Igual Assassinato Ninja: sem damageMult incondicional a arvore inteira
+  // era so' reduzir esquiva do ALVO — nunca aumentava o dano de quem comprou.
+  { nodeId: "tai_agitacao_passos", crossCategory: "TAIJUTSU", damageMult: 1.05, dodgePenalty: 0.05 },
+  { nodeId: "tai_agitacao_finta", crossCategory: "TAIJUTSU", damageMult: 1.05, dodgePenalty: 0.04 },
+  { nodeId: "tai_agitacao_ritmo", crossCategory: "TAIJUTSU", damageMult: 1.06, dodgePenalty: 0.03 },
 
   { nodeId: "tai_forte_ritmo", abilityIds: ["tai_furacao_folha", "tai_vendaval_folha", "tai_grande_furacao_folha"], costMult: 0.85 },
 
@@ -531,11 +545,19 @@ export const PASSIVES: PassiveDef[] = [
   { nodeId: "tai_ken_fio", crossCategory: "KENJUTSU", damageMult: 1.10 },
   { nodeId: "tai_ken_geometria", crossCategory: "KENJUTSU", rangeBonus: 1, rangeShapes: ["LINE"], armorPierce: 0.10 },
 
-  { nodeId: "tai_nevoa_primeiro_golpe", crossCategory: "TAIJUTSU", firstHitDamageMult: 1.15 },
-  { nodeId: "tai_nevoa_ponto_cego", crossCategory: "TAIJUTSU", damageMultVsEffect: { effectId: "DEFENSE_DOWN", mult: 1.12 }, armorPierce: 0.12 },
-  { nodeId: "tai_nevoa_ofuscante", crossCategory: "TAIJUTSU", mistDamageMult: 1.10 },
-  { nodeId: "tai_nevoa_marca", crossCategory: "TAIJUTSU", markOnFirstHit: { duration: 3 }, damageMultVsEffect: { effectId: "MARKED", mult: 1.10 } },
-  { nodeId: "tai_nevoa_misericordia", crossCategory: "TAIJUTSU", executeBonus: { hpThreshold: 0.20, mult: 1.18 } },
+  // Assassinato Ninja e' mais kenjutsu do que taijutsu na pratica (Kiri e'
+  // vila de espadachins) — os 5 buffs abaixo valem pras DUAS categorias.
+  // Saque Relampago/Corte Decisivo (Caminho da Lamina) ficam so' em KENJUTSU
+  // de proposito: eles sao a especializacao pura de espada.
+  // Passei a somar tambem um damageMult INCONDICIONAL em 3 nos (nao so'
+  // situacional): sem isso a arvore inteira dependia de acertar o combo certo
+  // (1o golpe, alvo marcado, alvo baixo de vida) pra valer o nivel/PN que pede
+  // — diferente de todo elemento, que ja da' dano garantido desde a raiz.
+  { nodeId: "tai_nevoa_primeiro_golpe", crossCategory: ["TAIJUTSU", "KENJUTSU"], damageMult: 1.08, firstHitDamageMult: 1.15 },
+  { nodeId: "tai_nevoa_ponto_cego", crossCategory: ["TAIJUTSU", "KENJUTSU"], damageMult: 1.07, damageMultVsEffect: { effectId: "DEFENSE_DOWN", mult: 1.12 }, armorPierce: 0.12 },
+  { nodeId: "tai_nevoa_ofuscante", crossCategory: ["TAIJUTSU", "KENJUTSU"], mistDamageMult: 1.10 },
+  { nodeId: "tai_nevoa_marca", crossCategory: ["TAIJUTSU", "KENJUTSU"], markOnFirstHit: { duration: 3 }, damageMultVsEffect: { effectId: "MARKED", mult: 1.10 } },
+  { nodeId: "tai_nevoa_misericordia", crossCategory: ["TAIJUTSU", "KENJUTSU"], damageMult: 1.06, executeBonus: { hpThreshold: 0.20, mult: 1.18 } },
   { nodeId: "tai_nevoa_saque", crossCategory: "KENJUTSU", firstKenjutsuDamageMult: 1.14, initiativePriority: 1 },
   { nodeId: "tai_nevoa_corte", crossCategory: "KENJUTSU", decisiveKenjutsuDamageMult: 1.18, armorPierce: 0.18 },
 ];

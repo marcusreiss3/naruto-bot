@@ -31,21 +31,27 @@ const IDS = [
 ] as const;
 
 describe("árvore de Taijutsu", () => {
-  it("é indexada e só contém jutsus ativos", () => {
+  it("é indexada e só contém jutsus ativos, exceto a passiva de estilo", () => {
     const indexed = new Set(allNodes().map((node) => node.id));
-    expect(TAIJUTSU_TREE).toHaveLength(24);
-    for (const node of TAIJUTSU_TREE) {
+    // Ritmo da Folha (Punho Forte) mora aqui — passiva específica do estilo,
+    // movida pra dentro da própria árvore em vez de ficar na transversal.
+    expect(TAIJUTSU_TREE).toHaveLength(25);
+    const jutsus = TAIJUTSU_TREE.filter((node) => node.kind === "JUTSU");
+    for (const node of jutsus) {
       expect(indexed.has(node.id)).toBe(true);
       expect(node.kind).toBe("JUTSU");
       expect(node.pool).toBe("taijutsu");
       expect(node.grantsAbilityId).toBe(node.id);
     }
-    expect(TAIJUTSU_TREE.every((node) => node.kind !== "PASSIVE")).toBe(true);
+    const passivas = TAIJUTSU_TREE.filter((node) => node.kind === "PASSIVE");
+    expect(passivas.map((node) => node.id)).toEqual(["tai_forte_ritmo"]);
+    expect(passivas[0]!.requires).toEqual(["tai_vendaval_folha"]);
   });
 
   it("concede todas as técnicas ativas com ranks definidos", () => {
-    expect(TAIJUTSU_TREE.map((node) => node.id)).toEqual(IDS);
-    expect(TAIJUTSU_TREE.map((node) => node.rank)).toEqual(["D", "D", "D", "D", "C", "C", "C", "C", "B", "B", "C", "B", "B", "A", "A", "A", "A", "A", "S", "S", "S", "S", "S", "S"]);
+    const jutsus = TAIJUTSU_TREE.filter((node) => node.kind === "JUTSU");
+    expect(jutsus.map((node) => node.id)).toEqual(IDS);
+    expect(jutsus.map((node) => node.rank)).toEqual(["D", "D", "D", "D", "C", "C", "C", "C", "B", "B", "C", "B", "B", "A", "A", "A", "A", "A", "S", "S", "S", "S", "S", "S"]);
     for (const id of IDS) {
       const ability = getAbility(id);
       expect(ability, id).toBeTruthy();

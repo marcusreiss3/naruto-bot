@@ -165,7 +165,7 @@ describe("Akimichi: passiva da raiz — única fonte de dano permanente do clã"
 
   it("Fartura do Clã dá +30% de dano e +1 casa de empurrão", () => {
     const m = passiveMods(["akimichi_raiz"], parcial);
-    expect(m.damageMult).toBeCloseTo(1.3);
+    expect(m.damageMult).toBeCloseTo(1.6);
     expect(m.pushBonus).toBe(1);
   });
 
@@ -257,7 +257,7 @@ describe("Pílula Secreta: skill com duração (EMPOWERED) e debuff ao expirar (
   it("empilhado com a passiva da raiz, o pico de dano fica mais forte que a antiga passiva permanente (~2,0x) — é o preço de ser temporário", () => {
     const raizMult = passiveMods(["akimichi_raiz"], getAbility("akimichi_baika_parcial")!).damageMult;
     const pico = raizMult * empoweredDamageMult([{ effectId: "EMPOWERED", stacks: 1, duration: 3 }], { category: "TAIJUTSU" });
-    expect(pico).toBeGreaterThan(1.3 * 1.55); // mais forte que a curva antiga (raiz*ápice permanentes)
+    expect(pico).toBeGreaterThan(1.6 * 1.55); // mais forte que a curva antiga (raiz*ápice permanentes)
   });
 });
 

@@ -1754,7 +1754,7 @@ export const CLAN_ABILITIES: Ability[] = [
     resource: "energia",
     cost: 58,
     actionType: "COMUM",
-    baseDamage: 48,
+    baseDamage: 42,
     scalingAttribute: "taijutsu",
     range: 1,
     shape: "MELEE",
