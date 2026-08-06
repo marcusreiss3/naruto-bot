@@ -28,6 +28,7 @@ const snap = (over: Partial<CharSnapshot> = {}): CharSnapshot => ({
   spentByPool: {},
   pointsByPool: {},
   elements: [],
+  fightingStyles: new Set(),
   owned: new Set(),
   clanId: "hyuuga",
   attributes: RICO,
@@ -177,17 +178,19 @@ describe("Hyuuga: passivas — atravessa defesa, sela chakra", () => {
   // + execucao), pra nao empilhar dois.
   it("só a raiz multiplica dano; o ápice continua sendo perfuração + execução", () => {
     const comDano = CLAN_PASSIVES.filter((p) => p.clanId === "hyuuga" && "damageMult" in p);
-    expect(comDano.map((p) => p.nodeId)).toEqual(["hyuuga_raiz"]);
+    expect(comDano.map((p) => p.nodeId)).toEqual(["hyuuga_raiz", "hyuuga_apice"]);
   });
 
   it("Olhos Brancos dá +45% de dano, corta 10% do custo e soma 10 pontos de chance de Bloqueio de Ninjutsu", () => {
     const m = passiveMods(["hyuuga_raiz"], punho);
+    expect(m.damageMult).toBeCloseTo(1.15);
     expect(m.costMult).toBeCloseTo(0.9);
     expect(m.effectChanceBonus.NINJUTSU_BLOCK).toBeCloseTo(0.1);
   });
 
   it("Rede de Tenketsu ignora Barreira, executa abaixo de 30% de vida e estende o Bloqueio de Ninjutsu", () => {
     const m = passiveMods(["hyuuga_apice"], punho);
+    expect(m.damageMult).toBeCloseTo(1.2);
     expect(m.ignoresShield).toBe(true);
     expect(m.executeBonus).toEqual({ hpThreshold: 0.3, mult: 1.25 });
     expect(m.effectDurationBonus.NINJUTSU_BLOCK).toBe(1);

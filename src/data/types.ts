@@ -118,6 +118,9 @@ export interface Ability {
   // Alguns golpes dos Portões só podem ser executados enquanto o estágio
   // correspondente estiver aberto.
   requiresActiveGate?: number;
+  // Alguns finalizadores de clã só existem enquanto o modo que os habilita
+  // ainda está ativo (ex.: Modo Borboleta e Lobo de Três Cabeças).
+  requiresActiveEffectFromAbilityId?: string;
   // flags especiais
   unblockable?: boolean;
   undodgeable?: boolean;

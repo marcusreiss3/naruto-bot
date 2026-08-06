@@ -1136,6 +1136,13 @@ async function portao(interaction: ChatInputCommandInteraction): Promise<void> {
     8: "da Morte",
   };
   const currentGate = typeof me.flags.punhoForteGate === "number" ? me.flags.punhoForteGate : 0;
+  if (currentGate === 8) {
+    await interaction.reply({
+      content: "☠️ O Portão da Morte não pode ser fechado nem trocado: ele permanece aberto até você morrer.",
+      ephemeral: true,
+    });
+    return;
+  }
   if (gate > 1 && currentGate !== gate - 1 && currentGate !== gate) {
     await interaction.reply({ content: `❌ Abra primeiro o Portão ${gateNames[gate - 1]}.`, ephemeral: true });
     return;

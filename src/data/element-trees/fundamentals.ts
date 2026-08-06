@@ -58,7 +58,7 @@ export const FUNDAMENTOS: SkillNodeDef[] = [
     img: "/assets/icons/ninjutsu/walk-water.png",
     cost: 2,
     branch: "Academia",
-    col: 1,
+    col: 1.25,
     row: 1,
     requires: ["funda_substituicao"],
     reqLevel: 1,

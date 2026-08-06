@@ -21,6 +21,13 @@ describe("Iryō Ninjutsu", () => {
     expect(nodes.filter((node) => node.branch === "Combate Médico" && node.kind === "PASSIVE")).toHaveLength(2);
   });
 
+  it("usa os ícones próprios em todos os nós da árvore", () => {
+    const nodes = allNodes().filter((node) => node.id.startsWith("iryo_") && node.pool === "iryoNinjutsu");
+    expect(nodes).toHaveLength(16);
+    expect(nodes.every((node) => node.img?.startsWith("/assets/icons/iryo-ninjutsu/"))).toBe(true);
+    expect(new Set(nodes.map((node) => node.img)).size).toBe(nodes.length);
+  });
+
   it("reduz condições intermediárias sem removê-las por completo", () => {
     expect(getAbility("iryo_mosquitos")!.reduceEffectDuration).toEqual([
       { effectId: "BURN", turns: 2 },

@@ -132,4 +132,12 @@ describe("árvore de Taijutsu", () => {
     expect(guy.unblockable).toBe(true);
     expect(guy.oncePerCombat).toBe(true);
   });
+
+  it("Portão da Morte mostra o bônus final de 150%", () => {
+    expect(getAbility("tai_portao_morte")!.gateRules).toMatchObject({
+      gate: 8,
+      taijutsuDamageMult: 2.5,
+      selfDamagePerTurn: 100,
+    });
+  });
 });

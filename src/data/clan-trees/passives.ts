@@ -187,7 +187,7 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
     // contra quem usa escudo, mas nao cobre 40% de dano a menos contra o
     // resto do jogo. A identidade continua nos outros tres campos; o
     // multiplicador so' o poe na curva.
-    damageMult: 1.45,
+    damageMult: 1.15,
     costMult: 0.9,
     effectChanceBonus: { NINJUTSU_BLOCK: 0.1 },
   },
@@ -203,6 +203,7 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
   {
     nodeId: "hyuuga_apice",
     clanId: "hyuuga",
+    damageMult: 1.2,
     ignoresShield: true,
     executeBonus: { hpThreshold: 0.3, mult: 1.25 },
     effectDurationBonus: { effectId: "NINJUTSU_BLOCK", bonus: 1 },
@@ -234,8 +235,13 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
     // 1.60: arvore mais cara do jogo (49 PN) e o cla explicitamente de dano
     // bruto, entao ele encabeca a curva de dano de cla. Ver a nota de
     // rebalanceamento no fim do arquivo.
-    damageMult: 1.6,
+    damageMult: 1.25,
     pushBonus: 1,
+  },
+  {
+    nodeId: "akimichi_conversao_calorica",
+    clanId: "akimichi",
+    damageMult: 1.25,
   },
 
   // ------------------------------------------------------------- ABURAME
@@ -274,13 +280,14 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
     // mas entregava 1.00x — furava a relacao "arvore cara entrega dano" que o
     // resto do arquivo segue. O bonus entra no VINCULO (raiz) porque e' a
     // matilha atacando junto, nao forca bruta do ninja sozinho.
-    damageMult: 1.5,
+    damageMult: 1.2,
     costMult: 0.9,
     summonHpBonus: 0.3,
   },
   {
     nodeId: "inuzuka_apice",
     clanId: "inuzuka",
+    damageMult: 1.2,
     executeBonus: { hpThreshold: 0.3, mult: 1.3 },
     effectChanceBonus: { STUN: 0.15 },
   },
@@ -363,12 +370,13 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
   {
     nodeId: "hoshigaki_raiz",
     clanId: "hoshigaki",
-    damageMult: 1.45, // 34 PN
+    damageMult: 1.15,
     costMult: 0.9,
   },
   {
     nodeId: "hoshigaki_fome_voraz",
     clanId: "hoshigaki",
+    damageMult: 1.2,
     effectChanceBonus: { BLEED: 0.15 },
     rangeBonus: 1,
     rangeShapes: ["CONE", "RADIUS"],
@@ -402,12 +410,14 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
   {
     nodeId: "hozuki_raiz",
     clanId: "hozuki",
+    damageMult: 1.1,
     costMult: 0.9,
     hpRegenPerTurn: 4,
   },
   {
     nodeId: "hozuki_fluidez",
     clanId: "hozuki",
+    damageMult: 1.1,
     effectChanceBonus: { WET: 0.2 },
     rangeBonus: 1,
     rangeShapes: ["SINGLE_TARGET", "LINE"],
@@ -443,6 +453,7 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
   {
     nodeId: "kaguya_raiz",
     clanId: "kaguya",
+    damageMult: 1.15,
     costMult: 0.9,
     hpRegenPerTurn: 5,
   },
@@ -455,12 +466,12 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
     nodeId: "kaguya_fio_osso",
     clanId: "kaguya",
     crossCategory: "KENJUTSU",
-    damageMult: 1.5, // 38 PN
     executeBonus: { hpThreshold: 0.3, mult: 1.25 },
   },
   {
     nodeId: "kaguya_apice",
     clanId: "kaguya",
+    damageMult: 1.15,
     effectChanceBonus: { BLEED: 0.15 },
     rangeBonus: 1,
     rangeShapes: ["SINGLE_TARGET", "LINE"],
@@ -481,6 +492,7 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
   {
     nodeId: "chinoike_raiz",
     clanId: "chinoike",
+    damageMult: 1.15,
     costMult: 0.9,
     hpRegenPerTurn: 4,
   },
@@ -500,9 +512,7 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
   {
     nodeId: "chinoike_apice",
     clanId: "chinoike",
-    damageMult: 1.4, // arvore barata (29 PN), entao fica na base da curva; ver
-    // "Custo total vs dano" na skill jutsu-authoring.
-    damageMultScalingAttribute: "genjutsu",
+    damageMult: 1.2,
     executeBonus: { hpThreshold: 0.3, mult: 1.25 },
   },
 
@@ -514,7 +524,9 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
   {
     nodeId: "kamaitachi_raiz",
     clanId: "kamaitachi",
-    damageMult: 1.4, // 26 PN
+    // O arsenal inteiro tambem recebe Vento. Dois bonus modestos evitam que
+    // a arvore barata volte a ser o maior pico/PN quando ambos se combinam.
+    damageMult: 1.05,
     costMult: 0.9,
   },
   {
@@ -525,6 +537,7 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
   {
     nodeId: "kamaitachi_lamina_viva",
     clanId: "kamaitachi",
+    damageMult: 1.05,
     armorPierce: 0.2,
   },
   {
@@ -579,7 +592,7 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
   {
     nodeId: "raikage_raiz",
     clanId: "raikage",
-    damageMult: 1.3, // 35 PN — abaixo do Hoshigaki (34 PN, 1.45x) de proposito:
+    damageMult: 1.15,
     // o Raikage entrega 7 jutsus, 4 tipos de efeito e 2 utilidades pelo mesmo
     // preco, entao paga o kit largo com multiplicador menor.
     costMult: 0.9,
@@ -587,6 +600,7 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
   {
     nodeId: "raikage_apice",
     clanId: "raikage",
+    damageMult: 1.1,
     executeBonus: { hpThreshold: 0.3, mult: 1.25 },
   },
 
@@ -611,8 +625,8 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
 
   // ---------------------------------------------------------------- SENJU
   { nodeId: "senju_vitalidade", clanId: "senju", maxHpBonus: 0.08, hpRegenPerTurn: 3 },
-  { nodeId: "senju_controle_chakra", clanId: "senju", crossCategory: "NINJUTSU", costMult: 0.92 },
-  { nodeId: "senju_heranca", clanId: "senju", chakraRegenPerTurn: 3 },
+  { nodeId: "senju_controle_chakra", clanId: "senju", crossCategory: "NINJUTSU", costMult: 0.92, chakraRegenPerTurn: 3 },
+  { nodeId: "senju_heranca", clanId: "senju", maxHpBonus: 0.05, hpRegenPerTurn: 5 },
   { nodeId: "senju_dominio_suiton", clanId: "senju", crossElement: "AGUA", damageMult: 1.1 },
   { nodeId: "senju_dragao_mare", clanId: "senju", abilityIds: ["suiton_suiryuudan"], damageMult: 1.15, rangeBonus: 1 },
   { nodeId: "senju_muralha", clanId: "senju", abilityIds: ["suiton_suijinheki"], costMult: 0.9, effectStacksBonus: { SHIELD: 12 } },

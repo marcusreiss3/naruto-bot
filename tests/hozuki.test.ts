@@ -121,8 +121,8 @@ describe("Hozuki: passivas — regeneração/fluidez + Kenjutsu em ramo separado
     const troncoEKenjutsu = CLAN_PASSIVES.filter((p) => p.clanId === "hozuki");
     const raiz = troncoEKenjutsu.find((p) => p.nodeId === "hozuki_raiz")!;
     const fluidez = troncoEKenjutsu.find((p) => p.nodeId === "hozuki_fluidez")!;
-    expect("damageMult" in raiz).toBe(false);
-    expect("damageMult" in fluidez).toBe(false);
+    expect(raiz.damageMult).toBeCloseTo(1.1);
+    expect(fluidez.damageMult).toBeCloseTo(1.1);
   });
 
   it("Corpo Líquido corta 10% do custo e regenera vida no início do turno", () => {
@@ -227,7 +227,7 @@ describe("Hozuki: são Suiton de verdade — a passiva de Água (Fluxo Constante
 
   it("as duas passivas empilham quando o personagem tem as duas árvores (Água + Hozuki) — custo, não dano (Hozuki não dá dano de graça)", () => {
     const m = passiveMods(["agua_raiz", "hozuki_raiz"], revolver);
-    expect(m.damageMult).toBeCloseTo(1.15); // só a de Água multiplica dano
+    expect(m.damageMult).toBeCloseTo(1.15 * 1.1);
     expect(m.costMult).toBeCloseTo(0.85 * 0.9);
   });
 

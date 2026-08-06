@@ -25,6 +25,7 @@ const jutsu = (
   reqLevel,
   reqPool,
   grantsAbilityId: id,
+  fightingStyle: "PUNHO_FORTE",
   desc,
 });
 
@@ -38,8 +39,8 @@ export const TAIJUTSU_TREE: SkillNodeDef[] = [
   {
     id: "tai_forte_ritmo", name: "Ritmo da Folha", kind: "PASSIVE", icon: "🥋",
     pool: "taijutsu", cost: 2, branch: "Punho Forte", col: 1.25, row: 1,
-    requires: ["tai_vendaval_folha"], reqLevel: 8, reqPool: 8,
-    desc: "Passiva: Furacão da Folha, Vendaval da Folha e Grande Furacão da Folha gastam 15% menos energia. Este desconto se combina com outros descontos de custo.",
+    requires: ["tai_vendaval_folha"], reqLevel: 8, reqPool: 8, fightingStyle: "PUNHO_FORTE",
+    desc: "Passiva: Furacão da Folha, Vendaval da Folha e Grande Furacão da Folha gastam 15% menos energia.",
   },
   jutsu("tai_acao_dinamica", "Ação Dinâmica", "D", 2, ["tai_entrada_dinamica"], 8, 8, "Série rápida de socos e chutes que pressiona a Defesa do alvo.", -1.25),
   jutsu("tai_grande_furacao_folha", "Grande Furacão da Folha", "C", 2, ["tai_vendaval_folha"], 12, 12, "Onda de chutes em sequência que dificulta a resposta do adversário."),

@@ -34,6 +34,7 @@ model UserCharacter {
   mastery    CharacterMastery?
   clan       CharacterClan?
   elements   CharacterElement[]
+  fightingStyles CharacterFightingStyle[]
   jutsus     CharacterJutsu[]
   missions   MissionInstance[]
   inventory  InventoryItem[]
@@ -96,6 +97,19 @@ model CharacterElement {
   element   String // FOGO | AGUA | VENTO | TERRA | RAIO | CRISTAL (kekkei genkai, so via /admin)
 
   @@unique([charId, element])
+}
+
+// Estilos de luta de Taijutsu que o personagem ja foi ensinado (ver
+// FightingStyle em config/enums.ts). Sem isso, a raiz da arvore do estilo
+// fica bloqueada mesmo com nivel suficiente — quem concede e' NPC em RP
+// (futuro) ou /admin ate la.
+model CharacterFightingStyle {
+  id        String        @id @default(cuid())
+  character UserCharacter @relation(fields: [charId], references: [id], onDelete: Cascade)
+  charId    String
+  style     String // PUNHO_FORTE | PUNHO_ARHAT | PUNHO_ADAMANTINO | TAIJUTSU_AGITACAO
+
+  @@unique([charId, style])
 }
 
 model CharacterClan {

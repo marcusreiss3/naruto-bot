@@ -4,6 +4,7 @@ export const FUINJUTSU_ABILITIES: Ability[] = [
   {
     id: "fuin_metodo_selamento_fogo", name: "Método de Selamento de Fogo", category: "NINJUTSU", tier: 1, resource: "chakra", cost: 12, actionType: "BONUS",
     range: 4, shape: "SINGLE_TARGET", clearsTerrain: "FIRE", cleanses: ["BURN"], scalingAttribute: "fuinjutsu",
+    requiredItems: [{ itemId: "pergaminho_rank_b", amount: 1, exhaustToItemId: "pergaminho_rank_b_gasto" }],
     requirements: { manualOnly: true, attributes: { fuinjutsu: 4 }, level: 4 }, tags: ["fuinjutsu", "selamento", "fogo", "suporte"],
     description: "Inscreve uma fórmula de selamento que apaga o fogo no local visado e remove Queimadura do alvo atingido.",
   },

@@ -226,6 +226,7 @@ export function empoweredDamageMult(
 // `empoweredScope` (restringe a quem a Sobrecarga vale, ver empoweredDamageMult
 // acima). Puro e testavel; quem grava/consome no banco e' combat-engine.ts.
 export interface EffectData {
+  sourceAbilityId?: string;
   formGroup?: { group: string; amount: number };
   onExpire?: { effectId: EffectId; stacks?: number; duration?: number };
   empoweredScope?:
@@ -242,6 +243,18 @@ export function parseEffectData(dataJson: string | null | undefined): EffectData
   } catch {
     return {};
   }
+}
+
+// Um finalizador de modo não pode ser liberado apenas por ter sido comprado
+// na árvore: a instância ativa do efeito precisa ter sido criada pelo próprio
+// modo. `duration` também impede que um efeito já expirado conte.
+export function hasActiveEffectFromAbility(
+  activeEffects: EffectState[],
+  abilityId: string,
+): boolean {
+  return activeEffects.some((effect) =>
+    effect.duration > 0 && parseEffectData(effect.dataJson).sourceAbilityId === abilityId,
+  );
 }
 
 // ----------------------------------------------------------------- NARA (cla)

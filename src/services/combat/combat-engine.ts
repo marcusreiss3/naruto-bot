@@ -54,6 +54,7 @@ import {
   ninjutsuBlocked,
   tickEffect,
   empoweredDamageMult,
+  hasActiveEffectFromAbility,
   parseEffectData,
   type EffectState,
 } from "./effects.js";
@@ -929,6 +930,12 @@ export async function useAbility(
   if (ability.requiresActiveGate && strongFistGate(actor.flags) !== ability.requiresActiveGate) {
     return fail(`Esta técnica exige o Portão ${ability.requiresActiveGate} aberto.`);
   }
+  if (
+    ability.requiresActiveEffectFromAbilityId
+    && !hasActiveEffectFromAbility(actor.effects, ability.requiresActiveEffectFromAbilityId)
+  ) {
+    return fail("Esta técnica exige que seu modo correspondente esteja ativo.");
+  }
 
   // economia de acao
   if (ability.additionalActionType === "COMUM" && actor.actedCommon) return fail("Ação comum já usada.");
@@ -1185,6 +1192,7 @@ export async function useAbility(
             replaceGroup: ae.replaceGroup,
             onExpire: ae.onExpire,
             empoweredScope: resolveEmpoweredScope(ae.empoweredScope, ability),
+            sourceAbilityId: ability.id,
           },
         );
         logs.push(`⚡ ${recipient.name} recebeu efeito **${effectLabel(ae.effectId)}**.`);
@@ -1907,6 +1915,7 @@ async function applyReactionBenefits(
       replaceGroup: effect.replaceGroup,
       onExpire: effect.onExpire,
       empoweredScope: resolveEmpoweredScope(effect.empoweredScope, reactAb),
+      sourceAbilityId: reactAb.id,
     });
     logs.push(`⚡ ${target.name} recebeu efeito **${effectLabel(effect.effectId)}** pela reação.`);
   }
@@ -1971,12 +1980,14 @@ export async function applyEffect(
       | { kind: "taijutsu" }
       | { kind: "ninjutsu" }
       | { kind: "clan"; clanId: string };
+    sourceAbilityId?: string;
   },
 ): Promise<{ explosion?: number; sealed?: boolean; hardened?: boolean; collapsed?: boolean }> {
   const burnOpts = opts?.burn;
   const replaceGroup = opts?.replaceGroup;
   const onExpire = opts?.onExpire;
   const empoweredScope = opts?.empoweredScope;
+  const sourceAbilityId = opts?.sourceAbilityId;
   const participant = await prisma.combatParticipant.findUnique({
     where: { id: participantId },
     select: { flagsJson: true },
@@ -2107,6 +2118,7 @@ export async function applyEffect(
   // ja' existia pra isso — ver EffectData/parseEffectData em effects.ts.
   const existing = await prisma.effectInstance.findFirst({ where: { participantId, effectId } });
   const data = parseEffectData(existing?.dataJson);
+  if (sourceAbilityId) data.sourceAbilityId = sourceAbilityId;
   // Sobrecarga e' um multiplicador temporario, nao um acumulo. Reaplicar ou
   // receber outra fonte mantem apenas a mais forte (1 = bonus padrao; valores
   // acima de 1 guardam o multiplicador proprio, como 1.2 do Bisturi).

@@ -150,13 +150,13 @@ describe("Chinoike: passivas — vitalidade de sangue, Genjutsu amplo e Genjutsu
     expect(passiveMods(["chinoike_sangue_fervente"], chuva).rangeBonus).toBe(0); // CONE, fora de rangeShapes
   });
 
-  it("Sangue Desperto (ápice) só multiplica dano da própria Genjutsu Ketsuryuugan, não os outros jutsus do clã", () => {
+  it("Sangue Desperto (ápice) é a segunda parcela de dano de todo o clã", () => {
     const mKetsuryuugan = passiveMods(["chinoike_apice"], ketsuryuugan);
-    expect(mKetsuryuugan.damageMult).toBeCloseTo(1.4);
+    expect(mKetsuryuugan.damageMult).toBeCloseTo(1.2);
     expect(mKetsuryuugan.executeBonus).toEqual({ hpThreshold: 0.3, mult: 1.25 });
 
     const mChuva = passiveMods(["chinoike_apice"], chuva); // escala por ninjutsu, não genjutsu
-    expect(mChuva.damageMult).toBe(1);
+    expect(mChuva.damageMult).toBeCloseTo(1.2);
   });
 
   it("nenhuma passiva de Chinoike afeta jutsu de outro clã, nem jutsu elemental", () => {
@@ -190,7 +190,7 @@ describe("Chinoike: Chuva de Granizo e Bolhas de Água são Suiton de verdade �
   it("as duas passivas empilham quando o personagem tem as duas árvores (Água + Chinoike)", () => {
     const m = passiveMods(["agua_raiz", "chinoike_raiz"], chuva);
     expect(m.costMult).toBeCloseTo(0.85 * 0.9); // Água multiplica dano E custo, Sangue Vivo só custo
-    expect(m.damageMult).toBeCloseTo(1.15);
+    expect(m.damageMult).toBeCloseTo(1.15 * 1.15);
   });
 
   it("Fluxo Constante NÃO afeta o Ketsuryuugan nem a Genjutsu Ketsuryuugan (não têm elemento)", () => {

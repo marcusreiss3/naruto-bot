@@ -65,6 +65,34 @@ const ELEMENTS = [
 // Compatibilidade para árvores que acabaram de ganhar arte enquanto o servidor
 // de demonstração ainda está com o módulo antigo carregado em memória.
 const NODE_IMAGE_FALLBACKS = {
+  akimichi_conversao_calorica: "/assets/icons/akimichi/conversao-calorica.png",
+  arhat_palmada_colapso: "/assets/icons/punho-arhat/palmada-do-colapso.png",
+  arhat_ombro: "/assets/icons/punho-arhat/ombrada.png",
+  arhat_joelhada: "/assets/icons/punho-arhat/joelhada.png",
+  arhat_palmada_ascendente: "/assets/icons/punho-arhat/palmada-ascendente.png",
+  arhat_palma_compressao: "/assets/icons/punho-arhat/palma-de-compressao.png",
+  arhat_golpe_rocha: "/assets/icons/punho-arhat/golpe-de-rocha.png",
+  tai_arhat_impacto: "/assets/icons/punho-arhat/palma-de-impacto.png",
+  tai_arhat_pressao: "/assets/icons/punho-arhat/pressao-esmagadora.png",
+  tai_arhat_estabilidade: "/assets/icons/punho-arhat/base-inabalavel.png",
+  adamantino_super_peteleco: "/assets/icons/punho-adamantino/super-peteleco.png",
+  adamantino_pe_dor_celestial: "/assets/icons/punho-adamantino/pe-da-dor-celestial.png",
+  adamantino_impacto_flor_cerejeira: "/assets/icons/punho-adamantino/impacto-da-flor-de-cerejeira.png",
+  adamantino_destruicao_pilar: "/assets/icons/punho-adamantino/destruicao-do-pilar-de-pedra.png",
+  adamantino_impacto_flor_florescimento: "/assets/icons/punho-adamantino/impacto-da-flor-de-cerejeira-florescimento.png",
+  adamantino_cem_forcas: "/assets/icons/punho-adamantino/tecnica-das-cem-forcas.png",
+  tai_adamantino_controle: "/assets/icons/punho-adamantino/controle-de-chakra-preciso.png",
+  tai_adamantino_ruptura: "/assets/icons/punho-adamantino/ruptura-concentrada.png",
+  tai_adamantino_forca: "/assets/icons/punho-adamantino/forca-acumulada.png",
+  lee_raiz: "/assets/icons/lee/espirito-da-juventude.png",
+  lee_folha_furacao: "/assets/icons/lee/furacao-da-folha.png",
+  lee_entrada_dinamica: "/assets/icons/lee/entrada-dinamica.png",
+  lee_pesos: "/assets/icons/lee/pesos-de-treinamento.png",
+  lee_lotus: "/assets/icons/lee/loto-reversa.png",
+  lee_condicionamento: "/assets/icons/lee/condicionamento-extremo.png",
+  lee_recuperacao: "/assets/icons/lee/recuperacao-heroica.png",
+  lee_passos: "/assets/icons/lee/passos-do-furacao.png",
+  lee_reflexos: "/assets/icons/lee/reflexos-de-combate.png",
   calor_raiz: "/assets/icons/calor/ebulicao-corporal.png",
   calor_disparo: "/assets/icons/calor/disparo-bolas-calor.png",
   calor_esfera: "/assets/icons/calor/esfera-calor.png",
@@ -157,7 +185,7 @@ const NODE_IMAGE_FALLBACKS = {
   bakurei_cupula: "/assets/icons/bakurei/cupula-sufocante.png",
 };
 
-const ICON_ASSET_VERSION = "20260804-d";
+const ICON_ASSET_VERSION = "20260806-fuinjutsu-punho-forte-2";
 
 function versionedIcon(path) {
   if (!path || !path.startsWith("/assets/icons/")) return path;
@@ -220,12 +248,13 @@ const ATTR_LABEL = {
 // pra comprar nada de fora do próprio clã/elemento (o servidor recusa).
 let showAllTrees = false;
 // Imagem de fundo por elemento (public/assets/bg). Ausente = sem imagem, só o gradiente.
-const BG_ASSET_VERSION = "20260805-d";
+const BG_ASSET_VERSION = "20260806-fuinjutsu";
 const ELEMENT_BG = {
   FUNDAMENTOS: `url('/assets/bg/ninjutsu.png?v=${BG_ASSET_VERSION}')`,
   IRYO_NINJUTSU: `url('/assets/bg/iryo-ninjutsu.png?v=${BG_ASSET_VERSION}')`,
   BUKIJUTSU: `url('/assets/bg/bukijutsu.png?v=${BG_ASSET_VERSION}')`,
   GENJUTSU: `url('/assets/bg/genjutsu.png?v=${BG_ASSET_VERSION}')`,
+  FUINJUTSU: `url('/assets/bg/fuinjutsu.png?v=${BG_ASSET_VERSION}')`,
   // taijutsu passiva (arvore central) + os 4 estilos de luta especificos
   TAIJUTSU_PASSIVAS: `url('/assets/bg/taijutsu.png?v=${BG_ASSET_VERSION}')`,
   TAIJUTSU: `url('/assets/bg/punho-forte.png?v=${BG_ASSET_VERSION}')`,
@@ -277,6 +306,7 @@ const CLAN_BACKGROUNDS = {
 // A descrição vem do servidor como texto puro; o realce é feito aqui por regex,
 // então basta escrever o nome do efeito na desc que ele vira link explicativo.
 const GLOSSARY = [
+  { re: "Selo de Contrato", tip: "Selo de Contrato: bloqueia temporariamente tecnicas de invocacao e tecnicas de chakra vinculadas a Bijuu. Dura 2 rodadas." },
   { re: "Inevitável", tip: "Inevitável: este ataque ignora todas as reações defensivas do alvo — Esquiva, Bloqueio e Aparo." },
   { re: "Queimadura(?:s)?", tip: "Queimadura: causa 8 de dano por rodada e reduz em 5% o dano de Taijutsu por acúmulo. Ao juntar 5 acúmulos, causa 40 de dano e os acúmulos são removidos." },
   { re: "Sangramento", tip: "Sangramento: o alvo perde 5 de vida por turno, recebe metade da cura e ainda perde 6 de vida sempre que usa um golpe físico." },
@@ -649,6 +679,11 @@ function setEquipmentOpen(open) {
   if (open) renderEquipmentPage();
 }
 
+const STYLE_TREE_IDS = new Set([
+  "ASSASSINATO_NINJA", "TAIJUTSU_AGITACAO",
+  "TAIJUTSU", "ARHAT", "ADAMANTINO",
+]);
+
 function buildElemBar() {
   const bar = $("elembar");
   bar.innerHTML = "";
@@ -660,8 +695,10 @@ function buildElemBar() {
     // todo no' de todo cla sem trocar o clanId do personagem).
     const unlocked =
       e.id === "FUNDAMENTOS" ||
-      e.id === "BUKIJUTSU" || e.id === "IRYO_NINJUTSU" || e.id === "GENJUTSU" || e.id === "FUINJUTSU" || e.id === "TAIJUTSU_PASSIVAS" || e.id === "ASSASSINATO_NINJA" || e.id === "TAIJUTSU_AGITACAO" || e.id === "TAIJUTSU" || e.id === "ARHAT" || e.id === "ADAMANTINO" ||
-      (e.clanGate
+      e.id === "BUKIJUTSU" || e.id === "IRYO_NINJUTSU" || e.id === "GENJUTSU" || e.id === "FUINJUTSU" || e.id === "TAIJUTSU_PASSIVAS" ||
+      (STYLE_TREE_IDS.has(e.id)
+        ? (state.trees[e.id] || []).some((n) => n.status === "OWNED")
+        : e.clanGate
         ? state.char.clanId === e.clanGate || (state.trees[e.id] || []).some((n) => n.status === "OWNED")
         : state.char.elements.includes(e.id));
     if (!unlocked && !showAllTrees) continue;
@@ -682,7 +719,21 @@ function buildElemBar() {
     div.dataset.el = e.id;
     bar.appendChild(div);
   }
+  // Centraliza quando todas as opcoes cabem; ao abrir todas as arvores,
+  // habilita o modo rolavel sem deixar itens escondidos nas extremidades.
+  requestAnimationFrame(() => bar.classList.toggle("is-overflow", bar.scrollWidth > bar.clientWidth + 1));
 }
+
+// Roda do mouse/trackpad tambem controla a barra horizontal, sem exigir
+// arrastar a pequena alca do scrollbar.
+document.addEventListener("DOMContentLoaded", () => {
+  const bar = $("elembar");
+  bar?.addEventListener("wheel", (event) => {
+    if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+    event.preventDefault();
+    bar.scrollLeft += event.deltaY;
+  }, { passive: false });
+});
 
 function actionLabel(ability) {
   const labels = { COMUM: "Ação comum", BONUS: "Ação bônus", MOVIMENTO: "Ação de movimento", REACAO: "Reação" };
@@ -739,7 +790,10 @@ function renderTree(elId) {
   // lá e é isso que dá a leitura de tronco central com ramos simétricos; calcular
   // posição a partir dos `requires` desmanchava esse desenho. Coluna 0 fica no
   // meio do palco, sob o título.
-  const alcance = nodes.reduce((m, n) => Math.max(m, Math.abs(n.col)), 0);
+  // Normaliza tanto a largura calculada quanto a posicao final. Assim as
+  // arvores elementais, kekkei genkai e de cla obedecem a mesma malha.
+  const standardCol = (col) => Math.abs(col) >= 0.8 && Math.abs(col) <= 1 ? Math.sign(col) * 1.25 : col;
+  const alcance = nodes.reduce((m, n) => Math.max(m, Math.abs(standardCol(n.col))), 0);
   const treeWidth = Math.max(WIDTH, alcance * 2 * COL_GAP + 240);
   wrap.style.width = treeWidth + "px";
   wrap.style.height = height + "px";
@@ -749,7 +803,12 @@ function renderTree(elId) {
   const rolagem = document.querySelector(".stage-scroll");
   if (rolagem) rolagem.scrollLeft = Math.max(0, (treeWidth - rolagem.clientWidth) / 2);
 
-  const pos = (n) => ({ x: treeWidth / 2 + n.col * COL_GAP, y: TOP_PAD + layoutRow(n) * ROW_GAP });
+  // Toda ramificação lateral usa a mesma distância do Bukijutsu. Alguns
+  // arquivos antigos registram a coluna lateral como ±1 ou ±0.8; ambos são
+  // a mesma intenção visual e entram na malha padrão ±1.25. Colunas ±0.75
+  // (interseções do Bukijutsu) e ±2 (layout especial Senju) permanecem como
+  // foram desenhadas.
+  const pos = (n) => ({ x: treeWidth / 2 + standardCol(n.col) * COL_GAP, y: TOP_PAD + layoutRow(n) * ROW_GAP });
   const byId = Object.fromEntries(nodes.map((n) => [n.id, n]));
 
   // arestas: linha reta (galho ligando pai -> filho) — mesmo estilo das árvores

@@ -19,7 +19,7 @@ export const IRYO_NINJUTSU_TREE: SkillNodeDef[] = [
   jutsu("iryo_hemostatica", "Técnica Hemostática", "C", "Purificação", 0, 2, ["iryo_desintoxicacao"], 7, 7, "Fios delicados de chakra verde aproximam as bordas do ferimento e selam os vasos rompidos."),
   // Único nó de desconto do Iryō. Antes eram 4 (um geral + três amarrados a
   // técnicas específicas), que empilhavam até -23,5% numa técnica só.
-  passive("iryo_antidoto_eficiente", "Refino do Fluxo", "🧪", "Purificação", 0, 3, ["iryo_hemostatica"], 11, 11, "Passiva: técnicas de Iryō Ninjutsu gastam 12% menos chakra. Este desconto se combina com outras reduções de custo que você já possui."),
+  passive("iryo_antidoto_eficiente", "Refino do Fluxo", "🧪", "Purificação", 0, 3, ["iryo_hemostatica"], 11, 11, "Passiva: técnicas de Iryō Ninjutsu gastam 12% menos chakra."),
   jutsu("iryo_mosquitos", "Água Medicinal: Mosquitos de Água", "B", "Purificação", 0, 4, ["iryo_antidoto_eficiente"], 14, 14, "Pequenos mosquitos feitos de água medicinal pousam sobre o paciente e extraem resíduos escuros."),
   passive("iryo_triagem_rapida", "Triagem Rápida", "⚕️", "Purificação", 0, 5, ["iryo_mosquitos"], 24, 24, "Passiva: suas técnicas de purificação e o Choque da Desorientação ganham +1 casa de alcance."),
 

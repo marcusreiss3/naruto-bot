@@ -1,6 +1,6 @@
 import { prisma } from "../../db/client.js";
 import { BALANCE } from "../../config/balance.js";
-import { ATTRIBUTES, type Attribute, type Element } from "../../config/enums.js";
+import { ATTRIBUTES, type Attribute, type Element, type FightingStyle } from "../../config/enums.js";
 import { ALL_ABILITIES, getClan } from "../../data/index.js";
 import { getNode } from "../../data/element-trees/index.js";
 import { maxHp, expectedMasteryPoints } from "./formulas.js";
@@ -179,6 +179,23 @@ export async function setElement(charId: string, element: Element): Promise<void
 export async function removeElement(charId: string, element: Element): Promise<void> {
   await prisma.characterElement
     .delete({ where: { charId_element: { charId, element } } })
+    .catch(() => undefined);
+}
+
+// Ensina um estilo de luta ao personagem (ver FightingStyle em config/
+// enums.ts). Hoje so' concedido via /admin — a via narrativa (NPC em RP)
+// ainda nao existe.
+export async function setFightingStyle(charId: string, style: FightingStyle): Promise<void> {
+  await prisma.characterFightingStyle.upsert({
+    where: { charId_style: { charId, style } },
+    create: { charId, style },
+    update: {},
+  });
+}
+
+export async function removeFightingStyle(charId: string, style: FightingStyle): Promise<void> {
+  await prisma.characterFightingStyle
+    .delete({ where: { charId_style: { charId, style } } })
     .catch(() => undefined);
 }
 

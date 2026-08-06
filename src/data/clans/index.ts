@@ -595,34 +595,6 @@ export const CLAN_ABILITIES: Ability[] = [
       "Depois da Técnica do Super Tamanho Múltiplo, desfere um tapa mortal com as duas mãos: a concentração de chakra ativa os músculos e aumenta ainda mais a massa do golpe. Ignora Bloqueio e Aparo.",
   },
   {
-    // id = "akimichi_apice" pra bater com o grantsAbilityId padrao do no
-    // homonimo na arvore (clan-trees/index.ts). Skill com duracao, NAO
-    // passiva permanente — o pedido original era "muito forte ser passiva".
-    id: "akimichi_apice",
-    name: "Pílula Secreta",
-    category: "NINJUTSU",
-    tier: 3,
-    resource: "chakra",
-    cost: 23,
-    actionType: "BONUS",
-    range: 0,
-    shape: "SELF",
-    effects: [
-      {
-        effectId: "EMPOWERED",
-        duration: 3,
-        onExpire: { effectId: "DEFENSE_DOWN", duration: 2 },
-        empoweredScope: "physical",
-      },
-    ],
-    requirements: { clanId: "akimichi", manualOnly: true },
-    tags: ["akimichi", "pilulas", "buff", "risco"],
-    visualDescription:
-      "O usuário engole uma das pílulas secretas do clã, e seu corpo é tomado por uma intensa descarga de chakra.",
-    description:
-      "O usuário engole uma das pílulas secretas do clã, e seu corpo é tomado por uma intensa descarga de chakra.",
-  },
-  {
     id: "akimichi_modo_borboleta",
     name: "Modo Borboleta",
     category: "NINJUTSU",
@@ -647,11 +619,12 @@ export const CLAN_ABILITIES: Ability[] = [
     resource: "energia",
     cost: 45,
     actionType: "COMUM",
-    baseDamage: 40,
+    baseDamage: 36,
     scalingAttribute: "taijutsu",
     range: 1,
     shape: "MELEE",
     unguardable: true,
+    requiresActiveEffectFromAbilityId: "akimichi_modo_borboleta",
     requirements: { clanId: "akimichi", manualOnly: true },
     tags: ["akimichi", "borboleta", "apice", "finalizador"],
     description:
@@ -918,7 +891,7 @@ export const CLAN_ABILITIES: Ability[] = [
     actionType: "COMUM",
     range: 0,
     shape: "SELF",
-    effects: [{ effectId: "EMPOWERED", duration: 3, empoweredScope: "physical" }],
+    effects: [{ effectId: "EMPOWERED", stacks: 1.3, duration: 3, empoweredScope: "physical" }],
     requiresPet: true,
     requirements: { clanId: "inuzuka", manualOnly: true },
     tags: ["inuzuka", "cao", "fusao", "buff"],
@@ -942,6 +915,7 @@ export const CLAN_ABILITIES: Ability[] = [
     push: 2,
     undodgeable: true,
     requiresPet: true,
+    requiresActiveEffectFromAbilityId: "inuzuka_lobo_duas_cabecas",
     requirements: { clanId: "inuzuka", manualOnly: true },
     tags: ["inuzuka", "cao", "fusao", "perfuracao"],
     visualDescription:
@@ -960,7 +934,7 @@ export const CLAN_ABILITIES: Ability[] = [
     range: 0,
     shape: "SELF",
     effects: [
-      { effectId: "EMPOWERED", duration: 3, empoweredScope: "physical" },
+      { effectId: "EMPOWERED", stacks: 1.3, duration: 3, empoweredScope: "physical" },
       { effectId: "SHIELD", stacks: 26, duration: 3 },
     ],
     requiresPet: true,
@@ -979,13 +953,14 @@ export const CLAN_ABILITIES: Ability[] = [
     resource: "energia",
     cost: 56,
     actionType: "COMUM",
-    baseDamage: 42,
+    baseDamage: 38,
     scalingAttribute: "taijutsu",
     range: 5,
     shape: "LINE",
     undodgeable: true,
     effects: [{ effectId: "STUN", duration: 1, chance: 0.35 }],
     requiresPet: true,
+    requiresActiveEffectFromAbilityId: "inuzuka_lobo_tres_cabecas",
     requirements: { clanId: "inuzuka", manualOnly: true },
     tags: ["inuzuka", "cao", "fusao", "apice", "finalizador"],
     visualDescription:
@@ -1254,7 +1229,7 @@ export const CLAN_ABILITIES: Ability[] = [
     actionType: "BONUS",
     range: 0,
     shape: "SELF",
-    effects: [{ effectId: "EMPOWERED", duration: 3, empoweredScope: "physical" }],
+    effects: [{ effectId: "EMPOWERED", stacks: 1.3, duration: 3, empoweredScope: "physical" }],
     requirements: { clanId: "hozuki", manualOnly: true },
     tags: ["hozuki", "buff", "forca"],
     visualDescription:
@@ -1613,7 +1588,7 @@ export const CLAN_ABILITIES: Ability[] = [
     resource: "chakra",
     cost: 68,
     actionType: "COMUM",
-    baseDamage: 42,
+    baseDamage: 38,
     scalingAttribute: "ninjutsu",
     range: 6,
     shape: "LINE",
@@ -2014,7 +1989,6 @@ export const CLANS: ClanDef[] = [
       "akimichi_super_baika",
       "akimichi_mergulho",
       "akimichi_bofetada",
-      "akimichi_apice",
       "akimichi_modo_borboleta",
       "akimichi_bombardeio",
     ],

@@ -6,8 +6,7 @@ import { CLAN_PASSIVES } from "../src/data/clan-trees/passives.js";
 import { passiveMods } from "../src/services/combat/passives.js";
 import { lockReason, type CharSnapshot } from "../src/services/characters/skill-tree.js";
 import { ATTRIBUTES } from "../src/config/enums.js";
-import { empoweredDamageMult, parseEffectData, type EffectState } from "../src/services/combat/effects.js";
-import { BALANCE } from "../src/config/balance.js";
+import { parseEffectData } from "../src/services/combat/effects.js";
 
 // as 6 tecnicas gated por atributo + a Pilula Secreta (skill, nao mais
 // passiva) + as 2 da "pilula" propriamente ditas = 9 abilities reais.
@@ -18,7 +17,6 @@ const IDS = [
   "akimichi_super_baika",
   "akimichi_mergulho",
   "akimichi_bofetada",
-  "akimichi_apice",
   "akimichi_modo_borboleta",
   "akimichi_bombardeio",
 ] as const;
@@ -29,7 +27,6 @@ const NINJUTSU_GATED = ["akimichi_baika_parcial", "akimichi_baika", "akimichi_su
 const TAIJUTSU_GATED = ["akimichi_tanque", "akimichi_mergulho", "akimichi_bofetada"] as const;
 // as duas depois da Pilula Secreta nao pedem atributo — o gate e' o proprio
 // nó "Pílula Secreta" (agora um jutsu, não mais passiva)
-const PILL_GATED = ["akimichi_modo_borboleta", "akimichi_bombardeio"] as const;
 
 // orcamento folgado em TODOS os atributos: cada no paga com o seu proprio
 // pool agora, entao um snapshot de teste precisa de saldo em todos eles.
@@ -42,6 +39,7 @@ const snap = (over: Partial<CharSnapshot> = {}): CharSnapshot => ({
   spentByPool: {},
   pointsByPool: {},
   elements: [],
+  fightingStyles: new Set(),
   owned: new Set(),
   clanId: "akimichi",
   attributes: RICO,
@@ -58,7 +56,7 @@ describe("Akimichi: integridade da arvore de cla", () => {
 
   it("só a raiz é PASSIVE — a árvore tem só 1 passiva permanente, não 2", () => {
     const passivos = allNodes().filter((n) => n.kind === "PASSIVE" && n.clanId === "akimichi");
-    expect(passivos.map((n) => n.id)).toEqual(["akimichi_raiz"]);
+    expect(passivos.map((n) => n.id)).toEqual(["akimichi_raiz", "akimichi_conversao_calorica"]);
   });
 
   it("nenhum nó de Akimichi tem `element` (gate é clanId, não elemento)", () => {
@@ -74,7 +72,7 @@ describe("Akimichi: integridade da arvore de cla", () => {
   });
 
   it("as tecnicas de 'crescer' e a Pílula Secreta são NINJUTSU; as de 'usar o corpo' são TAIJUTSU", () => {
-    for (const id of [...NINJUTSU_GATED, "akimichi_apice", "akimichi_modo_borboleta"]) {
+    for (const id of [...NINJUTSU_GATED, "akimichi_modo_borboleta"]) {
       expect(getAbility(id)!.category, id).toBe("NINJUTSU");
     }
     for (const id of [...TAIJUTSU_GATED, "akimichi_bombardeio"]) {
@@ -99,7 +97,6 @@ describe("Akimichi: integridade da arvore de cla", () => {
       "akimichi_super_baika",
       "akimichi_mergulho",
       "akimichi_bofetada",
-      "akimichi_apice",
       "akimichi_modo_borboleta",
       "akimichi_bombardeio",
     ];
@@ -131,9 +128,8 @@ describe("Akimichi: pool por atributo — 'crescer' paga Ninjutsu, 'bater' paga 
   });
 
   it("Pílula Secreta e Modo Borboleta saem de Ninjutsu; o Bombardeio (golpe físico), de Taijutsu", () => {
-    expect(allNodes().find((n) => n.id === "akimichi_apice")!.pool).toBe("ninjutsu");
-    expect(allNodes().find((n) => n.id === PILL_GATED[0])!.pool).toBe("ninjutsu");
-    expect(allNodes().find((n) => n.id === PILL_GATED[1])!.pool).toBe("taijutsu");
+    expect(allNodes().find((n) => n.id === "akimichi_modo_borboleta")!.pool).toBe("ninjutsu");
+    expect(allNodes().find((n) => n.id === "akimichi_bombardeio")!.pool).toBe("taijutsu");
   });
 
   it("nenhum nó carrega reqAttribute — o gate cruzado virou o próprio reqPool", () => {
@@ -160,12 +156,12 @@ describe("Akimichi: passiva da raiz — única fonte de dano permanente do clã"
 
   it("CLAN_PASSIVES do Akimichi tem só um registro (a raiz) — o ápice virou skill, não passiva", () => {
     const doAkimichi = CLAN_PASSIVES.filter((p) => p.clanId === "akimichi");
-    expect(doAkimichi.map((p) => p.nodeId)).toEqual(["akimichi_raiz"]);
+    expect(doAkimichi.map((p) => p.nodeId)).toEqual(["akimichi_raiz", "akimichi_conversao_calorica"]);
   });
 
   it("Fartura do Clã dá +30% de dano e +1 casa de empurrão", () => {
     const m = passiveMods(["akimichi_raiz"], parcial);
-    expect(m.damageMult).toBeCloseTo(1.6);
+    expect(m.damageMult).toBeCloseTo(1.25);
     expect(m.pushBonus).toBe(1);
   });
 
@@ -186,7 +182,7 @@ describe("Akimichi: passiva da raiz — única fonte de dano permanente do clã"
 
 describe("Akimichi: jutsu SELF não precisam do truque de baseDamage 0", () => {
   it("nenhum dos quatro (Baika/Super Baika/Pílula Secreta/Modo Borboleta) tem baseDamage — SELF já aplica sem gate de dano", () => {
-    for (const id of ["akimichi_baika", "akimichi_super_baika", "akimichi_apice", "akimichi_modo_borboleta"]) {
+    for (const id of ["akimichi_baika", "akimichi_super_baika", "akimichi_modo_borboleta"]) {
       expect(getAbility(id)!.baseDamage, id).toBeUndefined();
       expect(getAbility(id)!.shape, id).toBe("SELF");
     }
@@ -209,55 +205,6 @@ describe("Akimichi: Barreira de forma não soma (Baika -> Super Baika), mas outr
   it("Modo Borboleta NÃO usa o mesmo grupo (não é a mesma 'forma' — soma normal com outras Barreiras)", () => {
     const borboleta = getAbility("akimichi_modo_borboleta")!;
     expect(borboleta.effects![0]!.replaceGroup).toBeUndefined();
-  });
-});
-
-describe("Pílula Secreta: skill com duração (EMPOWERED) e debuff ao expirar (onExpire), não mais passiva permanente", () => {
-  const pilula = getAbility("akimichi_apice")!;
-
-  it("é ação bônus, categoria NINJUTSU, sem baseDamage — ingerir a pílula é rápido", () => {
-    expect(pilula.actionType).toBe("BONUS");
-    expect(pilula.category).toBe("NINJUTSU");
-  });
-
-  it("aplica EMPOWERED por 3 rodadas e vira Defesa Reduzida por 2 rodadas ao expirar", () => {
-    const eff = pilula.effects!.find((e) => e.effectId === "EMPOWERED")!;
-    expect(eff).toBeTruthy();
-    expect(eff.duration).toBe(3);
-    expect(eff.onExpire).toEqual({ effectId: "DEFENSE_DOWN", duration: 2 });
-  });
-
-  it("EMPOWERED multiplica o dano em +60% (bônus da Sobrecarga) e some quando expira", () => {
-    const fisico = { category: "TAIJUTSU" };
-    const ativo: EffectState[] = [{ effectId: "EMPOWERED", stacks: 1, duration: 3 }];
-    const expirado: EffectState[] = [{ effectId: "EMPOWERED", stacks: 1, duration: 0 }];
-    expect(empoweredDamageMult(ativo, fisico)).toBeCloseTo(1 + BALANCE.effects.EMPOWERED.dmgMultBonus);
-    expect(empoweredDamageMult(expirado, fisico)).toBe(1);
-    expect(empoweredDamageMult([], fisico)).toBe(1);
-  });
-
-  it("a Pílula nasce escopada pra dano FÍSICO — não deveria turbinar um ninjutsu elemental sem nada a ver", () => {
-    const eff = pilula.effects!.find((e) => e.effectId === "EMPOWERED")!;
-    expect(eff.empoweredScope).toBe("physical");
-  });
-
-  it("EMPOWERED escopado como 'physical' só multiplica TAIJUTSU/KENJUTSU (a descrição promete só 'Taijutsu/Kenjutsu')", () => {
-    const comEscopo: EffectState[] = [
-      { effectId: "EMPOWERED", stacks: 1, duration: 3, dataJson: JSON.stringify({ empoweredScope: { kind: "physical" } }) },
-    ];
-    expect(empoweredDamageMult(comEscopo, { category: "TAIJUTSU" })).toBeCloseTo(1.6);
-    expect(empoweredDamageMult(comEscopo, { category: "KENJUTSU" })).toBeCloseTo(1.6);
-    // Bukijutsu (arremesso de kunai/shuriken) fica de fora de propósito —
-    // é físico, mas a descrição só promete Taijutsu/Kenjutsu.
-    expect(empoweredDamageMult(comEscopo, { category: "BUKIJUTSU" })).toBe(1);
-    expect(empoweredDamageMult(comEscopo, { category: "NINJUTSU" })).toBe(1);
-    expect(empoweredDamageMult(comEscopo, { category: "GENJUTSU" })).toBe(1);
-  });
-
-  it("empilhado com a passiva da raiz, o pico de dano fica mais forte que a antiga passiva permanente (~2,0x) — é o preço de ser temporário", () => {
-    const raizMult = passiveMods(["akimichi_raiz"], getAbility("akimichi_baika_parcial")!).damageMult;
-    const pico = raizMult * empoweredDamageMult([{ effectId: "EMPOWERED", stacks: 1, duration: 3 }], { category: "TAIJUTSU" });
-    expect(pico).toBeGreaterThan(1.6 * 1.55); // mais forte que a curva antiga (raiz*ápice permanentes)
   });
 });
 

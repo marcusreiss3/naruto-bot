@@ -98,11 +98,9 @@ export const BALANCE = {
 
   // Punho Forte / Portões Internos: cada portão futuro poderá aumentar os
   // dois valores; o primeiro já cobra o desgaste físico pedido pela árvore.
-  // O multiplicador termina em 2.0x no portão 8 — o MESMO teto que toda
-  // passiva de dano do jogo respeita (regra dos ~2.0x, travada em
-  // tests/passives.test.ts pros elementos). Antes ia ate' 5.0x (+400%), o que
-  // deixava um golpe de Portão da Morte/Guy Noturno matar qualquer HP do jogo
-  // sozinho — muito acima de qualquer outra arvore.
+  // O Portão da Morte ultrapassa o teto usual de 2.0x porque, uma vez aberto,
+  // não pode mais ser fechado ou trocado até a morte do usuário. O desgaste
+  // de 100 HP por turno continua sendo o contrapeso central.
   punhoForteGates: {
     1: { taijutsuDamageMult: 1.10, selfDamagePerTurn: 5 },
     2: { taijutsuDamageMult: 1.20, selfDamagePerTurn: 8, energyRecoveryPerTurn: 10 },
@@ -111,7 +109,7 @@ export const BALANCE = {
     5: { taijutsuDamageMult: 1.58, selfDamagePerTurn: 25 },
     6: { taijutsuDamageMult: 1.72, selfDamagePerTurn: 35, energyRecoveryPerTurn: 20 },
     7: { taijutsuDamageMult: 1.85, selfDamagePerTurn: 50 },
-    8: { taijutsuDamageMult: 2.00, selfDamagePerTurn: 100 },
+    8: { taijutsuDamageMult: 2.50, selfDamagePerTurn: 100 },
   } as Record<number, { taijutsuDamageMult: number; selfDamagePerTurn: number; energyRecoveryPerTurn?: number }>,
 
   // ---- Maestria: multiplicador de custo por recurso ----

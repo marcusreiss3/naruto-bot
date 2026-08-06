@@ -34,6 +34,22 @@ export const ELEMENT_LABELS: Record<Element, string> = {
   GELO: "Gelo",
 };
 
+// Estilos de luta de Taijutsu: cada um e' uma arvore de especializacao
+// separada. O personagem NAO nasce com nenhum — sera ensinado por NPCs em
+// RP (ainda nao implementado) ou concedido via /admin ate la. Assassinato
+// Silencioso SOMA este requisito aos que ja tinha (elemento AGUA + vila
+// Kiri) — nao substitui.
+export const FIGHTING_STYLES = ["PUNHO_FORTE", "PUNHO_ARHAT", "PUNHO_ADAMANTINO", "TAIJUTSU_AGITACAO", "ASSASSINATO_SILENCIOSO"] as const;
+export type FightingStyle = (typeof FIGHTING_STYLES)[number];
+
+export const FIGHTING_STYLE_LABELS: Record<FightingStyle, string> = {
+  PUNHO_FORTE: "Punho Forte",
+  PUNHO_ARHAT: "Punho Arhat",
+  PUNHO_ADAMANTINO: "Punho Adamantino",
+  TAIJUTSU_AGITACAO: "Taijutsu de Agitação",
+  ASSASSINATO_SILENCIOSO: "Assassinato Silencioso",
+};
+
 // Os 9 atributos do personagem. Ordem = ordem de exibicao no /perfil e no menu.
 export const ATTRIBUTES = [
   "ninjutsu",

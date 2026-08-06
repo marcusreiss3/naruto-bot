@@ -2,8 +2,8 @@ import { SlashCommandBuilder, type ChatInputCommandInteraction, type Autocomplet
 import type { Command } from "./types.js";
 import { prisma } from "../db/client.js";
 import { isAdmin } from "../utils/permissions.js";
-import { ATTRIBUTES, ATTRIBUTE_LABELS, ELEMENTS, MASTERY_LEVELS, RESOURCES, EFFECT_IDS, effectLabel } from "../config/enums.js";
-import type { Attribute, Element, EffectId } from "../config/enums.js";
+import { ATTRIBUTES, ATTRIBUTE_LABELS, ELEMENTS, FIGHTING_STYLES, FIGHTING_STYLE_LABELS, MASTERY_LEVELS, RESOURCES, EFFECT_IDS, effectLabel } from "../config/enums.js";
+import type { Attribute, Element, EffectId, FightingStyle } from "../config/enums.js";
 import { respec } from "../services/characters/attribute-allocator.js";
 import {
   getOrCreateCharacter,
@@ -13,6 +13,7 @@ import {
   setResource,
   setMastery,
   setElement,
+  setFightingStyle,
   setClan,
   addJutsu,
   removeJutsu,
@@ -29,6 +30,7 @@ const attrChoices = ATTRIBUTES.map((a) => ({ name: ATTRIBUTE_LABELS[a], value: a
 const resourceChoices = RESOURCES.map((r) => ({ name: r, value: r }));
 const masteryChoices = MASTERY_LEVELS.map((m) => ({ name: m, value: m }));
 const elementChoices = ELEMENTS.map((e) => ({ name: e, value: e }));
+const fightingStyleChoices = FIGHTING_STYLES.map((s) => ({ name: FIGHTING_STYLE_LABELS[s], value: s }));
 
 export const admin: Command = {
   data: new SlashCommandBuilder()
@@ -176,6 +178,13 @@ export const admin: Command = {
         .setDescription("Concede um elemento")
         .addUserOption((o) => o.setName("usuario").setDescription("Usuário").setRequired(true))
         .addStringOption((o) => o.setName("elemento").setDescription("Elemento").addChoices(...elementChoices).setRequired(true)),
+    )
+    .addSubcommand((s) =>
+      s
+        .setName("estilo-luta-set")
+        .setDescription("Ensina um estilo de luta (Punho Forte, Arhat, Adamantino, Agitação, Assassinato)")
+        .addUserOption((o) => o.setName("usuario").setDescription("Usuário").setRequired(true))
+        .addStringOption((o) => o.setName("estilo").setDescription("Estilo de luta").addChoices(...fightingStyleChoices).setRequired(true)),
     )
     .addSubcommand((s) =>
       s
@@ -434,6 +443,13 @@ export const admin: Command = {
         await interaction.editReply(`✅ Elemento ${elemento} concedido a **${char.name}**.`);
         return;
       }
+      case "estilo-luta-set": {
+        const char = await getChar();
+        const estilo = interaction.options.getString("estilo", true) as FightingStyle;
+        await setFightingStyle(char.id, estilo);
+        await interaction.editReply(`✅ Estilo de luta ${FIGHTING_STYLE_LABELS[estilo]} ensinado a **${char.name}**.`);
+        return;
+      }
       case "cla-set": {
         const char = await getChar();
         const cla = interaction.options.getString("cla", true);
@@ -475,6 +491,7 @@ export const admin: Command = {
         const char = await getChar();
         for (const attr of ATTRIBUTES) await setAttribute(char.id, attr, 999);
         for (const element of ELEMENTS) await setElement(char.id, element);
+        for (const style of FIGHTING_STYLES) await setFightingStyle(char.id, style);
         const nodes = allNodes();
         for (const node of nodes) {
           await prisma.characterSkillNode.upsert({
@@ -491,7 +508,7 @@ export const admin: Command = {
           }
         }
         await interaction.editReply(
-          `✅ **${char.name}**: 999 em todos os atributos, todos os elementos concedidos e ${nodes.length} nós desbloqueados (todas as árvores — elementos, kekkei genkai e TODOS os clãs, mesmo os que não são o seu).`,
+          `✅ **${char.name}**: 999 em todos os atributos, todos os elementos e estilos de luta concedidos e ${nodes.length} nós desbloqueados (todas as árvores — elementos, kekkei genkai e TODOS os clãs, mesmo os que não são o seu).`,
         );
         return;
       }
@@ -499,7 +516,7 @@ export const admin: Command = {
         const char = await getChar();
         const full = await prisma.userCharacter.findUnique({
           where: { id: char.id },
-          include: { attributes: true, resources: true, mastery: true, elements: true, clan: true, jutsus: true },
+          include: { attributes: true, resources: true, mastery: true, elements: true, fightingStyles: true, clan: true, jutsus: true },
         });
         await interaction.editReply("```json\n" + JSON.stringify(full, null, 2).slice(0, 1900) + "\n```");
         return;

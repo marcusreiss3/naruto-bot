@@ -266,7 +266,7 @@ export const TAIJUTSU_ABILITIES: Ability[] = [
     range: 0,
     shape: "SELF",
     requirements: { manualOnly: true, attributes: { taijutsu: 45 }, level: 45, requiresAbilityId: "tai_portao_tristeza" },
-    gateRules: { command: "/combate portao portao:8", gate: 8, taijutsuDamageMult: 2.00, selfDamagePerTurn: 100 },
+    gateRules: { command: "/combate portao portao:8", gate: 8, taijutsuDamageMult: 2.50, selfDamagePerTurn: 100 },
     tags: ["taijutsu", "portoes", "buff", "kinjutsu", "sacrificio"],
     description: "Abre o oitavo Portão e libera a Formação dos Oito Portões Internos: poder colossal, mas o desgaste de 100 HP por turno normalmente é fatal.",
   },

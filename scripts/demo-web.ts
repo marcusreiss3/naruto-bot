@@ -9,9 +9,11 @@ import {
   ATTRIBUTE_LABELS,
   ATTRIBUTES,
   ELEMENTS,
+  FIGHTING_STYLE_LABELS,
   isKekkeiGenkai,
   type Attribute,
   type Element,
+  type FightingStyle,
 } from "../src/config/enums.js";
 import { ELEMENT_TREES, getNode, type SkillNodeDef } from "../src/data/element-trees/index.js";
 import { CLAN_TREES } from "../src/data/clan-trees/index.js";
@@ -55,6 +57,11 @@ const attributes: Partial<Record<Attribute, number>> = Object.fromEntries(
   ATTRIBUTES.map((a) => [a, 60]),
 );
 const elements: Element[] = ["FOGO", "AGUA", "VENTO", "TERRA", "RAIO"];
+// Vazio de proposito: personagem de verdade nao nasce com nenhum estilo de
+// luta (ver FightingStyle em config/enums.ts) — e' exatamente o estado que
+// mostra o cadeado nas 5 raizes. Pra navegar o conteudo das arvores mesmo
+// assim, adicione os estilos aqui manualmente.
+const fightingStyles = new Set<FightingStyle>();
 const owned = new Set<string>(["funda_elemento_1", "funda_disciplina_chakra"].filter((id) => getNode(id)));
 const conditions = new Set<string>(["TRAUMA"]);
 let mangekyoVariant: string | null = null;
@@ -83,6 +90,7 @@ function snapshot() {
     spentByPool,
     pointsByPool,
     elements,
+    fightingStyles,
     owned,
     conditions,
     clanId: DEMO_CLAN_ID as string | null,
@@ -129,6 +137,9 @@ function effectiveReqPool(node: SkillNodeDef): number {
 function lockReason(snap: ReturnType<typeof snapshot>, node: SkillNodeDef): string | null {
   if (snap.owned.has(node.id)) return "Já adquirido.";
   if (node.element && !snap.elements.includes(node.element)) return `Requer o elemento ${node.element}.`;
+  if (node.fightingStyle && !snap.fightingStyles.has(node.fightingStyle)) {
+    return `Requer o estilo de luta ${FIGHTING_STYLE_LABELS[node.fightingStyle]}.`;
+  }
   if (node.clanId && snap.clanId !== node.clanId) return `Requer o clã ${getClan(node.clanId)?.name ?? node.clanId}.`;
   if (node.requiresCondition && !snap.conditions.has(node.requiresCondition)) {
     return `Requer condição: ${node.requiresCondition === "TRAUMA" ? "Trauma" : node.requiresCondition}.`;

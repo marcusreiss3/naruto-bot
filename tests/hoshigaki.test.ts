@@ -131,12 +131,13 @@ describe("Hoshigaki: passivas — dano de graça + Kenjutsu em ramo separado, ma
 
   it("Sangue de Tubarão dá dano de graça (diferente de Nara/Hyuuga/Aburame) e corta custo", () => {
     const m = passiveMods(["hoshigaki_raiz"], cinco);
-    expect(m.damageMult).toBeCloseTo(1.45);
+    expect(m.damageMult).toBeCloseTo(1.15);
     expect(m.costMult).toBeCloseTo(0.9);
   });
 
   it("Fome Voraz soma chance de Sangramento e alcance em jutsu de área", () => {
     const m = passiveMods(["hoshigaki_fome_voraz"], cinco); // Cinco Tubarões é CONE
+    expect(m.damageMult).toBeCloseTo(1.2);
     expect(m.effectChanceBonus.BLEED).toBeCloseTo(0.15);
     expect(m.rangeBonus).toBe(1);
 
@@ -186,7 +187,7 @@ describe("Hoshigaki: são Suiton de verdade — a passiva de Água (Fluxo Consta
 
   it("as duas passivas empilham quando o personagem tem as duas árvores (Água + Hoshigaki)", () => {
     const m = passiveMods(["agua_raiz", "hoshigaki_raiz"], cinco);
-    expect(m.damageMult).toBeCloseTo(1.45 * 1.15);
+    expect(m.damageMult).toBeCloseTo(1.15 * 1.15);
     expect(m.costMult).toBeCloseTo(0.85 * 0.9);
   });
 

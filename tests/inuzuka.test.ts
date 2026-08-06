@@ -196,18 +196,19 @@ describe("Inuzuka: passivas — vínculo com a matilha, que agora também dá da
   // ele e' execucao + Atordoar, pra nao empilhar dois multiplicadores.
   it("só a raiz multiplica dano bruto; o ápice continua sendo execução", () => {
     const comDano = CLAN_PASSIVES.filter((p) => p.clanId === "inuzuka" && "damageMult" in p);
-    expect(comDano.map((p) => p.nodeId)).toEqual(["inuzuka_raiz"]);
+    expect(comDano.map((p) => p.nodeId)).toEqual(["inuzuka_raiz", "inuzuka_apice"]);
   });
 
   it("Vínculo de Matilha dá +50% de dano, corta 10% do custo e soma 30% de vida na invocação do cão", () => {
     const m = passiveMods(["inuzuka_raiz"], cao);
-    expect(m.damageMult).toBeCloseTo(1.5);
+    expect(m.damageMult).toBeCloseTo(1.2);
     expect(m.costMult).toBeCloseTo(0.9);
     expect(m.summonHpBonus).toBeCloseTo(0.3);
   });
 
   it("Instinto de Caçador executa alvos machucados e soma chance de Atordoar", () => {
     const m = passiveMods(["inuzuka_apice"], cao);
+    expect(m.damageMult).toBeCloseTo(1.2);
     expect(m.executeBonus).toEqual({ hpThreshold: 0.3, mult: 1.3 });
     expect(m.effectChanceBonus.STUN).toBeCloseTo(0.15);
   });

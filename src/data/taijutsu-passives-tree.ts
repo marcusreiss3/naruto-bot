@@ -22,11 +22,11 @@ export const TAIJUTSU_PASSIVES_TREE: SkillNodeDef[] = [
   passive("tai_pass_vigor", "Vigor de Combate", "Fundamento", "taijutsu", 0, 1, ["tai_pass_raiz"], 5, 5, "Passiva sempre ativa: sua vida máxima é 10% maior."),
 
   // Esquerda: mobilidade e esquiva.
-  passive("tai_pass_passada", "Passada Leve", "Esquerda", "taijutsu", -1, 2, ["tai_pass_vigor"], 10, 10, "Passiva: em combate, seu alcance de movimento aumenta em 1 casa."),
-  passive("tai_pass_passo_silencioso", "Passo Silencioso", "Esquerda", "taijutsu", -1, 3, ["tai_pass_passada"], 20, 20, "Passiva: seu alcance de movimento aumenta mais 1 casa."),
+  passive("tai_pass_passada", "Passada Leve", "Esquerda", "taijutsu", -1.25, 2, ["tai_pass_vigor"], 10, 10, "Passiva: em combate, seu alcance de movimento aumenta em 1 casa."),
+  passive("tai_pass_passo_silencioso", "Passo Silencioso", "Esquerda", "taijutsu", -1.25, 3, ["tai_pass_passada"], 20, 20, "Passiva: seu alcance de movimento aumenta mais 1 casa."),
   // "Nova skill" pedida: esquiva GERAL (dodgeBonus em
   // services/combat/passives.ts), nao so' contra Ninjutsu/Genjutsu.
-  passive("tai_pass_reflexo_evasivo", "Reflexo Evasivo", "Esquerda", "taijutsu", -1, 4, ["tai_pass_passo_silencioso"], 30, 30, "Passiva sempre ativa: sua chance de esquiva aumenta em 3 pontos percentuais contra qualquer ataque."),
+  passive("tai_pass_reflexo_evasivo", "Reflexo Evasivo", "Esquerda", "taijutsu", -1.25, 4, ["tai_pass_passo_silencioso"], 30, 30, "Passiva sempre ativa: sua chance de esquiva aumenta em 3 pontos percentuais contra qualquer ataque."),
 
   // Meio: corpo — vida e regeneração.
   passive("tai_pass_corpo_temperado", "Corpo Temperado", "Meio", "taijutsu", 0, 2, ["tai_pass_vigor"], 10, 10, "Passiva sempre ativa: sua vida máxima é mais 8% maior."),
@@ -36,11 +36,11 @@ export const TAIJUTSU_PASSIVES_TREE: SkillNodeDef[] = [
   passive("tai_pass_resistencia_fisica", "Resistência Física", "Meio", "taijutsu", 0, 4, ["tai_pass_recuperacao"], 30, 30, "Passiva sempre ativa: sua vida máxima é mais 5% maior e você recupera mais 2 de vida no início de cada rodada."),
 
   // Direita: só energia, 2 etapas (sem nível 10).
-  passive("tai_pass_reserva", "Reserva Física", "Direita", "taijutsu", 1, 2, ["tai_pass_vigor"], 20, 20, "Passiva: sua energia máxima aumenta 25% (até 125%).", { cost: 3 }),
-  passive("tai_pass_reserva_profunda", "Reserva Física Profunda", "Direita", "taijutsu", 1, 3, ["tai_pass_reserva"], 30, 30, "Passiva: sua energia máxima ganha mais 25%, chegando ao limite de 150%.", { cost: 4 }),
+  passive("tai_pass_reserva", "Reserva Física", "Direita", "taijutsu", 1.25, 2, ["tai_pass_vigor"], 20, 20, "Passiva: sua energia máxima aumenta 25% (até 125%).", { cost: 3 }),
+  passive("tai_pass_reserva_profunda", "Reserva Física Profunda", "Direita", "taijutsu", 1.25, 3, ["tai_pass_reserva"], 30, 30, "Passiva: sua energia máxima ganha mais 25%, chegando ao limite de 150%.", { cost: 4 }),
 
   // Depois de completar as três ramificações, elas convergem de novo.
   passive("tai_pass_maestria", "Maestria Marcial", "Fundamento", "taijutsu", 0, 5,
     ["tai_pass_reflexo_evasivo", "tai_pass_resistencia_fisica", "tai_pass_reserva_profunda"],
-    40, 40, "Passiva: +10% de dano em todas as técnicas de Taijutsu."),
+    40, 40, "Passiva: +20% de dano em todas as técnicas de Taijutsu."),
 ];

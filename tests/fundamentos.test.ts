@@ -24,6 +24,7 @@ const snap = (over: Partial<CharSnapshot> = {}): CharSnapshot => ({
   spentByPool: {},
   pointsByPool: {},
   elements: [],
+  fightingStyles: new Set(),
   owned: new Set(),
   clanId: null,
   attributes: RICO,

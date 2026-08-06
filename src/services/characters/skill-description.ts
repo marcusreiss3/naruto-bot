@@ -2,6 +2,7 @@ import type { EffectId, TerrainKind } from "../../config/enums.js";
 import { BALANCE } from "../../config/balance.js";
 import type { Ability, AppliedEffect } from "../../data/types.js";
 import { getItem } from "../../data/items.js";
+import { getAbility } from "../../data/index.js";
 import { defaultDurationFor } from "../combat/effects.js";
 
 const EFFECT_NAMES: Record<EffectId, string> = {
@@ -256,12 +257,18 @@ export function buildMechanicsSummary(ability: Ability): string {
 
   if (ability.gateRules) {
     const rules = ability.gateRules;
-    parts.push(`Pode ser ativado e desativado com ${rules.command}.`);
+    parts.push(rules.gate === 8
+      ? `Uma vez ativado com ${rules.command}, permanece aberto até sua morte.`
+      : `Pode ser ativado e desativado com ${rules.command}.`);
     parts.push(`Enquanto aberto, aumenta em ${Math.round((rules.taijutsuDamageMult - 1) * 100)}% o dano de Taijutsu.`);
     parts.push(`Causa ${rules.selfDamagePerTurn} de dano ao usuário no início de cada turno.`);
     if (rules.energyRecoveryPerTurn) parts.push(`Recupera ${rules.energyRecoveryPerTurn}% de energia por turno.`);
   }
   if (ability.requiresActiveGate) parts.push(`Exige o Portão ${ability.requiresActiveGate} aberto.`);
+  if (ability.requiresActiveEffectFromAbilityId) {
+    const mode = getAbility(ability.requiresActiveEffectFromAbilityId);
+    parts.push(`Exige ${mode?.name ?? "o modo correspondente"} ativo.`);
+  }
 
   return parts.join(" ");
 }

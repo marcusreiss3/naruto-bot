@@ -12,7 +12,7 @@
 // nó são estáveis (guardados no banco); os grantsAbilityId apontam para as
 // abilities que serão escritas quando o roster real existir.
 // ============================================================================
-import type { Attribute, Element } from "../../config/enums.js";
+import type { Attribute, Element, FightingStyle } from "../../config/enums.js";
 import type { CharacterCondition } from "../../services/characters/mangekyo.js";
 import type { VillageId } from "../../services/village-service.js";
 import { FUNDAMENTOS } from "./fundamentals.js";
@@ -41,6 +41,13 @@ export interface SkillNodeDef {
   // personagem pertenca a este cla em vez de checar elemento.
   clanId?: string;
   requiresVillage?: VillageId;
+  // presente em todo no' dos 5 estilos de luta de Taijutsu (Punho Forte/
+  // Arhat/Adamantino/Agitacao/Assassinato Silencioso), incluindo a raiz.
+  // lockReason exige que o personagem ja tenha sido ensinado o estilo (ver
+  // FightingStyle em config/enums.ts) antes de liberar qualquer no', igual
+  // ao gate de `element`. Em Assassinato Silencioso isso SOMA ao gate que
+  // ja existia (elemento AGUA + vila Kiri) — nao substitui.
+  fightingStyle?: FightingStyle;
   name: string;
   kind: NodeKind;
   rank?: NodeRank; // só em JUTSU
@@ -676,10 +683,41 @@ const NODE_ICONS: Record<string, string> = {
   akimichi_baika: "akimichi/tecnica-do-tamanho-multiplo.png",
   akimichi_tanque: "akimichi/tanque-da-bala-humana.png",
   akimichi_super_baika: "akimichi/tecnica-do-super-tamanho-multiplo.png",
+  akimichi_conversao_calorica: "akimichi/conversao-calorica.png",
   akimichi_mergulho: "akimichi/mergulho-gordinho.png",
   akimichi_bofetada: "akimichi/super-bofetada.png",
   akimichi_modo_borboleta: "akimichi/modo-borboleta.png",
   akimichi_bombardeio: "akimichi/bombardeio-da-borboleta.png",
+
+  arhat_palmada_colapso: "punho-arhat/palmada-do-colapso.png",
+  arhat_ombro: "punho-arhat/ombrada.png",
+  arhat_joelhada: "punho-arhat/joelhada.png",
+  arhat_palmada_ascendente: "punho-arhat/palmada-ascendente.png",
+  arhat_palma_compressao: "punho-arhat/palma-de-compressao.png",
+  arhat_golpe_rocha: "punho-arhat/golpe-de-rocha.png",
+  tai_arhat_impacto: "punho-arhat/palma-de-impacto.png",
+  tai_arhat_pressao: "punho-arhat/pressao-esmagadora.png",
+  tai_arhat_estabilidade: "punho-arhat/base-inabalavel.png",
+
+  adamantino_super_peteleco: "punho-adamantino/super-peteleco.png",
+  adamantino_pe_dor_celestial: "punho-adamantino/pe-da-dor-celestial.png",
+  adamantino_impacto_flor_cerejeira: "punho-adamantino/impacto-da-flor-de-cerejeira.png",
+  adamantino_destruicao_pilar: "punho-adamantino/destruicao-do-pilar-de-pedra.png",
+  adamantino_impacto_flor_florescimento: "punho-adamantino/impacto-da-flor-de-cerejeira-florescimento.png",
+  adamantino_cem_forcas: "punho-adamantino/tecnica-das-cem-forcas.png",
+  tai_adamantino_controle: "punho-adamantino/controle-de-chakra-preciso.png",
+  tai_adamantino_ruptura: "punho-adamantino/ruptura-concentrada.png",
+  tai_adamantino_forca: "punho-adamantino/forca-acumulada.png",
+
+  lee_raiz: "lee/espirito-da-juventude.png",
+  lee_folha_furacao: "lee/ritmo-da-folha.png",
+  lee_entrada_dinamica: "lee/entrada-demolidora.png",
+  lee_pesos: "lee/pesos-de-treino.png",
+  lee_lotus: "lee/disciplina-da-lotus.png",
+  lee_condicionamento: "lee/condicionamento-extremo.png",
+  lee_recuperacao: "lee/folego-inabalavel.png",
+  lee_passos: "lee/passos-acelerados.png",
+  lee_reflexos: "lee/reflexos-de-treino.png",
 
   senju_vitalidade: "senju/vitalidade-senju.png",
   senju_controle_chakra: "senju/controle-de-chakra.png",
@@ -765,6 +803,24 @@ const NODE_ICONS: Record<string, string> = {
   raio_pararaios: "raio/para-raios.png",
   raio_kirin: "raio/kirin.png",
 
+  // ---- Iryō Ninjutsu ----
+  iryo_palma_mistica: "iryo-ninjutsu/tecnica-da-palma-mistica.png",
+  iryo_medusa: "iryo-ninjutsu/agua-medicinal-medusa.png",
+  iryo_yin: "iryo-ninjutsu/reducao-e-cura-de-ferimentos-yin.png",
+  iryo_cura_precisa: "iryo-ninjutsu/diagnostico-preciso.png",
+  iryo_cura_regenerativa: "iryo-ninjutsu/tecnica-da-cura-regenerativa.png",
+  iryo_cura_critica: "iryo-ninjutsu/cirurgia-de-emergencia.png",
+  iryo_regeneracao: "iryo-ninjutsu/regeneracao-da-criacao.png",
+  iryo_desintoxicacao: "iryo-ninjutsu/tecnica-de-desintoxicacao.png",
+  iryo_hemostatica: "iryo-ninjutsu/tecnica-hemostatica.png",
+  iryo_antidoto_eficiente: "iryo-ninjutsu/refino-do-fluxo.png",
+  iryo_mosquitos: "iryo-ninjutsu/agua-medicinal-mosquitos-de-agua.png",
+  iryo_triagem_rapida: "iryo-ninjutsu/triagem-rapida.png",
+  iryo_bisturi: "iryo-ninjutsu/bisturi-de-chakra.png",
+  iryo_lamina_estavel: "iryo-ninjutsu/lamina-estavel.png",
+  iryo_choque_desorientacao: "iryo-ninjutsu/choque-da-desorientacao.png",
+  iryo_sinapses_caoticas: "iryo-ninjutsu/sinapses-caoticas.png",
+
   // ---- Genjutsu ----
   gen_raiz: "genjutsu/veu-da-mente.png",
   gen_raizes_obscuras: "genjutsu/raizes-obscuras.png",
@@ -780,6 +836,39 @@ const NODE_ICONS: Record<string, string> = {
   gen_visao_inferno: "genjutsu/ilusao-demoniaca-visao-do-inferno.png",
 
   // ---- Taijutsu (árvore geral de passivas) ----
+  fuin_raiz: "fuinjutsu/caligrafia-de-selos.png",
+  fuin_metodo_selamento_fogo: "fuinjutsu/metodo-de-selamento-de-fogo.png",
+  fuin_traco_contencao: "fuinjutsu/traco-de-contencao.png",
+  fuin_selo_cinco_elementos: "fuinjutsu/selo-de-cinco-elementos.png",
+  fuin_selamento_contrato: "fuinjutsu/selamento-de-contrato.png",
+  fuin_formacao_cordas_luz: "fuinjutsu/formacao-das-cordas-de-luz.png",
+  fuin_ancora_formula: "fuinjutsu/ancora-da-formula.png",
+  fuin_ligacao_pano: "fuinjutsu/tecnica-da-ligacao-de-pano.png",
+  tai_furacao_folha: "punho-forte/furacao-da-folha.png",
+  tai_entrada_dinamica: "punho-forte/entrada-dinamica.png",
+  tai_vendaval_folha: "punho-forte/vendaval-da-folha.png",
+  tai_forte_ritmo: "punho-forte/ritmo-da-folha.png",
+  tai_acao_dinamica: "punho-forte/acao-dinamica.png",
+  tai_grande_furacao_folha: "punho-forte/grande-furacao-da-folha.png",
+  tai_metodo_intersecao: "punho-forte/metodo-de-intersecao.png",
+  tai_vento_ascendente_folha: "punho-forte/vento-ascendente-da-folha.png",
+  tai_sombra_folha_dancante: "punho-forte/sombra-da-folha-dancante.png",
+  tai_luz_rotatoria_folha: "punho-forte/luz-rotatoria-da-folha.png",
+  tai_portao_abertura: "punho-forte/portao-da-abertura.png",
+  tai_rajada_leoes: "punho-forte/rajada-de-leoes.png",
+  tai_lotus_frontal: "punho-forte/lotus-frontal.png",
+  tai_portao_descanso: "punho-forte/portao-do-descanso.png",
+  tai_portao_vida: "punho-forte/portao-da-vida.png",
+  tai_lotus_oculta: "punho-forte/lotus-oculta.png",
+  tai_portao_dor: "punho-forte/portao-da-dor.png",
+  tai_portao_fechamento: "punho-forte/portao-do-fechamento.png",
+  tai_portao_alegria: "punho-forte/portao-da-alegria.png",
+  tai_pavao_amanhecer: "punho-forte/pavao-do-amanhecer.png",
+  tai_portao_tristeza: "punho-forte/portao-da-tristeza.png",
+  tai_tigre_diurno: "punho-forte/tigre-diurno.png",
+  tai_portao_morte: "punho-forte/portao-da-morte.png",
+  tai_elefante_anoitecer: "punho-forte/elefante-do-anoitecer.png",
+  tai_guy_noturno: "punho-forte/guy-noturno.png",
   tai_pass_raiz: "taijutsu/disciplina-corporal.png",
   tai_pass_vigor: "taijutsu/vigor-de-combate.png",
   tai_pass_passada: "taijutsu/passada-leve.png",

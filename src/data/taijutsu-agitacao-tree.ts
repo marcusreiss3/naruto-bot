@@ -4,7 +4,7 @@ const passive = (
   id: string, name: string, col: number, row: number, requires: string[], reqLevel: number, reqPool: number, desc: string,
 ): SkillNodeDef => ({
   id, name, kind: "PASSIVE", icon: "🥊", pool: "taijutsu", cost: 2, branch: "Taijutsu de Agitação",
-  col, row, requires, reqLevel, reqPool, desc,
+  col, row, requires, reqLevel, reqPool, fightingStyle: "TAIJUTSU_AGITACAO", desc,
 });
 
 // Um estilo corporal imprevisível: fintas, trocas de ritmo e deslocamentos
@@ -18,7 +18,7 @@ export const TAIJUTSU_AGITACAO_TREE: SkillNodeDef[] = [
   // Lâmina: uma rota independente para quem mistura movimentos imprevisíveis
   // com ataques de espada. Usa pontos de Kenjutsu e não exige uma árvore extra.
   {
-    ...passive("tai_ken_postura", "Postura da Lâmina", 0.8, 0, [], 10, 10, "Passiva: suas técnicas de Kenjutsu gastam 10% menos energia. Este desconto se combina com outros descontos de custo."),
+    ...passive("tai_ken_postura", "Postura da Lâmina", 0.8, 0, [], 10, 10, "Passiva: suas técnicas de Kenjutsu gastam 10% menos energia."),
     pool: "kenjutsu", branch: "Kenjutsu",
   },
   {

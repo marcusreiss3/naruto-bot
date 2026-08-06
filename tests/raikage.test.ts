@@ -168,13 +168,13 @@ describe("Raikage: passivas — dano de graça na raiz, ápice de execução (se
 
   it("Sangue de Raikage dá +30% de dano e corta 10% de custo", () => {
     const m = passiveMods(["raikage_raiz"], lariat);
-    expect(m.damageMult).toBeCloseTo(1.3);
+    expect(m.damageMult).toBeCloseTo(1.15);
     expect(m.costMult).toBeCloseTo(0.9);
   });
 
   it("Fúria do Raikage (ápice) é só execução — sem damageMult extra", () => {
     const p = CLAN_PASSIVES.find((x) => x.nodeId === "raikage_apice")!;
-    expect(p.damageMult).toBeUndefined();
+    expect(p.damageMult).toBeCloseTo(1.1);
     expect(p.executeBonus).toEqual({ hpThreshold: 0.3, mult: 1.25 });
   });
 

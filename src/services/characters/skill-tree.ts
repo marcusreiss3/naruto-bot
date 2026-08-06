@@ -17,9 +17,11 @@ import { prisma } from "../../db/client.js";
 import {
   ATTRIBUTE_LABELS,
   ELEMENTS,
+  FIGHTING_STYLE_LABELS,
   isKekkeiGenkai,
   type Attribute,
   type Element,
+  type FightingStyle,
   type Shape,
 } from "../../config/enums.js";
 import { ELEMENT_TREES, getNode, type SkillNodeDef } from "../../data/element-trees/index.js";
@@ -53,6 +55,18 @@ import {
 
 // Icone do elemento (footer). So basicos — kekkei genkai nunca e primeiro
 // elemento. Usado pra pintar o no "Primeiro Elemento" com o elemento do cla.
+// Sincroniza os icones do indice central com as arvores em modulos separados.
+for (const tree of [
+  TAIJUTSU_TREE, ARHAT_TREE, ADAMANTINO_TREE, TAIJUTSU_PASSIVES_TREE,
+  ASSASSINATO_NINJA_TREE, TAIJUTSU_AGITACAO_TREE, FUINJUTSU_TREE,
+  BUKIJUTSU_TREE, IRYO_NINJUTSU_TREE, GENJUTSU_TREE,
+]) {
+  for (const node of tree) {
+    const indexed = getNode(node.id);
+    if (indexed?.img) node.img = indexed.img;
+  }
+}
+
 const ELEMENT_ICON: Partial<Record<Element, string>> = {
   FOGO: "/assets/icons/footer/katon.png",
   AGUA: "/assets/icons/footer/suiton.png",
@@ -174,6 +188,7 @@ export interface CharSnapshot {
   spentByPool: PoolMap; // soma dos custos dos nós comprados, por pool
   pointsByPool: PoolMap; // disponível = atributo - spentByPool[atributo]
   elements: Element[]; // elementos desbloqueados
+  fightingStyles: Set<FightingStyle>; // estilos de luta ja ensinados (NPC/admin)
   owned: Set<string>; // ids de nó comprados
   copiedJutsuIds?: string[]; // arsenal permanente aprendido pelo Sharingan
   conditions?: Set<CharacterCondition>;
@@ -204,6 +219,7 @@ function snapFrom(char: {
   level: number;
   attributes: Partial<Record<Attribute, number>> | null;
   elements: { element: string }[];
+  fightingStyles: { style: string }[];
   skillNodes: { nodeId: string }[];
   clan: { clanId: string } | null;
 }): CharSnapshot {
@@ -238,6 +254,7 @@ function snapFrom(char: {
     spentByPool,
     pointsByPool,
     elements: char.elements.map((e) => e.element as Element),
+    fightingStyles: new Set(char.fightingStyles.map((s) => s.style as FightingStyle)),
     owned,
     copiedJutsuIds,
     conditions,
@@ -251,7 +268,7 @@ function snapFrom(char: {
 export async function loadSnapshot(discordId: string, guildId: string, villageId?: VillageId): Promise<CharSnapshot | null> {
   const char = await prisma.userCharacter.findUnique({
     where: { discordId_guildId: { discordId, guildId } },
-    include: { attributes: true, elements: true, skillNodes: true, clan: true },
+    include: { attributes: true, elements: true, fightingStyles: true, skillNodes: true, clan: true },
   });
   if (!char) return null;
   const snap = snapFrom(char);
@@ -272,13 +289,20 @@ export async function loadSnapshot(discordId: string, guildId: string, villageId
   return { ...snap, villageId };
 }
 
-// Motivo pelo qual um nó NÃO pode ser comprado agora (null = pode).
 export function lockReason(snap: CharSnapshot, node: SkillNodeDef): string | null {
   if (snap.owned.has(node.id)) return "Já adquirido.";
   // nos de Fundamentos nao tem `element` (nao sao de nenhuma natureza de
   // chakra) — pulam essa exigencia de proposito.
   if (node.element && !snap.elements.includes(node.element)) {
     return `Requer o elemento ${node.element}.`;
+  }
+  // Mesmo gate do elemento, mas pra estilo de luta: sem isso a RAIZ da
+  // arvore (que nao tem `requires`) ficava livre pra qualquer personagem no
+  // nivel minimo — so' Assassinato Silencioso escapava porque a raiz dele
+  // tambem exige elemento+vila. Concedido por NPC (RP, ainda nao
+  // implementado) ou /admin ate la.
+  if (node.fightingStyle && !snap.fightingStyles.has(node.fightingStyle)) {
+    return `Requer o estilo de luta ${FIGHTING_STYLE_LABELS[node.fightingStyle]}.`;
   }
   if (node.clanId && snap.clanId !== node.clanId) {
     return `Requer o clã ${getClan(node.clanId)?.name ?? node.clanId}.`;
@@ -499,7 +523,7 @@ export async function buyNode(
   return prisma.$transaction(async (tx) => {
     const char = await tx.userCharacter.findUnique({
       where: { discordId_guildId: { discordId, guildId } },
-      include: { attributes: true, elements: true, skillNodes: true, clan: true },
+      include: { attributes: true, elements: true, fightingStyles: true, skillNodes: true, clan: true },
     });
     if (!char) return { ok: false, error: "Personagem não encontrado." };
 

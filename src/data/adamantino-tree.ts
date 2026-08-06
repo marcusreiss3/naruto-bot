@@ -27,6 +27,7 @@ const jutsu = (
   reqPool: reqTaijutsu,
   reqAttribute: { attribute: "iryoNinjutsu", value: reqIryo },
   grantsAbilityId: id,
+  fightingStyle: "PUNHO_ADAMANTINO",
   desc,
 });
 
@@ -35,8 +36,8 @@ const passiva = (
   reqLevel: number, reqPool: number, reqTaijutsu: number, desc: string,
 ): SkillNodeDef => ({
   id, name, kind: "PASSIVE", icon: "🥋", pool: "iryoNinjutsu", cost: 2,
-  branch: "Punho Adamantino", col: -1, row, requires, reqLevel, reqPool,
-  reqAttribute: { attribute: "taijutsu", value: reqTaijutsu }, desc,
+  branch: "Punho Adamantino", col: -1.25, row, requires, reqLevel, reqPool,
+  reqAttribute: { attribute: "taijutsu", value: reqTaijutsu }, fightingStyle: "PUNHO_ADAMANTINO", desc,
 });
 
 // Taijutsu de força aprimorada por controle médico de chakra. Os jutsus são
@@ -56,7 +57,7 @@ export const ADAMANTINO_TREE: SkillNodeDef[] = [
   jutsu("adamantino_impacto_flor_florescimento", "Impacto da Flor de Cerejeira: Florescimento", "A", 4, ["adamantino_destruicao_pilar"], 30, 30, 24, "A mesma pancada da Flor de Cerejeira, só que sem economia: o terreno se abre em pétalas de pedra até onde a onda alcança."),
   jutsu("adamantino_cem_forcas", "Técnica das Cem Forças", "S", 5, ["adamantino_impacto_flor_florescimento"], 34, 34, 28, "O losango na testa se abre em linhas escuras que descem pelo corpo: o chakra guardado por anos volta de uma vez para os músculos."),
 
-  passiva("tai_adamantino_controle", "Controle de Chakra Preciso", 1, ["adamantino_super_peteleco"], 12, 12, 14, "Passiva: técnicas do Punho Adamantino gastam 12% menos energia ou chakra. Este desconto se combina com outros descontos de custo."),
+  passiva("tai_adamantino_controle", "Controle de Chakra Preciso", 1, ["adamantino_super_peteleco"], 12, 12, 14, "Passiva: técnicas do Punho Adamantino gastam 12% menos energia ou chakra."),
   passiva("tai_adamantino_ruptura", "Ruptura Concentrada", 2, ["tai_adamantino_controle"], 22, 22, 24, "Passiva: Impacto da Flor de Cerejeira, Florescimento e Super Peteleco causam 10% mais dano."),
-  passiva("tai_adamantino_forca", "Força Acumulada", 3, ["tai_adamantino_ruptura"], 30, 30, 32, "Passiva: seus golpes de Punho Adamantino causam 8% mais dano; ela se combina com a Sobrecarga de Cem Forças."),
+  passiva("tai_adamantino_forca", "Força Acumulada", 3, ["tai_adamantino_ruptura"], 30, 30, 32, "Passiva: seus golpes de Punho Adamantino causam 8% mais dano."),
 ];

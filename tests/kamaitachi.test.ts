@@ -98,7 +98,7 @@ describe("Kamaitachi: Dança da Decapitação Rápida — finalizador que ignora
     expect(node.requires).toEqual(["kamaitachi_apice"]);
     expect(node.reqLevel).toBe(26);
     expect(node.cost).toBe(6);
-    expect(decap.baseDamage).toBe(42);
+    expect(decap.baseDamage).toBe(38);
   });
 });
 
@@ -116,7 +116,7 @@ describe("Kamaitachi: passivas — dano de graça na raiz, ápice de controle (s
 
   it("Fio do Leque dá +15% de dano e corta 10% de custo", () => {
     const m = passiveMods(["kamaitachi_raiz"], grandeFoice);
-    expect(m.damageMult).toBeCloseTo(1.4);
+    expect(m.damageMult).toBeCloseTo(1.05);
     expect(m.costMult).toBeCloseTo(0.9);
   });
 
@@ -125,7 +125,9 @@ describe("Kamaitachi: passivas — dano de graça na raiz, ápice de controle (s
   });
 
   it("Lâmina Viva perfura 20% da redução de bloqueio/aparo", () => {
-    expect(passiveMods(["kamaitachi_lamina_viva"], grandeFoice).armorPierce).toBeCloseTo(0.2);
+    const m = passiveMods(["kamaitachi_lamina_viva"], grandeFoice);
+    expect(m.damageMult).toBeCloseTo(1.05);
+    expect(m.armorPierce).toBeCloseTo(0.2);
   });
 
   it("Domínio da Foice (ápice) é só controle — sem damageMult", () => {
@@ -160,7 +162,7 @@ describe("Kamaitachi: é Fuuton de verdade — a passiva de Vento empilha com a 
 
   it("as duas passivas empilham quando o personagem tem as duas árvores (Vento + Kamaitachi)", () => {
     const m = passiveMods(["vento_raiz", "kamaitachi_raiz"], grandeFoice);
-    expect(m.damageMult).toBeCloseTo(1.3 * 1.4);
+    expect(m.damageMult).toBeCloseTo(1.3 * 1.05);
     expect(m.armorPierce).toBeCloseTo(0.2); // vento_raiz já dá 0.2; kamaitachi_lamina_viva não comprada aqui
   });
 });

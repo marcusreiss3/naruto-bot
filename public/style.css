@@ -327,14 +327,19 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
 .edge.on{stroke:var(--orange);stroke-width:3.5;opacity:.9;filter:drop-shadow(0 0 5px rgba(255,122,24,.6));}
 
 /* ===== Footer (barra de elementos HUD) ===== */
-.elembar{position:sticky;bottom:0;z-index:5;display:flex;justify-content:center;gap:10px;padding:14px 12px;
-  flex-wrap:wrap;background:linear-gradient(0deg,rgba(14,20,30,.96),rgba(9,12,18,.55));
+.elembar{position:sticky;bottom:0;z-index:5;display:flex;justify-content:flex-start;gap:10px;padding:14px 12px;
+  flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.55) transparent;
+  background:linear-gradient(0deg,rgba(14,20,30,.96),rgba(9,12,18,.55));
   border-top:1px solid var(--line);backdrop-filter:blur(8px);}
+.elembar:not(.is-overflow){justify-content:center;}
+.elembar::-webkit-scrollbar{height:7px;}
+.elembar::-webkit-scrollbar-track{background:transparent;}
+.elembar::-webkit-scrollbar-thumb{background:rgba(120,160,220,.55);border-radius:999px;}
 /* linha de energia laranja no topo do footer */
 .elembar::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;
   background:linear-gradient(90deg,transparent,var(--orange) 40%,var(--orange2) 50%,var(--orange) 60%,transparent);
   box-shadow:0 0 14px rgba(255,122,24,.4);}
-.elem{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;
+.elem{display:flex;flex:0 0 auto;flex-direction:column;align-items:center;gap:5px;cursor:pointer;
   width:82px;padding:9px 4px;border:1.5px solid transparent;transition:.14s;
   clip-path:polygon(9px 0,100% 0,100% calc(100% - 9px),calc(100% - 9px) 100%,0 100%,0 9px);}
 .elem .e-ico{position:relative;width:48px;height:48px;border-radius:50%;
