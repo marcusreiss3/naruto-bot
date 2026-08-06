@@ -41,7 +41,10 @@ import {
   isAreaShape,
   resolveHit,
   endTurn,
-  skipMovement,
+  stepMove,
+  finishMovement,
+  movementBudget,
+  movementUsed,
   activeParticipant,
   pickUpWeapon,
   attemptFlee,
@@ -57,6 +60,7 @@ import { partyMemberIds } from "../services/party/party-service.js";
 import { pickUpInventoryItem } from "../services/characters/inventory.js";
 import { MapRenderer } from "../services/maps/renderer.js";
 import { buildSessionEntities, condenseLogs } from "../services/combat/combat-render.js";
+import { buildCombatEmbed, buildStatusEmbed, combatRows, turnPhase } from "../services/combat/combat-view.js";
 import { startKidDialogue } from "../services/missions/kid-dialogue.js";
 import { moverCleanVillage } from "../services/missions/clean-village.js";
 import { moverRoofCleanup } from "../services/missions/roof-cleanup.js";
@@ -64,29 +68,94 @@ import { moverRoofCleanup } from "../services/missions/roof-cleanup.js";
 // Tempo para confirmar um jutsu de area antes de cancelar sozinho.
 const PREVIEW_TIMEOUT_MS = 30_000;
 
+type ViewPayload = {
+  content?: string;
+  embeds?: EmbedBuilder[];
+  files?: AttachmentBuilder[];
+  components?: ActionRowBuilder<ButtonBuilder>[];
+};
+
+// Descobre o discordId de um participante p/ marcar o dono do turno.
+async function participantMention(p: SessionFull["participants"][number]): Promise<string | null> {
+  if (p.isNpc || !p.charId) return null;
+  const uc = await prisma.userCharacter.findUnique({
+    where: { id: p.charId },
+    select: { discordId: true },
+  });
+  return uc ? `<@${uc.discordId}>` : null;
+}
+
+// Monta o payload completo do turno: mapa renderizado, embed com o painel de
+// acoes e os botoes da fase atual. Usado tanto no envio novo quanto na edicao
+// (botao de movimento) — por isso devolve o payload em vez de enviar.
+async function buildCombatPayload(
+  sessionId: string,
+  guildId: string,
+  logs: string[],
+  opts?: { controls?: boolean; mention?: boolean },
+): Promise<ViewPayload> {
+  const session = await getSessionById(sessionId);
+  if (!session) return { content: condenseLogs(logs).slice(0, 1900) || "—" };
+
+  const scenario = getScenarioById(session.scenarioId)!;
+  const entities = await buildSessionEntities(session, guildId);
+  // So' o grid: sem coordenadas, titulo, legenda nem barras dentro do PNG —
+  // as coordenadas viraram botoes e o status virou embed de texto abaixo.
+  const png = await MapRenderer.renderScenario({
+    scenario,
+    round: session.round,
+    entities,
+    drops: session.drops.map((d) => ({ cell: d.cell })),
+    includeStatusPanel: false,
+    showMetadata: false,
+  });
+  const file = new AttachmentBuilder(png, { name: "combate.png" });
+
+  const active = session.status === "ACTIVE" ? activeParticipant(session) : null;
+  const phase = turnPhase(active);
+  const budget = active ? movementBudget(session, active) : 0;
+  const used = active ? movementUsed(active) : 0;
+
+  const embed = buildCombatEmbed({
+    session,
+    active,
+    logs,
+    phase,
+    moveBudget: budget,
+    moveUsed: used,
+  });
+
+  // segundo embed = status; empilhado na MESMA mensagem, entao continua
+  // tudo editavel de uma vez a cada passo do movimento
+  const status = buildStatusEmbed(session);
+  const embeds = status ? [embed, status] : [embed];
+
+  const payload: ViewPayload = { embeds, files: [file], components: [] };
+  // controles so' aparecem no turno de um jogador de verdade
+  if (opts?.controls && active && phase !== "NPC" && phase !== "NEUTRO") {
+    payload.components = combatRows({ phase, stepsLeft: Math.max(0, budget - used) });
+  }
+  if (opts?.mention && active) {
+    const mention = await participantMention(active);
+    if (mention) payload.content = mention;
+  }
+  return payload;
+}
+
 // Renderiza o mapa do combate + log enxuto num embed e envia.
+// `movement` liga os controles do turno; `mention` marca o dono da vez (so'
+// quando o turno TROCA de dono, pra nao pingar a cada acao do proprio jogador).
 async function sendCombatView(
   interaction: ChatInputCommandInteraction,
   sessionId: string,
   logs: string[],
-  opts?: { followup?: boolean; movement?: boolean },
+  opts?: { followup?: boolean; movement?: boolean; mention?: boolean },
 ): Promise<void> {
-  const session = await getSessionById(sessionId);
   const guildId = interaction.guildId ?? "global";
-  let payload: { content?: string; embeds?: EmbedBuilder[]; files?: AttachmentBuilder[]; components?: ActionRowBuilder<ButtonBuilder>[] };
-  if (!session) {
-    payload = { content: condenseLogs(logs).slice(0, 1900) || "—" };
-  } else {
-    const scenario = getScenarioById(session.scenarioId)!;
-    const entities = await buildSessionEntities(session, guildId);
-    const png = await MapRenderer.renderScenario({ scenario, round: session.round, entities });
-    const file = new AttachmentBuilder(png, { name: "combate.png" });
-    const embed = new EmbedBuilder()
-      .setColor(0xe67e22)
-      .setDescription(condenseLogs(logs).slice(0, 4000) || "—")
-      .setImage("attachment://combate.png");
-    payload = { embeds: [embed], files: [file], components: opts?.movement ? movementRows() : [] };
-  }
+  const payload = await buildCombatPayload(sessionId, guildId, logs, {
+    controls: opts?.movement,
+    mention: opts?.mention ?? opts?.movement,
+  });
   if (opts?.followup) await interaction.followUp(payload);
   else if (interaction.deferred || interaction.replied) await interaction.editReply(payload);
   else await interaction.reply(payload);
@@ -319,7 +388,10 @@ async function iniciar(interaction: ChatInputCommandInteraction): Promise<void> 
   await interaction.editReply(
     `⚔️ Combate iniciado em **${scenario.name}** com ${players.length} participante(s)!\nUse \`/mapa\` para ver o grid.`,
   );
-  await sendCombatView(interaction, session.id, ["Escolha seu movimento."], { followup: true, movement: true });
+  await sendCombatView(interaction, session.id, ["O combate começou. Escolha seu deslocamento."], {
+    followup: true,
+    movement: true,
+  });
 }
 
 // Resolve por qual CombatParticipant o usuario age agora: o proprio, ou o
@@ -350,54 +422,83 @@ function ensureMyTurn(session: SessionFull, meId: string): string | null {
   return null;
 }
 
-function movementRows(): ActionRowBuilder<ButtonBuilder>[] {
-  return [
-    new ActionRowBuilder<ButtonBuilder>().addComponents(
-      new ButtonBuilder().setCustomId("combate:movimento:cima").setLabel("↑").setStyle(ButtonStyle.Secondary),
-    ),
-    new ActionRowBuilder<ButtonBuilder>().addComponents(
-      new ButtonBuilder().setCustomId("combate:movimento:esquerda").setLabel("←").setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId("combate:movimento:parado").setLabel("🧍 Não mover").setStyle(ButtonStyle.Primary),
-      new ButtonBuilder().setCustomId("combate:movimento:direita").setLabel("→").setStyle(ButtonStyle.Secondary),
-    ),
-    new ActionRowBuilder<ButtonBuilder>().addComponents(
-      new ButtonBuilder().setCustomId("combate:movimento:baixo").setLabel("↓").setStyle(ButtonStyle.Secondary),
-    ),
-  ];
+// Deslocamento de cada botao do D-pad. A distancia do grid e' Chebyshev,
+// entao a diagonal custa igual a reta.
+const DIR_DELTA: Record<string, { dRow: number; dCol: number }> = {
+  cima: { dRow: -1, dCol: 0 },
+  baixo: { dRow: 1, dCol: 0 },
+  esquerda: { dRow: 0, dCol: -1 },
+  direita: { dRow: 0, dCol: 1 },
+  noroeste: { dRow: -1, dCol: -1 },
+  nordeste: { dRow: -1, dCol: 1 },
+  sudoeste: { dRow: 1, dCol: -1 },
+  sudeste: { dRow: 1, dCol: 1 },
+};
+
+// Reescreve a propria mensagem do turno com o mapa e o painel atualizados.
+async function refreshTurnMessage(
+  interaction: ButtonInteraction,
+  sessionId: string,
+  logs: string[],
+): Promise<void> {
+  const payload = await buildCombatPayload(sessionId, interaction.guildId ?? "global", logs, {
+    controls: true,
+    mention: true,
+  });
+  await interaction.update({
+    content: payload.content ?? "",
+    embeds: payload.embeds ?? [],
+    files: payload.files ?? [],
+    components: payload.components ?? [],
+  });
 }
 
 async function handleMovementButton(interaction: ButtonInteraction): Promise<void> {
-  const direction = interaction.customId.split(":")[2];
+  const direction = interaction.customId.split(":")[2]!;
   const { session, me } = await getMyParticipant(interaction);
   if (!session || !me) { await interaction.reply({ content: "❌ Você não está neste combate.", ephemeral: true }); return; }
   const turnErr = ensureMyTurn(session, me.id);
   if (turnErr) { await interaction.reply({ content: `❌ ${turnErr}`, ephemeral: true }); return; }
-  if (me.actedMove) { await interaction.reply({ content: "❌ Movimento já escolhido nesta rodada.", ephemeral: true }); return; }
+  if (me.actedMove) { await interaction.reply({ content: "❌ Movimento já encerrado nesta rodada.", ephemeral: true }); return; }
 
-  if (direction === "parado") {
-    const result = await skipMovement(session, me.id);
+  // "concluir" (e o antigo "parado") fecham o deslocamento e liberam as acoes
+  if (direction === "concluir" || direction === "parado") {
+    const result = await finishMovement(session, me.id);
     if (!result.ok) { await interaction.reply({ content: `❌ ${result.error}`, ephemeral: true }); return; }
-    await interaction.update({ content: `🧍 **${me.name}** permaneceu no lugar. Ações comum e bônus liberadas.`, components: [] });
+    const moved = movementUsed(me) > 0;
+    const logs = [
+      moved
+        ? `**${me.name}** encerrou o deslocamento em **${me.cell}**.`
+        : `**${me.name}** permaneceu em **${me.cell}**.`,
+      "Ação comum e ação bônus liberadas — use `/jutsu`.",
+    ];
+    await refreshTurnMessage(interaction, session.id, logs);
     return;
   }
 
+  const delta = DIR_DELTA[direction];
+  if (!delta) { await interaction.reply({ content: "❌ Direção inválida.", ephemeral: true }); return; }
   const cell = /^([A-Z])(\d+)$/.exec(me.cell);
   const scenario = getScenarioById(session.scenarioId)!;
   if (!cell) { await interaction.reply({ content: "❌ Posição inválida.", ephemeral: true }); return; }
-  let row = cell[1]!.charCodeAt(0) - 65;
-  let col = Number(cell[2]);
-  if (direction === "cima") row--;
-  if (direction === "baixo") row++;
-  if (direction === "esquerda") col--;
-  if (direction === "direita") col++;
+  const row = cell[1]!.charCodeAt(0) - 65 + delta.dRow;
+  const col = Number(cell[2]) + delta.dCol;
   if (row < 0 || row >= scenario.rows || col < 1 || col > scenario.cols) {
     await interaction.reply({ content: "❌ Você não pode sair do mapa.", ephemeral: true });
     return;
   }
   const dest = `${String.fromCharCode(65 + row)}${col}`;
-  const result = await moveParticipant(session, me.id, dest);
+  const result = await stepMove(session, me.id, dest);
   if (!result.ok) { await interaction.reply({ content: `❌ ${result.error}`, ephemeral: true }); return; }
-  await interaction.update({ content: `🏃 **${me.name}** moveu-se para **${dest}**. Ações comum e bônus liberadas.`, components: [] });
+
+  const logs = [`**${me.name}** moveu-se para **${dest}**.`];
+  if (result.finished) {
+    logs.push("Deslocamento encerrado — ação comum e ação bônus liberadas, use `/jutsu`.");
+  } else {
+    logs.push(`Restam **${result.left}** célula(s) de deslocamento.`);
+  }
+  // o mapa e o painel sao reescritos a cada passo, na mesma mensagem
+  await refreshTurnMessage(interaction, session.id, logs);
 }
 
 export async function mover(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -651,9 +752,25 @@ export async function executeKnownAbility(
     logs.push(...hitLogs);
   }
 
-  await sendCombatView(interaction, session.id, logs);
   await checkVictory(interaction, session.id);
+  // gastou movimento + comum + bonus? o turno passa sozinho e o proximo
+  // jogador ja recebe o fluxo completo (mapa + painel + botoes).
+  const advanceLogs = await autoAdvanceIfDone(interaction, session.id, me.id);
+  logs.push(...advanceLogs);
+  await sendCombatView(interaction, session.id, logs, {
+    movement: await nextIsPlayer(session.id),
+    // so' pinga se o turno realmente mudou de dono
+    mention: advanceLogs.length > 0,
+  });
   return true;
+}
+
+// O proximo a agir e' um jogador? (define se os controles vao junto do embed)
+async function nextIsPlayer(sessionId: string): Promise<boolean> {
+  const s = await getSessionById(sessionId);
+  if (!s || s.status !== "ACTIVE") return false;
+  const active = activeParticipant(s);
+  return Boolean(active && (!active.isNpc || active.controlledById));
 }
 
 // Mostra a area de um jutsu no mapa e pede confirmacao antes de gastar recurso.
@@ -921,26 +1038,21 @@ async function persistResources(session: SessionFull): Promise<void> {
   }
 }
 
-async function fimTurno(interaction: ChatInputCommandInteraction): Promise<void> {
-  const { session, me } = await getMyParticipant(interaction);
-  if (!session || !me) {
-    await interaction.reply({ content: "❌ Você não está em combate aqui.", ephemeral: true });
-    return;
-  }
-  const turnErr = ensureMyTurn(session, me.id);
-  if (turnErr) {
-    await interaction.reply({ content: `❌ ${turnErr}`, ephemeral: true });
-    return;
-  }
-  await interaction.deferReply();
+// Passa a vez e resolve todos os turnos de NPC seguidos, parando no proximo
+// jogador. Devolve os logs acumulados. Compartilhado pelo /combate fim-turno,
+// pelo botao "Encerrar turno" e pelo avanco automatico.
+async function advanceTurn(
+  interaction: ChatInputCommandInteraction,
+  sessionId: string,
+): Promise<string[]> {
   const logs: string[] = [];
-  let result = await endTurn(session.id);
+  let result = await endTurn(sessionId);
   logs.push(...result.logs);
 
   // roda turnos de NPC automaticamente
   let guard = 0;
   while (guard++ < 30) {
-    const s = await getSessionById(session.id);
+    const s = await getSessionById(sessionId);
     if (!s || s.status !== "ACTIVE") break;
     const active = activeParticipant(s);
     // controlledById: um jogador roubou o corpo deste NPC (Shintenshin) —
@@ -953,10 +1065,70 @@ async function fimTurno(interaction: ChatInputCommandInteraction): Promise<void>
     await checkVictory(interaction, s.id);
   }
 
-  const s2 = await getSessionById(session.id);
+  const s2 = await getSessionById(sessionId);
   const nextActive = s2 && s2.status === "ACTIVE" ? activeParticipant(s2) : null;
   if (nextActive) logs.push(`➡️ Vez de **${nextActive.name}**.`);
-  await sendCombatView(interaction, session.id, logs, { movement: Boolean(nextActive && !nextActive.isNpc) });
+  return logs;
+}
+
+// True quando o participante nao tem mais nada a gastar na rodada.
+function turnExhausted(p: SessionFull["participants"][number]): boolean {
+  return p.actedMove && p.actedCommon && p.actedBonus;
+}
+
+// Depois de qualquer acao, se o jogador gastou movimento + comum + bonus o
+// turno passa sozinho e o fluxo recomeca no proximo participante. Devolve os
+// logs do avanco (vazio quando ainda sobra acao).
+async function autoAdvanceIfDone(
+  interaction: ChatInputCommandInteraction,
+  sessionId: string,
+  participantId: string,
+): Promise<string[]> {
+  const s = await getSessionById(sessionId);
+  if (!s || s.status !== "ACTIVE") return [];
+  const active = activeParticipant(s);
+  // so' avanca se quem esgotou as acoes ainda e' quem esta na vez
+  if (!active || active.id !== participantId || !turnExhausted(active)) return [];
+  return advanceTurn(interaction, sessionId);
+}
+
+// Acoes que respondem so' com texto (toggles de dojutsu, portao, pegar item,
+// agua...) tambem podem esgotar o turno. Quando esgotam, o proximo turno vai
+// num post novo no canal, com mapa, painel e botoes.
+async function afterSideAction(
+  interaction: ChatInputCommandInteraction,
+  sessionId: string,
+  participantId: string,
+): Promise<void> {
+  const logs = await autoAdvanceIfDone(interaction, sessionId, participantId);
+  if (!logs.length) return;
+  const payload = await buildCombatPayload(sessionId, interaction.guildId ?? "global", logs, {
+    controls: await nextIsPlayer(sessionId),
+    mention: true,
+  });
+  if (interaction.channel && "send" in interaction.channel) {
+    await interaction.channel.send(payload);
+  }
+}
+
+async function fimTurno(interaction: ChatInputCommandInteraction): Promise<void> {
+  const { session, me } = await getMyParticipant(interaction);
+  if (!session || !me) {
+    await interaction.reply({ content: "❌ Você não está em combate aqui.", ephemeral: true });
+    return;
+  }
+  const turnErr = ensureMyTurn(session, me.id);
+  if (turnErr) {
+    await interaction.reply({ content: `❌ ${turnErr}`, ephemeral: true });
+    return;
+  }
+  await interaction.deferReply();
+  const logs = await advanceTurn(interaction, session.id);
+  const s2 = await getSessionById(session.id);
+  const nextActive = s2 && s2.status === "ACTIVE" ? activeParticipant(s2) : null;
+  await sendCombatView(interaction, session.id, logs, {
+    movement: Boolean(nextActive && !nextActive.isNpc),
+  });
 }
 
 async function pegarArma(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -977,6 +1149,7 @@ async function pegarArma(interaction: ChatInputCommandInteraction): Promise<void
   const msg = await pickUpWeapon(session.id, me.id);
   await prisma.combatParticipant.update({ where: { id: me.id }, data: { actedCommon: true } });
   await interaction.reply(`🗡️ ${msg}`);
+  await afterSideAction(interaction, session.id, me.id);
 }
 
 async function pegarItem(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -1001,6 +1174,7 @@ async function pegarItem(interaction: ChatInputCommandInteraction): Promise<void
   }
   await prisma.combatParticipant.update({ where: { id: me.id }, data: { actedCommon: true } });
   await interaction.reply(`📦 ${me.name} pegou **${result.amount}x ${result.name}**.`);
+  await afterSideAction(interaction, session.id, me.id);
 }
 
 async function agua(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -1038,6 +1212,7 @@ async function agua(interaction: ChatInputCommandInteraction): Promise<void> {
       ? `🌊 **${me.name}** passou a andar sobre a água (gasta ${BALANCE.waterWalkUpkeepPerTurn}% chakra/turno).`
       : `💧 **${me.name}** parou de andar sobre a água.`,
   );
+  await afterSideAction(interaction, session.id, me.id);
 }
 
 // Byakugan (Hyuuga): mesmo padrao de toggle+upkeep da Caminhada Aquatica —
@@ -1073,6 +1248,7 @@ async function byakugan(interaction: ChatInputCommandInteraction): Promise<void>
       ? `👁️ **${me.name}** ativou o Byakugan (+${Math.round(BALANCE.byakuganDodgeBonus * 100)}% de esquiva contra qualquer ataque; gasta ${BALANCE.byakuganUpkeepPerTurn}% chakra/turno).`
       : `👁️ **${me.name}** desativou o Byakugan.`,
   );
+  await afterSideAction(interaction, session.id, me.id);
 }
 
 // Ketsuryuugan (Chinoike): mesmo padrao de toggle+upkeep do Byakugan.
@@ -1106,6 +1282,7 @@ async function ketsuryuugan(interaction: ChatInputCommandInteraction): Promise<v
       ? `🩸 **${me.name}** ativou o Ketsuryuugan (+${Math.round(BALANCE.ketsuryuuganDodgeBonus * 100)}% de esquiva contra qualquer ataque; gasta ${BALANCE.ketsuryuuganUpkeepPerTurn}% chakra/turno).`
       : `🩸 **${me.name}** desativou o Ketsuryuugan.`,
   );
+  await afterSideAction(interaction, session.id, me.id);
 }
 
 async function portao(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -1180,6 +1357,7 @@ async function portao(interaction: ChatInputCommandInteraction): Promise<void> {
       ? `💨 **${me.name}** fechou o Portão ${gateNames[gate]}.`
       : `💨 **${me.name}** abriu o Portão ${gateNames[gate]} (+${Math.round((rules.taijutsuDamageMult - 1) * 100)}% de dano de Taijutsu; perde ${rules.selfDamagePerTurn} HP no início de cada turno).`,
   );
+  await afterSideAction(interaction, session.id, me.id);
 }
 
 async function sharingan(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -1219,10 +1397,12 @@ async function sharingan(interaction: ChatInputCommandInteraction): Promise<void
 
   if (disabling) {
     await interaction.reply(`👁️ **${me.name}** desativou o Sharingan.`);
+    await afterSideAction(interaction, session.id, me.id);
     return;
   }
   const rules = BALANCE.sharingan[tomoe];
   await interaction.reply(
     `🔴 **${me.name}** ativou o Sharingan de ${tomoe} tomoe (+${Math.round(rules.dodgeBonus * 100)}% de esquiva; gasta ${rules.upkeepPerTurn}% de chakra por turno${tomoe === 3 ? "; copia Ninjutsus elementais e estilos de Taijutsu elegíveis observados" : ""}).`,
   );
+  await afterSideAction(interaction, session.id, me.id);
 }

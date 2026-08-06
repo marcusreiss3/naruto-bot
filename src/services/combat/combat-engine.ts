@@ -545,6 +545,26 @@ export interface MoveResult {
   cost?: number;
 }
 
+// Orcamento de deslocamento do participante nesta rodada: base + passivas,
+// ajustado por lentidao/pressa, pelo terreno da celula de ORIGEM (pantano
+// prende) e pelo cristal — que pode zerar de vez, por isso vem depois do
+// piso de 1. Puro: nao le nem escreve no banco.
+export function movementBudget(s: SessionFull, p: SessionFull["participants"][number]): number {
+  const passiveMoveBonus = characterPassiveMods(ownedNodes(p)).moveBonus;
+  let move = moveRange() + passiveMoveBonus;
+  move = applySlowToMove(move, p.effects);
+  move = applyHasteToMove(move, p.effects);
+  move = Math.max(1, Math.floor(move * terrainMoveFactor(s.terrain, p.cell, s.round)));
+  move = applyCrystalToMove(move, p.effects);
+  return move;
+}
+
+// Quanto do orcamento ja foi gasto no passo-a-passo desta rodada.
+export function movementUsed(p: SessionFull["participants"][number]): number {
+  const used = p.flags.moveStepsUsed;
+  return typeof used === "number" ? used : 0;
+}
+
 // Valida um movimento SEM aplicar (usado p/ pré-checar antes de confirmar subida).
 export function validateMove(s: SessionFull, participantId: string, dest: string): MoveResult {
   const scenario = getScenarioById(s.scenarioId)!;
@@ -571,15 +591,8 @@ export function validateMove(s: SessionFull, participantId: string, dest: string
     return { ok: false, error: "Célula bloqueada por obstáculo." };
   }
 
-  const passiveMoveBonus = characterPassiveMods(ownedNodes(p)).moveBonus;
-  let move = moveRange() + passiveMoveBonus;
-  move = applySlowToMove(move, p.effects);
-  move = applyHasteToMove(move, p.effects);
-  // pantano na celula de origem prende: sair dele custa o dobro
-  move = Math.max(1, Math.floor(move * terrainMoveFactor(s.terrain, p.cell, s.round)));
-  // cristal pesa e PODE zerar o movimento (por isso vem depois do piso de 1):
-  // coberto de cristal o suficiente, o alvo simplesmente nao anda.
-  move = applyCrystalToMove(move, p.effects);
+  // desconta o que ja foi andado no passo-a-passo desta rodada
+  const move = movementBudget(s, p) - movementUsed(p);
   // Prisma: o usuario esta suspenso num casulo de luz. Nao se move, e ponto.
   if (isPrismed(p.effects)) {
     return { ok: false, error: "Você está imóvel dentro do Prisma." };
@@ -624,6 +637,57 @@ export async function skipMovement(s: SessionFull, participantId: string): Promi
   if (p.actedMove) return { ok: false, error: "Ação de movimento já usada nesta rodada." };
   await prisma.combatParticipant.update({ where: { id: participantId }, data: { actedMove: true } });
   return { ok: true, cost: 0 };
+}
+
+export interface StepResult extends MoveResult {
+  // orcamento total e quanto sobrou depois do passo — o embed mostra isso
+  budget?: number;
+  left?: number;
+  // true quando o passo esgotou o orcamento e o movimento fechou sozinho
+  finished?: boolean;
+}
+
+// Anda UMA celula (as 8 direcoes valem, a distancia do grid e' Chebyshev) e
+// consome so' o custo desse passo, em vez de queimar o movimento inteiro como
+// o moveParticipant faz. `actedMove` so' e' marcado quando o orcamento acaba —
+// e' isso que permite ao jogador dar varios passos e ver o mapa a cada um.
+export async function stepMove(
+  s: SessionFull,
+  participantId: string,
+  dest: string,
+): Promise<StepResult> {
+  const p = s.participants.find((x) => x.id === participantId);
+  if (!p) return { ok: false, error: "Participante fora do combate." };
+  if (p.actedMove) return { ok: false, error: "Ação de movimento já usada nesta rodada." };
+
+  const budget = movementBudget(s, p);
+  const used = movementUsed(p);
+  if (used >= budget) return { ok: false, error: "Sem deslocamento restante nesta rodada." };
+
+  // validateMove ja desconta o `used`, entao cobre alcance, obstaculo, lotacao,
+  // atordoamento/enraizamento e o dobro de custo da agua.
+  const chk = validateMove(s, participantId, dest);
+  if (!chk.ok) return chk;
+
+  const cost = chk.cost ?? 1;
+  const total = used + cost;
+  const finished = total >= budget;
+  const newFlags = { ...p.flags, elevated: false, moveStepsUsed: total };
+  await prisma.combatParticipant.update({
+    where: { id: participantId },
+    data: {
+      cell: dest,
+      flagsJson: JSON.stringify(newFlags),
+      ...(finished ? { actedMove: true } : {}),
+    },
+  });
+  return { ok: true, cost, budget, left: Math.max(0, budget - total), finished };
+}
+
+// Fecha o movimento por escolha do jogador (botao "Concluir"), mesmo que
+// ainda sobrasse deslocamento. Libera a leitura de acao comum/bonus no embed.
+export async function finishMovement(s: SessionFull, participantId: string): Promise<MoveResult> {
+  return skipMovement(s, participantId);
 }
 
 // Define a flag de "subido" (altura) de um participante.
@@ -2491,6 +2555,9 @@ async function processTurnStart(sessionId: string, participantId: string, logs: 
   }
 
   hp = clampInfiniteHp(hp, p.hpMax, flags);
+  // zera o passo-a-passo de deslocamento junto com o actedMove, senao o
+  // orcamento da rodada nova ja nasceria parcialmente gasto.
+  delete flags.moveStepsUsed;
   await prisma.combatParticipant.update({
     where: { id: participantId },
     data: {
