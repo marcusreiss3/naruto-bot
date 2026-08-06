@@ -865,7 +865,7 @@ function openCopyArsenal() {
   const list = $("copyArsenalList");
   const copied = state.copiedJutsus || [];
   if (!copied.length) {
-    list.innerHTML = '<div class="copy-arsenal-empty">Nenhuma técnica copiada ainda. Ative o Sharingan de três tomoe e observe um Ninjutsu elemental elegível em combate.</div>';
+    list.innerHTML = '<div class="copy-arsenal-empty">Nenhuma técnica copiada ainda. Ative o Sharingan de três tomoe e observe um Ninjutsu elemental ou Taijutsu elegível em combate.</div>';
   } else {
     list.innerHTML = copied.map((j) => {
       const category = CAT_LABEL[j.category] || j.category;
