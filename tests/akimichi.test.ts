@@ -159,9 +159,9 @@ describe("Akimichi: passiva da raiz — única fonte de dano permanente do clã"
     expect(doAkimichi.map((p) => p.nodeId)).toEqual(["akimichi_raiz", "akimichi_conversao_calorica"]);
   });
 
-  it("Fartura do Clã dá +30% de dano e +1 casa de empurrão", () => {
+  it("Fartura do Clã dá +20% de dano e +1 casa de empurrão", () => {
     const m = passiveMods(["akimichi_raiz"], parcial);
-    expect(m.damageMult).toBeCloseTo(1.25);
+    expect(m.damageMult).toBeCloseTo(1.20);
     expect(m.pushBonus).toBe(1);
   });
 

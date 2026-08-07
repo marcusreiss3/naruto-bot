@@ -114,9 +114,9 @@ describe("Kamaitachi: Lançamento da Rede — indefensável (esquiva), não unbl
 describe("Kamaitachi: passivas — dano de graça na raiz, ápice de controle (sem multiplicador extra)", () => {
   const grandeFoice = getAbility("kamaitachi_grande_foice")!;
 
-  it("Fio do Leque dá +15% de dano e corta 10% de custo", () => {
+  it("Fio do Leque não dá mais dano de graça (raiz cortada 06/08/2026) — só corta 10% de custo", () => {
     const m = passiveMods(["kamaitachi_raiz"], grandeFoice);
-    expect(m.damageMult).toBeCloseTo(1.05);
+    expect(m.damageMult).toBeCloseTo(1);
     expect(m.costMult).toBeCloseTo(0.9);
   });
 
@@ -160,9 +160,9 @@ describe("Kamaitachi: é Fuuton de verdade — a passiva de Vento empilha com a 
     for (const id of IDS) expect(getAbility(id)!.element, id).toBe("VENTO");
   });
 
-  it("as duas passivas empilham quando o personagem tem as duas árvores (Vento + Kamaitachi)", () => {
+  it("Vento carrega o dano sozinho aqui — kamaitachi_raiz não multiplica mais dano", () => {
     const m = passiveMods(["vento_raiz", "kamaitachi_raiz"], grandeFoice);
-    expect(m.damageMult).toBeCloseTo(1.3 * 1.05);
+    expect(m.damageMult).toBeCloseTo(1.3);
     expect(m.armorPierce).toBeCloseTo(0.2); // vento_raiz já dá 0.2; kamaitachi_lamina_viva não comprada aqui
   });
 });

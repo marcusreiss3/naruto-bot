@@ -137,21 +137,35 @@ Fuga (`BALANCE.flee`): base 50%, +1 p.p. por Taijutsu, −15 p.p. por inimigo ad
 
 ## Tabela de balanceamento por rank
 
-Extraída do roster real. Fique dentro dela salvo pedido explícito.
+**Medida direto no roster real em 06/08/2026** (todas as 43+ abilities de
+`elemental.ts`, básicos + kekkei genkai, resolvidas via `NODE_ABILITY`). A
+tabela anterior era uma referência de projeto que nunca bateu com o que foi
+publicado, principalmente em A e S — ficou substituída pelos números reais
+abaixo. `chance` de efeito sobe com o rank: C ~0.15–0.6, B ~0.7, A/S
+garantido (omitir `chance`).
 
-| Rank do nó | Custo do nó (PN) | `cost` de chakra | `baseDamage` | Alcance |
+| Rank do nó | Custo do nó (PN) | `cost` de chakra | `baseDamage` núcleo¹ | `baseDamage` faixa completa² |
 |---|---|---|---|---|
-| D | 1 | 12 | ~12 | 5 |
-| C | 3 | 16–22 | 14–22 | 3–5 |
-| B | 4 | 24–32 | 24–32 | 4–6 |
-| A | 6 | 36–48 | 36–44 | 4–6 |
-| S | 10 | **70–78** | 45–55 | 7 / global |
+| D | 1 | 12 | — (1 amostra só: 14) | 14 |
+| C | 3 | 16–22 | 14–22 | 10–26 |
+| B | 4 | 24–32 | 22–32 | 10–32 |
+| A | 6 | 36–48 | 20–40 | 10–40 |
+| S | 10 | **70–78** | 34–48 | 34–48³ |
+
+¹ "Núcleo" exclui jutsu de puro controle (ver bullet abaixo) — é a faixa útil pra calibrar um jutsu de dano novo.
+² Faixa completa inclui os de controle, que puxam o piso pra baixo.
+³ Golem Defensor (Terra, rank S) fica de fora: `baseDamage` 0, é parede/utilidade, não finalizador.
+
+**C e B batem com a tabela antiga.** A e S NÃO batiam: nenhuma ability A
+chega nos 44 do teto antigo (a mais forte é 40); em S só o Kirin (48, Raio)
+chega perto de 45 — Vento e Explosão ficam em 34, bem abaixo do piso antigo.
+Rank D tem amostra única (Choro Celestial, Água, 14) — não dá pra confiar
+numa faixa com 1 dado só, trate como estimativa.
 
 Proporções:
 - Rank S é freado **economicamente**: 70–80% do pool de 100. Pode ter trava extra (Kirin: `requiresStorm` + `oncePerCombat`).
 - Área (CONE/RADIUS/LINE) paga com `baseDamage` menor que single-target do mesmo rank.
-- Jutsu de puro controle troca dano por efeito: Corrida de Fogo tem 12 de dano e entrega `FLEE_LOCK`; Prisão dos Quatro Pilares tem 12 e entrega STUN 2 + ROOT 2 + FLEE_LOCK 2 + terreno.
-- `chance` de efeito sobe com o rank: C ~0.15–0.6, B ~0.7, A/S garantido (omitir `chance`).
+- Jutsu de puro controle troca dano por efeito, e é isso que puxa o piso da faixa completa pra baixo do núcleo: Corrida de Fogo (B) tem 12 de dano e entrega `FLEE_LOCK`; Prisão dos Quatro Pilares (A) tem 12 e entrega STUN 2 + ROOT 2 + FLEE_LOCK 2 + terreno; Prisão de Água/Prisão Cristal de Jade (B, 10) e Prisão Cúpula de Terra/Pântano do Submundo (A, 10–14) seguem o mesmo padrão.
 
 ## Checklist — 3 lugares obrigatórios
 

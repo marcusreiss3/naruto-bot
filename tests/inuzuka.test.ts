@@ -199,9 +199,9 @@ describe("Inuzuka: passivas — vínculo com a matilha, que agora também dá da
     expect(comDano.map((p) => p.nodeId)).toEqual(["inuzuka_raiz", "inuzuka_apice"]);
   });
 
-  it("Vínculo de Matilha dá +50% de dano, corta 10% do custo e soma 30% de vida na invocação do cão", () => {
+  it("Vínculo de Matilha dá +15% de dano, corta 10% do custo e soma 30% de vida na invocação do cão", () => {
     const m = passiveMods(["inuzuka_raiz"], cao);
-    expect(m.damageMult).toBeCloseTo(1.2);
+    expect(m.damageMult).toBeCloseTo(1.15);
     expect(m.costMult).toBeCloseTo(0.9);
     expect(m.summonHpBonus).toBeCloseTo(0.3);
   });

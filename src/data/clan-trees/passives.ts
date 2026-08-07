@@ -179,15 +179,16 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
   {
     nodeId: "hyuuga_raiz",
     clanId: "hyuuga",
-    // 1.45 (37 PN, na curva do Raikage/Kaguya). O cla passou muito tempo em
-    // 1.00x apostando so' em ATRAVESSAR defesa (ignoresShield + execucao +
-    // Bloqueio de Ninjutsu) — ver o comentario acima. Medido depois do
-    // rebalanceamento dos clas de dano, isso deixou o Hyuuga com pico 36
-    // contra 41-70 dos outros: ultimo lugar. Perfuracao vale contra Terra e
-    // contra quem usa escudo, mas nao cobre 40% de dano a menos contra o
-    // resto do jogo. A identidade continua nos outros tres campos; o
-    // multiplicador so' o poe na curva.
-    damageMult: 1.15,
+    // 1.10 na raiz + 1.20 no apice (1.32x total, 37 PN) — dividido em dois
+    // como o resto dos clas de dano. O cla passou muito tempo em 1.00x
+    // apostando so' em ATRAVESSAR defesa (ignoresShield + execucao +
+    // Bloqueio de Ninjutsu) — ver o comentario acima — e isso deixava o
+    // Hyuuga em ultimo lugar de pico. A identidade continua nos outros tres
+    // campos; o multiplicador so' o poe na curva. Raiz cortada em 5 pontos
+    // percentuais (06/08/2026) junto com o resto dos clas de dano, pra
+    // media do grupo nao ultrapassar o Elemental sem afinidade (ver
+    // capitulo 8 do BALANCEAMENTO_FINAL.txt).
+    damageMult: 1.10,
     costMult: 0.9,
     effectChanceBonus: { NINJUTSU_BLOCK: 0.1 },
   },
@@ -232,10 +233,12 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
   {
     nodeId: "akimichi_raiz",
     clanId: "akimichi",
-    // 1.60: arvore mais cara do jogo (49 PN) e o cla explicitamente de dano
-    // bruto, entao ele encabeca a curva de dano de cla. Ver a nota de
-    // rebalanceamento no fim do arquivo.
-    damageMult: 1.25,
+    // 1.20 na raiz + 1.25 na Conversao Calorica (1.50x total, 45 PN — a
+    // arvore mais cara do jogo). O cla e' explicitamente de dano bruto,
+    // entao encabeca a curva de dano de cla; dividido em dois nos como o
+    // resto dos clas de dano. Raiz cortada -5pp (06/08/2026, ver nota em
+    // hyuuga_raiz).
+    damageMult: 1.20,
     pushBonus: 1,
   },
   {
@@ -276,11 +279,13 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
   {
     nodeId: "inuzuka_raiz",
     clanId: "inuzuka",
-    // 1.50 novo: a arvore custa 46 PN (2a mais cara) e tem 5 jutsus de dano,
-    // mas entregava 1.00x — furava a relacao "arvore cara entrega dano" que o
-    // resto do arquivo segue. O bonus entra no VINCULO (raiz) porque e' a
-    // matilha atacando junto, nao forca bruta do ninja sozinho.
-    damageMult: 1.2,
+    // 1.15 na raiz + 1.20 no apice (1.38x total, 46 PN — 2a arvore mais
+    // cara). A arvore tem 5 jutsus de dano mas entregava 1.00x — furava a
+    // relacao "arvore cara entrega dano" que o resto do arquivo segue. O
+    // bonus entra no VINCULO (raiz) porque e' a matilha atacando junto, nao
+    // forca bruta do ninja sozinho. Raiz cortada -5pp (06/08/2026, ver nota
+    // em hyuuga_raiz).
+    damageMult: 1.15,
     costMult: 0.9,
     summonHpBonus: 0.3,
   },
@@ -370,7 +375,9 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
   {
     nodeId: "hoshigaki_raiz",
     clanId: "hoshigaki",
-    damageMult: 1.15,
+    // 1.10 na raiz + 1.20 no Fome Voraz (1.32x total) — raiz cortada -5pp
+    // (06/08/2026, ver nota em hyuuga_raiz).
+    damageMult: 1.10,
     costMult: 0.9,
   },
   {
@@ -410,7 +417,9 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
   {
     nodeId: "hozuki_raiz",
     clanId: "hozuki",
-    damageMult: 1.1,
+    // 1.05 na raiz + 1.10 na Fluidez (1.155x total) — raiz cortada -5pp
+    // (06/08/2026, ver nota em hyuuga_raiz).
+    damageMult: 1.05,
     costMult: 0.9,
     hpRegenPerTurn: 4,
   },
@@ -453,7 +462,9 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
   {
     nodeId: "kaguya_raiz",
     clanId: "kaguya",
-    damageMult: 1.15,
+    // 1.10 na raiz + 1.15 no apice (1.265x total) — raiz cortada -5pp
+    // (06/08/2026, ver nota em hyuuga_raiz).
+    damageMult: 1.10,
     costMult: 0.9,
     hpRegenPerTurn: 5,
   },
@@ -492,7 +503,9 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
   {
     nodeId: "chinoike_raiz",
     clanId: "chinoike",
-    damageMult: 1.15,
+    // 1.10 na raiz + 1.20 no apice (1.32x total) — raiz cortada -5pp
+    // (06/08/2026, ver nota em hyuuga_raiz).
+    damageMult: 1.10,
     costMult: 0.9,
     hpRegenPerTurn: 4,
   },
@@ -517,16 +530,18 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
   },
 
   // ------------------------------------------------------------ KAMAITACHI
-  // Clã do vento de Suna. Mesmo nível de dano do Hoshigaki/Yuki (raiz +15%,
-  // sem multiplicador extra no ápice) — 30 PN de custo total, dano médio. O
-  // ápice e' controle (alcance + chance de Sangramento), coerente com a
-  // identidade de precisão do Vento, em vez de mais um multiplicador de dano.
+  // Clã do vento de Suna, arvore mais barata dos clas de dano (26 PN). O
+  // corte de -5pp do corte geral de raiz (06/08/2026, ver nota em
+  // hyuuga_raiz) zerou o bonus da raiz aqui — igual o Yamanaka, o campo
+  // damageMult foi removido em vez de deixado em 1.00 escrito. O cla nao
+  // fica sem dano de graça igual o Yamanaka, so' passou a receber ele
+  // inteiro pelo ápice (Lâmina Viva, 1.05x): 26 PN e' a arvore mais barata,
+  // entao e' a que menos sobra pra cortar. O ápice de controle (alcance +
+  // chance de Sangramento) continua intacto, coerente com a identidade de
+  // precisão do Vento.
   {
     nodeId: "kamaitachi_raiz",
     clanId: "kamaitachi",
-    // O arsenal inteiro tambem recebe Vento. Dois bonus modestos evitam que
-    // a arvore barata volte a ser o maior pico/PN quando ambos se combinam.
-    damageMult: 1.05,
     costMult: 0.9,
   },
   {
@@ -583,18 +598,19 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
   },
 
   // -------------------------------------------------------------- RAIKAGE
-  // Clã de dano bruto corpo a corpo (raio + taijutsu), mesmo nível de dano de
-  // raiz que Hoshigaki/Hozuki/Yuki/Kamaitachi (+15%, sem multiplicador extra
-  // no ápice) — 35 PN de custo total, dano alto pro preço. O ápice é
-  // execução (bate mais forte em quem já está no chão), coerente com a
-  // identidade de finalizador físico do clã, em vez de mais um multiplicador
-  // de dano bruto empilhado em cima da raiz.
+  // Clã de dano bruto corpo a corpo (raio + taijutsu) — 35 PN de custo
+  // total. Raiz +10%, ápice +10% (execução: bate mais forte em quem já está
+  // no chão) — 1.21x total, abaixo do Hoshigaki/Chinoike (1.32x) e do
+  // Hyuuga (1.32x) de propósito: o Raikage entrega 7 jutsus, 4 tipos de
+  // efeito e 2 utilidades pelo mesmo preço, entao paga o kit largo com
+  // multiplicador menor (ver o comentário na raiz).
   {
     nodeId: "raikage_raiz",
     clanId: "raikage",
-    damageMult: 1.15,
     // o Raikage entrega 7 jutsus, 4 tipos de efeito e 2 utilidades pelo mesmo
-    // preco, entao paga o kit largo com multiplicador menor.
+    // preco, entao paga o kit largo com multiplicador menor. Raiz tambem
+    // cortada -5pp no corte geral (06/08/2026, ver nota em hyuuga_raiz).
+    damageMult: 1.10,
     costMult: 0.9,
   },
   {

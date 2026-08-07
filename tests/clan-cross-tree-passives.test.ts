@@ -28,9 +28,9 @@ describe("sinergias entre árvores e técnicas de clã", () => {
 
   it("Hoshigaki e os ataques Hozuki recebem Água junto com suas duas passivas de clã", () => {
     const cases = [
-      ["hoshigaki_cinco_tubaroes", ["hoshigaki_raiz", "hoshigaki_fome_voraz"], 1.15 * 1.2],
-      ["hozuki_revolver_agua", ["hozuki_raiz", "hozuki_fluidez"], 1.1 * 1.1],
-      ["hozuki_tate_eboshi", ["hozuki_raiz", "hozuki_fluidez"], 1.1 * 1.1],
+      ["hoshigaki_cinco_tubaroes", ["hoshigaki_raiz", "hoshigaki_fome_voraz"], 1.10 * 1.2],
+      ["hozuki_revolver_agua", ["hozuki_raiz", "hozuki_fluidez"], 1.05 * 1.1],
+      ["hozuki_tate_eboshi", ["hozuki_raiz", "hozuki_fluidez"], 1.05 * 1.1],
     ] as const;
     for (const [id, clanNodes, clanMult] of cases) {
       const ability = getAbility(id)!;

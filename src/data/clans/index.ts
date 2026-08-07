@@ -234,7 +234,10 @@ export const CLAN_ABILITIES: Ability[] = [
     resource: "energia",
     cost: 15,
     actionType: "COMUM",
-    baseDamage: 14,
+    // rebalanceamento 06/08/2026: kit inteiro do Hyuuga tava com dano base
+    // sistematicamente abaixo dos outros clas de dano (ver clan-balance-report.ts).
+    // 14 -> 18, dentro da faixa generica de tier 1 (14-18).
+    baseDamage: 18,
     scalingAttribute: "taijutsu",
     range: 1,
     shape: "MELEE",
@@ -253,7 +256,7 @@ export const CLAN_ABILITIES: Ability[] = [
     resource: "energia",
     cost: 22,
     actionType: "COMUM",
-    baseDamage: 22,
+    baseDamage: 26, // rebalanceamento 06/08/2026 (era 22), ver hyuuga_punho_suave
     scalingAttribute: "taijutsu",
     range: 4,
     shape: "SINGLE_TARGET",
@@ -273,7 +276,7 @@ export const CLAN_ABILITIES: Ability[] = [
     resource: "energia",
     cost: 31,
     actionType: "COMUM",
-    baseDamage: 24,
+    baseDamage: 28, // rebalanceamento 06/08/2026 (era 24), ver hyuuga_punho_suave
     scalingAttribute: "taijutsu",
     range: 1,
     shape: "MELEE",
@@ -314,7 +317,10 @@ export const CLAN_ABILITIES: Ability[] = [
     resource: "energia",
     cost: 27,
     actionType: "COMUM",
-    baseDamage: 20,
+    // rebalanceamento 06/08/2026 (era 20): area (RADIUS) continua pagando
+    // menos que alvo unico do mesmo tier (Leoes Gemeos, 40) — mas precisa
+    // ficar ACIMA de 64 Palmas (28, tier 2, MELEE), nao abaixo como estava.
+    baseDamage: 33,
     scalingAttribute: "taijutsu",
     range: 4,
     shape: "RADIUS",
@@ -336,7 +342,7 @@ export const CLAN_ABILITIES: Ability[] = [
     resource: "energia",
     cost: 66,
     actionType: "COMUM",
-    baseDamage: 36,
+    baseDamage: 40, // rebalanceamento 06/08/2026 (era 36), ver hyuuga_punho_suave
     scalingAttribute: "taijutsu",
     range: 1,
     shape: "MELEE",
@@ -1246,7 +1252,7 @@ export const CLAN_ABILITIES: Ability[] = [
     resource: "chakra",
     cost: 21,
     actionType: "COMUM",
-    baseDamage: 20,
+    baseDamage: 24, // rebalanceamento 06/08/2026 (era 20)
     scalingAttribute: "ninjutsu",
     range: 5,
     shape: "SINGLE_TARGET",
@@ -1266,7 +1272,9 @@ export const CLAN_ABILITIES: Ability[] = [
     resource: "chakra",
     cost: 34,
     actionType: "COMUM",
-    baseDamage: 26,
+    // rebalanceamento 06/08/2026 (era 26): rank S pagando dano de rank C.
+    // 34 bate no piso real medido pra S (34-48, ver ninjutsu-authoring).
+    baseDamage: 34,
     scalingAttribute: "ninjutsu",
     range: 5,
     shape: "RADIUS",
@@ -1498,7 +1506,10 @@ export const CLAN_ABILITIES: Ability[] = [
     resource: "chakra",
     cost: 42,
     actionType: "COMUM",
-    baseDamage: 30,
+    // rebalanceamento 06/08/2026 (era 30): ápice alvo único de tier 3, sem
+    // desconto de área — era o pior golpe de fechamento entre os clãs de
+    // dano (Hyuuga 40, Akimichi 36, Kaguya 44). Ver clan-balance-report.ts.
+    baseDamage: 39,
     scalingAttribute: "ninjutsu",
     range: 5,
     shape: "SINGLE_TARGET",

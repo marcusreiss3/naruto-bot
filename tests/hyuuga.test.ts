@@ -181,9 +181,9 @@ describe("Hyuuga: passivas — atravessa defesa, sela chakra", () => {
     expect(comDano.map((p) => p.nodeId)).toEqual(["hyuuga_raiz", "hyuuga_apice"]);
   });
 
-  it("Olhos Brancos dá +45% de dano, corta 10% do custo e soma 10 pontos de chance de Bloqueio de Ninjutsu", () => {
+  it("Olhos Brancos dá +10% de dano, corta 10% do custo e soma 10 pontos de chance de Bloqueio de Ninjutsu", () => {
     const m = passiveMods(["hyuuga_raiz"], punho);
-    expect(m.damageMult).toBeCloseTo(1.15);
+    expect(m.damageMult).toBeCloseTo(1.10);
     expect(m.costMult).toBeCloseTo(0.9);
     expect(m.effectChanceBonus.NINJUTSU_BLOCK).toBeCloseTo(0.1);
   });

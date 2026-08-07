@@ -39,9 +39,6 @@ PICO / PN
     Melhor golpe dividido pelo custo total em PN. Quanto maior, mais dano
     ofensivo por PN investido. Nao mede controle, defesa, regeneracao ou alcance.
 
-GOLPES ATE MATAR
-    HP de referencia dividido pelo melhor golpe medio da categoria.
-
 
 3. BALANCEAMENTO FINAL DOS CLAS
 --------------------------------------------------------------------------------
@@ -51,15 +48,15 @@ Os dois bonus de dano sao multiplicativos.
 Cla          PN    Passivas       Dano medio   Melhor   Custo/dano   Pico/PN
                          proprias      nv.45       golpe
 --------------------------------------------------------------------------------
-Akimichi      45    +25% / +25%       41,25       56,25       0,74        1,25
-Inuzuka       46    +20% / +20%       40,90       54,72       0,86        1,19
-Kaguya        38    +15% / +15%       39,67       58,19       0,79        1,53
-Hyuuga        37    +15% / +20%       32,02       49,68       0,91        1,34
-Raikage       35    +15% / +10%       40,48       53,13       0,87        1,52
-Hoshigaki     34    +15% / +20%       40,30       57,96       0,82        1,70
-Chinoike      29    +15% / +20%       36,91       41,40       0,79        1,43
-Kamaitachi    26     +5% /  +5%       31,97       41,90       1,23        1,61
-Hozuki        27    +10% / +10%       27,83       31,46       0,89        1,17
+Akimichi      45    +20% / +25%       39,60       54,00       0,77        1,20
+Inuzuka       46    +15% / +20%       39,19       52,44       0,90        1,14
+Kaguya        38    +10% / +15%       37,95       55,66       0,82        1,46
+Hyuuga        37    +10% / +20%       38,28       52,80       0,76        1,43
+Raikage       35    +10% / +10%       38,72       50,82       0,91        1,45
+Hoshigaki     34    +10% / +20%       38,54       55,44       0,85        1,63
+Chinoike      33    +10% / +20%       38,28       51,48       0,76        1,56
+Kamaitachi    26     +0% /  +5%       30,45       39,90       1,29        1,53
+Hozuki        27     +5% / +10%       33,50       39,27       0,74        1,45
 
 
 4. CLAS COM AFINIDADES NATURAIS
@@ -71,15 +68,15 @@ arvore elemental.
 
 Cla          Afinidade considerada        Dano medio combinado   Melhor golpe
 --------------------------------------------------------------------------------
-Akimichi      Taijutsu                              51,98             72,90
-Inuzuka       Taijutsu                              51,64             70,92
-Kaguya        Taijutsu                              49,33             75,41
-Hyuuga        Taijutsu                              41,49             64,39
-Raikage       Taijutsu e Raio em parte do arsenal   55,61             68,86
-Hoshigaki     Agua                                  57,93             83,32
-Chinoike      Agua em parte do arsenal              44,16             51,58
-Kamaitachi    Vento                                 64,42             84,42
-Hozuki        Agua                                  40,01             45,22
+Akimichi      Taijutsu                              49,90             69,98
+Inuzuka       Taijutsu                              49,49             67,96
+Kaguya        Taijutsu                              47,19             72,14
+Hyuuga        Taijutsu                              49,61             68,43
+Raikage       Taijutsu e Raio em parte do arsenal   53,19             65,86
+Hoshigaki     Agua                                  55,41             79,69
+Chinoike      Agua em parte do arsenal              45,21             51,48
+Kamaitachi    Vento                                 61,36             80,40
+Hozuki        Agua                                  48,15             56,45
 
 
 5. INVESTIMENTOS COMBINADOS CAROS
@@ -88,11 +85,11 @@ Hozuki        Agua                                  40,01             45,22
 Build no nivel 45       PN       Dano medio    Melhor golpe   Custo/dano
 --------------------------------------------------------------------------------
 Agua completa           52          28,43          54,63          0,75
-Hoshigaki completo      34          40,30          57,96          0,82
-Hoshigaki + Agua        86          57,93          83,32             -
+Hoshigaki completo      34          38,54          55,44          0,85
+Hoshigaki + Agua        86          55,41          79,69             -
 Vento completo          47          49,37          68,51          0,74
-Kamaitachi completo     26          31,97          41,90          1,23
-Kamaitachi + Vento      73          64,42          84,42             -
+Kamaitachi completo     26          30,45          39,90          1,29
+Kamaitachi + Vento      73          61,36          80,40             -
 
 Hoshigaki + Agua e Kamaitachi + Vento atingem numeros altos, mas nao sao
 comparaveis a uma unica arvore: exigem respectivamente 86 e 73 PN. O custo
@@ -149,53 +146,66 @@ impossibilidade de fechar ou trocar o Portao antes da morte.
 
 DANO REAL - arsenal medio com passivas proprias, sem transformacao
 
-  Nivel   Bukijutsu   Elemental   Cla   Estilo   Kekkei Genkai
-  nv 10      25,9        23,1     26,0   22,1       30,1
-  nv 20      33,2        34,4     34,8   26,2       38,2
-  nv 30      36,4        40,5     38,4   31,3       57,7
-  nv 45      36,4        44,1     39,1   38,6       62,4
+  Nivel   Bukijutsu   Elemental   Cla   Estilo
+  nv 10      25,91       20,62    22,57   18,30
+  nv 20      33,15       30,86    32,17   22,70
+  nv 30      36,43       34,78    36,77   27,88
+  nv 45      36,43       37,96    37,17   34,50
 
 MELHOR GOLPE DISPONIVEL - com passivas, sem transformacao
 
-  Nivel   Bukijutsu   Elemental   Cla   Estilo   Kekkei Genkai
-  nv 10      29,9        24,3     33,2   23,0       34,4
-  nv 20      38,1        41,5     45,0   29,8       47,7
-  nv 30      50,3        52,5     53,3   41,3       75,1
-  nv 45      50,3        63,1     55,3   50,4       82,9
+  Nivel   Bukijutsu   Elemental   Cla   Estilo
+  nv 10      29,90       24,34    25,02   23,04
+  nv 20      38,09       41,51    40,35   29,84
+  nv 30      50,25       52,48    49,20   41,31
+  nv 45      50,25       63,07    50,20   50,43
 
 CUSTO / DANO REAL - menor e melhor
 
-  Nivel   Bukijutsu   Elemental   Cla   Estilo   Kekkei Genkai
-  nv 10      0,92        0,90     0,77   1,08       1,11
-  nv 20      1,05        0,72     0,82   1,09       0,99
-  nv 30      1,09        0,70     0,86   1,05       0,70
-  nv 45      1,09        0,73     0,85   0,89       0,70
+  Nivel   Bukijutsu   Elemental   Cla   Estilo
+  nv 10      0,92        0,99     0,81   1,06
+  nv 20      1,05        0,80     0,88   1,07
+  nv 30      1,09        0,80     0,87   1,05
+  nv 45      1,09        0,82     0,87   0,88
 
 COMO AS TABELAS DE CLASSES SAO CALCULADAS
 
-Cla: considera todas as passivas proprias permanentes do cla. Nao considera
-passivas de outras arvores, afinidades externas ou modos/transformacoes.
+Cla: media dos 9 clas de dano dos capitulos 3 e 4 (Akimichi, Inuzuka, Kaguya,
+Hyuuga, Raikage, Hoshigaki, Chinoike, Kamaitachi, Hozuki) - nao o roster
+completo de clas, que inclui varios de suporte puro sem multiplicador de dano
+(Nara, Aburame, Uzumaki...). Cada cla considera so' as passivas proprias
+permanentes. Nao considera afinidades externas ou modos/transformacoes.
 
-Estilo de luta: considera a arvore propria do estilo e as passivas genericas de
-Taijutsu. Nao considera modos, Portoes ou outras transformacoes temporarias.
+Estilo de luta: media de Punho Forte, Punho Arhat e Punho Adamantino, cada um
+com a arvore propria do estilo mais as passivas genericas de Taijutsu. Nao
+considera modos, Portoes ou outras transformacoes temporarias.
+
+Elemental: media dos 5 elementos basicos (Fogo, Agua, Vento, Terra, Raio),
+alvo seco, so' passivas proprias de cada elemento.
 
 HIERARQUIA POR FAIXA DE NIVEL - dano real, sem modos ou afinidades externas
 
-  Inicio (nv 10):  Cla > Bukijutsu > Elemental > Estilo
-  Meio   (nv 20):  Cla ~= Elemental > Bukijutsu > Estilo
-  Final  (nv 30):  Elemental > Cla > Bukijutsu > Estilo
-  Final  (nv 45):  Elemental > Cla > Estilo > Bukijutsu
+  Inicio (nv 10):  Bukijutsu > Cla > Elemental > Estilo
+  Meio   (nv 20):  Bukijutsu > Cla > Elemental > Estilo
+  Meio   (nv 30):  Cla > Bukijutsu > Elemental > Estilo
+  Final  (nv 45):  Elemental > Cla > Bukijutsu > Estilo
 
-Bukijutsu cumpre o objetivo de comecar forte e perder eficiencia depois.
-Estilo recebe o reforco de Maestria no final, mas continua abaixo de Elemental
-sem modo. Kekkei Genkai fica fora desta hierarquia ate a revisao propria.
+Bukijutsu cumpre o objetivo de comecar forte e perder eficiencia depois (o
+custo/dano dele so' piora nivel a nivel, o unico assim) - inclusive lidera
+o inicio de jogo, antes do Cla assumir na faixa do meio. No nivel 45, o
+Elemental ultrapassa o Cla mesmo sem afinidade nenhuma (37,96 contra 37,17) -
+o cla so' fica claramente a frente do elemental somando a arvore externa
+(ver capitulo 4), que e' exatamente o que o capitulo 1 promete. Estilo fica
+atras em dano medio a faixa toda, mas o melhor golpe dele se aproxima do
+resto no fim de jogo (nv 45: 50,43, quase igual ao Cla) - isso sem contar
+os Portoes, que mudam o teto dele por completo (ver capitulo 9).
 
 
 9. TAIJUTSU E MODOS
 --------------------------------------------------------------------------------
 
 Maestria Marcial no nivel 40: +20% de dano em Taijutsu.
-Estilo no nivel 45: dano medio sem modo 38,6; melhor golpe 50,4; custo/dano 0,89.
+Estilo no nivel 45: dano medio sem modo 34,50; melhor golpe 50,43; custo/dano 0,88.
 8o Portao: 2,50x em Taijutsu, 100 HP por turno e irreversivel ate a morte.
 Pico estimado com 8o Portao: aproximadamente 126,0.
 

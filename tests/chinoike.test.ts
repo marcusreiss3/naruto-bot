@@ -189,8 +189,8 @@ describe("Chinoike: Chuva de Granizo e Bolhas de Água são Suiton de verdade �
 
   it("as duas passivas empilham quando o personagem tem as duas árvores (Água + Chinoike)", () => {
     const m = passiveMods(["agua_raiz", "chinoike_raiz"], chuva);
-    expect(m.costMult).toBeCloseTo(0.85 * 0.9); // Água multiplica dano E custo, Sangue Vivo só custo
-    expect(m.damageMult).toBeCloseTo(1.15 * 1.15);
+    expect(m.costMult).toBeCloseTo(0.85 * 0.9);
+    expect(m.damageMult).toBeCloseTo(1.15 * 1.10);
   });
 
   it("Fluxo Constante NÃO afeta o Ketsuryuugan nem a Genjutsu Ketsuryuugan (não têm elemento)", () => {

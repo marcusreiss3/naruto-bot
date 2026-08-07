@@ -335,7 +335,7 @@ const HYUUGA: SkillNodeDef[] = [
     [],
     1,
     1,
-    "Passiva sempre ativa: mesmo sem o Byakugan ativado, a visão periférica quase total do clã já ajuda a mirar nos tenketsu certos. Seus jutsus de clã causam +15% de dano, custam 10% menos recurso e têm +10 pontos percentuais de chance de aplicar Bloqueio de Ninjutsu.",
+    "Passiva sempre ativa: mesmo sem o Byakugan ativado, a visão periférica quase total do clã já ajuda a mirar nos tenketsu certos. Seus jutsus de clã causam +10% de dano, custam 10% menos recurso e têm +10 pontos percentuais de chance de aplicar Bloqueio de Ninjutsu.",
     true,
     undefined,
     // a porta de entrada do clã e' o OLHO, nao o punho: raiz e Byakugan saem
@@ -502,7 +502,7 @@ const AKIMICHI: SkillNodeDef[] = [
     [],
     1,
     1,
-    "Passiva sempre ativa: gerações de Akimichi acumulando calorias em força. Seus jutsus de clã causam +25% de dano e empurram o alvo 1 casa a mais.",
+    "Passiva sempre ativa: gerações de Akimichi acumulando calorias em força. Seus jutsus de clã causam +20% de dano e empurram o alvo 1 casa a mais.",
     true,
   ),
   K.jutsu(
@@ -803,7 +803,7 @@ const INUZUKA: SkillNodeDef[] = [
     [],
     1,
     1,
-    "Passiva sempre ativa: o vínculo com o cão desde filhote apura os sentidos do usuário. Seus jutsus de clã causam +20% de dano e custam 10% menos recurso, e a invocação do seu cão ninja tem +30% de vida.",
+    "Passiva sempre ativa: o vínculo com o cão desde filhote apura os sentidos do usuário. Seus jutsus de clã causam +15% de dano e custam 10% menos recurso, e a invocação do seu cão ninja tem +30% de vida.",
     true,
   ),
   IZ.jutsu(
@@ -1142,7 +1142,7 @@ const HOSHIGAKI: SkillNodeDef[] = [
     [],
     1,
     1,
-    "Passiva sempre ativa: o sangue predador do clã Hoshigaki potencializa cada golpe. Seus jutsus de clã causam +15% de dano e custam 10% menos recurso.",
+    "Passiva sempre ativa: o sangue predador do clã Hoshigaki potencializa cada golpe. Seus jutsus de clã causam +10% de dano e custam 10% menos recurso.",
     true,
   ),
   HG.jutsu(
@@ -1276,7 +1276,7 @@ const HOZUKI: SkillNodeDef[] = [
     [],
     1,
     1,
-    "Passiva sempre ativa: a hidrificação do clã nunca desliga de vez. Seus jutsus de clã causam +10% de dano, custam 10% menos recurso, e você regenera 4 de vida no início de cada turno seu.",
+    "Passiva sempre ativa: a hidrificação do clã nunca desliga de vez. Seus jutsus de clã causam +5% de dano, custam 10% menos recurso, e você regenera 4 de vida no início de cada turno seu.",
     true,
   ),
   HZ.jutsu(
@@ -1400,7 +1400,7 @@ const KAGUYA: SkillNodeDef[] = [
     [],
     1,
     1,
-    "Passiva sempre ativa: o esqueleto do clã nunca para de se regenerar — cada osso quebrado volta mais forte que antes. Seus jutsus de clã causam +15% de dano, custam 10% menos recurso, e você regenera 5 de vida no início de cada turno seu.",
+    "Passiva sempre ativa: o esqueleto do clã nunca para de se regenerar — cada osso quebrado volta mais forte que antes. Seus jutsus de clã causam +10% de dano, custam 10% menos recurso, e você regenera 5 de vida no início de cada turno seu.",
     true,
   ),
   KG.jutsu(
@@ -1567,7 +1567,7 @@ const CHINOIKE: SkillNodeDef[] = [
     [],
     1,
     1,
-    "Passiva sempre ativa: o sangue do clã se regenera rápido demais pra qualquer ferimento pequeno atrapalhar. Seus jutsus de clã causam +15% de dano, custam 10% menos recurso, e você regenera 4 de vida no início de cada turno seu.",
+    "Passiva sempre ativa: o sangue do clã se regenera rápido demais pra qualquer ferimento pequeno atrapalhar. Seus jutsus de clã causam +10% de dano, custam 10% menos recurso, e você regenera 4 de vida no início de cada turno seu.",
     true,
   ),
   CI.jutsu(
@@ -1610,6 +1610,13 @@ const CHINOIKE: SkillNodeDef[] = [
     8,
     7,
     "Cria bolhas de composição explosiva ao redor do alvo, capazes de estourar sozinhas ou sob comando. Dano em área com 65% de chance de causar Queimadura por 2 rodadas.",
+    undefined,
+    undefined,
+    // rebalanceamento 06/08/2026: custo explicito de rank A (6, nao os 4 de
+    // B) — o rank continua B porque o dano dela e' de B mesmo; so' o preco
+    // sobe, pra puxar o PN total da arvore (29->33) e trazer o Pico/PN de
+    // volta pra faixa do Hoshigaki/Raikage depois do buff do apice.
+    6,
   ),
   CI.pass(
     "chinoike_olhos_sangue",
@@ -1652,6 +1659,9 @@ const CHINOIKE: SkillNodeDef[] = [
     "Prende o oponente numa ilusão sangrenta que o próprio corpo dele acredita ser real — a dor é real. Tem 60% de chance de causar Confusão por 2 rodadas e exige o Ketsuryuugan ativo (/combate ketsuryuugan).",
     undefined,
     "genjutsu",
+    // rebalanceamento 06/08/2026: mesmo caso de chinoike_bolhas_agua — custo
+    // explicito de rank A (6), rank continua B (dano de B).
+    6,
   ),
   CI.pass(
     "chinoike_apice",
@@ -1702,7 +1712,7 @@ const KAMAITACHI: SkillNodeDef[] = [
     [],
     1,
     1,
-    "Passiva sempre ativa: a mestria do clã com o leque gigante potencializa cada golpe. Seus jutsus de clã causam +5% de dano e custam 10% menos recurso.",
+    "Passiva sempre ativa: a mestria do clã com o leque gigante refina cada golpe. Seus jutsus de clã custam 10% menos recurso.",
     true,
   ),
   KM.jutsu(
@@ -1941,7 +1951,7 @@ const RAIKAGE: SkillNodeDef[] = [
     [],
     1,
     1,
-    "Passiva sempre ativa: a força descomunal da linhagem dos Raikage potencializa cada golpe. Seus jutsus de clã causam +15% de dano e custam 10% menos recurso.",
+    "Passiva sempre ativa: a força descomunal da linhagem dos Raikage potencializa cada golpe. Seus jutsus de clã causam +10% de dano e custam 10% menos recurso.",
     true,
   ),
   RK.jutsu(
