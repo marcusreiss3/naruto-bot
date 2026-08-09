@@ -15,17 +15,27 @@ export interface JutsuCostFactors {
   shape: Shape;
   baseDamage?: number;
   baseHeal?: number;
-  effects?: { effectId: EffectId; duration?: number; chance?: number }[];
+  effects?: { effectId: EffectId; stacks?: number; duration?: number; chance?: number }[];
   // buff que sempre cai no proprio usuario (ex: a Barreira da Parede de
   // Terra) — vale o mesmo que um efeito normal na conta, entao entra no
   // mesmo somatorio.
-  selfEffects?: { effectId: EffectId; duration?: number; chance?: number }[];
+  selfEffects?: { effectId: EffectId; stacks?: number; duration?: number; chance?: number }[];
   unblockable?: boolean;
   undodgeable?: boolean;
   unguardable?: boolean;
 }
 
 const AREA_SHAPES: readonly Shape[] = ["LINE", "CONE", "RADIUS"];
+
+// Efeitos cujo valor vem do ACUMULO, nao da rodada. A conta padrao
+// (severidade x duracao) parte de "severidade = quanto vale UMA RODADA do
+// efeito", o que vale pra tudo que age a cada turno — Queimadura, Veneno,
+// Lentidao, Sangramento. O MINADO nao faz nada durante as rodadas: ele detona
+// no fim, por `explodeDamagePerStack`. A duracao dele e' o comprimento do
+// pavio, nao quantas vezes ele paga — entao entra `stacks` no lugar dela.
+// Sem isso, 1 acumulo com pavio de 2 rodadas custava igual a 2 acumulos com o
+// mesmo pavio, entregando metade do dano (Esfera Explosiva vs Punho de Mina).
+const STACK_SCALED_EFFECTS: ReadonlySet<EffectId> = new Set<EffectId>(["MINADO"]);
 
 // Taxa PROGRESSIVA (tipo faixa de IR): os primeiros pontos de saida (dano OU
 // cura) custam pouco, o excedente custa cada vez mais — ver nota em
@@ -52,11 +62,11 @@ export function suggestedJutsuCost(factors: JutsuCostFactors): number {
 
   const effectsCost = [...(factors.effects ?? []), ...(factors.selfEffects ?? [])].reduce((sum, e) => {
     const severity = F.effectSeverity[e.effectId] ?? 2;
-    // sem duration explicita, assume 1 rodada (piso conservador: nao
+    // sem duration/stacks explicito, assume 1 (piso conservador: nao
     // recompensa deixar o campo em branco com custo mais baixo).
-    const duration = e.duration ?? 1;
+    const scale = STACK_SCALED_EFFECTS.has(e.effectId) ? (e.stacks ?? 1) : (e.duration ?? 1);
     const chance = e.chance ?? 1;
-    return sum + severity * duration * chance;
+    return sum + severity * scale * chance;
   }, 0);
 
   let subtotal = outputCost + effectsCost;

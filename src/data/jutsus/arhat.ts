@@ -1,5 +1,11 @@
 import type { Ability } from "../types.js";
 
+// Custos revisados em 09/08/2026 contra suggestedJutsuCost(): as seis tecnicas
+// estavam -2 a -7 acima da regua, o unico estilo de luta com TODAS as entradas
+// negativas (Punho Forte -2.67 de media, Adamantino +0.17). O alvo foi
+// "sugerido + 2", nao a regua exata: o corpo a corpo inteiro pende ~-2 porque a
+// formula nao precifica `push`, e o Arhat empurra em 5 das 6 tecnicas — zerar o
+// desvio dele o deixaria mais barato que os colegas.
 /** Técnicas ativas da árvore de Taijutsu Punho Arhat. */
 export const ARHAT_ABILITIES: Ability[] = [
   {
@@ -25,7 +31,7 @@ export const ARHAT_ABILITIES: Ability[] = [
     category: "TAIJUTSU",
     tier: 1,
     resource: "energia",
-    cost: 20,
+    cost: 17,
     actionType: "COMUM",
     baseDamage: 17,
     scalingAttribute: "taijutsu",
@@ -42,7 +48,7 @@ export const ARHAT_ABILITIES: Ability[] = [
     category: "TAIJUTSU",
     tier: 2,
     resource: "energia",
-    cost: 28,
+    cost: 26,
     actionType: "COMUM",
     baseDamage: 22,
     scalingAttribute: "taijutsu",
@@ -60,7 +66,7 @@ export const ARHAT_ABILITIES: Ability[] = [
     category: "TAIJUTSU",
     tier: 2,
     resource: "energia",
-    cost: 32,
+    cost: 27,
     actionType: "COMUM",
     baseDamage: 25,
     scalingAttribute: "taijutsu",
@@ -77,7 +83,7 @@ export const ARHAT_ABILITIES: Ability[] = [
     category: "TAIJUTSU",
     tier: 3,
     resource: "energia",
-    cost: 32,
+    cost: 29,
     actionType: "COMUM",
     baseDamage: 24,
     scalingAttribute: "taijutsu",
@@ -95,7 +101,7 @@ export const ARHAT_ABILITIES: Ability[] = [
     category: "TAIJUTSU",
     tier: 3,
     resource: "energia",
-    cost: 40,
+    cost: 35,
     actionType: "COMUM",
     baseDamage: 30,
     scalingAttribute: "taijutsu",

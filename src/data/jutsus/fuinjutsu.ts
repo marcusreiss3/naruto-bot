@@ -21,7 +21,13 @@ export const FUINJUTSU_ABILITIES: Ability[] = [
     description: "Ao tocar o peito do alvo, rompe temporariamente contratos de invocação e veda o chakra associado a Bijuu.",
   },
   {
-    id: "fuin_formacao_cordas_luz", name: "Formação das Cordas de Luz", category: "NINJUTSU", tier: 2, resource: "chakra", cost: 24, actionType: "COMUM",
+    // 24 -> 20 em 09/08/2026: era -8 na regua, o unico Fuinjutsu caro SEM
+    // motivo. Os outros negativos se explicam por negacao de build (Selamento
+    // de Contrato anula invocacao, Selo de Cinco Elementos fecha o Ninjutsu do
+    // alvo) ou por campo que a formula nao preca (`cleanses`). Este e' so'
+    // Imobilizacao em area. 20 o poe no mesmo preco da Ligacao de Pano, que
+    // troca a area por um segundo efeito e 15pp de chance.
+    id: "fuin_formacao_cordas_luz", name: "Formação das Cordas de Luz", category: "NINJUTSU", tier: 2, resource: "chakra", cost: 20, actionType: "COMUM",
     baseDamage: 8, scalingAttribute: "fuinjutsu", range: 3, shape: "RADIUS", effects: [{ effectId: "ROOT", duration: 2, chance: 0.65 }],
     requirements: { manualOnly: true, attributes: { fuinjutsu: 10 }, level: 10 }, tags: ["fuinjutsu", "selamento", "area", "controle"],
     description: "Uma fórmula circular se espalha pelo chão e pode imobilizar todos os inimigos dentro dela.",

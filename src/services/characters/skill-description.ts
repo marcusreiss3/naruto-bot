@@ -244,7 +244,7 @@ export function buildMechanicsSummary(ability: Ability): string {
     parts.push(`Consome ${rules.upkeepPerTurn}% de chakra por rodada.`);
     if (rules.cloneDodgeReduction !== undefined) {
       parts.push(
-        `Reduz em ${Math.round(rules.cloneDodgeReduction * 100)}% o bônus de Esquiva concedido por clones e substituições.`,
+        `Reduz em ${Math.round(rules.cloneDodgeReduction * 100)}% o bônus de Esquiva que o alvo recebe de clones e substituições ao reagir aos seus ataques.`,
       );
     }
     if (rules.disablesWithoutResource) parts.push("É desativado automaticamente quando o chakra acaba.");

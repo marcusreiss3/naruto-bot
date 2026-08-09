@@ -347,7 +347,11 @@ export const CLAN_ABILITIES: Ability[] = [
     category: "TAIJUTSU",
     tier: 3,
     resource: "energia",
-    cost: 66,
+    // 66 -> 60 em 09/08/2026: era o unico do kit a cobrar PREMIO sobre a regua
+    // (-2) exigindo o mesmo Byakugan que da' desconto de +3 a +9 nos outros
+    // quatro. 60 o poe a +4, no meio da faixa dos irmaos. Nao muda o numero de
+    // usos (2x60 > 100 do mesmo jeito) — muda o que sobra pro resto do turno.
+    cost: 60,
     actionType: "COMUM",
     baseDamage: 40, // rebalanceamento 06/08/2026 (era 36), ver hyuuga_punho_suave
     scalingAttribute: "taijutsu",
@@ -1259,7 +1263,12 @@ export const CLAN_ABILITIES: Ability[] = [
     element: "AGUA",
     tier: 2,
     resource: "chakra",
-    cost: 21,
+    // 21 -> 28 em 09/08/2026: mesma divida do Tate Eboshi — o buff de dano de
+    // 06/08 nao foi repreciado. Sem freio compensatorio (nao exige dojutsu
+    // ativo nem item), e a 21 era o alvo unico indefensavel mais barato do
+    // jogo. 28 fica entre a Palma de Vacuo (22, sem efeito e presa ao
+    // Byakugan) e a Lamina da Luz Branca (35, 26 de dano com Sangramento).
+    cost: 28,
     actionType: "COMUM",
     baseDamage: 24, // rebalanceamento 06/08/2026 (era 20)
     scalingAttribute: "ninjutsu",
@@ -1279,7 +1288,13 @@ export const CLAN_ABILITIES: Ability[] = [
     element: "AGUA",
     tier: 3,
     resource: "chakra",
-    cost: 34,
+    // 34 -> 48 em 09/08/2026: o custo era de quando o dano era 26 (e estava
+    // exato pra ele). O buff de 06/08 subiu 8 pontos de dano sem repreciar, e
+    // esses 8 caem na faixa de 1.5/ponto AINDA multiplicada por area (1.15) e
+    // por ignorar guarda (1.15) — viraram 16 de custo. 48 fica acima da Chuva
+    // de Agulhas Geladas (45: mesmo dano/forma/alcance/efeito, sem os extras)
+    // e abaixo dos 50 da regua, que nem cobra o `push: 3`.
+    cost: 48,
     actionType: "COMUM",
     // rebalanceamento 06/08/2026 (era 26): rank S pagando dano de rank C.
     // 34 bate no piso real medido pra S (34-48, ver ninjutsu-authoring).
@@ -1513,7 +1528,11 @@ export const CLAN_ABILITIES: Ability[] = [
     category: "NINJUTSU",
     tier: 3,
     resource: "chakra",
-    cost: 42,
+    // 42 -> 50 em 09/08/2026: mesma divida do Tate Eboshi e do Revolver de
+    // Agua. A 42 ele dava 9 pontos de dano A MAIS que o Vento Cortante (43,
+    // 30 de dano, Sangramento quase igual) cobrando 1 a menos. 50 poe os dois
+    // na mesma curva.
+    cost: 50,
     actionType: "COMUM",
     // rebalanceamento 06/08/2026 (era 30): ápice alvo único de tier 3, sem
     // desconto de área — era o pior golpe de fechamento entre os clãs de
@@ -1974,7 +1993,13 @@ export const CLANS: ClanDef[] = [
   {
     id: "inuzuka",
     name: "Inuzuka",
-    description: "Clã dos ninken de Konoha: luta ao lado de cães, faro apurado e ataques de garra.",
+    // A mencao a "nao dao pra esquivar" e' identidade declarada, nao enfeite:
+    // 3 das 5 tecnicas ofensivas do cla sao `undodgeable` (a maior densidade
+    // do jogo, acima do proprio Vento). Os custos ja' pagam o multiplicador de
+    // 1.2 e o Bloqueio/Aparo continuam funcionando — o que faltava era o texto
+    // dizer que isso e' a marca do cla, e nao coincidencia. Ver conversa de
+    // 09/08/2026 em pendencias-balanceamento.
+    description: "Clã dos ninken de Konoha: luta ao lado de cães e faro apurado. As brocas giratórias do clã perseguem o alvo pelo cheiro — de meio caminho em diante, não dá para esquivar delas.",
     passiveIds: [],
     // concedidas pela arvore de cla (src/data/clan-trees/index.ts). Cao Ninja
     // e' a excecao: nasce com o personagem (ver autoGrantedNodeIds abaixo),
