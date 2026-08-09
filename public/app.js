@@ -308,22 +308,22 @@ const CLAN_BACKGROUNDS = {
 const GLOSSARY = [
   { re: "Selo de Contrato", tip: "Selo de Contrato: bloqueia temporariamente tecnicas de invocacao e tecnicas de chakra vinculadas a Bijuu. Dura 2 rodadas." },
   { re: "Inevitável", tip: "Inevitável: este ataque ignora todas as reações defensivas do alvo — Esquiva, Bloqueio e Aparo." },
-  { re: "Queimadura(?:s)?", tip: "Queimadura: causa 8 de dano por rodada e reduz em 5% o dano de Taijutsu por acúmulo. Ao juntar 5 acúmulos, causa 40 de dano e os acúmulos são removidos." },
-  { re: "Sangramento", tip: "Sangramento: o alvo perde 5 de vida por turno, recebe metade da cura e ainda perde 6 de vida sempre que usa um golpe físico." },
-  { re: "Veneno", tip: "Veneno: causa 2 de dano por rodada, mais 1 por acúmulo adicional. Sua duração não pode passar de 5 rodadas." },
+  { re: "Queimadura(?:s)?", tip: "Queimadura: causa 5 de dano por rodada. Cada acúmulo reduz em 5% o dano dos golpes físicos do alvo (Taijutsu, Bukijutsu e Kenjutsu). Ao juntar 5 acúmulos, causa 20 de dano e os acúmulos zeram." },
+  { re: "Sangramento", tip: "Sangramento: causa 5 de dano por rodada, corta pela metade a cura que o alvo recebe e causa mais 6 de dano sempre que ele usa um golpe físico." },
+  { re: "Veneno", tip: "Veneno: causa 2 de dano por rodada. Cada acúmulo adicional soma 1 de dano por rodada. A duração chega no máximo a 5 rodadas." },
   // ATENCAO: alternativas da MAIS LONGA para a mais curta — a regex casa a primeira
   // que servir, entao "Atordoa" antes de "atordoado" cortaria a palavra no meio.
   { re: "Atordoamento|Atordoarem|Atordoar|atordoados|atordoado|Atordoam|Atordoa", tip: "Atordoamento: o alvo não pode agir nem se mover no turno. Perde a vez." },
   { re: "Encharcando|Encharcad[oa]s|Encharcad[oa]", tip: "Encharcado: o alvo está molhado. Com Nuvens de Tempestade, jutsus de Raio causam +75% de dano contra ele. Também serve de condutor para acertos em cadeia." },
-  { re: "Fumaça", tip: "Fumaça: bloqueia a linha de visão de técnicas à distância quando fica entre o atacante e o alvo, mas não impede movimento nem ataques corpo a corpo." },
-  { re: "Barreira", tip: "Barreira: escudo que absorve parte do dano recebido antes de descontar da sua vida." },
+  { re: "Fumaça", tip: "Fumaça: bloqueia a linha de visão de técnicas à distância quando fica entre o atacante e o alvo. Movimento e ataques corpo a corpo atravessam normalmente." },
+  { re: "Barreira", tip: "Barreira: absorve dano antes de descontar da vida. Cada ponto de Barreira absorve 1 de dano e é consumido no processo." },
   { re: "Imobilização|preso(?:s)? ao chão", tip: "Imobilização: o alvo não consegue sair do lugar. Ainda pode atacar." },
   { re: "mais lento(?:s)?|Lentidão", tip: "Lentidão: o movimento do alvo cai pela metade." },
-  { re: "Defesa reduzida|reduzindo a defesa|reduz a defesa", tip: "Defesa reduzida: o alvo perde 15% de chance de esquivar dos ataques." },
+  { re: "Defesa Reduzida|reduzindo a defesa|reduz a defesa", tip: "Defesa Reduzida: o alvo perde 15% de chance de esquivar dos ataques." },
   { re: "não pode(?:m)? ser esquivad[oa](?:s)?", tip: "Não pode ser esquivado: ignora a reação de esquiva do alvo. O ataque sempre acerta." },
   { re: "Ignora Bloqueio e Aparo", tip: "Sem guarda: o alvo ainda pode tentar Esquivar, mas não pode reagir com Bloqueio nem Aparo." },
-  { re: "bloque\\w* o Ninjutsu|Bloqueio de Ninjutsu", tip: "Bloqueio de Ninjutsu: o alvo não consegue usar jutsu de categoria Ninjutsu enquanto durar. Não drena chakra (isso seria Dreno de Chakra, outro efeito) — só tranca esse tipo de técnica." },
-  { re: "Fuga bloqueada|não consegue fugir|sem poder fugir|não conseguem fugir", tip: "Fuga bloqueada: o alvo não pode usar a ação de fugir do combate enquanto o efeito durar." },
+  { re: "bloque\\w* o Ninjutsu|Bloqueio de Ninjutsu", tip: "Bloqueio de Ninjutsu: o alvo não consegue usar jutsu de categoria Ninjutsu enquanto durar." },
+  { re: "Bloqueio de Fuga|Fuga bloqueada|não consegue fugir|sem poder fugir|não conseguem fugir", tip: "Bloqueio de Fuga: o alvo não pode usar a ação de fugir do combate enquanto o efeito durar." },
   { re: "Dreno de Chakra|perde 10% de chakra por turno|perder 10% de chakra por turno", tip: "Dreno de Chakra: remove 10% de chakra do alvo no início de cada turno enquanto durar." },
   { re: "Confuso|Confusão", tip: "Confusão: enquanto durar, o alvo confuso ataca alguém aleatório entre todos os vivos em vez de escolher — pode até acertar o próprio time." },
   { re: "Aceleração|Acelerado", tip: "Aceleração: concede +2 de movimento, +10 pontos percentuais de Esquiva e +25 pontos percentuais de chance de fuga. Quem acertar o portador corpo a corpo sofre 8 de dano." },
@@ -331,25 +331,36 @@ const GLOSSARY = [
   // (?! de Cem Forças): "Sobrecarga de Cem Forças" e' o NOME de uma habilidade
   // do Punho Adamantino, nao o efeito — citar ela numa descricao nao deve virar
   // tooltip do efeito. Ver a mesma trava em "Colapso" no fim da lista.
-  { re: "Sobrecarga(?! de Cem Forças)", tip: "Sobrecarga: aumenta temporariamente o dano. A força do aumento, as técnicas afetadas e a duração aparecem em Efeitos e regras." },
+  { re: "Sobrecarga(?! de Cem Forças)", tip: "Sobrecarga: aumenta o dano que o alvo causa por tempo limitado. Cada técnica define a força do aumento e quais categorias entram." },
   // ---- exclusivo do clã Nara ----
-  { re: "Vínculo de Sombra", tip: "Vínculo de Sombra: sem dano, mas o alvo não pode se mover nem reagir (Esquivar/Bloquear/Aparar) enquanto durar — o corpo dele copia o do usuário. Só uma Esquiva bem-sucedida ANTES do vínculo prender evita o efeito." },
+  { re: "Vínculo de Sombra", tip: "Vínculo de Sombra: o alvo não pode se mover nem reagir (Esquivar/Bloquear/Aparar) enquanto durar — o corpo dele copia o do usuário. Só uma Esquiva bem-sucedida ANTES do vínculo prender evita o efeito." },
+  // ---- exclusivo do clã Hyuuga ----
+  // ATENCAO: precisa vir ANTES da entrada "selad[oa]|selar" do Cristal — a
+  // regex e' montada na ordem deste array e a primeira alternativa que casar
+  // vence, entao "selar os tenketsu" cairia no tooltip do Cristal se ficasse
+  // depois.
+  { re: "Selo dos Tenketsu|sela(?:r)? os tenketsu|tenketsu selados", tip: "Selo dos Tenketsu: os pontos de chakra do alvo são fechados. Enquanto durar, ele fica impedido de usar Ninjutsu, Genjutsu e Iryō Ninjutsu (inclui técnicas de clã e de selamento, que são Ninjutsu) e de abrir um Portão Interno; um Portão que já esteja aberto permanece assim. Um ninja médico consegue reabrir os tenketsu." },
+  // ---- kekkei genkai: Gelo ----
+  // ATENCAO: "Congelado" e "congela" precisam vir ANTES da entrada
+  // "selad[oa]|selar" do Cristal e das de Lentidão, senao casam errado.
+  { re: "Congelamento", tip: "Congelamento: cada acúmulo aumenta em 10% o custo das técnicas do alvo e reduz 1 casa de movimento. Ao juntar 4 acúmulos, aplica Congelado e os acúmulos zeram." },
+  { re: "Congelad[oa](?:s)?|congela(?:m)?", tip: "Congelado: o corpo travou no gelo. Por 1 rodada o alvo não usa nenhuma reação defensiva — nem Esquiva, nem Bloqueio, nem Aparo. Ele ainda age normalmente no próprio turno." },
   // ---- kekkei genkai: Cristal ----
-  { re: "Cristalizado", tip: "Cristalizado: cristais cravados no corpo do alvo. Cada acúmulo tira 8% de esquiva e 1 de movimento, e não causa dano por turno. Ao juntar 4 acúmulos o cristal se fecha: o alvo é selado (Atordoamento + preso ao chão) e os acúmulos zeram." },
+  { re: "Cristalizado", tip: "Cristalizado: cada acúmulo reduz 8% da Esquiva e 1 casa de movimento do alvo. Ao juntar 4 acúmulos, aplica Atordoamento por 1 rodada, prende ao chão por 2 rodadas e os acúmulos zeram." },
   { re: "selad[oa](?:s)?|selar", tip: "Selado: o casulo de cristal fechou. O alvo fica Atordoado 1 rodada e preso ao chão por 2." },
   { re: "Prisma", tip: "Prisma: casulo de luz sobre você. Corta 60% do dano de Ninjutsu recebido e devolve 30% do que barrou no atacante. Em troca, você fica imóvel e golpes físicos passam inteiros." },
   // ---- kekkei genkai: Vapor ----
-  { re: "Corrosão", tip: "Corrosão: causa 5 de dano por rodada e remove 8 pontos de Barreira por acúmulo a cada rodada." },
+  { re: "Corrosão", tip: "Corrosão: causa 5 de dano por rodada. Cada acúmulo reduz 8 pontos de Barreira do alvo por rodada." },
   // ---- kekkei genkai: Calor ----
-  { re: "Desidratação|Desidrata(?:d[oa])?(?:s)?", tip: "Desidratação: reduz em 15% todo o dano causado pelo alvo por acúmulo." },
+  { re: "Desidratação|Desidrata(?:d[oa])?(?:s)?", tip: "Desidratação: cada acúmulo reduz em 10% todo o dano que o alvo causar, de qualquer categoria. Acumula até 3 vezes, chegando a 30%." },
   // ---- kekkei genkai: Lava ----
-  { re: "Magma", tip: "Magma: causa 4 de dano por rodada. Ao juntar 4 acúmulos, eles são removidos e o alvo fica Imobilizado por 2 rodadas, sem Atordoamento." },
+  { re: "Magma", tip: "Magma: causa 4 de dano por rodada. Ao juntar 4 acúmulos, prende o alvo ao chão por 2 rodadas e os acúmulos zeram." },
   { re: "endureceu|endurecer", tip: "Endureceu: o Magma acumulado fechou. O alvo fica preso no lugar (Imobilização), mas continua podendo agir." },
   // ---- kekkei genkai: Explosão ----
-  { re: "Minado", tip: "Minado: não causa dano durante a contagem. Quando a duração termina, causa 20 de dano por acúmulo." },
+  { re: "Minado", tip: "Minado: quando a duração termina, causa 20 de dano por acúmulo." },
   { re: "defletiu|redireciona(?:r)?", tip: "Explosão Defensiva: contra um projétil (arma arremessada), apara e devolve o golpe inteiro no atacante em vez de só reduzir o dano." },
   // ---- kekkei genkai: Poeira ----
-  { re: "Desintegração", tip: "Desintegração: causa 6 de dano por rodada e remove 10 pontos de Barreira por acúmulo a cada rodada. Ao juntar 3 acúmulos, a Barreira restante é zerada de uma vez e o alvo fica com Defesa Reduzida." },
+  { re: "Desintegração", tip: "Desintegração: causa 6 de dano por rodada. Cada acúmulo reduz 10 pontos de Barreira do alvo por rodada. Ao juntar 3 acúmulos, zera toda a Barreira restante, aplica Defesa Reduzida por 3 rodadas e os acúmulos zeram." },
   // (?<!Palmada do ): "Palmada do Colapso" e' o NOME do jutsu raiz do Punho
   // Arhat, nao o efeito Colapso (que e' de Poeira). Sem essa trava, citar a
   // habilidade numa descricao virava tooltip do efeito errado.
@@ -637,6 +648,21 @@ function renderEquipmentPage() {
       <div class="equipment-section-title"><span>${group.icon}</span><div><small>Comandos básicos</small><h2>${escHtml(group.title)}</h2></div></div>
       <div class="command-grid">${group.commands.map((entry) =>
         `<article><code>${escHtml(entry.command)}</code><p>${escHtml(entry.description)}</p></article>`
+      ).join("")}</div>
+    </section>`
+  ).join("");
+
+  // Glossario de efeitos: os textos vem prontos do servidor (effect-catalog.ts),
+  // com os numeros lidos de BALANCE — nao repetir nada aqui, senao desatualiza.
+  $("equipmentEffects").innerHTML = (catalog.effectGroups || []).map((group, index) =>
+    `<section class="effect-group">
+      ${index === 0 ? `<div class="equipment-section-title"><span>✨</span><div><small>Referência</small><h2>Efeitos e o que fazem</h2></div></div>` : ""}
+      <h3 class="effect-group-title">${escHtml(group.title)}</h3>
+      <div class="effect-grid">${group.effects.map((effect) =>
+        `<article class="effect-card">
+          <strong>${escHtml(effect.label)}</strong>
+          <p>${escHtml(effect.description)}</p>
+        </article>`
       ).join("")}</div>
     </section>`
   ).join("");

@@ -105,7 +105,12 @@ export const ADAMANTINO_ABILITIES: Ability[] = [
     actionType: "BONUS",
     range: 0,
     shape: "SELF",
-    effects: [{ effectId: "EMPOWERED", duration: 3, empoweredScope: "physical" }],
+    // stacks = o multiplicador. Declarado explicito (1.6) em vez de deixar cair
+    // no padrao de BALANCE.effects.EMPOWERED: esta era a UNICA ability do jogo
+    // que usava o padrao, entao ele descrevia so' a Cem Forcas e fazia o
+    // glossario anunciar "+60%" como se fosse o normal — quando o comum sao os
+    // +30% das outras cinco. Mesmo valor de antes, so' que agora visivel aqui.
+    effects: [{ effectId: "EMPOWERED", stacks: 1.6, duration: 3, empoweredScope: "physical" }],
     requirements: { manualOnly: true, attributes: { taijutsu: 34 }, level: 34 },
     tags: ["taijutsu", "adamantino", "buff", "medico"],
     description: "O losango na testa se abre em linhas escuras que descem pelo corpo, devolvendo aos músculos o chakra guardado por anos.",

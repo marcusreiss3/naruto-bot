@@ -241,12 +241,12 @@ export const CLAN_ABILITIES: Ability[] = [
     scalingAttribute: "taijutsu",
     range: 1,
     shape: "MELEE",
-    effects: [{ effectId: "NINJUTSU_BLOCK", duration: 1, chance: 0.4 }],
+    effects: [{ effectId: "TENKETSU_SEAL", duration: 1, chance: 0.4 }],
     requiresActiveDoujutsu: { flag: "byakuganActive", label: "Byakugan" },
     requirements: { clanId: "hyuuga", manualOnly: true },
     tags: ["hyuuga", "tenketsu", "fisico"],
     description:
-      "Estilo de combate básico dos Hyūga: injeta chakra no golpe para ferir órgãos internos e a rede de chakra do adversário, em vez de só o corpo. 40% de chance de bloquear o Ninjutsu do alvo por 1 rodada. Exige o Byakugan ativo.",
+      "Estilo de combate básico dos Hyūga: injeta chakra no golpe para ferir órgãos internos e a rede de chakra do adversário, em vez de só o corpo. 40% de chance de selar os tenketsu do alvo por 1 rodada. Exige o Byakugan ativo.",
   },
   {
     id: "hyuuga_palma_vacuo",
@@ -260,7 +260,11 @@ export const CLAN_ABILITIES: Ability[] = [
     scalingAttribute: "taijutsu",
     range: 4,
     shape: "SINGLE_TARGET",
-    unguardable: true,
+    // undodgeable, nao unguardable (09/08/2026): a ability E o no da arvore
+    // sempre descreveram uma bala de vacuo que acerta "antes mesmo dele
+    // perceber o que aconteceu" — isso e' negar ESQUIVA. O dado dizia
+    // unguardable (nega Bloqueio/Aparo), contradizendo os dois textos.
+    undodgeable: true,
     push: 3,
     requiresActiveDoujutsu: { flag: "byakuganActive", label: "Byakugan" },
     requirements: { clanId: "hyuuga", manualOnly: true },
@@ -281,14 +285,14 @@ export const CLAN_ABILITIES: Ability[] = [
     range: 1,
     shape: "MELEE",
     effects: [
-      { effectId: "NINJUTSU_BLOCK", duration: 2, chance: 0.85 },
+      { effectId: "TENKETSU_SEAL", duration: 1, chance: 0.75 },
       { effectId: "STUN", duration: 1, chance: 0.3 },
     ],
     requiresActiveDoujutsu: { flag: "byakuganActive", label: "Byakugan" },
     requirements: { clanId: "hyuuga", manualOnly: true },
     tags: ["hyuuga", "tenketsu", "barragem"],
     description:
-      "Sequência de 64 golpes extremamente rápidos que bloqueiam dezenas de tenketsu de uma vez: 85% de chance de bloquear o Ninjutsu do alvo por 2 rodadas, e 30% de chance de Atordoar por 1 rodada. Exige o Byakugan ativo.",
+      "Sequência de 64 golpes extremamente rápidos que bloqueiam dezenas de tenketsu de uma vez: 75% de chance de selar os tenketsu do alvo por 1 rodada, e 30% de chance de Atordoar por 1 rodada. Exige o Byakugan ativo.",
   },
   {
     id: "hyuuga_palma_rotativa",
@@ -301,21 +305,24 @@ export const CLAN_ABILITIES: Ability[] = [
     reactionKind: "BLOCK",
     range: 0,
     shape: "SELF",
-    effects: [{ effectId: "SHIELD", stacks: 24, duration: 3 }],
+    effects: [{ effectId: "SHIELD", stacks: 7, hpPercentStacks: 0.09, duration: 3 }],
     cleanses: ["ROOT"],
     requiresActiveDoujutsu: { flag: "byakuganActive", label: "Byakugan" },
     requirements: { clanId: "hyuuga", manualOnly: true },
     tags: ["hyuuga", "defesa", "barreira"],
     description:
-      "Gira rapidamente enquanto libera chakra por todos os tenketsu, criando uma esfera defensiva quase impenetrável. Ganha 24 pontos de Barreira por 3 rodadas e livra você de ficar preso ao chão. Exige o Byakugan ativo.",
+      "Gira rapidamente enquanto libera chakra por todos os tenketsu, criando uma esfera defensiva quase impenetrável. Ganha uma Barreira que cresce com sua vida máxima por 3 rodadas e livra você de ficar preso ao chão. Exige o Byakugan ativo.",
   },
   {
     id: "hyuuga_128_palmas",
     name: "Oito Trigramas: 128 Palmas",
     category: "TAIJUTSU",
     tier: 3,
+    // 27 -> 38 (09/08/2026): com o dano em 33 a tecnica virou o maior outlier
+    // do roster no audit de custo (sugeria 50 contra 27 cobrados). Era a unica
+    // do clan que dava MAIS dano que as 64 Palmas custando MENOS que elas (31).
     resource: "energia",
-    cost: 27,
+    cost: 38,
     actionType: "COMUM",
     // rebalanceamento 06/08/2026 (era 20): area (RADIUS) continua pagando
     // menos que alvo unico do mesmo tier (Leoes Gemeos, 40) — mas precisa
@@ -325,14 +332,14 @@ export const CLAN_ABILITIES: Ability[] = [
     range: 4,
     shape: "RADIUS",
     effects: [
-      { effectId: "NINJUTSU_BLOCK", duration: 2, chance: 0.8 },
+      { effectId: "TENKETSU_SEAL", duration: 1, chance: 0.8 },
       { effectId: "SLOW", duration: 2, chance: 0.5 },
     ],
     requiresActiveDoujutsu: { flag: "byakuganActive", label: "Byakugan" },
     requirements: { clanId: "hyuuga", manualOnly: true },
     tags: ["hyuuga", "tenketsu", "area", "barragem"],
     description:
-      "Versão em dobro de velocidade das 64 Palmas: 80% de chance de bloquear o Ninjutsu do alvo por 2 rodadas e 50% de chance de deixá-lo mais lento por 2 rodadas. Exige o Byakugan ativo.",
+      "Versão em dobro de velocidade das 64 Palmas: 80% de chance de selar os tenketsu do alvo por 1 rodada e 50% de chance de deixá-lo mais lento por 2 rodadas. Exige o Byakugan ativo.",
   },
   {
     id: "hyuuga_leoes_gemeos",
@@ -348,14 +355,14 @@ export const CLAN_ABILITIES: Ability[] = [
     shape: "MELEE",
     undodgeable: true,
     effects: [
-      { effectId: "NINJUTSU_BLOCK", duration: 3 },
+      { effectId: "TENKETSU_SEAL", duration: 2 },
       { effectId: "DEFENSE_DOWN", duration: 2 },
     ],
     requiresActiveDoujutsu: { flag: "byakuganActive", label: "Byakugan" },
     requirements: { clanId: "hyuuga", manualOnly: true },
     tags: ["hyuuga", "tenketsu", "apice", "finalizador"],
     description:
-      "Libera uma grande quantidade de chakra pelos punhos, moldado em duas cabeças de leão. Não pode ser esquivado. Ao acertar, destroça por completo os meridianos do alvo: bloqueia o Ninjutsu dele por 3 rodadas e reduz a defesa dele por 2 rodadas. Exige o Byakugan ativo.",
+      "Libera uma grande quantidade de chakra pelos punhos, moldado em duas cabeças de leão. Não pode ser esquivado. Ao acertar, destroça por completo os meridianos do alvo: sela os tenketsu dele por 2 rodadas e reduz a defesa dele por 2 rodadas. Exige o Byakugan ativo.",
   },
 
   // ---- Nara ----
@@ -422,7 +429,7 @@ export const CLAN_ABILITIES: Ability[] = [
     range: 4,
     shape: "CONE",
     effects: [
-      { effectId: "BLEED", stacks: 1, duration: 2, chance: 0.6 },
+      { effectId: "BLEED", duration: 2, chance: 0.6 },
       { effectId: "ROOT", duration: 1, chance: 0.4 },
     ],
     requirements: { clanId: "nara", manualOnly: true },
@@ -523,7 +530,7 @@ export const CLAN_ABILITIES: Ability[] = [
     actionType: "COMUM",
     range: 0,
     shape: "SELF",
-    effects: [{ effectId: "SHIELD", stacks: 20, duration: 4, replaceGroup: "akimichi_forma" }],
+    effects: [{ effectId: "SHIELD", stacks: 5, hpPercentStacks: 0.06, duration: 4, replaceGroup: "akimichi_forma" }],
     requirements: { clanId: "akimichi", manualOnly: true },
     tags: ["akimichi", "tamanho", "buff"],
     description:
@@ -543,6 +550,7 @@ export const CLAN_ABILITIES: Ability[] = [
     shape: "LINE",
     push: 2,
     effects: [{ effectId: "STUN", duration: 1, chance: 0.3 }],
+    requiresActiveEffectFromAbilityId: "akimichi_baika",
     requirements: { clanId: "akimichi", manualOnly: true },
     tags: ["akimichi", "tamanho", "impacto"],
     description:
@@ -558,7 +566,7 @@ export const CLAN_ABILITIES: Ability[] = [
     actionType: "COMUM",
     range: 0,
     shape: "SELF",
-    effects: [{ effectId: "SHIELD", stacks: 32, duration: 4, replaceGroup: "akimichi_forma" }],
+    effects: [{ effectId: "SHIELD", stacks: 7, hpPercentStacks: 0.09, duration: 4, replaceGroup: "akimichi_forma" }],
     requirements: { clanId: "akimichi", manualOnly: true },
     tags: ["akimichi", "tamanho", "buff", "gigante"],
     description:
@@ -595,10 +603,11 @@ export const CLAN_ABILITIES: Ability[] = [
     shape: "MELEE",
     undodgeable: true,
     push: 3,
+    requiresActiveEffectFromAbilityId: "akimichi_super_baika",
     requirements: { clanId: "akimichi", manualOnly: true },
     tags: ["akimichi", "gigante", "impacto"],
     description:
-      "Depois da Técnica do Super Tamanho Múltiplo, desfere um tapa mortal com as duas mãos: a concentração de chakra ativa os músculos e aumenta ainda mais a massa do golpe. Ignora Bloqueio e Aparo.",
+      "Depois da Técnica do Super Tamanho Múltiplo, desfere um tapa mortal com as duas mãos: a concentração de chakra ativa os músculos e aumenta ainda mais a massa do golpe. Não pode ser esquivada.",
   },
   {
     id: "akimichi_modo_borboleta",
@@ -610,7 +619,7 @@ export const CLAN_ABILITIES: Ability[] = [
     actionType: "COMUM",
     range: 0,
     shape: "SELF",
-    effects: [{ effectId: "SHIELD", stacks: 20, duration: 2 }],
+    effects: [{ effectId: "SHIELD", stacks: 9, hpPercentStacks: 0.13, duration: 2 }],
     cleanses: ["BURN", "POISON", "BLEED", "SLOW"],
     requirements: { clanId: "akimichi", manualOnly: true },
     tags: ["akimichi", "borboleta", "pilulas", "buff"],
@@ -735,11 +744,11 @@ export const CLAN_ABILITIES: Ability[] = [
     actionType: "COMUM",
     range: 2,
     shape: "ALLY",
-    effects: [{ effectId: "SHIELD", stacks: 22, duration: 3 }],
+    effects: [{ effectId: "SHIELD", stacks: 7, hpPercentStacks: 0.09, duration: 3 }],
     requirements: { clanId: "aburame", manualOnly: true },
     tags: ["aburame", "inseto", "defesa", "barreira"],
     description:
-      "Um enxame denso forma uma parede viva de insetos, resistente o bastante pra aguentar entulho caindo ou fogo: dá 22 pontos de Barreira por 3 rodadas a si mesmo ou a um aliado próximo. Não segura gases, como uma cortina de veneno.",
+      "Um enxame denso forma uma parede viva de insetos, resistente o bastante pra aguentar entulho caindo ou fogo: dá uma Barreira que cresce com a vida máxima de quem recebe (você ou um aliado próximo) por 3 rodadas. Não segura gases, como uma cortina de veneno.",
   },
   {
     id: "aburame_jarro_veneno",
@@ -775,7 +784,7 @@ export const CLAN_ABILITIES: Ability[] = [
     range: 1,
     shape: "MELEE",
     effects: [
-      { effectId: "BLEED", stacks: 2, duration: 3 },
+      { effectId: "BLEED", duration: 3 },
       { effectId: "CHAKRA_DRAIN", duration: 3, chance: 0.85 },
     ],
     requirements: { clanId: "aburame", manualOnly: true },
@@ -941,7 +950,7 @@ export const CLAN_ABILITIES: Ability[] = [
     shape: "SELF",
     effects: [
       { effectId: "EMPOWERED", stacks: 1.3, duration: 3, empoweredScope: "physical" },
-      { effectId: "SHIELD", stacks: 26, duration: 3 },
+      { effectId: "SHIELD", stacks: 9, hpPercentStacks: 0.13, duration: 3 },
     ],
     requiresPet: true,
     requirements: { clanId: "inuzuka", manualOnly: true },
@@ -1584,7 +1593,7 @@ export const CLAN_ABILITIES: Ability[] = [
     range: 6,
     shape: "RADIUS",
     undodgeable: true,
-    effects: [{ effectId: "BLEED", stacks: 2, duration: 3, chance: 0.8 }],
+    effects: [{ effectId: "BLEED", duration: 3, chance: 0.8 }],
     requirements: { clanId: "kamaitachi", manualOnly: true },
     tags: ["kamaitachi", "vento", "area", "indefensavel", "sangramento"],
     description:
@@ -1604,7 +1613,7 @@ export const CLAN_ABILITIES: Ability[] = [
     range: 6,
     shape: "LINE",
     unblockable: true,
-    effects: [{ effectId: "BLEED", stacks: 3, duration: 3, chance: 0.9 }],
+    effects: [{ effectId: "BLEED", duration: 3, chance: 0.9 }],
     requirements: { clanId: "kamaitachi", manualOnly: true },
     tags: ["kamaitachi", "vento", "linha", "finalizador"],
     description:

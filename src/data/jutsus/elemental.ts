@@ -364,7 +364,7 @@ export const ELEMENTAL: Ability[] = [
     reactionKind: "BLOCK",
     range: 0,
     shape: "SELF",
-    effects: [{ effectId: "SHIELD", stacks: 20, duration: 3 }],
+    effects: [{ effectId: "SHIELD", stacks: 7, hpPercentStacks: 0.09, duration: 3 }],
     requirements: { element: "AGUA", manualOnly: true },
     tags: ["agua", "defesa", "barreira"],
     visualDescription: "Uma corrente circular sobe ao redor do usuário e se fecha como uma muralha móvel de água.",
@@ -545,11 +545,11 @@ export const ELEMENTAL: Ability[] = [
     range: 4,
     shape: "SINGLE_TARGET",
     undodgeable: true,
-    effects: [{ effectId: "BLEED", stacks: 2, duration: 3 }],
+    effects: [{ effectId: "BLEED", duration: 3 }],
     requirements: { element: "VENTO", manualOnly: true },
     tags: ["vento", "preciso", "alvo-unico"],
     description:
-      "Rajada afiada focada em um unico alvo: nao pode ser esquivada, causa dano alto e 2 acumulos de Sangramento.",
+      "Rajada afiada focada em um unico alvo: nao pode ser esquivada, causa dano alto e deixa o alvo Sangrando.",
   },
   {
     id: "fuuton_pressao_danosa",
@@ -588,7 +588,7 @@ export const ELEMENTAL: Ability[] = [
     range: 6,
     shape: "CONE",
     unblockable: true,
-    effects: [{ effectId: "BLEED", stacks: 2, duration: 4 }],
+    effects: [{ effectId: "BLEED", duration: 4 }],
     requirements: { element: "VENTO", manualOnly: true },
     tags: ["vento", "area", "apice", "preciso"],
     description:
@@ -614,11 +614,11 @@ export const ELEMENTAL: Ability[] = [
     range: 3,
     shape: "LINE",
     terrain: { kind: "OBSTACLE", duration: 3 },
-    effects: [{ effectId: "SHIELD", stacks: 12, duration: 3 }],
+    selfEffects: [{ effectId: "SHIELD", stacks: 5, hpPercentStacks: 0.06, duration: 3 }],
     requirements: { element: "TERRA", manualOnly: true },
     tags: ["terra", "defesa", "terreno", "muro"],
     description:
-      "Ergue um muro de terra que bloqueia a passagem e a linha de visao dos ataques. Tambem te da Barreira.",
+      "Ergue um muro de terra que bloqueia a passagem e a linha de visao dos ataques. Tambem te da Barreira, que cresce com sua vida maxima.",
   },
   {
     id: "doton_punho_rochoso",
@@ -633,11 +633,11 @@ export const ELEMENTAL: Ability[] = [
     scalingAttribute: "ninjutsu",
     range: 1,
     shape: "MELEE",
-    effects: [{ effectId: "SHIELD", stacks: 8, duration: 2 }],
+    selfEffects: [{ effectId: "SHIELD", stacks: 5, hpPercentStacks: 0.06, duration: 2 }],
     requirements: { element: "TERRA", manualOnly: true },
     tags: ["terra", "corpo-a-corpo", "defesa"],
     description:
-      "Cobre o punho de pedra e golpeia corpo a corpo. Voce ganha Barreira no turno.",
+      "Cobre o punho de pedra e golpeia corpo a corpo. Voce ganha Barreira no turno, que cresce com sua vida maxima.",
   },
   {
     id: "doton_clone",
@@ -780,7 +780,7 @@ export const ELEMENTAL: Ability[] = [
     shape: "SELF",
     summon: {
       templateId: "summon_golem",
-      onDeath: { effectId: "SHIELD", stacks: 20, radius: 1, duration: 3 },
+      onDeath: { effectId: "SHIELD", stacks: 12, hpPercentStacks: 0.18, radius: 1, duration: 3 },
     },
     requirements: { element: "TERRA", manualOnly: true },
     tags: ["terra", "invocacao", "apice", "defesa"],
@@ -837,7 +837,11 @@ export const ELEMENTAL: Ability[] = [
     element: "RAIO",
     tier: 3,
     resource: "chakra",
-    cost: 30,
+    // 30 -> 36 (09/08/2026): trava total de 2 rodadas (Atordoamento + Imobilizacao
+    // + Bloqueio de Fuga, tudo garantido) por 30 de chakra era barato demais.
+    // Ficou visivel quando o Atordoamento subiu de severidade 4 pra 7 na regua
+    // de custo — ver a nota em BALANCE.jutsuCostFormula.effectSeverity.
+    cost: 36,
     actionType: "COMUM",
     baseDamage: 12,
     scalingAttribute: "ninjutsu",
@@ -1097,7 +1101,7 @@ export const ELEMENTAL: Ability[] = [
     scalingAttribute: "ninjutsu",
     range: 6,
     shape: "LINE",
-    effects: [{ effectId: "BLEED", stacks: 2, duration: 3 }],
+    effects: [{ effectId: "BLEED", duration: 3 }],
     unblockable: true,
     requirements: { element: "CRISTAL", manualOnly: true },
     tags: ["cristal", "linha", "indefensavel", "corte"],
@@ -1157,12 +1161,16 @@ export const ELEMENTAL: Ability[] = [
     scalingAttribute: "ninjutsu",
     range: 7,
     shape: "RADIUS",
-    effects: [{ effectId: "CRYSTALLIZED", stacks: 3, duration: 4 }],
+    // 3 -> 2 acumulos (09/08/2026): com a Faceta Cortante (+1) os 3 batiam
+    // exatamente no gatilho de 4 e selavam DO ZERO, contrariando a propria
+    // descricao abaixo ("o bastante para selar quem JA' TIVER um cristal").
+    // Com 2, o total vira 3 e o texto volta a ser verdade.
+    effects: [{ effectId: "CRYSTALLIZED", stacks: 2, duration: 4 }],
     terrain: { kind: "OBSTACLE", duration: 3 },
     requirements: { element: "CRISTAL", manualOnly: true },
     tags: ["cristal", "apice", "area", "cristalizar", "terreno"],
     description:
-      "Fecha uma área imensa em oito paredes de cristal. Crava 3 acúmulos de Cristalizado em todos os atingidos, o bastante para selar quem já tiver um cristal no corpo. Gasta quase todo o chakra.",
+      "Fecha uma área imensa em oito paredes de cristal. Crava 2 acúmulos de Cristalizado em todos os atingidos, o bastante para selar quem já tiver um cristal no corpo. Gasta quase todo o chakra.",
   },
 
   // ---------------- VAPOR (Futton) — KEKKEI GENKAI ----------------
@@ -1545,7 +1553,11 @@ export const ELEMENTAL: Ability[] = [
     range: 5,
     shape: "SINGLE_TARGET",
     unguardable: true,
-    effects: [{ effectId: "DISINTEGRATION", stacks: 2, duration: 3 }],
+    // 2 -> 1 acumulo (09/08/2026): com o Estilhaco de Poeira (+1) os 2 batiam
+    // exatamente no gatilho de 3 e colapsavam a defesa do alvo num uso so'.
+    // Todos os outros jutsus de Poeira ja' aplicavam 1 — este era o unico
+    // fora do padrao.
+    effects: [{ effectId: "DISINTEGRATION", stacks: 1, duration: 3 }],
     requirements: { element: "POEIRA", manualOnly: true },
     tags: ["poeira", "jinton", "barragem", "indefensavel", "apice", "desintegracao"],
     description:
@@ -1635,6 +1647,102 @@ export const ELEMENTAL: Ability[] = [
       "Multiplica os espelhos e enche a área de agulhas de gelo caindo de todos os ângulos, deixando quem for atingido mais lento pelo frio nos ferimentos.",
   },
   {
+    id: "gelo_captura",
+    name: "Captura no Campo Congelado",
+    category: "NINJUTSU",
+    element: "GELO",
+    tier: 1,
+    resource: "chakra",
+    cost: 26,
+    actionType: "COMUM",
+    // Dano baixo de proposito: e' a entrada de CONTROLE do ramo de Campo, nao
+    // um golpe. O valor esta em prender + comecar a pilha de Congelamento.
+    baseDamage: 14,
+    scalingAttribute: "ninjutsu",
+    range: 4,
+    shape: "RADIUS",
+    effects: [
+      { effectId: "ROOT", duration: 2, chance: 0.8 },
+      { effectId: "FROZEN", stacks: 1, duration: 2 },
+    ],
+    requirements: { element: "GELO", manualOnly: true },
+    tags: ["gelo", "hyoton", "area", "controle", "terreno"],
+    description:
+      "Depois do selo de mão, o solo da área congela numa camada só: os pés de quem estiver em cima ficam presos no gelo, e o frio começa a subir pelo corpo.",
+  },
+  {
+    id: "gelo_neve",
+    name: "Neve Congelante",
+    category: "NINJUTSU",
+    element: "GELO",
+    tier: 2,
+    resource: "chakra",
+    cost: 36,
+    actionType: "COMUM",
+    baseDamage: 26,
+    scalingAttribute: "ninjutsu",
+    range: 4,
+    shape: "CONE",
+    // O redemoinho gelado cega de verdade: fumaca corta a linha de visao de
+    // quem quiser mirar atraves dela (mesma regra do terreno SMOKE).
+    terrain: { kind: "SMOKE", duration: 2 },
+    effects: [{ effectId: "FROZEN", stacks: 2, duration: 2 }],
+    requirements: { element: "GELO", manualOnly: true },
+    tags: ["gelo", "hyoton", "area", "cone", "terreno"],
+    description:
+      "A mão aponta e dispara uma rajada de fragmentos de gelo junto de um redemoinho gelado: quem está dentro perde o campo de visão e congela por baixo da nevasca.",
+  },
+  {
+    id: "gelo_parede",
+    name: "Parede de Cristal",
+    category: "NINJUTSU",
+    element: "GELO",
+    tier: 2,
+    resource: "chakra",
+    cost: 28,
+    actionType: "COMUM",
+    baseDamage: 20,
+    scalingAttribute: "ninjutsu",
+    range: 4,
+    shape: "RADIUS",
+    // Unico jutsu de Gelo que aplica Confusao: a cupula nao machuca muito,
+    // ela QUEBRA a leitura de quem esta dentro (o alvo confunde aliado com
+    // inimigo, ver CONFUSION em effects.ts).
+    effects: [
+      { effectId: "CONFUSION", duration: 2, chance: 0.75 },
+      { effectId: "DEFENSE_DOWN", duration: 2, chance: 0.6 },
+    ],
+    requirements: { element: "GELO", manualOnly: true },
+    tags: ["gelo", "hyoton", "area", "ilusao", "controle"],
+    description:
+      "Fecha os inimigos numa cúpula de gelo polido. Cercados pelo próprio reflexo repetido, eles perdem a noção de quem é quem e passam a atacar os aliados como se fossem inimigos.",
+  },
+  {
+    id: "gelo_lancas",
+    name: "Lanças de Gelo do Assassinato Certeiro",
+    category: "NINJUTSU",
+    element: "GELO",
+    tier: 3,
+    resource: "chakra",
+    cost: 50,
+    actionType: "COMUM",
+    // O mais forte dos quatro jutsus novos, mas ainda abaixo das Mil Agulhas
+    // (46): aquele continua sendo o apice do elemento. Sem `unguardable` de
+    // proposito — com area + indefensavel + Congelamento a formula de custo
+    // pedia 67, mais caro que o proprio S-rank do elemento (53). A descricao
+    // original tambem nao promete atravessar guarda: sao espinhos grandes,
+    // nao um golpe inevitavel.
+    baseDamage: 38,
+    scalingAttribute: "ninjutsu",
+    range: 5,
+    shape: "LINE",
+    effects: [{ effectId: "FROZEN", stacks: 2, duration: 2 }],
+    requirements: { element: "GELO", manualOnly: true },
+    tags: ["gelo", "hyoton", "linha", "perfuracao"],
+    description:
+      "O usuário condensa as partículas de gelo suspensas no ar em espinhos gigantes e os empala de uma vez, congelando quem for atravessado.",
+  },
+  {
     id: "gelo_agulhas_mil",
     name: "Mil Agulhas Voadoras de Água da Morte",
     category: "NINJUTSU",
@@ -1648,7 +1756,7 @@ export const ELEMENTAL: Ability[] = [
     range: 6,
     shape: "SINGLE_TARGET",
     undodgeable: true,
-    effects: [{ effectId: "BLEED", stacks: 2, duration: 3, chance: 0.85 }],
+    effects: [{ effectId: "BLEED", duration: 3, chance: 0.85 }],
     requirements: { element: "GELO", manualOnly: true },
     tags: ["gelo", "hyoton", "finalizador", "indefensavel"],
     description:

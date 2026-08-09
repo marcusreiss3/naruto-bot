@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { getAbility, getClan } from "../src/data/index.js";
+import { ALL_ABILITIES, getAbility, getClan } from "../src/data/index.js";
+import { BALANCE } from "../src/config/balance.js";
 import { allNodes } from "../src/data/element-trees/index.js";
 import { CLAN_TREES } from "../src/data/clan-trees/index.js";
 import { CLAN_PASSIVES } from "../src/data/clan-trees/passives.js";
@@ -169,6 +170,43 @@ describe("Hyuuga: pool por atributo — o olho paga com Dōjutsu, o punho com Ta
   });
 });
 
+describe("Hyuuga: Selo dos Tenketsu — efeito exclusivo do clã", () => {
+  const COM_SELO = [
+    ["hyuuga_punho_suave", 1, 0.4],
+    ["hyuuga_64_palmas", 1, 0.75],
+    ["hyuuga_128_palmas", 1, 0.8],
+    ["hyuuga_leoes_gemeos", 2, undefined],
+  ] as const;
+
+  it("as quatro técnicas de tenketsu aplicam TENKETSU_SEAL, não o NINJUTSU_BLOCK genérico", () => {
+    for (const [id, duration, chance] of COM_SELO) {
+      const selo = getAbility(id)!.effects!.find((e) => e.effectId === "TENKETSU_SEAL");
+      expect(selo, id).toBeTruthy();
+      expect(selo!.duration, id).toBe(duration);
+      expect(selo!.chance, id).toBe(chance);
+      expect(getAbility(id)!.effects!.some((e) => e.effectId === "NINJUTSU_BLOCK"), id).toBe(false);
+    }
+  });
+
+  it("nenhuma ability FORA do Hyuuga usa o selo — Fuinjutsu e Genjutsu seguem no NINJUTSU_BLOCK", () => {
+    const forasteiras = ALL_ABILITIES.filter(
+      (a) => a.effects?.some((e) => e.effectId === "TENKETSU_SEAL") && a.requirements?.clanId !== "hyuuga",
+    );
+    expect(forasteiras.map((a) => a.id)).toEqual([]);
+  });
+
+  it("o selo pesa mais que o Bloqueio de Ninjutsu na régua de custo (fecha 3 categorias, não 1)", () => {
+    const F = BALANCE.jutsuCostFormula.effectSeverity;
+    expect(F.TENKETSU_SEAL).toBeGreaterThan(F.NINJUTSU_BLOCK!);
+  });
+
+  it("Clareza Mental (Iryō) é a contra-jogada: reabre tenketsu selados", () => {
+    expect(getAbility("iryo_clareza")!.cleanses).toContain("TENKETSU_SEAL");
+    // o dispel de Genjutsu NAO limpa: o selo e' dano fisico na rede de chakra
+    expect(getAbility("gen_contra_genjutsu")!.cleanses ?? []).not.toContain("TENKETSU_SEAL");
+  });
+});
+
 describe("Hyuuga: passivas — atravessa defesa, sela chakra", () => {
   const punho = getAbility("hyuuga_punho_suave")!;
 
@@ -181,19 +219,19 @@ describe("Hyuuga: passivas — atravessa defesa, sela chakra", () => {
     expect(comDano.map((p) => p.nodeId)).toEqual(["hyuuga_raiz", "hyuuga_apice"]);
   });
 
-  it("Olhos Brancos dá +10% de dano, corta 10% do custo e soma 10 pontos de chance de Bloqueio de Ninjutsu", () => {
+  it("Olhos Brancos dá +10% de dano, corta 10% do custo e soma 10 pontos de chance de Selo dos Tenketsu", () => {
     const m = passiveMods(["hyuuga_raiz"], punho);
     expect(m.damageMult).toBeCloseTo(1.10);
     expect(m.costMult).toBeCloseTo(0.9);
-    expect(m.effectChanceBonus.NINJUTSU_BLOCK).toBeCloseTo(0.1);
+    expect(m.effectChanceBonus.TENKETSU_SEAL).toBeCloseTo(0.1);
   });
 
-  it("Rede de Tenketsu ignora Barreira, executa abaixo de 30% de vida e estende o Bloqueio de Ninjutsu", () => {
+  it("Rede de Tenketsu ignora Barreira, executa abaixo de 30% de vida e estende o Selo dos Tenketsu", () => {
     const m = passiveMods(["hyuuga_apice"], punho);
     expect(m.damageMult).toBeCloseTo(1.2);
     expect(m.ignoresShield).toBe(true);
     expect(m.executeBonus).toEqual({ hpThreshold: 0.3, mult: 1.25 });
-    expect(m.effectDurationBonus.NINJUTSU_BLOCK).toBe(1);
+    expect(m.effectDurationBonus.TENKETSU_SEAL).toBe(1);
   });
 
   it("passiva de Hyuuga não afeta jutsu de Nara, e vice-versa (clãs isolados entre si)", () => {

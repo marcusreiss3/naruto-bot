@@ -35,7 +35,9 @@ describe("árvore Punho Adamantino", () => {
     expect(jutsus.map((node) => node.reqAttribute?.value)).toEqual([2, 6, 12, 18, 24, 28]);
     const cem = getAbility("adamantino_cem_forcas")!;
     expect(cem.resource).toBe("chakra");
-    expect(cem.effects).toContainEqual({ effectId: "EMPOWERED", duration: 3, empoweredScope: "physical" });
+    // stacks = multiplicador (1.6 = +60%), declarado explicito na ability em
+    // vez de herdar o padrao de BALANCE — ver o comentario em adamantino.ts.
+    expect(cem.effects).toContainEqual({ effectId: "EMPOWERED", stacks: 1.6, duration: 3, empoweredScope: "physical" });
   });
 
   it("tem as três passivas de estilo encadeadas a partir de um jutsu próprio, pagas com Iryō", () => {

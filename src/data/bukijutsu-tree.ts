@@ -17,7 +17,7 @@ export const BUKIJUTSU_TREE: SkillNodeDef[] = [
     id: "buki_arsenal_selado", name: "Arsenal Selado", kind: "PASSIVE", icon: "📜",
     pool: "bukijutsu", cost: 2, branch: "Pergaminhos", col: 0, row: 1, requires: ["buki_fundamentos"],
     reqLevel: 2, reqPool: 2,
-    desc: "Permite usar técnicas de convocação com o Pergaminho de Arsenal. Essas técnicas gastam 10% menos chakra ou energia, conforme o recurso utilizado.",
+    desc: "Permite usar técnicas de convocação com o Pergaminho de Arsenal — quanto mais forte a técnica, mais pergaminhos ela abre de uma vez. Essas técnicas gastam 10% menos chakra ou energia, conforme o recurso utilizado.",
   },
   {
     id: "buki_lamina_chakra", name: "Lâmina de Chakra", kind: "PASSIVE", icon: "🔪",

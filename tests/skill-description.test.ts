@@ -134,3 +134,61 @@ describe("progressao monotona da arvore", () => {
     expect(regressions).toEqual([]);
   });
 });
+
+// O texto de uma habilidade so' pode citar "acumulo" de efeito cuja CONTAGEM
+// muda alguma coisa no motor. Sangramento e' o contra-exemplo que motivou este
+// teste: 9 habilidades declaravam `stacks: 2` e o texto prometia "2 acumulos",
+// mas as tres mecanicas dele leem so' "esta ativo?" (ver effects.ts).
+describe("acumulos so' aparecem onde a contagem importa", () => {
+  it("nenhuma ability declara acúmulos de Sangramento", () => {
+    const comStacks = ALL_ABILITIES.filter((ability) =>
+      ability.effects?.some((effect) => effect.effectId === "BLEED" && effect.stacks !== undefined),
+    );
+    expect(comStacks.map((ability) => ability.id)).toEqual([]);
+  });
+
+  it("o resumo de uma habilidade com Sangramento não fala em acúmulo", () => {
+    const comBleed = ALL_ABILITIES.filter((a) => a.effects?.some((e) => e.effectId === "BLEED"));
+    expect(comBleed.length).toBeGreaterThan(0);
+    for (const ability of comBleed) {
+      expect(buildMechanicsSummary(ability), ability.id).not.toMatch(/acúmulos? de Sangramento/i);
+    }
+  });
+});
+
+// A confusao entre `unguardable` (ignora Bloqueio/Aparo) e `undodgeable`
+// (ignora Esquiva) ja' tinha invertido o texto de 6 habilidades: a Palma de
+// Vacuo prometia "nao pode ser esquivada" com unguardable no dado, e quatro
+// nos de arvore diziam "nao pode ser esquivado" pra habilidades unguardable.
+// Sao coisas OPOSTAS — o texto escrito a mao tem que concordar com a flag.
+describe("texto escrito à mão concorda com as flags de defesa", () => {
+  const SEM_ESQUIVA = /não pode ser esquivad|impossível .{0,12}esquivar|rápido demais pra esquivar/i;
+  const SEM_GUARDA = /ignora bloqueio e aparo/i;
+
+  const textos = (ability: { id: string; description?: string }) => {
+    const doNo = allNodes().find((node) => node.grantsAbilityId === ability.id)?.desc;
+    return [["ability", ability.description ?? ""], ["nó", doNo ?? ""]] as const;
+  };
+
+  it("quem promete 'não pode ser esquivado' tem undodgeable ou unblockable", () => {
+    const erros: string[] = [];
+    for (const ability of ALL_ABILITIES) {
+      if (ability.undodgeable || ability.unblockable) continue;
+      for (const [onde, texto] of textos(ability)) {
+        if (SEM_ESQUIVA.test(texto)) erros.push(`${ability.id} (${onde})`);
+      }
+    }
+    expect(erros).toEqual([]);
+  });
+
+  it("quem promete 'ignora Bloqueio e Aparo' tem unguardable ou unblockable", () => {
+    const erros: string[] = [];
+    for (const ability of ALL_ABILITIES) {
+      if (ability.unguardable || ability.unblockable) continue;
+      for (const [onde, texto] of textos(ability)) {
+        if (SEM_GUARDA.test(texto)) erros.push(`${ability.id} (${onde})`);
+      }
+    }
+    expect(erros).toEqual([]);
+  });
+});

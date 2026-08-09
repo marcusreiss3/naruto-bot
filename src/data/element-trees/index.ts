@@ -162,7 +162,7 @@ const FOGO: SkillNodeDef[] = [
   F.jutsu("fogo_grande_bola", "Grande Bola de Fogo", "☄️", "C", "Brasa", 0, 1, ["fogo_raiz"], 1, 3, "O usuário concentra chakra na boca e cospe uma esfera de fogo que avança em cone, iluminando o campo com uma explosão de chamas."),
   F.jutsu("fogo_flor_fenix", "Flor de Fogo Fênix", "🌸", "C", "Brasa", 0, 2, ["fogo_grande_bola"], 5, 5, "Várias pequenas bolas de fogo florescem ao redor do usuário e voam em trajetórias diferentes, fechando os caminhos de fuga do alvo."),
   F.pass("fogo_brasas", "Brasas Persistentes", "♨️", "Brasa", 1, 2, ["fogo_flor_fenix"], 8, 8, "Passiva: todo acerto seu de Fogo aplica 1 acúmulo de Queimadura a mais."),
-  F.pass("fogo_combustao", "Combustão", "💥", "Brasa", 1, 3, ["fogo_brasas"], 15, 12, "Passiva: a Queimadura explode com 4 acúmulos em vez de 5, e a explosão causa 60 de dano em vez de 40."),
+  F.pass("fogo_combustao", "Combustão", "💥", "Brasa", 1, 3, ["fogo_brasas"], 15, 12, "Passiva: a explosão da Queimadura causa 30 de dano em vez de 20."),
   F.jutsu("fogo_dragao", "Fogo do Dragão", "🐉", "B", "Cerco", 0, 4, ["fogo_flor_fenix"], 12, 10, "Lança um jato de fogo em linha reta que deixa um rastro de chamas no caminho. Aplica 3 acúmulos de Queimadura."),
   F.pass("fogo_pavio", "Pavio", "🧨", "Cerco", -1, 4, ["fogo_dragao"], 12, 10, "Passiva: as casas atingidas pelos seus jutsus de Fogo ficam em chamas por 2 rodadas e queimam quem passar por elas."),
   F.jutsu("fogo_cinzas", "Cinzas Ardentes", "🌫️", "A", "Cerco", -1, 5, ["fogo_pavio"], 22, 16, "Solta uma cortina de cinzas que bloqueia a visão e depois detona, aplicando 3 acúmulos de Queimadura em área."),
@@ -269,7 +269,7 @@ const CRISTAL: SkillNodeDef[] = [
   C.pass("cristal_refracao", "Refração", "🔮", "Prisma", 1, 5, ["cristal_rede"], 22, 16, "Passiva: a luz presa nas facetas atrapalha a mira de quem lança Ninjutsu em você. Ganha 8 pontos percentuais de esquiva contra Ninjutsu."),
   C.jutsu("cristal_fio_luz", "Fio de Luz", "🌈", "A", "Prisma", 1, 6, ["cristal_refracao"], 28, 22, "Forma um prisma de luz ao seu redor. Por 2 rodadas o Ninjutsu recebido cai 60% e parte volta no atacante. Em troca, você fica totalmente imóvel e o corpo a corpo passa inteiro."),
   C.pass("cristal_faceta", "Faceta Perfeita", "✨", "Ápice", 0, 6, ["cristal_dragao"], 30, 22, "Passiva: seus jutsus de Cristal causam +50% de dano."),
-  C.jutsu("cristal_oito_paredes", "Oito Paredes de Cristal de Jade", "🏯", "S", "Ápice", 0, 7, ["cristal_faceta"], 38, 28, "Fecha uma área imensa em oito paredes de cristal. Crava 3 acúmulos de Cristalizado em todos os atingidos, o bastante para selar quem já tiver um cristal no corpo. Gasta quase todo o chakra."),
+  C.jutsu("cristal_oito_paredes", "Oito Paredes de Cristal de Jade", "🏯", "S", "Ápice", 0, 7, ["cristal_faceta"], 38, 28, "Fecha uma área imensa em oito paredes de cristal. Crava 2 acúmulos de Cristalizado em todos os atingidos, o bastante para selar quem já tiver um cristal no corpo. Gasta quase todo o chakra."),
 ];
 
 // ----------------------------------------------------------------- VAPOR (KG)
@@ -403,15 +403,35 @@ const POEIRA: SkillNodeDef[] = [
 // Silenciosa.
 const GL = make("GELO");
 const GELO: SkillNodeDef[] = [
+  // Tronco curto (raiz -> Agulhas de Gelo) e' so' a porta de entrada; dali a
+  // arvore abre em TRES ramos que nao se repetem em papel:
+  //   Espelho (col -1): precisao/alvo unico, a linha do Haku
+  //   Campo   (col  0): area, terreno e a pilha de Congelamento
+  //   Reflexo (col +1): defesa e ilusao
+  // O apice exige as duas pontas ofensivas (Chuva de Agulhas + Lancas), entao
+  // ninguem chega no S-rank subindo um ramo so'.
   GL.pass("gelo_raiz", "Sangue de Gelo", "❄️", "Raiz", 0, 0, [], 1, 1, "Passiva sempre ativa: todos os seus jutsus de Gelo causam +35% de dano.", true),
   GL.jutsu("gelo_agulhas", "Agulhas de Gelo", "🧊", "C", "Gelo", 0, 1, ["gelo_raiz"], 4, 4, "Congela a umidade do ar em agulhas afiadas e as dispara em linha reta contra o alvo, cortando fundo."),
-  GL.jutsu("gelo_espelho", "Espelho Demoníaco de Gelo Fino", "🪞", "B", "Gelo", 0, 2, ["gelo_agulhas"], 9, 8, "Cria um único espelho de gelo fino e ataca de dentro dele com agulhas em vários ângulos ao mesmo tempo. O alvo, distraído tentando achar de onde vem o golpe, baixa a guarda."),
-  GL.jutsu("gelo_domo", "Domo de Iceberg", "🏔️", "B", "Defesa", 1, 2, ["gelo_agulhas"], 9, 8, "A umidade do ar congela num estalo e sobe em placas que se fecham por cima, trancando o usuário e quem estiver ao lado dele sob uma abóbada de gelo."),
-  GL.pass("gelo_presenca", "Presença Silenciosa", "🌫️", "Gelo", 0, 3, ["gelo_espelho"], 13, 11, "Passiva sempre ativa: os espelhos e reflexos gélidos confundem qualquer um. Seus jutsus de Gelo têm +15 pontos percentuais de chance de deixar o alvo com a guarda baixa (Defesa Reduzida), e a Lentidão que você aplica dura 1 rodada a mais."),
-  GL.pass("gelo_reflexos", "Reflexos Gélidos", "💠", "Defesa", 1, 3, ["gelo_domo"], 13, 11, "Passiva sempre ativa: anos refletindo o próprio corpo no gelo afiam os reflexos. +8 pontos percentuais de esquiva contra qualquer jutsu de Ninjutsu, e seus jutsus de Gelo custam 10% menos chakra."),
-  GL.jutsu("gelo_chuva_agulhas", "Chuva de Agulhas Geladas", "🌨️", "A", "Gelo", 0, 4, ["gelo_presenca"], 18, 15, "Multiplica os espelhos e enche a área de agulhas de gelo caindo de todos os ângulos, deixando quem for atingido mais lento pelo frio nos ferimentos."),
-  GL.pass("gelo_apice", "Domínio do Espelho de Gelo", "🔷", "Ápice", 0, 5, ["gelo_chuva_agulhas"], 24, 19, "Passiva: o domínio total da técnica do espelho chega ao ápice. Seus jutsus de Gelo causam +50% de dano."),
-  GL.jutsu("gelo_agulhas_mil", "Mil Agulhas Voadoras de Água da Morte", "❄️", "S", "Ápice", 0, 6, ["gelo_apice"], 30, 24, "Produz mil agulhas de gelo afiadas e longas, mira num único alvo específico e as lança todas de uma vez em altíssima velocidade. Rápido demais pra esquivar."),
+
+  // ---- ramo Espelho (col -1): precisao, alvo unico ----
+  GL.jutsu("gelo_espelho", "Espelho Demoníaco de Gelo Fino", "🪞", "B", "Espelho", -1, 2, ["gelo_agulhas"], 9, 8, "Cria um único espelho de gelo fino e ataca de dentro dele com agulhas em vários ângulos ao mesmo tempo. O alvo, distraído tentando achar de onde vem o golpe, baixa a guarda."),
+  GL.pass("gelo_presenca", "Presença Silenciosa", "🌫️", "Espelho", -1, 3, ["gelo_espelho"], 13, 11, "Passiva sempre ativa: os espelhos e reflexos gélidos confundem qualquer um. Seus jutsus de Gelo têm +15 pontos percentuais de chance de deixar o alvo com a guarda baixa (Defesa Reduzida), e a Lentidão que você aplica dura 1 rodada a mais."),
+  GL.jutsu("gelo_chuva_agulhas", "Chuva de Agulhas Geladas", "🌨️", "A", "Espelho", -1, 4, ["gelo_presenca"], 22, 18, "Multiplica os espelhos e enche a área de agulhas de gelo caindo de todos os ângulos, deixando quem for atingido mais lento pelo frio nos ferimentos."),
+
+  // ---- ramo Campo (col 0): area, terreno e a pilha de Congelamento ----
+  GL.jutsu("gelo_captura", "Captura no Campo Congelado", "🏒", "C", "Campo", 0, 2, ["gelo_agulhas"], 8, 7, "Depois do selo de mão, o solo da área congela numa camada só: os pés de quem estiver em cima ficam presos no gelo, e o frio começa a subir pelo corpo."),
+  GL.jutsu("gelo_neve", "Neve Congelante", "🌬️", "B", "Campo", 0, 3, ["gelo_captura"], 12, 10, "A mão aponta e dispara uma rajada de fragmentos de gelo junto de um redemoinho gelado: quem está dentro perde o campo de visão e congela por baixo da nevasca."),
+  GL.pass("gelo_cristais", "Cristais no Sangue", "🩸", "Campo", 0, 4, ["gelo_neve"], 16, 14, "Passiva: cada acerto seu de Gelo crava 1 acúmulo de Congelamento a mais. Na prática, o alvo congela em 2 golpes em vez de 4."),
+  GL.jutsu("gelo_lancas", "Lanças de Gelo do Assassinato Certeiro", "🧊", "A", "Campo", 0, 5, ["gelo_cristais"], 24, 19, "O usuário condensa as partículas de gelo suspensas no ar em espinhos gigantes e os empala de uma vez, congelando quem for atravessado."),
+
+  // ---- ramo Reflexo (col +1): defesa e ilusao ----
+  GL.jutsu("gelo_domo", "Domo de Iceberg", "🏔️", "B", "Reflexo", 1, 2, ["gelo_agulhas"], 9, 8, "A umidade do ar congela num estalo e sobe em placas que se fecham por cima, trancando o usuário e quem estiver ao lado dele sob uma abóbada de gelo."),
+  GL.pass("gelo_reflexos", "Reflexos Gélidos", "💠", "Reflexo", 1, 3, ["gelo_domo"], 13, 11, "Passiva sempre ativa: anos refletindo o próprio corpo no gelo afiam os reflexos. +8 pontos percentuais de esquiva contra qualquer jutsu de Ninjutsu, e seus jutsus de Gelo custam 10% menos chakra."),
+  GL.jutsu("gelo_parede", "Parede de Cristal", "🪟", "B", "Reflexo", 1, 4, ["gelo_reflexos"], 18, 15, "Fecha os inimigos numa cúpula de gelo polido. Cercados pelo próprio reflexo repetido, eles perdem a noção de quem é quem e passam a atacar os aliados como se fossem inimigos."),
+
+  // ---- Ápice (col 0): exige as duas pontas ofensivas ----
+  GL.pass("gelo_apice", "Domínio do Espelho de Gelo", "🔷", "Ápice", 0, 6, ["gelo_chuva_agulhas", "gelo_lancas"], 30, 22, "Passiva: o domínio total da técnica do espelho chega ao ápice. Seus jutsus de Gelo causam +50% de dano."),
+  GL.jutsu("gelo_agulhas_mil", "Mil Agulhas Voadoras de Água da Morte", "❄️", "S", "Ápice", 0, 7, ["gelo_apice"], 38, 28, "Produz mil agulhas de gelo afiadas e longas, mira num único alvo específico e as lança todas de uma vez em altíssima velocidade. Rápido demais pra esquivar."),
 ];
 
 export const ELEMENT_TREES: Record<Element, SkillNodeDef[]> = {
@@ -566,6 +586,11 @@ const NODE_ICONS: Record<string, string> = {
   gelo_chuva_agulhas: "gelo/chuva-de-agulhas-geladas.png",
   gelo_apice: "gelo/dominio-do-espelho-de-gelo.png",
   gelo_agulhas_mil: "gelo/mil-agulhas-voadoras.png",
+  gelo_captura: "gelo/captura-no-campo-congelado.png",
+  gelo_neve: "gelo/neve-congelante.png",
+  gelo_cristais: "gelo/cristais-no-sangue.png",
+  gelo_parede: "gelo/parede-de-cristal.png",
+  gelo_lancas: "gelo/lancas-de-gelo.png",
 
   aburame_raiz: "aburame/colonia-ancestral.png",
   aburame_clone_inseto: "aburame/tecnica-dos-clones-de-inseto.png",

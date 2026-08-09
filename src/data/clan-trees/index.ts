@@ -335,7 +335,7 @@ const HYUUGA: SkillNodeDef[] = [
     [],
     1,
     1,
-    "Passiva sempre ativa: mesmo sem o Byakugan ativado, a visão periférica quase total do clã já ajuda a mirar nos tenketsu certos. Seus jutsus de clã causam +10% de dano, custam 10% menos recurso e têm +10 pontos percentuais de chance de aplicar Bloqueio de Ninjutsu.",
+    "Passiva sempre ativa: mesmo sem o Byakugan ativado, a visão periférica quase total do clã já ajuda a mirar nos tenketsu certos. Seus jutsus de clã causam +10% de dano, custam 10% menos recurso e têm +10 pontos percentuais de chance de aplicar o Selo dos Tenketsu.",
     true,
     undefined,
     // a porta de entrada do clã e' o OLHO, nao o punho: raiz e Byakugan saem
@@ -368,7 +368,7 @@ const HYUUGA: SkillNodeDef[] = [
     ["hyuuga_byakugan"],
     1,
     4,
-    "Estilo de combate básico dos Hyūga: injeta chakra no golpe para ferir órgãos internos e a rede de chakra do adversário, em vez de só o corpo. 40% de chance de bloquear o Ninjutsu do alvo por 1 rodada. Exige o Byakugan ativo.",
+    "Estilo de combate básico dos Hyūga: injeta chakra no golpe para ferir órgãos internos e a rede de chakra do adversário, em vez de só o corpo. 40% de chance de selar os tenketsu do alvo por 1 rodada. Exige o Byakugan ativo.",
   ),
   H.jutsu(
     "hyuuga_palma_vacuo",
@@ -394,7 +394,7 @@ const HYUUGA: SkillNodeDef[] = [
     ["hyuuga_punho_suave"],
     10,
     9,
-    "Gira rapidamente enquanto libera chakra por todos os tenketsu, criando uma esfera defensiva quase impenetrável. Ganha 24 pontos de Barreira por 3 rodadas e livra você de ficar preso ao chão. Exige o Byakugan ativo.",
+    "Gira rapidamente enquanto libera chakra por todos os tenketsu, criando uma esfera defensiva quase impenetrável. Ganha uma Barreira que cresce com sua vida máxima por 3 rodadas e livra você de ficar preso ao chão. Exige o Byakugan ativo.",
   ),
   H.pass(
     "hyuuga_guarda_perpetua",
@@ -419,7 +419,7 @@ const HYUUGA: SkillNodeDef[] = [
     ["hyuuga_palma_vacuo"],
     12,
     12,
-    "Sequência de 64 golpes extremamente rápidos que bloqueiam dezenas de tenketsu de uma vez: 85% de chance de bloquear o Ninjutsu do alvo por 2 rodadas, e 30% de chance de Atordoar por 1 rodada. Exige o Byakugan ativo.",
+    "Sequência de 64 golpes extremamente rápidos que bloqueiam dezenas de tenketsu de uma vez: 75% de chance de selar os tenketsu do alvo por 1 rodada, e 30% de chance de Atordoar por 1 rodada. Exige o Byakugan ativo.",
   ),
   H.jutsu(
     "hyuuga_128_palmas",
@@ -444,7 +444,7 @@ const HYUUGA: SkillNodeDef[] = [
     ["hyuuga_128_palmas", "hyuuga_guarda_perpetua"],
     24,
     20,
-    "Passiva: todo golpe do seu clã mira direto nos órgãos internos. Seus jutsus de clã causam mais 20% de dano, ignoram a Barreira e causam mais 25% em quem estiver abaixo de 30% de vida. O Bloqueio de Ninjutsu que aplicarem dura 1 rodada a mais.",
+    "Passiva: todo golpe do seu clã mira direto nos órgãos internos. Seus jutsus de clã causam mais 20% de dano, ignoram a Barreira e causam mais 25% em quem estiver abaixo de 30% de vida. O Selo dos Tenketsu que aplicarem dura 1 rodada a mais.",
   ),
   H.jutsu(
     "hyuuga_leoes_gemeos",
@@ -457,7 +457,7 @@ const HYUUGA: SkillNodeDef[] = [
     ["hyuuga_apice"],
     30,
     28,
-    "Libera uma grande quantidade de chakra pelos punhos, moldado em duas cabeças de leão. Não pode ser esquivado. Ao acertar, destroça por completo os meridianos do alvo: bloqueia o Ninjutsu dele por 3 rodadas e reduz a defesa dele por 2 rodadas. Exige o Byakugan ativo.",
+    "Libera uma grande quantidade de chakra pelos punhos, moldado em duas cabeças de leão. Não pode ser esquivado. Ao acertar, destroça por completo os meridianos do alvo: sela os tenketsu dele por 2 rodadas e reduz a defesa dele por 2 rodadas. Exige o Byakugan ativo.",
   ),
 ];
 
@@ -531,7 +531,7 @@ const AKIMICHI: SkillNodeDef[] = [
     ["akimichi_baika_parcial"],
     6,
     7,
-    "Altera livremente o próprio tamanho e consegue manter a forma por um período extenso — consome muitas calorias, mas o corpo maior absorve muito mais impacto. Ganha 20 pontos de Barreira por 4 rodadas.",
+    "Altera livremente o próprio tamanho e consegue manter a forma por um período extenso — consome muitas calorias, mas o corpo maior absorve muito mais impacto. Ganha uma Barreira que cresce com sua vida máxima por 4 rodadas.",
     undefined,
     "ninjutsu",
   ),
@@ -559,7 +559,7 @@ const AKIMICHI: SkillNodeDef[] = [
     ["akimichi_tanque"],
     14,
     12,
-    "A versão mais poderosa da Técnica do Tamanho Múltiplo: multiplica o corpo pra um tamanho inacreditável. Ganha 32 pontos de Barreira por 4 rodadas.",
+    "A versão mais poderosa da Técnica do Tamanho Múltiplo: multiplica o corpo pra um tamanho inacreditável. Ganha uma Barreira maior, que cresce com sua vida máxima, por 4 rodadas.",
     undefined,
     "ninjutsu",
   ),
@@ -612,7 +612,7 @@ const AKIMICHI: SkillNodeDef[] = [
     ["akimichi_bofetada"],
     28,
     21,
-    "Converte calorias em chakra puro: fazem brotar borboletas de chakra nas costas, multiplicando a força bruta do usuário. Limpa Queimadura, Veneno, Sangramento e Lentidão, e ganha 20 pontos de Barreira por 2 rodadas.",
+    "Converte calorias em chakra puro: fazem brotar borboletas de chakra nas costas, multiplicando a força bruta do usuário. Limpa Queimadura, Veneno, Sangramento e Lentidão, e ganha uma Barreira que cresce com sua vida máxima por 2 rodadas.",
     undefined,
     "ninjutsu",
   ),
@@ -627,7 +627,7 @@ const AKIMICHI: SkillNodeDef[] = [
     ["akimichi_modo_borboleta"],
     32,
     25,
-    "Depois do Modo Borboleta, concentra todo o poder acumulado num único golpe de taijutsu devastador. Não pode ser esquivado.",
+    "Depois do Modo Borboleta, concentra todo o poder acumulado num único golpe de taijutsu devastador. Ignora Bloqueio e Aparo.",
   ),
 ];
 
@@ -721,7 +721,7 @@ const ABURAME: SkillNodeDef[] = [
     ["aburame_esfera"],
     13,
     11,
-    "Um enxame denso forma uma parede viva de insetos, resistente o bastante pra aguentar entulho caindo ou fogo: dá 22 pontos de Barreira por 3 rodadas a si mesmo ou a um aliado próximo. Não segura gases, como uma cortina de veneno.",
+    "Um enxame denso forma uma parede viva de insetos, resistente o bastante pra aguentar entulho caindo ou fogo: dá uma Barreira que cresce com a vida máxima de quem recebe (você ou um aliado próximo) por 3 rodadas. Não segura gases, como uma cortina de veneno.",
   ),
   AB.jutsu(
     "aburame_jarro_veneno",
@@ -1250,7 +1250,7 @@ const HOSHIGAKI: SkillNodeDef[] = [
     ["hoshigaki_mil_tubaroes"],
     24,
     20,
-    "Cria um tubarão gigantesco fora da água e o arremessa com as duas mãos: não pode ser esquivado, e absorve o chakra da técnica do adversário, crescendo ainda mais no impacto — sugando 10% de chakra por turno por 3 rodadas.",
+    "Cria um tubarão gigantesco fora da água e o arremessa com as duas mãos: ignora Bloqueio e Aparo, e absorve o chakra da técnica do adversário, crescendo ainda mais no impacto — sugando 10% de chakra por turno por 3 rodadas.",
   ),
 ];
 
@@ -1371,7 +1371,7 @@ const HOZUKI: SkillNodeDef[] = [
     ["hozuki_fluidez"],
     19,
     19,
-    "Forma uma onda gigante em formato de peixe demoníaco: capaz de lutar contra adversários muito maiores, arrasando a área. Não pode ser esquivada, empurra 3 casas quem for atingido e tem 75% de chance de deixar mais lento por 2 rodadas.",
+    "Forma uma onda gigante em formato de peixe demoníaco: capaz de lutar contra adversários muito maiores, arrasando a área. Ignora Bloqueio e Aparo, empurra 3 casas quem for atingido e tem 75% de chance de deixar mais lento por 2 rodadas.",
   ),
 ];
 
@@ -1520,7 +1520,7 @@ const KAGUYA: SkillNodeDef[] = [
     ["kaguya_apice"],
     29,
     23,
-    "Concentra todo o poder do próprio corpo, projetando os ossos comprimidos em lanças rígidas ao extremo: uma arma de osso incrivelmente destrutiva. Não pode ser esquivada. 85% de chance de causar Sangramento por 3 rodadas.",
+    "Concentra todo o poder do próprio corpo, projetando os ossos comprimidos em lanças rígidas ao extremo: uma arma de osso incrivelmente destrutiva. Ignora Bloqueio e Aparo. 85% de chance de causar Sangramento por 3 rodadas.",
   ),
 ];
 

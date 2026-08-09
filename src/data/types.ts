@@ -36,6 +36,12 @@ export interface AppliedEffect {
   //     efeito (Casulo do Aburame: so' golpes que exigem clanId "aburame",
   //     cobrindo a Mordida de Inseto mesmo sendo categoria NINJUTSU)
   empoweredScope?: "physical" | "taijutsu" | "ninjutsu" | "clan";
+  // Alem de `stacks` fixo, soma round(hpMax * hpPercentStacks) de quem RECEBE
+  // o efeito no momento da aplicacao. Usado pela Barreira (SHIELD) pra escalar
+  // com o jogo em vez de ficar num numero fixo pra sempre — `stacks` vira o
+  // piso minimo, isto soma por cima. So' faz sentido em efeitos empilhaveis
+  // tipo SHIELD; omitido = comportamento antigo (so' o `stacks` fixo).
+  hpPercentStacks?: number;
 }
 
 export interface AbilityRequirements {
@@ -80,6 +86,12 @@ export interface Ability {
   range: number; // em celulas; 0 = self/melee adjacente
   shape: Shape;
   effects?: AppliedEffect[];
+  // Efeitos que sempre vao pro PROPRIO ATOR quando a habilidade e' usada com
+  // sucesso, independente de `shape`/alvo/acerto. Existe pra ataques que
+  // tambem concedem um buff defensivo a quem os usa (ex: Parede de Terra e
+  // Punho Rochoso dao Barreira a quem golpeia, nao a quem apanha) — `effects`
+  // sozinho aplicaria isso no ALVO atingido, o que nunca e' a intencao.
+  selfEffects?: AppliedEffect[];
   // remove efeitos do alvo (Iryo)
   cleanses?: EffectId[];
   // Reduz a duração dos efeitos sem removê-los necessariamente. Usado por
@@ -216,7 +228,7 @@ export interface Ability {
     // o que acontece quando a invocacao morre (clone d'agua estoura molhando).
     // `stacks` e' especialmente importante para Barreira: representa a vida
     // do escudo concedido, em vez de depender do valor padrao de 1.
-    onDeath?: { effectId: EffectId; radius: number; duration?: number; stacks?: number };
+    onDeath?: { effectId: EffectId; radius: number; duration?: number; stacks?: number; hpPercentStacks?: number };
     // teto de invocacoes VIVAS deste mesmo templateId por invocador. Uma nova
     // criacao acima do teto e' recusada em useAbility (ver createSummon), mas
     // repor uma que morreu volta a ser permitido. Ex: Clones das Sombras (ate' 6).

@@ -58,6 +58,7 @@ import { getAbility } from "../data/index.js";
 import { onCombatEnded, onCombatLost } from "../services/missions/mission-runtime.js";
 import { partyMemberIds } from "../services/party/party-service.js";
 import { pickUpInventoryItem } from "../services/characters/inventory.js";
+import { tenketsuSealed } from "../services/combat/effects.js";
 import { MapRenderer } from "../services/maps/renderer.js";
 import { buildSessionEntities, condenseLogs } from "../services/combat/combat-render.js";
 import { buildCombatEmbed, buildStatusEmbed, combatRows, turnPhase } from "../services/combat/combat-view.js";
@@ -1322,6 +1323,18 @@ async function portao(interaction: ChatInputCommandInteraction): Promise<void> {
   }
   if (gate > 1 && currentGate !== gate - 1 && currentGate !== gate) {
     await interaction.reply({ content: `❌ Abra primeiro o Portão ${gateNames[gate - 1]}.`, ephemeral: true });
+    return;
+  }
+  // Selo dos Tenketsu (Hyuuga): abrir Portao e' forcar chakra pelos tenketsu,
+  // entao o selo tranca a abertura. Nao fecha Portao ja' aberto (nem o proprio
+  // comando de FECHAR, que passa por aqui com `disabling`): o selo barra a
+  // porta, nao desfaz o que ja' passou.
+  const closing = currentGate === gate;
+  if (!closing && tenketsuSealed(me.effects)) {
+    await interaction.reply({
+      content: "❌ Seus tenketsu estão selados: você não consegue forçar chakra para abrir um Portão.",
+      ephemeral: true,
+    });
     return;
   }
   const gateAbilityIds: Record<number, string> = {

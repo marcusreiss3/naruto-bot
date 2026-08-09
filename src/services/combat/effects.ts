@@ -29,6 +29,9 @@ const DEFAULT_DURATIONS: Partial<Record<EffectId, number>> = {
   CONFUSION: E.CONFUSION.defaultDuration,
   ROOT: E.ROOT.defaultDuration,
   NINJUTSU_BLOCK: E.NINJUTSU_BLOCK.defaultDuration,
+  TENKETSU_SEAL: E.TENKETSU_SEAL.defaultDuration,
+  FROZEN: E.FROZEN.defaultDuration,
+  FROZEN_SOLID: E.FROZEN_SOLID.defaultDuration,
   CONTRACT_SEAL: E.CONTRACT_SEAL.defaultDuration,
   FLEE_LOCK: E.FLEE_LOCK.defaultDuration,
   WET: E.WET.defaultDuration,
@@ -63,9 +66,11 @@ export function burnTaijutsuMultiplier(burnStacks: number): number {
 }
 
 // Multiplicador de dano de QUALQUER categoria do alvo desidratado (Calor).
-// Diferente do burnTaijutsuMultiplier, nao se limita a TAI/BUKI.
+// Diferente do burnTaijutsuMultiplier, nao se limita a TAI/BUKI — por isso
+// respeita um teto de acumulos (maxStacks), senao o alvo chegava a causar 0.
 export function dehydrationMultiplier(stacks: number): number {
-  return Math.max(0, 1 - E.DEHYDRATION.dmgReductionPerStack * stacks);
+  const capped = Math.min(stacks, E.DEHYDRATION.maxStacks);
+  return Math.max(0, 1 - E.DEHYDRATION.dmgReductionPerStack * capped);
 }
 
 // Aplica stacks de queimadura; retorna stacks resultantes + dano explosivo (se atingiu o cap).
@@ -116,6 +121,13 @@ export function isConfused(activeEffects: EffectState[]): boolean {
 
 export function ninjutsuBlocked(activeEffects: EffectState[]): boolean {
   return activeEffects.some((e) => isActive(e, "NINJUTSU_BLOCK"));
+}
+
+// Selo dos Tenketsu (Hyuuga): pontos de chakra fechados. Trava as tres
+// categorias que gastam chakra (ver SEALED_BY_TENKETSU em combat-engine) e
+// impede ABRIR Portao Interno — Portao ja' aberto nao e' fechado por ele.
+export function tenketsuSealed(activeEffects: EffectState[]): boolean {
+  return activeEffects.some((e) => isActive(e, "TENKETSU_SEAL"));
 }
 
 // Impedido de fugir do combate (anel de fogo, prisao, raizes...).
@@ -311,6 +323,43 @@ export function applyCrystalStacks(
   const total = currentStacks + addStacks;
   if (total >= sealAt) return { stacks: 0, sealed: true };
   return { stacks: total, sealed: false };
+}
+
+// ------------------------------------------------------------------ GELO (KG)
+// Congelamento: acumula sem causar dano. Cada acumulo encarece as tecnicas do
+// alvo e tira movimento; ao encher, congela (FROZEN_SOLID) e zera.
+export function frozenStacks(activeEffects: EffectState[]): number {
+  return activeEffects
+    .filter((e) => isActive(e, "FROZEN"))
+    .reduce((total, e) => total + e.stacks, 0);
+}
+
+// Multiplicador de custo das tecnicas de quem esta congelando (>= 1).
+// Chamado com os efeitos do PROPRIO ator, nao os do alvo.
+export function frozenCostMultiplier(activeEffects: EffectState[]): number {
+  return 1 + frozenStacks(activeEffects) * E.FROZEN.costPenaltyPerStack;
+}
+
+// Movimento efetivo considerando o corpo enrijecido pelo gelo (nunca < 0).
+export function applyFrozenToMove(move: number, activeEffects: EffectState[]): number {
+  return Math.max(0, move - frozenStacks(activeEffects) * E.FROZEN.movePenaltyPerStack);
+}
+
+// Congelado de verdade: nenhuma reacao defensiva e' aceita enquanto durar.
+export function isFrozenSolid(activeEffects: EffectState[]): boolean {
+  return activeEffects.some((e) => isActive(e, "FROZEN_SOLID"));
+}
+
+// Mesmo contrato de applyCrystalStacks: se encher, congela e os acumulos zeram.
+export function applyFrozenStacks(
+  currentStacks: number,
+  addStacks: number,
+  opts?: { freezeAtStacks?: number },
+): { stacks: number; frozen: boolean } {
+  const freezeAt = opts?.freezeAtStacks ?? E.FROZEN.freezeAtStacks;
+  const total = currentStacks + addStacks;
+  if (total >= freezeAt) return { stacks: 0, frozen: true };
+  return { stacks: total, frozen: false };
 }
 
 // Prisma: enquanto ativo, o ninjutsu recebido e' cortado e parte volta no

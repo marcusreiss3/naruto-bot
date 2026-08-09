@@ -76,10 +76,11 @@ describe("Clone de Raio", () => {
 describe("Golem Defensor", () => {
   const golem = getAbility("doton_golem")!;
 
-  it("deixa uma Barreira de 20 de vida ao morrer", () => {
+  it("deixa uma Barreira que cresce com a vida máxima de quem recebe ao morrer", () => {
     expect(golem.summon?.onDeath).toMatchObject({
       effectId: "SHIELD",
-      stacks: 20,
+      stacks: 12,
+      hpPercentStacks: 0.18,
       radius: 1,
       duration: 3,
     });

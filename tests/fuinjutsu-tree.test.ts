@@ -43,11 +43,11 @@ describe("árvore de Fuinjutsu", () => {
     }
   });
 
-  it("gasta um Pergaminho Rank B no Método de Selamento de Fogo", () => {
+  it("gasta um Pergaminho de Arsenal no Método de Selamento de Fogo", () => {
     const ability = getAbility("fuin_metodo_selamento_fogo")!;
     expect(ability.requiredItems).toEqual([
-      { itemId: "pergaminho_rank_b", amount: 1, exhaustToItemId: "pergaminho_rank_b_gasto" },
+      { itemId: "pergaminho_arsenal", amount: 1, exhaustToItemId: "pergaminho_arsenal_gasto" },
     ]);
-    expect(buildMechanicsSummary(ability)).toMatch(/Gasta 1x Pergaminho Rank B; restaure-o para usar novamente/);
+    expect(buildMechanicsSummary(ability)).toMatch(/Gasta 1x Pergaminho de Arsenal; restaure-o para usar novamente/);
   });
 });

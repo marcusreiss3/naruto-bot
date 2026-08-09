@@ -10,7 +10,7 @@ import {
   shieldPoints,
   type EffectState,
 } from "../src/services/combat/effects.js";
-import { getAbility } from "../src/data/index.js";
+import { ALL_ABILITIES, getAbility } from "../src/data/index.js";
 import { allNodes } from "../src/data/element-trees/index.js";
 import { PASSIVES } from "../src/data/element-trees/passives.js";
 import { BALANCE } from "../src/config/balance.js";
@@ -103,10 +103,23 @@ describe("passivas: queimadura", () => {
     expect(passiveMods(["fogo_brasas"], bola).extraBurnStacks).toBe(1);
   });
 
-  it("Combustão baixa o gatilho e sobe o dano da explosão", () => {
+  it("Combustão sobe o dano da explosão, mas NÃO baixa o gatilho", () => {
     const m = passiveMods(["fogo_combustao"], bola);
-    expect(m.burnExplodeAtStacks).toBe(4);
-    expect(m.burnExplodeDamage).toBe(60);
+    expect(m.burnExplodeDamage).toBe(30);
+    // o gatilho tem que continuar no padrao: baixar pra 4 fazia os jutsus de
+    // 3 acumulos + Brasas (+1) explodirem TODO uso, virando dano fixo.
+    expect(m.burnExplodeAtStacks).toBe(BALANCE.effects.BURN.explodeAtStacks);
+  });
+
+  it("nenhum uso único de Fogo enche o gatilho sozinho, mesmo com a árvore toda", () => {
+    const todas = ["fogo_raiz", "fogo_brasas", "fogo_combustao", "fogo_pavio", "fogo_folego", "fogo_sopro"];
+    const maiorAplicacao = Math.max(
+      ...ALL_ABILITIES
+        .filter((a) => a.element === "FOGO")
+        .map((a) => a.effects?.find((e) => e.effectId === "BURN")?.stacks ?? 0),
+    );
+    const m = passiveMods(todas, bola);
+    expect(maiorAplicacao + m.extraBurnStacks).toBeLessThan(m.burnExplodeAtStacks);
   });
 
   it("sem Combustão vale o padrão do balance", () => {
@@ -115,14 +128,14 @@ describe("passivas: queimadura", () => {
     expect(m.burnExplodeDamage).toBe(BALANCE.effects.BURN.explodeDmg);
   });
 
-  it("explosão respeita o gatilho da Combustão (4 em vez de 5)", () => {
-    const semPassiva = applyBurnStacks(3, 1);
-    expect(semPassiva.explosionDamage).toBe(0);
-    expect(semPassiva.stacks).toBe(4);
+  it("explosão respeita o gatilho e zera os acúmulos ao estourar", () => {
+    const aindaNao = applyBurnStacks(3, 1);
+    expect(aindaNao.explosionDamage).toBe(0);
+    expect(aindaNao.stacks).toBe(4);
 
-    const comCombustao = applyBurnStacks(3, 1, { explodeAtStacks: 4, explodeDamage: 60 });
-    expect(comCombustao.explosionDamage).toBe(60);
-    expect(comCombustao.stacks).toBe(0); // zera apos explodir
+    const estourou = applyBurnStacks(4, 1);
+    expect(estourou.explosionDamage).toBe(BALANCE.effects.BURN.explodeDmg);
+    expect(estourou.stacks).toBe(0); // zera apos explodir
   });
 });
 
@@ -313,8 +326,8 @@ describe("passivas: build completa de Fogo", () => {
     expect(m.damageMult).toBeCloseTo(2.015); // 1.30 * 1.55: fonte unica de crescimento de dano
     expect(m.costMult).toBeCloseTo(0.8);
     expect(m.extraBurnStacks).toBe(1);
-    expect(m.burnExplodeAtStacks).toBe(4);
-    expect(m.burnExplodeDamage).toBe(60);
+    expect(m.burnExplodeAtStacks).toBe(BALANCE.effects.BURN.explodeAtStacks);
+    expect(m.burnExplodeDamage).toBe(30);
     expect(m.terrainOnHit).toHaveLength(1);
   });
 });

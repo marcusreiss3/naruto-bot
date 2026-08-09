@@ -42,9 +42,33 @@ export interface SharinganCopyGate {
   attribute?: { key: Attribute; value: number };
 }
 
+// O olho memoriza selo de mao e fluxo de chakra — nao entrega o CORPO nem os
+// anos de preparo que a tecnica exige. Por isso duas familias ficam de fora
+// mesmo sendo Taijutsu de arvore copiavel:
+//
+//   1. Transformacoes (Portoes Internos do Punho Forte, Cem Forcas do
+//      Adamantino): nao sao "um golpe que da' pra imitar" — sao o proprio
+//      corpo do usuario alterado. O Portao exige abrir tenketsu que o
+//      copiador nunca condicionou; as Cem Forcas exigem um selo carregado
+//      por anos.
+//   2. Kinjutsu (tecnica proibida): mesmo vendo os selos, falta o requisito
+//      fundamental por tras. Marcadas pela tag `kinjutsu` — quando o termo
+//      virar conceito de primeira classe no projeto, e' so' trocar a leitura
+//      da tag pelo campo novo aqui.
+function isTransformation(ability: Ability): boolean {
+  // Portoes: unico grupo com gateRules. Modos: buff no proprio corpo (SELF).
+  return Boolean(ability.gateRules)
+    || (ability.shape === "SELF" && ability.tags.includes("buff"));
+}
+
+function isForbidden(ability: Ability): boolean {
+  return ability.tags.some((tag) => tag.toLocaleLowerCase("pt-BR") === "kinjutsu");
+}
+
 // O Sharingan copia técnicas moldadas por natureza elemental. Gelo e madeira
 // são exceções explícitas, identificadas pelas tags canônicas da habilidade.
 export function isSharinganCopyable(ability: Ability): boolean {
+  if (isTransformation(ability) || isForbidden(ability)) return false;
   const isAllowedTaijutsu =
     ability.category === "TAIJUTSU" &&
     COPYABLE_TAIJUTSU_IDS.has(ability.id);

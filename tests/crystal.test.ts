@@ -125,11 +125,14 @@ describe("Cristalizado", () => {
     expect(applyCrystalToMove(4, [ef("CRYSTALLIZED", 2, 0)])).toBe(4);
   });
 
-  it("Oito Paredes crava 3 — sela sozinho quem ja tem 1 cristal", () => {
+  it("Oito Paredes crava 2 — sela quem ja tem cristal, mas nunca do zero", () => {
     const paredes = getAbility("shouton_oito_paredes")!;
     const stacks = paredes.effects!.find((e) => e.effectId === "CRYSTALLIZED")!.stacks!;
-    expect(stacks).toBe(3);
-    expect(applyCrystalStacks(1, stacks).sealed).toBe(true);
+    expect(stacks).toBe(2);
+    // com 1 cristal ja' no corpo -> sela, exatamente o que a descricao promete
+    expect(applyCrystalStacks(1, stacks + 1).sealed).toBe(true);
+    // do zero, mesmo com a Faceta Cortante (+1), NAO sela num uso so'
+    expect(applyCrystalStacks(0, stacks + 1).sealed).toBe(false);
   });
 });
 

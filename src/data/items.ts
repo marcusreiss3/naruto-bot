@@ -150,25 +150,32 @@ export const ITEMS: ItemDef[] = [
     actions: ["EQUIP"],
     basicAbilityId: "item_lamina_chakra_cortar",
   },
+  // Pergaminho unico (09/08/2026). Antes existiam 3 ranks (B/A/S) x 2 estados
+  // = 6 entradas de inventario pra uma mecanica so'. O rank nao gateava nada
+  // — nenhuma tecnica exigia "rank A ou melhor", cada uma exigia um rank
+  // exato — entao so' enchia a mochila. Agora a tecnica mais forte pede MAIS
+  // pergaminhos (`amount`) em vez de um pergaminho mais raro, o que preserva
+  // o custo crescente: com ryoValue 300, restaurar os 3 da Cadeia do Desastre
+  // custa os mesmos 450 ryo do antigo pergaminho rank S.
   {
     id: "pergaminho_arsenal",
     name: "Pergaminho de Arsenal",
-    description: "Pergaminho preparado para armazenar e convocar grandes quantidades de ferramentas ninja.",
+    description: "Pergaminho preparado para armazenar e convocar grandes quantidades de ferramentas ninja. Após ser usado, fica gasto até ser restaurado.",
     category: "NINJA_TOOL",
     stackable: false,
     actions: [],
+    ryoValue: 300,
   },
-  // So' B, A e S: as tecnicas de pergaminho da arvore de Bukijutsu comecam no
-  // rank B (Dragoes Gemeos), entao pergaminho D e C nao eram usados por skill
-  // nenhuma — eram item morto na loja.
-  ...(["B", "A", "S"] as const).flatMap((rank, index) => {
-    const values = [280, 500, 900];
-    const activeId = `pergaminho_rank_${rank.toLowerCase()}`;
-    return [
-      { id: activeId, name: `Pergaminho Rank ${rank}`, description: `Pergaminho de Bukijutsu Rank ${rank}. Após ser usado, fica gasto até ser restaurado.`, category: "NINJA_TOOL" as const, stackable: false, actions: [], ryoValue: values[index] },
-      { id: `${activeId}_gasto`, name: `Pergaminho Rank ${rank} (gasto)`, description: `Pergaminho Rank ${rank} sem chakra selado. Pode ser restaurado por metade do valor do pergaminho.`, category: "NINJA_TOOL" as const, stackable: false, actions: [], ryoValue: values[index], restoresItemId: activeId },
-    ];
-  }),
+  {
+    id: "pergaminho_arsenal_gasto",
+    name: "Pergaminho de Arsenal (gasto)",
+    description: "Pergaminho de Arsenal sem chakra selado. Pode ser restaurado por metade do valor do pergaminho.",
+    category: "NINJA_TOOL",
+    stackable: false,
+    actions: [],
+    ryoValue: 300,
+    restoresItemId: "pergaminho_arsenal",
+  },
   {
     id: "corrente_ferro",
     name: "Corrente de Ferro",

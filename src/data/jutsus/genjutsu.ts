@@ -169,7 +169,11 @@ export const GENJUTSU_ABILITIES: Ability[] = [
     category: "GENJUTSU",
     tier: 3,
     resource: "chakra",
-    cost: 51,
+    // 51 -> 57 (09/08/2026): Atordoamento garantido de 2 rodadas + Defesa
+    // Reduzida, junto de 26 de dano. Mesmo motivo da Prisao dos Quatro
+    // Pilares — a subida do Atordoamento pra severidade 7 na regua expos que
+    // o preco nao cobria uma negacao de turno tao longa.
+    cost: 57,
     actionType: "COMUM",
     baseDamage: 26,
     scalingAttribute: "genjutsu",

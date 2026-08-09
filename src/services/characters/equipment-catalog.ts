@@ -6,6 +6,7 @@ import {
 } from "../../data/items.js";
 import { getAbility } from "../../data/index.js";
 import { buildMechanicsSummary } from "./skill-description.js";
+import { buildEffectCatalog } from "./effect-catalog.js";
 
 function abilityView(abilityId: string | undefined) {
   if (!abilityId) return null;
@@ -97,6 +98,7 @@ export function buildEquipmentCatalog() {
     ],
     commandGroups,
     commands: commandGroups.flatMap((group) => group.commands),
+    effectGroups: buildEffectCatalog(),
     unarmedAttack: abilityView("item_soco_basico"),
     categories: Object.entries(ITEM_CATEGORY_LABELS).map(([id, label]) => ({
       id,

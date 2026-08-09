@@ -16,6 +16,10 @@ export interface JutsuCostFactors {
   baseDamage?: number;
   baseHeal?: number;
   effects?: { effectId: EffectId; duration?: number; chance?: number }[];
+  // buff que sempre cai no proprio usuario (ex: a Barreira da Parede de
+  // Terra) — vale o mesmo que um efeito normal na conta, entao entra no
+  // mesmo somatorio.
+  selfEffects?: { effectId: EffectId; duration?: number; chance?: number }[];
   unblockable?: boolean;
   undodgeable?: boolean;
   unguardable?: boolean;
@@ -46,7 +50,7 @@ export function suggestedJutsuCost(factors: JutsuCostFactors): number {
 
   const outputCost = bracketedOutputCost((factors.baseDamage ?? 0) + (factors.baseHeal ?? 0));
 
-  const effectsCost = (factors.effects ?? []).reduce((sum, e) => {
+  const effectsCost = [...(factors.effects ?? []), ...(factors.selfEffects ?? [])].reduce((sum, e) => {
     const severity = F.effectSeverity[e.effectId] ?? 2;
     // sem duration explicita, assume 1 rodada (piso conservador: nao
     // recompensa deixar o campo em branco com custo mais baixo).

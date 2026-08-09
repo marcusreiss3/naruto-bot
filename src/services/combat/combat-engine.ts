@@ -1,6 +1,6 @@
 import { prisma } from "../../db/client.js";
 import { BALANCE } from "../../config/balance.js";
-import { effectLabel, type Attribute, type EffectId, type Element } from "../../config/enums.js";
+import { effectLabel, type Attribute, type Category, type EffectId, type Element } from "../../config/enums.js";
 import { getAbility, getScenarioById, getNpc } from "../../data/index.js";
 import { allNodes } from "../../data/element-trees/index.js";
 import type { Ability, AppliedEffect, ScenarioDef } from "../../data/types.js";
@@ -52,6 +52,11 @@ import {
   absorbWithShield,
   chakraDrainPerTurn,
   ninjutsuBlocked,
+  tenketsuSealed,
+  applyFrozenStacks,
+  applyFrozenToMove,
+  frozenCostMultiplier,
+  isFrozenSolid,
   tickEffect,
   empoweredDamageMult,
   hasActiveEffectFromAbility,
@@ -456,7 +461,7 @@ async function triggerSummonDeath(
   logs: string[],
 ): Promise<void> {
   const onDeath = dead.flags.onDeath as
-    | { effectId: EffectId; radius: number; duration?: number; stacks?: number }
+    | { effectId: EffectId; radius: number; duration?: number; stacks?: number; hpPercentStacks?: number }
     | null
     | undefined;
   if (!onDeath) return;
@@ -474,7 +479,7 @@ async function triggerSummonDeath(
     await applyEffect(
       alvo.id,
       onDeath.effectId,
-      onDeath.stacks ?? 1,
+      (onDeath.stacks ?? 1) + extraHpStacks(onDeath, alvo.hpMax),
       onDeath.duration ?? defaultDurationFor(onDeath.effectId),
     );
   }
@@ -547,8 +552,8 @@ export interface MoveResult {
 
 // Orcamento de deslocamento do participante nesta rodada: base + passivas,
 // ajustado por lentidao/pressa, pelo terreno da celula de ORIGEM (pantano
-// prende) e pelo cristal — que pode zerar de vez, por isso vem depois do
-// piso de 1. Puro: nao le nem escreve no banco.
+// prende) e pelo cristal/gelo — que podem zerar de vez, por isso vem depois
+// do piso de 1. Puro: nao le nem escreve no banco.
 export function movementBudget(s: SessionFull, p: SessionFull["participants"][number]): number {
   const passiveMoveBonus = characterPassiveMods(ownedNodes(p)).moveBonus;
   let move = moveRange() + passiveMoveBonus;
@@ -556,6 +561,7 @@ export function movementBudget(s: SessionFull, p: SessionFull["participants"][nu
   move = applyHasteToMove(move, p.effects);
   move = Math.max(1, Math.floor(move * terrainMoveFactor(s.terrain, p.cell, s.round)));
   move = applyCrystalToMove(move, p.effects);
+  move = applyFrozenToMove(move, p.effects);
   return move;
 }
 
@@ -839,6 +845,16 @@ function sharinganDodgeBonus(flags: Record<string, unknown>): number {
   return tomoe ? BALANCE.sharingan[tomoe].dodgeBonus : 0;
 }
 
+// Categorias que o Selo dos Tenketsu (Hyuuga) tranca: as que moldam chakra.
+// Fuinjutsu NAO precisa entrar na lista — todo jutsu de selo e' `category:
+// "NINJUTSU"` escalando pelo atributo fuinjutsu (ver o comentario de
+// CATEGORIES em enums.ts), entao ja' cai no NINJUTSU aqui. O mesmo vale pra
+// tecnica de cla, que tambem usa as categorias normais.
+// Fora da lista de proposito: TAIJUTSU/BUKIJUTSU/KENJUTSU (gastam energia) e
+// DOJUTSU (Byakugan/Sharingan sao toggles com upkeep proprio, tratados em
+// /combate, nao passam por useAbility).
+const SEALED_BY_TENKETSU: readonly Category[] = ["NINJUTSU", "GENJUTSU", "IRYO_NINJUTSU"];
+
 function strongFistGate(flags: Record<string, unknown>): number | null {
   const value = flags.punhoForteGate;
   return typeof value === "number" && BALANCE.punhoForteGates[value] ? value : null;
@@ -1012,6 +1028,13 @@ export async function useAbility(
   if (ability.category === "NINJUTSU" && ninjutsuBlocked(actor.effects)) {
     return fail("Você está impedido de usar Ninjutsu (selo/genjutsu).");
   }
+  // Selo dos Tenketsu (Hyuuga): fecha as tres categorias que gastam chakra.
+  // Tecnica de cla nao tem categoria propria (nenhuma ability usa "CLA") — um
+  // ninjutsu/genjutsu de cla e' categoria NINJUTSU/GENJUTSU normal, entao cai
+  // aqui junto com o resto, que e' o esperado.
+  if (SEALED_BY_TENKETSU.includes(ability.category) && tenketsuSealed(actor.effects)) {
+    return fail("Seus tenketsu estão selados: você não consegue moldar chakra.");
+  }
   // O sistema atual de invocações usa `ability.summon`. Chakra de Bijuu ainda
   // não tem uma mecânica própria; quando existir, suas abilities devem receber
   // a tag `bijuu`, que este mesmo selo também bloqueará.
@@ -1023,9 +1046,16 @@ export async function useAbility(
   // passivas dos nos comprados (snapshot em flags.nodes)
   const mods = passiveMods(ownedNodes(actor), ability);
 
-  // custo apos maestria e apos passivas de reducao de custo
+  // custo apos maestria, apos passivas de reducao de custo e apos o
+  // Congelamento (Gelo) — o unico efeito que encarece a tecnica de quem o
+  // carrega: dedos duros e chakra travado atrasam os selos de mao.
   const mastery = await masteryFor(actor, ability.resource);
-  const cost = Math.max(1, Math.round(costAfterMastery(ability.cost, mastery) * mods.costMult));
+  const cost = Math.max(
+    1,
+    Math.round(
+      costAfterMastery(ability.cost, mastery) * mods.costMult * frozenCostMultiplier(actor.effects),
+    ),
+  );
   const pool = ability.resource === "chakra" ? actor.chakra : actor.energia;
   if (pool < cost) return fail(`${ability.resource} insuficiente (precisa ${cost}%).`);
 
@@ -1250,7 +1280,7 @@ export async function useAbility(
         await applyEffect(
           recipient.id,
           ae.effectId,
-          (ae.stacks ?? 1) + (mods.effectStacksBonus[ae.effectId] ?? 0),
+          (ae.stacks ?? 1) + extraHpStacks(ae, recipient.hpMax) + (mods.effectStacksBonus[ae.effectId] ?? 0),
           (ae.duration ?? defaultDurationFor(ae.effectId)) + (mods.effectDurationBonus[ae.effectId] ?? 0),
           {
             replaceGroup: ae.replaceGroup,
@@ -1261,6 +1291,29 @@ export async function useAbility(
         );
         logs.push(`⚡ ${recipient.name} recebeu efeito **${effectLabel(ae.effectId)}**.`);
       }
+    }
+  }
+
+  // Efeitos que sempre vao pro proprio ator, mesmo em ataques que miram o
+  // inimigo (ver comentario de `selfEffects` em types.ts) — ex: Parede de
+  // Terra e Punho Rochoso dao Barreira a quem golpeia. Aplica ao usar com
+  // sucesso, independente de acertar alvo ou nao.
+  if (ability.selfEffects) {
+    for (const ae of ability.selfEffects) {
+      if (ae.chance !== undefined && !chance(ae.chance)) continue;
+      await applyEffect(
+        actor.id,
+        ae.effectId,
+        (ae.stacks ?? 1) + extraHpStacks(ae, actor.hpMax) + (mods.effectStacksBonus[ae.effectId] ?? 0),
+        (ae.duration ?? defaultDurationFor(ae.effectId)) + (mods.effectDurationBonus[ae.effectId] ?? 0),
+        {
+          replaceGroup: ae.replaceGroup,
+          onExpire: ae.onExpire,
+          empoweredScope: resolveEmpoweredScope(ae.empoweredScope, ability),
+          sourceAbilityId: ability.id,
+        },
+      );
+      logs.push(`⚡ ${actor.name} recebeu efeito **${effectLabel(ae.effectId)}**.`);
     }
   }
 
@@ -1433,6 +1486,12 @@ function stacksOf(p: SessionFull["participants"][number], effectId: string): num
   return p.effects.filter((e) => e.effectId === effectId).reduce((acc, e) => acc + e.stacks, 0);
 }
 
+// Barreira (e qualquer futuro efeito empilhavel marcado com hpPercentStacks)
+// soma uma fracao do hpMax de quem RECEBE o efeito por cima do `stacks` fixo.
+function extraHpStacks(ae: { hpPercentStacks?: number }, recipientHpMax: number): number {
+  return ae.hpPercentStacks ? Math.round(recipientHpMax * ae.hpPercentStacks) : 0;
+}
+
 // Altura agora depende de o participante ter SUBIDO (flag elevated), não só de
 // pisar numa célula de árvore/altura.
 function onHeight(p: SessionFull["participants"][number]): boolean {
@@ -1479,11 +1538,18 @@ export async function resolveHit(
       `🌑 ${target.name} está com a sombra vinculada — o corpo copia o do atacante e não consegue reagir.`,
     );
   }
+  // Congelado (Gelo): o corpo travou no gelo. Mesma consequencia do Vinculo de
+  // Sombra — nenhuma reacao e' aceita — mas por outro caminho: aqui o alvo
+  // encheu os acumulos de Congelamento em vez de ter a sombra presa.
+  const frozenSolid = isFrozenSolid(target.effects);
+  if (frozenSolid && requestedReaction !== "NONE") {
+    logs.push(`🧊 ${target.name} está congelado — o corpo não responde e não consegue reagir.`);
+  }
   const alreadyReacted = target.flags.reactionUsedRound === s.round;
   if (alreadyReacted && requestedReaction !== "NONE") {
     logs.push(`⏳ ${target.name} já usou uma reação defensiva nesta rodada.`);
   }
-  const reaction = boundByShadow || alreadyReacted ? "NONE" : requestedReaction;
+  const reaction = boundByShadow || frozenSolid || alreadyReacted ? "NONE" : requestedReaction;
   if (reaction === "DODGE" && !undodgeable && !ability.unblockable) {
     const reactAb = opts.reactionAbilityId ? getAbility(opts.reactionAbilityId) : undefined;
     const physical = isPhysicalCategory(ability.category);
@@ -1757,7 +1823,7 @@ export async function resolveHit(
       const r = await applyEffect(
         target.id,
         ae.effectId,
-        (ae.stacks ?? 1) + extraStacks,
+        (ae.stacks ?? 1) + extraHpStacks(ae, target.hpMax) + extraStacks,
         finalDur,
         {
           burn: ae.effectId === "BURN" ? burnOpts : undefined,
@@ -1779,6 +1845,9 @@ export async function resolveHit(
         logs.push(
           `💨💥 A desintegração colapsou a defesa de ${target.name}: **Barreira zerada** e **Defesa Reduzida**.`,
         );
+      }
+      if (r.frozen) {
+        logs.push(`🧊❄️ O gelo fechou sobre ${target.name}: **congelado** (sem reação defensiva).`);
       }
       if (r.explosion) {
         hpAfterEffects = await applyDamage(
@@ -1971,7 +2040,8 @@ async function applyReactionBenefits(
   const mods = passiveMods(ownedNodes(target), reactAb);
   for (const effect of reactAb.effects ?? []) {
     if (effect.chance !== undefined && !chance(effect.chance)) continue;
-    const stacks = (effect.stacks ?? 1) + (mods.effectStacksBonus[effect.effectId] ?? 0);
+    const stacks =
+      (effect.stacks ?? 1) + extraHpStacks(effect, target.hpMax) + (mods.effectStacksBonus[effect.effectId] ?? 0);
     const duration =
       (effect.duration ?? defaultDurationFor(effect.effectId)) +
       (mods.effectDurationBonus[effect.effectId] ?? 0);
@@ -2046,7 +2116,7 @@ export async function applyEffect(
       | { kind: "clan"; clanId: string };
     sourceAbilityId?: string;
   },
-): Promise<{ explosion?: number; sealed?: boolean; hardened?: boolean; collapsed?: boolean }> {
+): Promise<{ explosion?: number; sealed?: boolean; hardened?: boolean; collapsed?: boolean; frozen?: boolean }> {
   const burnOpts = opts?.burn;
   const replaceGroup = opts?.replaceGroup;
   const onExpire = opts?.onExpire;
@@ -2086,6 +2156,29 @@ export async function applyEffect(
       await applyEffect(participantId, "ROOT", 1, C.sealRootDuration);
     }
     return { sealed: sealed || undefined };
+  }
+
+  // gelo: mesma forma do cristal (acumula ate um gatilho), mas o payoff nao e'
+  // Atordoar/Enraizar — e' CONGELAR: o alvo perde a reacao defensiva.
+  if (effectId === "FROZEN") {
+    const existing = await prisma.effectInstance.findFirst({
+      where: { participantId, effectId: "FROZEN" },
+    });
+    const { stacks: newStacks, frozen } = applyFrozenStacks(existing?.stacks ?? 0, stacks);
+    if (existing) {
+      await prisma.effectInstance.update({
+        where: { id: existing.id },
+        data: { stacks: newStacks, duration: Math.max(existing.duration, dur) },
+      });
+    } else {
+      await prisma.effectInstance.create({
+        data: { participantId, effectId, name: "Congelamento", stacks: newStacks, duration: dur },
+      });
+    }
+    if (frozen) {
+      await applyEffect(participantId, "FROZEN_SOLID", 1, BALANCE.effects.FROZEN.freezeDuration);
+    }
+    return { frozen: frozen || undefined };
   }
 
   // magma: mesma forma do cristal (acumula ate um gatilho), mas o payoff e'
@@ -2203,9 +2296,15 @@ export async function applyEffect(
     if (empoweredScope) data.empoweredScope = empoweredScope;
   }
   if (existing) {
-    const newStacks = effectId === "EMPOWERED"
+    const somados = effectId === "EMPOWERED"
       ? (keepExistingEmpowered ? existing.stacks : stacks)
       : existing.stacks - prevFormAmount + stacks;
+    // Desidratacao e' a unica que soma sem gatilho pra zerar, entao o teto
+    // vem daqui — sem isso o efeito mostrava 8 acumulos com so' 3 valendo
+    // (dehydrationMultiplier ja' capa o calculo, ver effects.ts).
+    const newStacks = effectId === "DEHYDRATION"
+      ? Math.min(somados, BALANCE.effects.DEHYDRATION.maxStacks)
+      : somados;
     await prisma.effectInstance.update({
       where: { id: existing.id },
       data: {

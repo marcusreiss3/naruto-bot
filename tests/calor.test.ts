@@ -96,8 +96,12 @@ describe("Desidratação", () => {
     expect(dehydrationMultiplier(2)).toBeCloseTo(1 - D.dmgReductionPerStack * 2, 5);
   });
 
-  it("nunca fica negativo mesmo com muitos acúmulos", () => {
-    expect(dehydrationMultiplier(100)).toBe(0);
+  it("respeita o teto de acúmulos — não dá pra zerar o dano do alvo", () => {
+    const piso = 1 - D.dmgReductionPerStack * D.maxStacks;
+    expect(dehydrationMultiplier(D.maxStacks)).toBeCloseTo(piso, 5);
+    // acima do teto nao muda mais nada, nem fica negativo
+    expect(dehydrationMultiplier(100)).toBeCloseTo(piso, 5);
+    expect(dehydrationMultiplier(100)).toBeGreaterThan(0);
   });
 
   it("corta o dano de QUALQUER categoria, diferente da Queimadura (só TAI/BUKI)", () => {

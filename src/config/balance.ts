@@ -100,16 +100,18 @@ export const BALANCE = {
   // dois valores; o primeiro já cobra o desgaste físico pedido pela árvore.
   // O Portão da Morte ultrapassa o teto usual de 2.0x porque, uma vez aberto,
   // não pode mais ser fechado ou trocado até a morte do usuário. O desgaste
-  // de 100 HP por turno continua sendo o contrapeso central.
+  // de 80 HP por turno segue a mesma proporção de crescimento dos portões
+  // anteriores (~1.4-1.6x por portão) em vez de dobrar como fazia antes,
+  // mas continua sendo o contrapeso central.
   punhoForteGates: {
-    1: { taijutsuDamageMult: 1.10, selfDamagePerTurn: 5 },
-    2: { taijutsuDamageMult: 1.20, selfDamagePerTurn: 8, energyRecoveryPerTurn: 10 },
-    3: { taijutsuDamageMult: 1.32, selfDamagePerTurn: 12 },
-    4: { taijutsuDamageMult: 1.45, selfDamagePerTurn: 18 },
-    5: { taijutsuDamageMult: 1.58, selfDamagePerTurn: 25 },
-    6: { taijutsuDamageMult: 1.72, selfDamagePerTurn: 35, energyRecoveryPerTurn: 20 },
-    7: { taijutsuDamageMult: 1.85, selfDamagePerTurn: 50 },
-    8: { taijutsuDamageMult: 2.50, selfDamagePerTurn: 100 },
+    1: { taijutsuDamageMult: 1.10, selfDamagePerTurn: 10 },
+    2: { taijutsuDamageMult: 1.20, selfDamagePerTurn: 15, energyRecoveryPerTurn: 10 },
+    3: { taijutsuDamageMult: 1.30, selfDamagePerTurn: 20 },
+    4: { taijutsuDamageMult: 1.45, selfDamagePerTurn: 25 },
+    5: { taijutsuDamageMult: 1.60, selfDamagePerTurn: 35 },
+    6: { taijutsuDamageMult: 1.70, selfDamagePerTurn: 45, energyRecoveryPerTurn: 20 },
+    7: { taijutsuDamageMult: 1.85, selfDamagePerTurn: 60 },
+    8: { taijutsuDamageMult: 2.50, selfDamagePerTurn: 80 },
   } as Record<number, { taijutsuDamageMult: number; selfDamagePerTurn: number; energyRecoveryPerTurn?: number }>,
 
   // ---- Maestria: multiplicador de custo por recurso ----
@@ -130,7 +132,25 @@ export const BALANCE = {
 
   // ---- Efeitos: numeros base ----
   effects: {
-    BURN: { dmgPerTurn: 8, taijutsuDmgReductionPerStack: 0.05, explodeAtStacks: 5, explodeDmg: 40 },
+    // explodeDmg 40 -> 30 (09/08/2026): a explosao era o unico payoff de
+    // gatilho que pagava em DANO num patamar de jutsu de apice (o maior
+    // baseDamage do jogo e' 48, a media dos elementais e' 24). Somada aos 24
+    // de dano por turno da propria Queimadura, uma aplicacao entregava mais
+    // que o golpe mais forte que existe. 30 fica acima da media e bem abaixo
+    // do teto. REGRA: explodeAtStacks tem que ser MAIOR que o maximo de
+    // acumulos que um unico uso consegue aplicar (hoje 4 = jutsu de 3 +
+    // Brasas Persistentes), senao a explosao vira dano fixo por uso.
+    // dmgPerTurn 8 -> 5 e explodeDmg 40 -> 20 (09/08/2026). Dois motivos:
+    //   1. O BALANCEAMENTO_FINAL.txt mede so' baseDamage x passivas, entao o
+    //      dano da Queimadura era invisivel nele: o doc mostrava Fogo 47,4 e
+    //      Vento 49,4 (empate), quando o real era 84,8 x 49,4.
+    //   2. A escada de dano-por-turno estava invertida — a Queimadura, de
+    //      elemento BASICO, batia mais que todos os efeitos de kekkei genkai
+    //      (Desintegracao 6, Corrosao 5, Magma 4). Agora ela empata com os
+    //      comuns e fica abaixo do Poeira, que e' a hierarquia do projeto.
+    // O tick e' FIXO de proposito (nao escala com acumulo): quem investe em
+    // empilhar e' pago pela explosao e pelo corte de dano de TAI/BUKI.
+    BURN: { dmgPerTurn: 5, taijutsuDmgReductionPerStack: 0.05, explodeAtStacks: 5, explodeDmg: 20 },
     POISON: { baseDmg: 2, dmgPerStack: 1, maxDuration: 5 },
     BLEED: { dmgPerTurn: 5, extraOnTaiKen: 6, healCutFactor: 0.5 },
     STUN: { defaultDuration: 1 },
@@ -138,6 +158,9 @@ export const BALANCE = {
     CONFUSION: { defaultDuration: 2 },
     ROOT: { defaultDuration: 1 },
     NINJUTSU_BLOCK: { defaultDuration: 2 },
+    // Selo dos Tenketsu (Hyuuga): mesma duracao padrao do NINJUTSU_BLOCK, mas
+    // fecha as tres categorias de chakra e tranca a abertura de Portao.
+    TENKETSU_SEAL: { defaultDuration: 2 },
     CONTRACT_SEAL: { defaultDuration: 2 },
     DEFENSE_DOWN: { dodgeReduction: 0.15 },
     FLEE_LOCK: { defaultDuration: 2 },
@@ -201,7 +224,15 @@ export const BALANCE = {
     // o dano de QUALQUER categoria que o alvo debilitado causar.
     DEHYDRATION: {
       defaultDuration: 2,
-      dmgReductionPerStack: 0.15, // -15% de todo dano causado pelo alvo, por acumulo
+      // -10% de todo dano causado pelo alvo, por acumulo (era 15%). E' o unico
+      // efeito que corta dano de QUALQUER categoria — a Queimadura, que e' o
+      // outro corte de dano, tira 5% e so' de TAI/BUKI. Em 15% sem teto o
+      // Calor zerava o dano do alvo com 7 acumulos (4 usos da Esfera).
+      dmgReductionPerStack: 0.1,
+      // Teto de acumulos. Queimadura e Cristal ja' tem freio natural (o
+      // gatilho zera os acumulos); a Desidratacao era a unica que somava sem
+      // limite. Com 3, o piso do alvo e' 70% do dano.
+      maxStacks: 3,
     },
     // Magma (Lava): mesma forma do Cristalizado (acumula ate um gatilho), mas
     // com dano leve por turno enquanto acumula — a lava esfria sobre o corpo.
@@ -236,6 +267,25 @@ export const BALANCE = {
       collapseAtStacks: 3,
       collapseDefenseDownDuration: 3,
     },
+    // Congelamento (Gelo): o unico efeito do jogo que mexe no CUSTO das
+    // tecnicas do alvo. Sem dano por turno de proposito — o Gelo ja' tem o
+    // maior pico de dano entre os KKG (ver capitulo de KKG do balanceamento);
+    // o que faltava era identidade propria. Mesma forma de acumular ate um
+    // gatilho do Cristal/Lava, mas o payoff nao Atordoa nem Enraiza: congela
+    // o corpo e tira a REACAO (nem Esquiva, nem Bloqueio, nem Aparo).
+    FROZEN: {
+      defaultDuration: 3,
+      // +10% no custo das tecnicas do alvo, por acumulo. Comecou em 15% e
+      // caiu: o teto pratico e' 3 acumulos (no 4o congela e zera), entao 15%
+      // dava +45% de custo somado a -3 de movimento — os dois juntos apagavam
+      // o turno do alvo. Em 10% o pico fica em +30%, na mesma faixa do
+      // Cristalizado (que cobra -8% de esquiva por acumulo na mesma forma).
+      costPenaltyPerStack: 0.1,
+      movePenaltyPerStack: 1,
+      freezeAtStacks: 4, // ao chegar aqui, congela e os acumulos zeram
+      freezeDuration: 1, // rodadas de FROZEN_SOLID aplicadas ao congelar
+    },
+    FROZEN_SOLID: { defaultDuration: 1 },
   },
 
   // ---- Deslocamento (empurrao / puxao) ----
@@ -346,11 +396,34 @@ export const BALANCE = {
     // ou que a engine sabe ter um "pagamento escondido" em BALANCE.effects
     // (MINADO explode depois, CRYSTALLIZED/MAGMA selam ao encher) valem mais.
     effectSeverity: {
-      STUN: 4, // trava a acao inteira — calibrado (raiton_esfera/ataque_raio)
+      // STUN 4 -> 7 (09/08/2026): estava ABAIXO de efeitos que negam menos.
+      // Atordoar tira o turno inteiro (acao E movimento); o Selo dos Tenketsu,
+      // que valia 7, deixa o alvo andar e usar TAI/BUKI/KEN a vontade. Fica em
+      // 7 e nao em 8 porque o atordoado ainda consegue REAGIR (Esquivar,
+      // Bloquear, Aparar) — e' o Vinculo de Sombra que tira a reacao, e e' por
+      // isso que ele vale 8 mesmo deixando o alvo agir. A chance/duracao baixa
+      // da maioria dos jutsus com Atordoamento ja' desconta na formula.
+      STUN: 7,
       SHADOW_BOUND: 8, // trava movimento+reacao E e' combo-enabler do Nara — mediana real 5-19, ver nota acima
       PRISM: 8, // casulo de luz: reduz dano recebido E reflete — mediana real (Fio de Luz)
       NINJUTSU_BLOCK: 4, // fecha uma categoria inteira
+      // Selo dos Tenketsu: fecha TRES categorias (Ninjutsu/Genjutsu/Iryo) e
+      // ainda tranca a abertura de Portao — acima do NINJUTSU_BLOCK, que fecha
+      // uma so'. Baixado de 7 pra 5 em 09/08/2026: negar tres categorias e'
+      // menos que negar o turno inteiro (Atordoamento), e o alvo selado
+      // continua andando, batendo e reagindo normalmente.
+      TENKETSU_SEAL: 5,
+      // Congelamento: mesmo peso do Cristalizado — acumula ate um gatilho de
+      // controle, sem dano por turno. O encarecimento por acumulo compensa o
+      // payoff ser mais curto (1 rodada sem reacao contra 1 Atordoar + 2
+      // Imobilizar do Cristal).
+      FROZEN: 4,
       CONFUSION: 4, // ataca alvo aleatorio, pode acertar aliado
+      // Era o ultimo efeito do roster sem severidade propria (caia no padrao
+      // 2). Fecha uma mecanica inteira — invocacao e chakra de Bijuu — entao
+      // vale como o NINJUTSU_BLOCK, que tambem fecha uma so'. Nao mais que
+      // isso porque so' morde quem investiu em invocacao.
+      CONTRACT_SEAL: 4,
       DISARM: 3,
       ROOT: 3, // so' trava movimento — mediana real (Abelha do Mel) puxou pra cima
       POISON: 3, // mediana real (Nuvem de Veneno do Aburame)

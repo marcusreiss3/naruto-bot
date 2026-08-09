@@ -10,8 +10,8 @@ import { buildEquipmentCatalog } from "../src/services/characters/equipment-cata
 
 describe("catálogo de itens", () => {
   it("registra os nove itens básicos e os equipamentos especiais com ids únicos", () => {
-    expect(ITEMS).toHaveLength(13);
-    expect(new Set(ITEMS.map((item) => item.id)).size).toBe(13);
+    expect(ITEMS).toHaveLength(14);
+    expect(new Set(ITEMS.map((item) => item.id)).size).toBe(14);
     expect(ITEMS.slice(0, 9).map((item) => item.name)).toEqual([
       "Kunai",
       "Shuriken",
@@ -26,6 +26,7 @@ describe("catálogo de itens", () => {
     expect(ITEMS.slice(9).map((item) => item.name)).toEqual([
       "Lâmina de Chakra",
       "Pergaminho de Arsenal",
+      "Pergaminho de Arsenal (gasto)",
       "Corrente de Ferro",
       "Esfera Explosiva",
     ]);
@@ -104,7 +105,7 @@ describe("catálogo de itens", () => {
   it("expõe o mesmo catálogo para a página do site", () => {
     const catalog = buildEquipmentCatalog();
     expect(catalog.unarmedAttack?.name).toBe("Soco");
-    expect(catalog.items).toHaveLength(13);
+    expect(catalog.items).toHaveLength(14);
     const commands = catalog.commands.map((entry) => entry.command);
     expect(commands).toEqual(expect.arrayContaining([
       "/atributos",

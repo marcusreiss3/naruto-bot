@@ -24,7 +24,7 @@ export const BUKIJUTSU_ABILITIES: Ability[] = [
       // Tecnica de PERGAMINHO: o pergaminho existe justamente pra despejar uma
       // quantidade grande de ferramenta de uma vez — por isso o consumo aqui e'
       // varias vezes maior que o de uma tecnica de arremesso comum.
-      { itemId: "pergaminho_rank_b", amount: 1, exhaustToItemId: "pergaminho_rank_b_gasto" },
+      { itemId: "pergaminho_arsenal", amount: 1, exhaustToItemId: "pergaminho_arsenal_gasto" },
       { itemId: "kunai", amount: 10, consume: true },
       { itemId: "shuriken", amount: 10, consume: true },
     ],
@@ -74,7 +74,7 @@ export const BUKIJUTSU_ABILITIES: Ability[] = [
     effects: [{ effectId: "MINADO", stacks: 1, duration: 2 }],
     requirements: { manualOnly: true },
     requiredItems: [
-      { itemId: "pergaminho_rank_a", amount: 1, exhaustToItemId: "pergaminho_rank_a_gasto" },
+      { itemId: "pergaminho_arsenal", amount: 2, exhaustToItemId: "pergaminho_arsenal_gasto" },
       { itemId: "esfera_explosiva", amount: 1, consume: true },
     ],
     tags: ["projétil", "explosivo", "pergaminho"],
@@ -87,7 +87,7 @@ export const BUKIJUTSU_ABILITIES: Ability[] = [
     unguardable: true,
     effects: [
       { effectId: "ROOT", duration: 2 },
-      { effectId: "BLEED", stacks: 1, duration: 3 },
+      { effectId: "BLEED", duration: 3 },
     ],
     requirements: { manualOnly: true },
     requiredItems: [
@@ -103,9 +103,10 @@ export const BUKIJUTSU_ABILITIES: Ability[] = [
     undodgeable: true, oncePerCombat: true,
     requirements: { manualOnly: true },
     requiredItems: [
-      // Pergaminho rank S cobrindo a area inteira numa chuva continua de armas:
-      // o maior consumo do jogo, coerente com o que a descricao promete.
-      { itemId: "pergaminho_rank_s", amount: 1, exhaustToItemId: "pergaminho_rank_s_gasto" },
+      // TRES pergaminhos abertos de uma vez cobrindo a area inteira numa chuva
+      // continua de armas: o maior consumo do jogo, coerente com o que a
+      // descricao promete (e o mesmo custo de restauro do antigo rank S).
+      { itemId: "pergaminho_arsenal", amount: 3, exhaustToItemId: "pergaminho_arsenal_gasto" },
       { itemId: "kunai", amount: 20, consume: true },
       { itemId: "shuriken", amount: 20, consume: true },
     ],

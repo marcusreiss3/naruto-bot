@@ -1,44 +1,25 @@
-import type { EffectId, TerrainKind } from "../../config/enums.js";
+import { EFFECT_LABELS, type EffectId, type TerrainKind } from "../../config/enums.js";
 import { BALANCE } from "../../config/balance.js";
 import type { Ability, AppliedEffect } from "../../data/types.js";
 import { getItem } from "../../data/items.js";
 import { getAbility } from "../../data/index.js";
 import { defaultDurationFor } from "../combat/effects.js";
 
-const EFFECT_NAMES: Record<EffectId, string> = {
-  BURN: "Queimadura",
-  POISON: "Veneno",
-  BLEED: "Sangramento",
-  STUN: "Atordoamento",
-  SLOW: "Lentidão",
-  DISARM: "Desarme",
-  CONFUSION: "Confusão",
-  ROOT: "Imobilização",
-  NINJUTSU_BLOCK: "Bloqueio de Ninjutsu",
-  CONTRACT_SEAL: "Selo de Contrato",
-  DEFENSE_DOWN: "Defesa reduzida",
-  FLEE_LOCK: "Fuga bloqueada",
-  WET: "Encharcado",
-  SHIELD: "Barreira",
-  CHAKRA_DRAIN: "Dreno de Chakra",
-  HASTE: "Aceleração",
-  EMPOWERED: "Sobrecarga",
-  MARKED: "Marcado",
-  SHADOW_BOUND: "Vínculo de Sombra",
-  CRYSTALLIZED: "Cristalizado",
-  PRISM: "Prisma",
-  CORROSION: "Corrosão",
-  DEHYDRATION: "Desidratação",
-  MAGMA: "Magma",
-  MINADO: "Minado",
-  DISINTEGRATION: "Desintegração",
-};
+// O nome de exibicao de cada efeito vem de EFFECT_LABELS (config/enums.ts),
+// fonte unica. Antes existia uma copia manual aqui e as duas divergiram:
+// FLEE_LOCK aparecia como "Bloqueio de Fuga" no glossario e "Fuga bloqueada"
+// nas habilidades, e DEFENSE_DOWN trocava a caixa do R.
+const EFFECT_NAMES = EFFECT_LABELS;
 
+// Efeitos em que a QUANTIDADE de acumulos muda alguma coisa no motor — so'
+// esses citam acumulo no texto. Sangramento fica FORA de proposito: as tres
+// mecanicas dele (dano por turno, corte de cura, extra no golpe fisico) leem
+// apenas "esta ativo?", nunca a contagem (ver effects.ts).
 const STACK_EFFECTS = new Set<EffectId>([
   "BURN",
   "POISON",
-  "BLEED",
   "CRYSTALLIZED",
+  "FROZEN",
   "CORROSION",
   "DEHYDRATION",
   "MAGMA",
@@ -59,7 +40,12 @@ function effectText(effect: AppliedEffect): string {
   const stacks = effect.stacks ?? 1;
 
   if (effect.effectId === "SHIELD") {
-    return `Concede Barreira de ${stacks} pontos${durationText}.`;
+    // Barreira escala com a vida de quem recebe (ver hpPercentStacks em
+    // types.ts): o `stacks` e' so' o piso fixo, o resto sai do hpMax.
+    const pct = effect.hpPercentStacks
+      ? ` + ${Math.round(effect.hpPercentStacks * 100)}% da vida máxima`
+      : "";
+    return `Concede Barreira de ${stacks} pontos${pct}${durationText}.`;
   }
   if (effect.effectId === "EMPOWERED") {
     const multiplier = stacks > 1
@@ -122,6 +108,12 @@ export function buildMechanicsSummary(ability: Ability): string {
       parts.push(`Quando ${EFFECT_NAMES[effect.effectId]} termina: ${effectText(effect.onExpire)}`);
     }
   }
+  // selfEffects sempre vao pro proprio usuario, mesmo em golpe que mira o
+  // inimigo (ex: a Barreira da Parede de Terra) — o texto precisa deixar
+  // claro em QUEM cai, senao parece mais um efeito aplicado no alvo.
+  for (const effect of ability.selfEffects ?? []) {
+    parts.push(`No próprio usuário: ${effectText(effect).replace(/^Concede /, "concede ")}`);
+  }
 
   if (ability.requiresTargetEffect?.length) {
     const required = ability.requiresTargetEffect.map((effect) => EFFECT_NAMES[effect]);
@@ -161,6 +153,8 @@ export function buildMechanicsSummary(ability: Ability): string {
     parts.push("Aprende permanentemente Ninjutsus de Fogo, Água, Vento, Terra e Raio, além dos jutsus ativos de Punho Forte, Arhat e Adamantino observados em combate. Não copia passivas.");
     parts.push("Não copia técnicas exclusivas de clã.");
     parts.push("Não copia Kekkei Genkai.");
+    parts.push("Não copia transformações, como os Portões Internos e a Técnica das Cem Forças: o olho lê os selos, mas não entrega o corpo condicionado por anos que a técnica exige.");
+    parts.push("Não copia Kinjutsu. Uma técnica proibida não se resume aos selos de mão: exige requisitos fundamentais que só ver não concede.");
     parts.push("A cópia exige afinidade com o elemento, além do nível e Ninjutsu ou Taijutsu mínimos da técnica.");
   }
   if (ability.requiresPet) {
@@ -185,8 +179,9 @@ export function buildMechanicsSummary(ability: Ability): string {
     if (ability.summon.onDeath) {
       const duration = ability.summon.onDeath.duration ?? defaultDurationFor(ability.summon.onDeath.effectId);
       const amount = ability.summon.onDeath.stacks;
+      const hpPct = ability.summon.onDeath.hpPercentStacks;
       const effectText = ability.summon.onDeath.effectId === "SHIELD" && amount !== undefined
-        ? `${EFFECT_NAMES[ability.summon.onDeath.effectId]} de ${amount} de vida`
+        ? `${EFFECT_NAMES[ability.summon.onDeath.effectId]} de ${amount} pontos${hpPct ? ` + ${Math.round(hpPct * 100)}% da vida máxima` : ""}`
         : EFFECT_NAMES[ability.summon.onDeath.effectId];
       parts.push(
         `Ao morrer, a invocação aplica ${effectText} por ${rounds(duration)} em um raio de ${ability.summon.onDeath.radius} casas.`,

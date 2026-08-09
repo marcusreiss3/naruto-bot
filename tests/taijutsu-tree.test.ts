@@ -91,7 +91,7 @@ describe("árvore de Taijutsu", () => {
   it("Portão da Abertura é o toggle que sustenta a progressão da Lótus", () => {
     const gate = getAbility("tai_portao_abertura")!;
     const lotus = getAbility("tai_lotus_frontal")!;
-    expect(gate.gateRules).toMatchObject({ gate: 1, taijutsuDamageMult: 1.45, selfDamagePerTurn: 5 });
+    expect(gate.gateRules).toMatchObject({ gate: 1, taijutsuDamageMult: 1.10, selfDamagePerTurn: 10 });
     expect(lotus.requirements?.requiresAbilityId).toBe("tai_portao_abertura");
     expect(lotus.oncePerCombat).toBe(true);
   });
@@ -137,7 +137,7 @@ describe("árvore de Taijutsu", () => {
     expect(getAbility("tai_portao_morte")!.gateRules).toMatchObject({
       gate: 8,
       taijutsuDamageMult: 2.5,
-      selfDamagePerTurn: 100,
+      selfDamagePerTurn: 80,
     });
   });
 });

@@ -136,9 +136,10 @@ Punho Arhat         22         6             29,69         43,55          0,90
 Punho Adamantino    33         5             40,35         58,50          0,77
 
 Os numeros acima nao incluem modos. O Punho Forte tem o maior investimento,
-mas seus Portoes mudam seu teto: com o 8o Portao, o pico chega a aproximadamente
-126,0. Esse valor e compensado por 100 HP perdidos por turno e pela
-impossibilidade de fechar ou trocar o Portao antes da morte.
+mas seus Portoes mudam seu teto: com o 8o Portao, o pico (Guy Noturno: 52 base
+x 2,50 do portao x 1,08 da Disciplina Corporal x 1,20 da Maestria Marcial)
+chega a aproximadamente 168,5. Esse valor e compensado por 80 HP perdidos por
+turno e pela impossibilidade de fechar ou trocar o Portao antes da morte.
 
 
 8. NUMEROS FINAIS
@@ -206,8 +207,8 @@ os Portoes, que mudam o teto dele por completo (ver capitulo 9).
 
 Maestria Marcial no nivel 40: +20% de dano em Taijutsu.
 Estilo no nivel 45: dano medio sem modo 34,50; melhor golpe 50,43; custo/dano 0,88.
-8o Portao: 2,50x em Taijutsu, 100 HP por turno e irreversivel ate a morte.
-Pico estimado com 8o Portao: aproximadamente 126,0.
+8o Portao: 2,50x em Taijutsu, 80 HP por turno e irreversivel ate a morte.
+Pico estimado com 8o Portao: aproximadamente 168,5.
 
 
 10. VEREDITO FINAL

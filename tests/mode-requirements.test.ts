@@ -14,6 +14,11 @@ describe("modos obrigatórios para finalizadores", () => {
       .toBe("inuzuka_lobo_duas_cabecas");
   });
 
+  it("Tanque da Bala Humana e Super Bofetada agora exigem a forma correspondente ativa, como a descrição sempre prometeu", () => {
+    expect(getAbility("akimichi_tanque")!.requiresActiveEffectFromAbilityId).toBe("akimichi_baika");
+    expect(getAbility("akimichi_bofetada")!.requiresActiveEffectFromAbilityId).toBe("akimichi_super_baika");
+  });
+
   it("só aceita o efeito ativo gerado pelo modo correto", () => {
     const effects: EffectState[] = [
       {
@@ -34,6 +39,6 @@ describe("modos obrigatórios para finalizadores", () => {
   });
 
   it("eleva o 8º Portão a 2,50x em troca da irreversibilidade e do desgaste", () => {
-    expect(BALANCE.punhoForteGates[8]).toEqual({ taijutsuDamageMult: 2.5, selfDamagePerTurn: 100 });
+    expect(BALANCE.punhoForteGates[8]).toEqual({ taijutsuDamageMult: 2.5, selfDamagePerTurn: 80 });
   });
 });

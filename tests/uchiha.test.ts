@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { BALANCE } from "../src/config/balance.js";
-import { getAbility, getClan } from "../src/data/index.js";
+import { ALL_ABILITIES, getAbility, getClan } from "../src/data/index.js";
 import { CLAN_TREES } from "../src/data/clan-trees/index.js";
 import { allNodes } from "../src/data/element-trees/index.js";
 import { TAIJUTSU_AGITACAO_TREE } from "../src/data/taijutsu-agitacao-tree.js";
@@ -132,6 +132,36 @@ describe("Sharingan de três tomoe: cópia", () => {
       ),
     ).toBeNull();
     expect(TAIJUTSU_AGITACAO_TREE.every((node) => node.kind === "PASSIVE" || !isSharinganCopyable(getAbility(node.grantsAbilityId!)!))).toBe(true);
+  });
+
+  it("não copia transformação: o olho lê os selos, não entrega o corpo condicionado", () => {
+    // Portões Internos (Punho Forte): todos os 8, incluindo os dois primeiros
+    // que nem sequer têm a tag kinjutsu — o gate em si já é transformação.
+    for (const id of ["tai_portao_abertura", "tai_portao_descanso", "tai_portao_morte"]) {
+      expect(isSharinganCopyable(getAbility(id)!), id).toBe(false);
+    }
+    // Cem Forças (Punho Adamantino): modo no próprio corpo, não um golpe.
+    expect(isSharinganCopyable(getAbility("adamantino_cem_forcas")!)).toBe(false);
+    // toda ability com gateRules está fora, sem exceção
+    const gates = ALL_ABILITIES.filter((a) => a.gateRules);
+    expect(gates.length).toBeGreaterThan(0);
+    expect(gates.filter((a) => isSharinganCopyable(a))).toEqual([]);
+  });
+
+  it("não copia Kinjutsu — técnica proibida exige mais que ver o selo", () => {
+    const kinjutsu = ALL_ABILITIES.filter((a) => a.tags.includes("kinjutsu"));
+    expect(kinjutsu.length).toBeGreaterThan(0);
+    expect(kinjutsu.filter((a) => isSharinganCopyable(a)).map((a) => a.id)).toEqual([]);
+    // as Lótus e os finalizadores de Portão caem aqui
+    for (const id of ["tai_lotus_frontal", "tai_lotus_oculta", "tai_guy_noturno", "tai_elefante_anoitecer"]) {
+      expect(isSharinganCopyable(getAbility(id)!), id).toBe(false);
+    }
+  });
+
+  it("os golpes normais dos três estilos continuam copiáveis", () => {
+    for (const id of ["tai_furacao_folha", "tai_luz_rotatoria_folha", "arhat_golpe_rocha", "adamantino_super_peteleco"]) {
+      expect(isSharinganCopyable(getAbility(id)!), id).toBe(true);
+    }
   });
 
   it("não copia técnica de clã, habilidade sem elemento ou Kekkei Genkai", () => {

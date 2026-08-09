@@ -81,11 +81,16 @@ export const SUPPORT: Ability[] = [
     actionType: "COMUM",
     range: 1,
     shape: "ALLY",
-    cleanses: ["STUN", "SLOW", "CONFUSION", "NINJUTSU_BLOCK"],
+    // TENKETSU_SEAL entra aqui, mas NAO no cleanse do Genjutsu (gen_clareza):
+    // o selo do Hyuuga e' dano fisico na rede de chakra, nao ilusao — quem
+    // reabre tenketsu fechado e' ninja medico. E' tambem a unica contra-jogada
+    // ao selo, e vem de fora (shape ALLY): selado, voce nao consegue lancar
+    // Iryo em si mesmo.
+    cleanses: ["STUN", "SLOW", "CONFUSION", "NINJUTSU_BLOCK", "TENKETSU_SEAL"],
     scalingAttribute: "iryoNinjutsu",
     requirements: { attributes: { iryoNinjutsu: 10 }, level: 10 },
     tags: ["cura", "remocao"],
-    description: "Reduz/remove atordoamento, lentidao e efeitos mentais.",
+    description: "Reduz/remove atordoamento, lentidao, efeitos mentais e reabre tenketsu selados.",
   },
   {
     id: "iryo_cura_avancada",

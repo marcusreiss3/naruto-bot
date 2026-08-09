@@ -463,7 +463,14 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
   border-radius:10px;}
 .equipment-commands code,.equipment-ability code{color:var(--orange2);font-weight:800;}
 .equipment-commands p{margin:6px 0 0;color:var(--ink-soft);font-size:12px;line-height:1.5;}
-.equipment-unarmed,.equipment-group{max-width:1100px;margin:0 auto 30px;}
+.equipment-unarmed,.equipment-group,.effect-group{max-width:1100px;margin:0 auto 30px;}
+.effect-group-title{font-family:var(--hud);font-size:14px;text-transform:uppercase;letter-spacing:1.2px;
+  color:var(--ink-soft);margin:0 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);}
+.effect-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:12px;}
+.effect-card{padding:13px 15px;border:1px solid var(--line);border-radius:11px;
+  background:linear-gradient(180deg,rgba(27,36,48,.7),rgba(12,17,24,.85));}
+.effect-card strong{font-family:var(--hud);font-size:14px;letter-spacing:.4px;color:#ffd2a8;}
+.effect-card p{margin:7px 0 0;color:var(--ink-soft);font-size:12px;line-height:1.55;}
 .equipment-section-title{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
 .equipment-section-title>span{font-size:30px;width:48px;height:48px;display:grid;place-items:center;border-radius:50%;
   background:rgba(255,122,24,.09);border:1px solid rgba(255,122,24,.3);}

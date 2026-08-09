@@ -116,10 +116,14 @@ export const PASSIVES: PassiveDef[] = [
     extraBurnStacks: 1,
   },
   {
+    // Combustao NAO baixa mais o gatilho pra 4 (09/08/2026). Com Brasas
+    // Persistentes dando +1 acumulo, os jutsus de 3 acumulos batiam exatamente
+    // em 4 e explodiam TODO uso — a explosao virava dano fixo em vez de
+    // recompensa por manter a pressao. Agora ela so' aumenta o estouro; o
+    // gatilho segue em 5 (ver a regra em BALANCE.effects.BURN).
     nodeId: "fogo_combustao",
     element: "FOGO",
-    burnExplodeAtStacks: 4,
-    burnExplodeDamage: 60,
+    burnExplodeDamage: 30,
   },
   {
     nodeId: "fogo_pavio",
@@ -498,6 +502,16 @@ export const PASSIVES: PassiveDef[] = [
     element: "GELO",
     ninjutsuDodgeBonus: 0.08,
     costMult: 0.9,
+  },
+  {
+    // Cristais no Sangue: a 5a passiva, que faltava pro Gelo ter o mesmo
+    // numero de passivas de Cristal/Vapor/Calor/Lava/Explosao. E' o
+    // acelerador do plano de controle, mesmo papel da Faceta Cortante no
+    // Cristal — com effectStacksBonus generico em vez de campo dedicado
+    // (mesmo caminho do poeira_estilhaco, ver acima).
+    nodeId: "gelo_cristais",
+    element: "GELO",
+    effectStacksBonus: { FROZEN: 1 },
   },
   {
     nodeId: "gelo_apice",

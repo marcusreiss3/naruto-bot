@@ -190,7 +190,7 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
     // capitulo 8 do BALANCEAMENTO_FINAL.txt).
     damageMult: 1.10,
     costMult: 0.9,
-    effectChanceBonus: { NINJUTSU_BLOCK: 0.1 },
+    effectChanceBonus: { TENKETSU_SEAL: 0.1 },
   },
   {
     // Guarda Perpétua: fecha o ramo Defensivo (abaixo da Palma Rotativa) —
@@ -207,7 +207,7 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
     damageMult: 1.2,
     ignoresShield: true,
     executeBonus: { hpThreshold: 0.3, mult: 1.25 },
-    effectDurationBonus: { effectId: "NINJUTSU_BLOCK", bonus: 1 },
+    effectDurationBonus: { effectId: "TENKETSU_SEAL", bonus: 1 },
   },
 
   // ------------------------------------------------------------------ LEE

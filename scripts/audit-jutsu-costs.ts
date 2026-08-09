@@ -4,8 +4,20 @@
 // cleanses, reduceEffectDuration, restoreResource, requiredItems,
 // equippedItemIds, toggleRules) sao listadas à parte, sem sugestão.
 import { ALL_ABILITIES } from "../src/data/index.js";
+import { NPCS } from "../src/data/npcs.js";
 import { suggestedJutsuCost } from "../src/services/characters/jutsu-balance.js";
 import type { Ability } from "../src/data/types.js";
+
+// Habilidade que SO' existe no arsenal de um NpcTemplate e custa 0 e' conteudo
+// de NPC — nao precifica. O sinal documentado ("sem requirements E custo 0")
+// nao pegava as do Rei Macaco Enma, que carregam um `manualOnly: true`
+// inofensivo e por isso apareciam como os dois maiores outliers do roster.
+const NPC_ONLY = new Set(
+  NPCS.flatMap((npc) => npc.abilityIds ?? []).filter((id) => {
+    const ability = ALL_ABILITIES.find((a) => a.id === id);
+    return ability?.cost === 0;
+  }),
+);
 
 function isOutOfScope(ab: Ability): boolean {
   return Boolean(
@@ -18,12 +30,13 @@ function isOutOfScope(ab: Ability): boolean {
       ab.requiredItems?.length ||
       ab.equippedItemIds?.length ||
       ab.toggleRules ||
-      (!ab.baseDamage && !ab.baseHeal && !ab.effects?.length) || // buff/utilidade pura sem numero nenhum
+      (!ab.baseDamage && !ab.baseHeal && !ab.effects?.length && !ab.selfEffects?.length) || // buff/utilidade pura sem numero nenhum
       // conteudo de NPC de verdade (pombo_bicada, cao_ninja_mordida...): sem
       // requirements de desbloqueio E custo 0 e' o sinal documentado em
       // jutsus/support.ts. NAO confundir com as acoes de item (item_*.ts),
       // que tambem nao tem `requirements` mas JA custam > 0.
-      (!ab.requirements && ab.cost === 0),
+      (!ab.requirements && ab.cost === 0) ||
+      NPC_ONLY.has(ab.id),
   );
 }
 
@@ -41,6 +54,7 @@ for (const ab of ALL_ABILITIES) {
     baseDamage: ab.baseDamage,
     baseHeal: ab.baseHeal,
     effects: ab.effects,
+    selfEffects: ab.selfEffects,
     unblockable: ab.unblockable,
     undodgeable: ab.undodgeable,
     unguardable: ab.unguardable,

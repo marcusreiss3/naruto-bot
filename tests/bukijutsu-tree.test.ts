@@ -80,7 +80,7 @@ describe("árvore de Bukijutsu", () => {
   it("expõe equipamentos e consumo no bloco Efeitos e regras", () => {
     const dragons = getAbility("buki_dragoes_gemeos")!;
     const text = buildMechanicsSummary(dragons);
-    expect(text).toMatch(/Gasta 1x Pergaminho Rank B/);
+    expect(text).toMatch(/Gasta 1x Pergaminho de Arsenal/);
     // técnica de pergaminho: consumo alto de propósito (o pergaminho existe
     // pra despejar muita ferramenta de uma vez).
     expect(text).toMatch(/Consome 10x Kunai e 10x Shuriken/);

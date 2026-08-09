@@ -150,6 +150,14 @@ export const EFFECT_IDS = [
   "MARKED", // alvo marcado para execucao/seguimento
   // ---- exclusivo do cla Nara ----
   "SHADOW_BOUND", // vinculo de sombra: sem dano, mas trava movimento E reacao (Esquivar/Bloquear/Aparar)
+  // ---- exclusivo do cla Hyuuga ----
+  // Selo dos Tenketsu: versao propria (e mais forte) do NINJUTSU_BLOCK. Fecha
+  // os pontos de chakra, entao trava TODA categoria que gasta chakra
+  // (Ninjutsu, Genjutsu e Iryo Ninjutsu) em vez de so' Ninjutsu, e impede
+  // ABRIR Portao Interno — que e' literalmente forcar chakra pelos tenketsu.
+  // Portao ja' aberto continua aberto: o selo fecha a porta, nao desfaz o que
+  // ja' passou. Ver tenketsuSealed() em combat/effects.ts.
+  "TENKETSU_SEAL",
   // ---- exclusivos de kekkei genkai ----
   "CRYSTALLIZED", // cristalizado: acumulos de cristal travam esquiva e movimento; ao encher, selam
   "PRISM", // prisma: casulo de luz que reduz ninjutsu recebido e reflete parte, mas prende no lugar
@@ -158,6 +166,10 @@ export const EFFECT_IDS = [
   "MAGMA", // magma: Lava acumula, queima leve, e ao encher endurece e prende (ROOT) o alvo
   "MINADO", // minado: Explosao planta uma carga no contato que detona sozinha ao fim da duracao
   "DISINTEGRATION", // desintegracao: Poeira derrete Barreira por turno E, ao encher, colapsa: zera toda Barreira restante e reduz a defesa
+  // Gelo: o unico KKG que nao mexe em dano por turno nem em Barreira. Congela
+  // o CHAKRA do alvo — cada acumulo encarece as tecnicas dele e trava o corpo.
+  "FROZEN", // congelamento: acumula; +custo nas tecnicas do alvo e -movimento por acumulo
+  "FROZEN_SOLID", // congelado: o payoff do Congelamento cheio — o alvo nao consegue reagir
 ] as const;
 
 // Terreno temporario criado por jutsu (camada por cima do cenario estatico).
@@ -191,6 +203,7 @@ export const EFFECT_LABELS: Record<EffectId, string> = {
   EMPOWERED: "Sobrecarga",
   MARKED: "Marcado",
   SHADOW_BOUND: "Vínculo de Sombra",
+  TENKETSU_SEAL: "Selo dos Tenketsu",
   CRYSTALLIZED: "Cristalizado",
   PRISM: "Prisma",
   CORROSION: "Corrosão",
@@ -198,6 +211,8 @@ export const EFFECT_LABELS: Record<EffectId, string> = {
   MAGMA: "Magma",
   MINADO: "Minado",
   DISINTEGRATION: "Desintegração",
+  FROZEN: "Congelamento",
+  FROZEN_SOLID: "Congelado",
 };
 
 export function effectLabel(effectId: string): string {
