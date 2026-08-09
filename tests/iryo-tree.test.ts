@@ -29,9 +29,13 @@ describe("Iryō Ninjutsu", () => {
   });
 
   it("reduz condições intermediárias sem removê-las por completo", () => {
+    // O Selo dos Tenketsu entra como REDUCAO e nao como remocao: e' a unica
+    // resposta ao selo no roster real (a Clareza Mental, que o limpava, mora
+    // no support.ts e vai ser apagada com o resto do placeholder).
     expect(getAbility("iryo_mosquitos")!.reduceEffectDuration).toEqual([
       { effectId: "BURN", turns: 2 },
       { effectId: "POISON", turns: 2 },
+      { effectId: "TENKETSU_SEAL", turns: 2 },
     ]);
     expect(getAbility("iryo_yin")!.reduceEffectDuration).toEqual([
       { effectId: "BURN", turns: 2 },

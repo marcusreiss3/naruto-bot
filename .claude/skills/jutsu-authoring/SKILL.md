@@ -5,38 +5,42 @@ description: Use ao criar, editar ou balancear jutsus/habilidades (Ability) — 
 
 # Criar jutsu
 
-## ⚠️ Leia antes: os jutsus de jogador são descartáveis
+## ⚠️ Leia antes: não existe mais placeholder
 
-As 39 habilidades **de jogador** hoje no projeto (15 elementais, 18 de support, 6 de clã) são **placeholder** e serão **apagadas** — não substituídas, apagadas. Existem só para exercitar o sistema de efeitos e de área. Vale até para `chidori`, `fuuton_rasenshuriken` e `uchiha_sharingan1`.
+Todas as **258 habilidades** do projeto são conteúdo real. Balanceie normalmente: dano, custo, tier, requisitos, texto.
 
-**Habilidades de NPC ficam** — são conteúdo real: `pombo_bicada`, `vespa_ferroada`.
+> Esta seção dizia até 09/08/2026 que as "39 habilidades de jogador (15 elementais, 18 de support, 6 de clã)" eram descartáveis, e citava `chidori`/`fuuton_rasenshuriken`/`uchiha_sharingan1` — ids que não existem mais. Era verdade quando o projeto tinha 39 habilidades no total. O último arquivo descartável, `jutsus/support.ts`, foi apagado em 09/08/2026.
 
-Como distinguir (verificado, só essas 2 das 41):
+**Arsenal de NPC** (`src/data/jutsus/npc.ts`): a marca é **não ter `requirements`** — `autoUnlockJutsus()` pula essas, então nunca caem no arsenal de jogador nenhum. Só entram em combate via `NpcTemplate.abilityIds`. São duas famílias: os bichos (`pombo_bicada`, `vespa_ferroada`, `cao_ninja_mordida`, `abelha_gigante_*`), com custo 0, e o kit genérico de humanoide com prefixo `npc_` (`npc_soco`, `npc_corte_simples`, `npc_confusao`...), que mantém custo próprio.
 
-| | Requisitos | Custo |
+| | Requisitos | Onde |
 |---|---|---|
-| **Jogador** (descartável) | tem `level`/`element`/`clanId`/`attributes` | > 0 |
-| **NPC** (fica) | sem `requirements` de desbloqueio | 0 |
+| **NPC** | sem `requirements` | `jutsus/npc.ts` |
+| **Jogador** | tem `manualOnly` + `level`/`element`/`clanId`/`attributes` | os outros arquivos |
 
-Estar em `NpcTemplate.abilityIds` **não** faz a habilidade ser de NPC — 13 ids aparecem lá, mas NPCs reusam jutsu de jogador (`katon_goukakyuu`, `tai_soco_forte`...). O teste é o requisito, não quem usa.
-
-O que fica é o sistema: o contrato `Ability`, a engine, os efeitos, os números de `balance.ts`.
+Estar em `NpcTemplate.abilityIds` **não** faz a habilidade ser de NPC — NPCs reusam jutsu de jogador (`katon_goukakyuu`, `suiton_teppoudama`...). O teste é o requisito, não quem usa.
 
 Consequências práticas:
-- **Não invista em balanceamento fino** de jutsu de jogador sem pedido explícito. A tabela de tier abaixo serve pra manter os placeholders coerentes, não é balanceamento final.
-- **Não trate os ids como contrato estável.** Código que dependa de `katon_goukakyuu` existir é frágil.
-- Jutsu de jogador novo também é descartável — diga isso ao propor um.
-- Habilidade de NPC é conteúdo de verdade: trate normal, balanceie normal.
-- Ao mexer nos placeholders, priorize o que valida o sistema (o efeito novo funciona? a forma de área está certa?), não o feel do jogo.
-- **Ao apagar em massa:** 13 ids são referenciados por `NpcTemplate.abilityIds` (`src/data/npcs.ts`) e as 6 de clã por `ClanDef.passiveIds`/`activeIds`. NPC que fica sem habilidade de dano vira inanimado — a IA o deixa parado.
+- **Confira o custo** com `npx tsx scripts/audit-jutsu-costs.ts` antes de commitar. Ele mostra o desvio contra a régua e, ao lado, os freios que a fórmula não vê (uso único, dojutsu ativo, gate de nível). Desvio grande **com** freio está explicado; desvio grande com a coluna vazia é dívida.
+- **Ids de nó são estáveis** (vão pro banco em `CharacterSkillNode`). Ids de ability podem mudar; a ponte é o `NODE_ABILITY`.
+- **`manualOnly: true` em toda ability concedida por nó.** Sem isso o auto-unlock entrega de graça e a árvore vira enfeite — `tests/combat-math.test.ts` trava isso.
+- **Reações básicas:** `tai_defesa` (BLOCK), `ken_aparar` (PARRY) e `tecnica_substituicao` (DODGE), em `fundamentals.ts`, são as únicas reações **genéricas** (as outras exigem elemento, clã ou árvore). Não apague sem substituir — a engine escolhe por `reactionKind`, não por id, então nada quebra ao compilar.
+- **Ao mexer em NPC:** NPC sem habilidade de dano vira inanimado, a IA o deixa parado.
 
 ## Onde
 
 | Categoria | Arquivo |
 |---|---|
-| NINJUTSU elemental (FOGO/AGUA/VENTO/TERRA/RAIO) | `src/data/jutsus/elemental.ts` (`ELEMENTAL[]`) |
-| IRYO, TAIJUTSU, GENJUTSU, KENJUTSU | `src/data/jutsus/support.ts` (`SUPPORT[]`) |
+| NINJUTSU elemental (5 naturezas + 7 kekkei genkai) | `src/data/jutsus/elemental.ts` (`ELEMENTAL[]`) |
+| IRYO | `src/data/jutsus/iryo.ts` |
+| TAIJUTSU (Punho Forte) | `src/data/jutsus/taijutsu.ts` — Arhat em `arhat.ts`, Adamantino em `adamantino.ts` |
+| GENJUTSU | `src/data/jutsus/genjutsu.ts` |
+| BUKIJUTSU | `src/data/jutsus/bukijutsu.ts` |
+| FUINJUTSU | `src/data/jutsus/fuinjutsu.ts` |
+| Ninjutsu de Academia | `src/data/jutsus/fundamentals.ts` |
 | CLA | `src/data/clans/index.ts` + registrar id em `passiveIds`/`activeIds` do clã |
+
+Habilidade de NPC vai em `src/data/jutsus/npc.ts` (sem `requirements`).
 
 Contrato do tipo: `src/data/types.ts` → `interface Ability`. Números globais: `src/config/balance.ts`.
 

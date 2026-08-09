@@ -14,15 +14,15 @@ npm run prisma:push  # aplica schema.prisma no SQLite
 npm run seed         # grava MissionDef no banco (após editar src/data/missions)
 ```
 
-## ⚠️ Os jutsus de jogador são descartáveis
+## Não existe mais placeholder
 
-As 39 habilidades **de jogador** em `src/data/jutsus/` e `src/data/clans/index.ts` são **placeholder de teste** e serão **apagadas** — não substituídas, apagadas. Existem só para exercitar o sistema de efeitos. Vale inclusive para nomes canon (`chidori`, `fuuton_rasenshuriken`, `uchiha_sharingan1`).
+**Todas as 258 habilidades do projeto são conteúdo real.** Balanceie normalmente: números, custo, requisitos, texto. Rode `npx tsx scripts/audit-jutsu-costs.ts` antes de commitar custo novo — ele mostra o desvio contra a régua e, ao lado, os freios que a fórmula não vê (uso único, dojutsu ativo, gate de nível). Desvio grande **com** freio está explicado; desvio grande com a coluna vazia é dívida.
 
-**Habilidades de NPC ficam** — são conteúdo real: `pombo_bicada` e `vespa_ferroada`. Como distinguir: NPC não tem requisito de desbloqueio e custa 0; jogador tem `level`/`element`/`clanId`/`attributes`. (NPCs também *reusam* jutsus de jogador — estar em `NpcTemplate.abilityIds` não faz a habilidade ser de NPC.)
+> Histórico, para ninguém reintroduzir a confusão: até 09/08/2026 esta seção dizia que as "39 habilidades de jogador em `src/data/jutsus/` e `clans/index.ts`" eram placeholder descartável, citando `chidori`/`fuuton_rasenshuriken`/`uchiha_sharingan1`. Era verdade quando o projeto tinha 39 abilities no total. O último arquivo realmente descartável era o `jutsus/support.ts`, **apagado em 09/08/2026**: as 18 de jogador sumiram, as 5 de bicho e as 7 que os NPCs usavam foram para `jutsus/npc.ts`, e as reações básicas para `jutsus/fundamentals.ts`.
 
-O que fica é o sistema: o contrato `Ability`, a engine de combate, os efeitos e os números de `balance.ts`.
+**Arsenal de NPC** (`src/data/jutsus/npc.ts`): a marca é **não ter `requirements`** — `autoUnlockJutsus()` pula essas, então nunca caem no arsenal de jogador. Entram em combate só via `NpcTemplate.abilityIds`. Os ids do kit genérico usam prefixo `npc_`. (NPCs também *reusam* jutsu de jogador — estar em `NpcTemplate.abilityIds` não faz a habilidade ser de NPC.)
 
-Na prática: **não invista em balanceamento fino** (dano, custo, tier, requisitos) dos jutsus de jogador sem pedido explícito. Não trate os ids como contrato estável. Jutsu de jogador novo também é descartável.
+⚠️ **Reações básicas:** `tai_defesa` (BLOCK), `ken_aparar` (PARRY) e `tecnica_substituicao` (DODGE), em `jutsus/fundamentals.ts`, são as únicas reações **genéricas** — o contra-jogo que qualquer personagem tem. As outras (Muralha de Água, Palma Rotativa, Método de Interseção…) exigem elemento, clã ou árvore. Não apague as três sem substituir: a engine escolhe a reação por `reactionKind`, não por id, então nada quebra ao compilar e o jogador só perde a opção.
 
 ## Regras do código
 

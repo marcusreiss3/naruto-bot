@@ -19,7 +19,7 @@ requirements: { element: "RAIO", manualOnly: true }   // OBRIGATÓRIO
 
 Sem `manualOnly`, o auto-unlock por nível/atributo (`character-service.ts`) entrega o jutsu de graça e a árvore vira enfeite. **`tests/combat-math.test.ts` → "todo jutsu concedido pela árvore é manualOnly" falha se esquecer.**
 
-> ⚠️ O cabeçalho de `elemental.ts` ainda diz "PLACEHOLDER — ESTE ROSTER SERA APAGADO" (herdado do roster antigo, que já sumiu — não há mais `chidori`/`rasenshuriken`). Contradiz o corpo do arquivo ("Roster real: um por no de JUTSU da arvore") e o CLAUDE.md. Trate o roster elemental como **real**; se for mexer, avise o usuário sobre o comentário obsoleto em vez de apagar por conta própria.
+> O roster elemental é **real** — 81 abilities, uma por nó de JUTSU das 12 árvores. O cabeçalho obsoleto que dizia "PLACEHOLDER — ESTE ROSTER SERA APAGADO" foi corrigido em 09/08/2026, junto com a mesma afirmação no `CLAUDE.md`. O único arquivo descartável hoje é `jutsus/support.ts`.
 
 ## Regra 1 — dano NÃO escala com atributo
 

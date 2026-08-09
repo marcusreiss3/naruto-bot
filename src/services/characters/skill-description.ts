@@ -81,6 +81,14 @@ function terrainName(kind: TerrainKind): string {
   return names[kind];
 }
 
+// Lista em portugues corrente: "A", "A e B", "A, B e C". Virgula ate o
+// penultimo item e conjuncao so' antes do ultimo — sem isso, uma lista de tres
+// vira "A e B e C".
+function listar(itens: readonly string[], conjuncao = "e"): string {
+  if (itens.length <= 1) return itens[0] ?? "";
+  return `${itens.slice(0, -1).join(", ")} ${conjuncao} ${itens[itens.length - 1]}`;
+}
+
 // Resumo voltado ao jogador e derivado dos mesmos dados usados pela engine.
 // Chance, duracao, acumulos e limitacoes nao ficam desatualizados.
 export function buildMechanicsSummary(ability: Ability): string {
@@ -117,17 +125,15 @@ export function buildMechanicsSummary(ability: Ability): string {
 
   if (ability.requiresTargetEffect?.length) {
     const required = ability.requiresTargetEffect.map((effect) => EFFECT_NAMES[effect]);
-    const joined = required.length === 1
-      ? required[0]
-      : `${required.slice(0, -1).join(", ")} ou ${required[required.length - 1]}`;
-    parts.push(`Exige que o alvo esteja sob ${joined}.`);
+    parts.push(`Exige que o alvo esteja sob ${listar(required, "ou")}.`);
   }
 
   if (ability.cleanses?.length) {
-    parts.push(`Remove ${ability.cleanses.map((effect) => EFFECT_NAMES[effect]).join(", ")}.`);
+    parts.push(`Remove ${listar(ability.cleanses.map((effect) => EFFECT_NAMES[effect]))}.`);
   }
   if (ability.reduceEffectDuration?.length) {
-    parts.push(`Reduz ${ability.reduceEffectDuration.map(({ effectId, turns }) => `${turns} turno(s) de ${EFFECT_NAMES[effectId]}`).join(" e ")}.`);
+    const itens = ability.reduceEffectDuration.map(({ effectId, turns }) => `${turns} turno(s) de ${EFFECT_NAMES[effectId]}`);
+    parts.push(`Reduz ${listar(itens)}.`);
   }
   if (ability.restoreResource) {
     const resource = ability.restoreResource.resource === "chakra" ? "chakra" : "energia";

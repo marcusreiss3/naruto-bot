@@ -193,7 +193,7 @@ describe("Hozuki: passivas — regeneração/fluidez + Kenjutsu em ramo separado
   });
 
   it("mas NÃO vale numa arma de arremesso (BUKIJUTSU genérico, kunai/shuriken)", () => {
-    const kunai = getAbility("ken_corte_simples")!;
+    const kunai = getAbility("item_kunai_arremessar")!;
     expect(kunai.category).toBe("BUKIJUTSU");
     expect(kunai.scalingAttribute).not.toBe("kenjutsu");
 

@@ -31,7 +31,7 @@ function isOutOfScope(ab: Ability): boolean {
       (!ab.baseDamage && !ab.baseHeal && !ab.effects?.length) ||
       // conteudo de NPC de verdade (pombo_bicada, cao_ninja_mordida...): sem
       // requirements de desbloqueio E custo 0 e' o sinal documentado em
-      // jutsus/support.ts. NAO confundir com as acoes de item (item_*.ts),
+      // jutsus/npc.ts. NAO confundir com as acoes de item (item_*.ts),
       // que tambem nao tem `requirements` mas JA custam > 0.
       (!ab.requirements && ab.cost === 0),
   );

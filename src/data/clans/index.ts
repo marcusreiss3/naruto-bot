@@ -1960,8 +1960,8 @@ export const CLANS: ClanDef[] = [
 
   // --------------------------------------------------------------------------
   // Clas sem abilities proprias ainda — so a identidade (nome/descricao) e o
-  // primeiro elemento em ../clans/starting-element.ts. As habilidades de cla
-  // sao placeholder (ver topo do arquivo); estes entram vazios de proposito.
+  // primeiro elemento em ../clans/starting-element.ts. Entram vazios de
+  // proposito: e' conteudo que ainda nao foi escrito, nao conteudo descartavel.
   // --------------------------------------------------------------------------
 
   // ---- Konoha ----

@@ -9,9 +9,10 @@ import type { Ability } from "../types.js";
 // (Ability.summon.deathReflect). Ver createSummon()/resolveHit() em
 // combat-engine.ts e runNpcTurn() em npc-combat.ts.
 //
-// NAO esta em nenhum no de arvore ainda (manualOnly) — de proposito, a
-// pedido explicito. Placeholder de jogador como qualquer outro, ver
-// CLAUDE.md.
+// NAO esta em nenhum no de arvore ainda (manualOnly) — de proposito, a pedido
+// explicito. Isso NAO faz dele placeholder — nao existe mais arquivo
+// descartavel no projeto (o support.ts foi apagado em 09/08/2026). Ficar fora
+// da arvore aqui significa "so' entra por admin/pergaminho".
 // ============================================================================
 export const KAGE_BUNSHIN_ABILITIES: Ability[] = [
   {

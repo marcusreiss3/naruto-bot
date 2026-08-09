@@ -66,7 +66,7 @@ describe("Senju", () => {
   });
 
   it("ramo médico fortalece cura e reduz Veneno/Atordoamento recebidos", () => {
-    const heal = getAbility("iryo_cura_avancada")!;
+    const heal = getAbility("iryo_cura_regenerativa")!;
     const mods = passiveMods(["senju_regenerativo", "senju_especialista"], heal);
     expect(mods.healMult).toBeCloseTo(1.15 * 1.15);
     expect(mods.costMult).toBeCloseTo(0.9);

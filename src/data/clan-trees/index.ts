@@ -9,9 +9,12 @@
 // sentido aqui porque a categoria CLA das habilidades do Nara ainda é
 // chakra manipulado como ninjutsu (não é uma linhagem ocular/física à parte).
 //
-// Nota: os jutsus de jogador (inclusive os de clã) ainda são placeholder
-// (ver CLAUDE.md) — a estrutura da árvore (nó, requisito, custo) é o que
-// deve sobreviver, não necessariamente estes ids/números exatos.
+// Nota: as habilidades de clã são conteúdo REAL — balanceie normalmente. (Até
+// 09/08/2026 este comentário dizia que eram placeholder, herança de quando o
+// projeto tinha 39 abilities no total; o único arquivo descartável era o
+// `jutsus/support.ts`, já apagado.) Ids de NÓ são estáveis porque vão pro
+// banco em CharacterSkillNode; id de ability pode mudar, a ponte é o
+// grantsAbilityId.
 // ============================================================================
 import type { Attribute } from "../../config/enums.js";
 import type { NodeRank, SkillNodeDef } from "../element-trees/index.js";

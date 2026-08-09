@@ -283,6 +283,13 @@ describe("passivas: Raio", () => {
       mindControlUpkeepMult: 1,
       sharinganUpkeepMult: 1,
       mindControlNinjutsuBonus: 0,
+      // Os tres abaixo nasceram com as passivas de Fundamentos de Taijutsu
+      // (Reflexo Evasivo, Reserva Fisica, Passada Leve). O objeto de retorno
+      // cresceu e este toEqual nao acompanhou — valem 0 pra quem so' tem a
+      // raiz de Raio, entao nunca houve mudanca de comportamento.
+      dodgeBonus: 0,
+      maxEnergyBonus: 0,
+      moveBonus: 0,
     });
   });
 });

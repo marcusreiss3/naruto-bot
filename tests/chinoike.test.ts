@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getAbility, getClan } from "../src/data/index.js";
+import { ALL_ABILITIES, getAbility, getClan } from "../src/data/index.js";
 import { allNodes } from "../src/data/element-trees/index.js";
 import { CLAN_TREES } from "../src/data/clan-trees/index.js";
 import { CLAN_PASSIVES } from "../src/data/clan-trees/passives.js";
@@ -60,14 +60,21 @@ describe("Chinoike: integridade da arvore de cla", () => {
     }
   });
 
-  it("Genjutsu Ketsuryuugan é a exceção: genjutsu que causa dano real (baseDamage), diferente dos genjutsu genéricos de fundamentos", () => {
+  // Antes este teste comparava com os genjutsu genericos de dano 0 do
+  // support.ts, apagado em 09/08/2026. A arvore de Genjutsu real tem varias
+  // tecnicas com dano, entao a afirmacao virou outra: o Ketsuryuugan e' o que
+  // bate MAIS FORTE entre todos os Genjutsu — e' isso que faz dele a excecao.
+  it("Genjutsu Ketsuryuugan é a exceção: o Genjutsu que causa mais dano do jogo", () => {
     const ketsuryuugan = getAbility("chinoike_genjutsu_ketsuryuugan")!;
     expect(ketsuryuugan.category).toBe("GENJUTSU");
-    expect(ketsuryuugan.baseDamage).toBeGreaterThan(0);
     expect(ketsuryuugan.scalingAttribute).toBe("genjutsu");
 
-    const generico = getAbility("gen_confusao")!;
-    expect(generico.baseDamage ?? 0).toBe(0);
+    const outros = ALL_ABILITIES.filter(
+      (a) => a.category === "GENJUTSU" && a.id !== "chinoike_genjutsu_ketsuryuugan",
+    );
+    for (const outro of outros) {
+      expect(ketsuryuugan.baseDamage!, outro.id).toBeGreaterThan(outro.baseDamage ?? 0);
+    }
   });
 
   it("as quatro passivas (raiz, olhos de sangue, sangue fervente, ápice) têm definição", () => {
@@ -214,17 +221,18 @@ describe("Chinoike: Olhos de Sangue — passiva de Genjutsu ESCOPADA POR CATEGOR
     expect(m.effectChanceBonus.STUN).toBeCloseTo(0.1);
   });
 
-  it("TAMBÉM soma nos genjutsu genéricos de fundamentos, que não têm clanId nem element — o ponto do pedido", () => {
-    const confusao = getAbility("gen_confusao")!; // CONFUSION, sem clanId/element
-    const paralisante = getAbility("gen_perda_acao")!; // STUN, sem clanId/element
-    expect(confusao.requirements?.clanId).toBeUndefined();
-    expect(confusao.element).toBeUndefined();
+  // O escopo e' por CATEGORIA, entao vale em Genjutsu de fora do cla. Os
+  // genericos usados aqui antes (gen_confusao, gen_perda_acao) moravam no
+  // support.ts e foram apagados em 09/08/2026; a arvore de Genjutsu real
+  // cobre o mesmo ponto.
+  it("TAMBÉM soma nos genjutsu de fora do clã, que não têm clanId nem element — o ponto do pedido", () => {
+    const penas = getAbility("gen_penas_caidas")!; // STUN, sem clanId/element
+    const arvore = getAbility("gen_arvore_assassina")!; // STUN, sem clanId/element
+    expect(penas.requirements?.clanId).toBeUndefined();
+    expect(penas.element).toBeUndefined();
 
-    const mConfusao = passiveMods(["chinoike_olhos_sangue"], confusao);
-    expect(mConfusao.effectChanceBonus.CONFUSION).toBeCloseTo(0.1);
-
-    const mParalisante = passiveMods(["chinoike_olhos_sangue"], paralisante);
-    expect(mParalisante.effectChanceBonus.STUN).toBeCloseTo(0.1);
+    expect(passiveMods(["chinoike_olhos_sangue"], penas).effectChanceBonus.STUN).toBeCloseTo(0.1);
+    expect(passiveMods(["chinoike_olhos_sangue"], arvore).effectChanceBonus.STUN).toBeCloseTo(0.1);
   });
 
   it("NÃO soma em jutsu de outra categoria (nem elemental, nem de outro clã), só Genjutsu", () => {

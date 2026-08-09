@@ -5,6 +5,7 @@ import { BALANCE } from "../src/config/balance.js";
 import type { Ability } from "../src/data/types.js";
 import { meetsRequirements } from "../src/services/characters/requirements.js";
 import { ALL_ABILITIES, getAbility } from "../src/data/index.js";
+import { buildMechanicsSummary } from "../src/services/characters/skill-description.js";
 import { allNodes } from "../src/data/element-trees/index.js";
 import { getScenarioById } from "../src/data/scenarios/index.js";
 
@@ -20,7 +21,7 @@ describe("seleção de alvos / área", () => {
 
   it("MELEE/SINGLE atinge só o alvo", () => {
     const scenario = getScenarioById("floresta")!;
-    const ab = getAbility("tai_soco_forte")!;
+    const ab = getAbility("tai_furacao_folha")!;
     const cells = resolveAreaCells(ab, "A1", "A2", scenario);
     expect(cells).toEqual(["A2"]);
   });
@@ -103,8 +104,10 @@ describe("desbloqueio de jutsu", () => {
 });
 
 describe("integridade de dados", () => {
-  it("desarme: ken_desarme aplica efeito DISARM", () => {
-    const ab = getAbility("ken_desarme")!;
+  // Era o ken_desarme do support.ts (apagado em 09/08/2026). O Vento
+  // Ascendente da Folha e' a unica ability do roster real que aplica DISARM.
+  it("desarme: Vento Ascendente da Folha aplica efeito DISARM", () => {
+    const ab = getAbility("tai_vento_ascendente_folha")!;
     expect(ab.effects?.some((e) => e.effectId === "DISARM")).toBe(true);
   });
 });
@@ -118,9 +121,15 @@ describe("escala uniforme de dano", () => {
     expect(computeDamage(ab, { attrValue: 50 })).toBe(29);
   });
 
+  // A garantia que interessa e' "o jogador LE a palavra Inevitavel", e quem
+  // entrega isso hoje e' a linha gerada por buildMechanicsSummary a partir da
+  // flag `unblockable` — nao o texto escrito a mao. Os testes checavam
+  // `description`/`node.desc` e cobravam que a mecanica fosse duplicada na
+  // ambientacao, o contrario do padrao do projeto (buildVisualDescription
+  // existe justamente pra TIRAR frase mecanica do texto de sabor).
   it("toda ability sem reacao usa o nome amigavel Inevitavel", () => {
     for (const ab of ALL_ABILITIES.filter((ability) => ability.unblockable)) {
-      expect(ab.description, ab.id).toMatch(/Inevitável/i);
+      expect(buildMechanicsSummary(ab), ab.id).toMatch(/Inevitável/i);
     }
   });
 
@@ -130,7 +139,8 @@ describe("escala uniforme de dano", () => {
       return ability?.unblockable;
     });
     for (const node of nodes) {
-      expect(node.desc, node.id).toMatch(/Inevitável/i);
+      const ability = getAbility(node.grantsAbilityId!)!;
+      expect(buildMechanicsSummary(ability), node.id).toMatch(/Inevitável/i);
     }
   });
 });

@@ -200,8 +200,14 @@ describe("Hyuuga: Selo dos Tenketsu — efeito exclusivo do clã", () => {
     expect(F.TENKETSU_SEAL).toBeGreaterThan(F.NINJUTSU_BLOCK!);
   });
 
-  it("Clareza Mental (Iryō) é a contra-jogada: reabre tenketsu selados", () => {
-    expect(getAbility("iryo_clareza")!.cleanses).toContain("TENKETSU_SEAL");
+  // A Clareza Mental limpava o selo, mas morava no support.ts e foi apagada em
+  // 09/08/2026. A contra-jogada passou pros Mosquitos de Agua, na arvore de
+  // Iryo real, como REDUCAO de duracao — a tecnica nunca limpa nada, so'
+  // encurta, e vem de fora (shape ALLY): selado, voce nao lanca Iryo em si.
+  it("Mosquitos de Água (Iryō) é a contra-jogada: encurta o selo dos tenketsu", () => {
+    const mosquitos = getAbility("iryo_mosquitos")!;
+    expect(mosquitos.shape).toBe("ALLY");
+    expect(mosquitos.reduceEffectDuration?.some((r) => r.effectId === "TENKETSU_SEAL")).toBe(true);
     // o dispel de Genjutsu NAO limpa: o selo e' dano fisico na rede de chakra
     expect(getAbility("gen_contra_genjutsu")!.cleanses ?? []).not.toContain("TENKETSU_SEAL");
   });

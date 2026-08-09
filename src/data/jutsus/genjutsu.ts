@@ -1,17 +1,17 @@
 import type { Ability } from "../types.js";
 
 // ============================================================================
-// Genjutsu — roster REAL (nao e' o placeholder de jogador mencionado no
-// CLAUDE.md): estas 8 tecnicas sao o conteudo oficial da arvore de Genjutsu
-// (src/data/genjutsu-tree.ts), em 3 ramos: Aprisionamento (Raizes Obscuras ->
-// Arvore Assassina -> Interrogatorio), Ilusao/Fuga (Contra-Genjutsu ->
-// Substituicao Ilusoria) e Pesadelo (Penas Caidas -> Dominio do Mundo
-// Obscuro), convergindo em Visao do Inferno. Os 4 genjutsu antigos em
-// jutsus/support.ts
-// (gen_confusao, gen_bloqueio_nin, gen_defesa_baixa, gen_perda_acao) sao o
-// placeholder que ainda NAO foi apagado porque varios NpcTemplate.abilityIds
-// (src/data/npcs.ts) dependem deles hoje — migrar esses NPCs pra esta nova
-// arvore fica pra uma limpeza dedicada, nao faz parte deste commit.
+// Genjutsu — as 8 tecnicas da arvore de Genjutsu (src/data/genjutsu-tree.ts),
+// em 3 ramos: Aprisionamento (Raizes Obscuras -> Arvore Assassina ->
+// Interrogatorio), Ilusao/Fuga (Contra-Genjutsu -> Substituicao Ilusoria) e
+// Pesadelo (Penas Caidas -> Dominio do Mundo Obscuro), convergindo em Visao do
+// Inferno.
+//
+// Os 4 genjutsu genericos antigos (gen_confusao, gen_bloqueio_nin,
+// gen_defesa_baixa, gen_perda_acao) viviam no `jutsus/support.ts`, que foi
+// apagado em 09/08/2026. Os dois que NPC usava viraram `npc_confusao` e
+// `npc_bloqueio_ninjutsu` em `jutsus/npc.ts`, com os mesmos numeros; os outros
+// dois sumiram.
 //
 // Identidade: Genjutsu e' arvore de CONTROLE (igual Nara/Hyuuga/Aburame no
 // jutsu-authoring skill) — sem damageMult de dano bruto. O atributo genjutsu

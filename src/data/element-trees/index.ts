@@ -8,9 +8,11 @@
 // O que cada nó concede e seus requisitos é AUTORIDADE DO SERVIDOR: o site
 // só exibe. A compra é validada em services/characters/skill-tree.ts.
 //
-// Nota: os jutsus de jogador ainda são placeholder (ver CLAUDE.md). Os ids de
-// nó são estáveis (guardados no banco); os grantsAbilityId apontam para as
-// abilities que serão escritas quando o roster real existir.
+// Nota: as abilities apontadas por grantsAbilityId são conteúdo REAL e já
+// existem — balanceie normalmente. (Até 09/08/2026 este comentário dizia que
+// seriam "escritas quando o roster real existir", herança de quando o projeto
+// tinha 39 abilities.) Ids de NÓ são estáveis porque vão pro banco em
+// CharacterSkillNode; id de ability pode mudar, a ponte é o grantsAbilityId.
 // ============================================================================
 import type { Attribute, Element, FightingStyle } from "../../config/enums.js";
 import type { CharacterCondition } from "../../services/characters/mangekyo.js";

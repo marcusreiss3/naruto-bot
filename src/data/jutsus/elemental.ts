@@ -1,20 +1,29 @@
 import type { Ability } from "../types.js";
 
 // ============================================================================
-// PLACEHOLDER - ESTE ROSTER SERA APAGADO
+// ROSTER REAL - NINJUTSU ELEMENTAL
 // ============================================================================
-// Estes jutsus existem so para exercitar o sistema de efeitos e de area.
-// Nao entram no projeto final e nao serao substituidos em lugar: somem.
-// Isso vale ate para os nomes canon (chidori, rasenshuriken, ...).
+// Este arquivo NAO e' placeholder. Ate 2026 ele carregava um cabecalho dizendo
+// "ESTE ROSTER SERA APAGADO", herdado da epoca em que tinha 15 jutsus de teste
+// (chidori, rasenshuriken...). Aqueles sumiram; estes 81 sao conteudo
+// definitivo. O `support.ts`, que era o ultimo placeholder de verdade, foi
+// apagado em 09/08/2026 — hoje nao existe arquivo descartavel no projeto.
 //
-// O que fica e o SISTEMA: o contrato `Ability` (../types.ts), a engine
-// (services/combat/) e os numeros de config/balance.ts.
+// Sao 81 abilities: uma por no' de JUTSU das 12 arvores elementais
+// (5 naturezas basicas + 7 kekkei genkai), conferido — nenhuma orfa.
+//   FOGO 8  AGUA 11  VENTO 8  TERRA 9  RAIO 8
+//   CRISTAL 10  GELO 9  LAVA 4  EXPLOSAO 4  POEIRA 4  VAPOR 3  CALOR 3
 //
-// => Nao invista em balanceamento fino (dano/custo/tier) daqui sem pedido.
-// => Nao trate estes ids como contrato estavel.
+// Regras que valem aqui:
+// => `requirements: { element, manualOnly: true }` em TODAS. Sem manualOnly o
+//    auto-unlock por nivel/atributo entrega o jutsu de graca e a arvore vira
+//    enfeite (tests/combat-math.test.ts trava isso).
+// => O no' da arvore aponta pra ability pelo NODE_ABILITY em
+//    data/element-trees/index.ts. Id de no' e' estavel (vai pro banco); id de
+//    ability pode mudar, a ponte e' o NODE_ABILITY.
+// => Balanceamento aqui e' pra valer. Confira o custo com
+//    `npx tsx scripts/audit-jutsu-costs.ts` antes de commitar.
 // ============================================================================
-
-// 3 jutsus por elemento (tier 1/2/3). Requisitos editaveis.
 export const ELEMENTAL: Ability[] = [
   // ---------------- FOGO ----------------
   // Roster real: um por no de JUTSU da arvore de Fogo (data/element-trees).
