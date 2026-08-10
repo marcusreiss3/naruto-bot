@@ -187,7 +187,12 @@ const TERRA: SkillNodeDef[] = [
   T.jutsu("terra_clone", "Clone de Terra", "🧍", "B", "Colosso", 1, 3, ["terra_punho"], 12, 8, "Cria um clone de terra que luta ao seu lado e explode em pedras quando morre, ferindo quem está perto."),
   T.pass("terra_barro", "Vínculo de Barro", "🧎", "Colosso", 1, 4, ["terra_clone"], 18, 12, "Passiva: seus clones e invocações nascem com +25% de vida."),
   T.jutsu("terra_decapitacao", "Decapitação Subterrânea", "🕳️", "B", "Aprisionamento", 0, 5, ["terra_punho"], 12, 8, "Você mergulha no solo e puxa o alvo para baixo da terra: ele fica preso ao chão, atordoado e sem poder fugir."),
-  T.pass("terra_peso", "Peso da Montanha", "🏔️", "Aprisionamento", -1, 5, ["terra_decapitacao"], 18, 12, "Passiva: seus jutsus de Terra causam +55% de dano, e prender alguém ao chão dura 1 rodada a mais."),
+  // nv18 -> 25 em 09/08/2026: alinhado com o Folego do Dragao (Fogo). Fogo,
+  // Vento e Terra sao os tres elementos de dano INCONDICIONAL e os tres fecham
+  // no mesmo x2,015 (raiz x passiva grande) — mas Vento e Terra chegavam la'
+  // sete niveis antes. Era isso, e nao o cla, que fazia Kamaitachi+Vento matar
+  // em 2,8 golpes no nv20 enquanto Fogo puro ainda matava em 6,6.
+  T.pass("terra_peso", "Peso da Montanha", "🏔️", "Aprisionamento", -1, 5, ["terra_decapitacao"], 25, 18, "Passiva: seus jutsus de Terra causam +55% de dano, e prender alguém ao chão dura 1 rodada a mais."),
   T.jutsu("terra_pantano", "Pântano do Submundo", "🟫", "A", "Aprisionamento", -1, 6, ["terra_peso"], 25, 18, "Transforma a área num pântano que fica no mapa: quem estiver dentro fica preso ao chão e mais lento."),
   T.jutsu("terra_dragao", "Projétil do Dragão de Terra", "🐉", "B", "Colosso", 0, 7, ["terra_decapitacao"], 12, 10, "Invoca um dragão de terra que cospe projéteis de lama em linha. Deixa o alvo mais lento."),
   T.jutsu("terra_biscoito", "Biscoito de Terra Sepulcral", "🥮", "B", "Terraplanagem", 1, 7, ["terra_dragao"], 15, 12, "O usuário enfia as mãos no solo e arranca um amontoado de terra do tamanho de uma casa, ergue o bloco acima da cabeça e o despeja sobre os alvos."),
@@ -220,7 +225,10 @@ const VENTO: SkillNodeDef[] = [
   V.pass("vento_raiz", "Fio de Navalha", "🌪️", "Raiz", 0, 0, [], 1, 1, "Passiva sempre ativa: seus jutsus de Vento causam +30% de dano e cortam 20% da redução de quem bloqueia ou apara.", true),
   V.jutsu("vento_palma", "Palma do Vendaval Violento", "🖐️", "C", "Corte", 0, 1, ["vento_raiz"], 1, 3, "O chakra vira vento entre as palmas e o usuário bate as mãos uma na outra: o ar comprimido escapa de uma vez, numa rajada que sai rasante e violenta."),
   V.jutsu("vento_bestial", "Palma da Onda Bestial", "🌊", "B", "Corte", 1, 1, ["vento_palma"], 12, 10, "Um balançar largo dos braços solta uma onda de chakra afiada, que se abre em leque enquanto avança pelo campo."),
-  V.pass("vento_corte", "Corte Profundo", "🩸", "Corte", 1, 2, ["vento_bestial"], 18, 12, "Passiva: seus jutsus de Vento causam +55% de dano, e seu Sangramento dura 1 rodada a mais."),
+  // nv18 -> 25 em 09/08/2026: mesmo motivo do Peso da Montanha (Terra), ver o
+  // comentario la'. Os tres elementos de dano incondicional agora fecham o
+  // x2,015 no mesmo nivel.
+  V.pass("vento_corte", "Corte Profundo", "🩸", "Corte", 1, 2, ["vento_bestial"], 25, 18, "Passiva: seus jutsus de Vento causam +55% de dano, e seu Sangramento dura 1 rodada a mais."),
   V.jutsu("vento_destruicao", "Grande Destruição", "💨", "C", "Vendaval", 0, 3, ["vento_palma"], 5, 5, "O usuário enche o peito e sopra uma parede de ar que varre tudo pela frente, levantando poeira e arrancando o inimigo do lugar onde estava."),
   V.jutsu("vento_danca", "Dança da Dispersão de Flor", "🌸", "B", "Dispersão", 1, 3, ["vento_destruicao"], 12, 10, "Um turbilhão de pétalas sobe em espiral e gira cada vez mais rápido em volta dos alvos, até ninguém enxergar mais nada além do rodopio."),
   V.pass("vento_vacuo", "Vácuo Cortante", "🌀", "Vendaval", -1, 3, ["vento_destruicao"], 18, 12, "Passiva: alvo empurrado contra uma parede ou obstáculo toma +15 de dano de impacto."),
@@ -476,6 +484,7 @@ const NODE_ICONS: Record<string, string> = {
   buki_voo_andorinha: "bukijutsu/voo-da-andorinha.png",
   buki_maestria_arremesso: "bukijutsu/maestria-de-arremesso.png",
   buki_resma_explosiva: "bukijutsu/resma-de-amuletos-explosivos.png",
+  buki_polvora_refinada: "bukijutsu/polvora-refinada.png",
   buki_meteoro_anexado: "bukijutsu/meteoro-anexado.png",
   buki_clone_shuriken: "bukijutsu/clone-da-sombra-de-shuriken.png",
   buki_esfera_explosiva: "bukijutsu/esfera-explosiva.png",

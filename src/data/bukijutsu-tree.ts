@@ -57,10 +57,23 @@ export const BUKIJUTSU_TREE: SkillNodeDef[] = [
     desc: "Aumenta em 1 casa o alcance e em 15% o dano dos ataques de Bukijutsu arremessados ou disparados à distância.",
   },
   {
-    id: "buki_resma_explosiva", name: "Resma de Amuletos Explosivos", kind: "PASSIVE", icon: "💥",
-    pool: "bukijutsu", cost: 2, branch: "Pergaminhos", col: 0, row: 3,
-    requires: ["buki_dragoes_gemeos"], reqLevel: 10, reqPool: 9,
-    desc: "Aumenta em 20% o dano da Esfera Explosiva e da Kunai Explosiva arremessada.",
+    // Virou JUTSU em 09/08/2026 (era uma passiva com este mesmo nome). Ocupa o
+    // degrau do tronco logo depois dos Dragoes Gemeos; a passiva antiga foi
+    // renomeada pra "Polvora Refinada" e pendurada ao lado, ver abaixo.
+    id: "buki_resma_explosiva", name: "Resma de Amuletos Explosivos", kind: "JUTSU", rank: "B", icon: "💥",
+    pool: "bukijutsu", cost: 4, branch: "Pergaminhos", col: 0, row: 3,
+    requires: ["buki_dragoes_gemeos"], reqLevel: 11, reqPool: 10,
+    grantsAbilityId: "buki_resma_explosiva",
+    desc: "O pergaminho se desenrola de uma vez e cospe uma fileira de kunai, cada uma com vários papéis-bomba presos ao cabo, que detonam em sequência ao longo da linha.",
+  },
+  {
+    // Mesma passiva de sempre (+20%), so' renomeada: o nome "Resma de Amuletos
+    // Explosivos" foi pro jutsu acima. Saiu do tronco pra uma coluna lateral —
+    // deixou de ser passagem obrigatoria pra Esfera Explosiva e virou escolha.
+    id: "buki_polvora_refinada", name: "Pólvora Refinada", kind: "PASSIVE", icon: "🧨",
+    pool: "bukijutsu", cost: 2, branch: "Pergaminhos", col: 0.75, row: 4,
+    requires: ["buki_resma_explosiva"], reqLevel: 13, reqPool: 12,
+    desc: "Aumenta em 20% o dano da Esfera Explosiva, da Resma de Amuletos Explosivos e da Kunai Explosiva arremessada.",
   },
   {
     id: "buki_meteoro_anexado", name: "Meteoro Anexado", kind: "JUTSU", rank: "A", icon: "⛓️",

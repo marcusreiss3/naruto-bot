@@ -53,6 +53,8 @@ export function buildEquipmentCatalog() {
         { command: "/mover destino", description: "Move o personagem para uma célula válida dentro do alcance de movimento." },
         { command: "/atacar alvo", description: "Ataca corpo a corpo conforme a arma equipada; sem arma, usa Soco." },
         { command: "/jutsu", description: "Usa uma técnica aprendida. Escolha a categoria, a habilidade e depois o alvo ou célula." },
+        { command: "/jutsu ninjutsu Concentrar Chakra", description: "Gasta a ação comum do turno para recuperar 20 de chakra. Recurso não se recupera sozinho em combate — esta é a única forma." },
+        { command: "/jutsu taijutsu Recuperar o Fôlego", description: "Gasta a ação comum do turno para recuperar 20 de energia. Mesma ideia do Concentrar Chakra, do outro lado do recurso." },
         { command: "/combate fugir", description: "Tenta abandonar a luta. Inimigos próximos reduzem a chance de sucesso." },
         { command: "/combate fim-turno", description: "Encerra sua vez e passa o turno para o próximo participante." },
         { command: "/combate pegar-arma", description: "Recupera uma arma derrubada na mesma célula usando uma ação comum." },

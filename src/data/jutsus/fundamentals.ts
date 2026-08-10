@@ -71,6 +71,43 @@ export const FUNDAMENTOS: Ability[] = [
       "Ativa automaticamente ao pisar na água (ligar/desligar com /combate agua). Enquanto ativa, gasta 5% de chakra por turno, mas você não fica Encharcado nem tem o movimento reduzido pela água.",
   },
 
+  // ---------------- recuperacao de recurso ----------------
+  // Recurso NAO regenera sozinho em combate: o pool de 100 e' o orcamento da
+  // luta inteira. Estas duas acoes sao a unica torneira, e cobram caro por
+  // isso — gastam a ACAO COMUM do turno, ou seja, voce troca um ataque por
+  // 20 de recurso. Duas rodadas concentrando pra bancar uma tecnica de 40.
+  // O trait "Ultimo em Pe" dobra o valor delas abaixo de 50% de vida.
+  {
+    id: "tecnica_concentracao",
+    name: "Concentrar Chakra",
+    category: "NINJUTSU",
+    tier: 1,
+    resource: "chakra",
+    cost: 0,
+    actionType: "COMUM",
+    range: 0,
+    shape: "SELF",
+    restoreResource: { resource: "chakra", amount: 20 },
+    requirements: { level: 1 },
+    tags: ["fundamentos", "recurso"],
+    description: "Você para, sela as mãos e reorganiza o próprio fluxo de chakra.",
+  },
+  {
+    id: "tecnica_folego",
+    name: "Recuperar o Fôlego",
+    category: "TAIJUTSU",
+    tier: 1,
+    resource: "energia",
+    cost: 0,
+    actionType: "COMUM",
+    range: 0,
+    shape: "SELF",
+    restoreResource: { resource: "energia", amount: 20 },
+    requirements: { level: 1 },
+    tags: ["fundamentos", "recurso"],
+    description: "Você recua o peso do corpo, controla a respiração e recupera o fôlego.",
+  },
+
   // ---------------- reacoes basicas ----------------
   // As unicas com reactionKind BLOCK e PARRY do jogo (a de DODGE e' a Tecnica
   // de Substituicao, acima). Ver o cabecalho do arquivo antes de mexer.
@@ -102,6 +139,11 @@ export const FUNDAMENTOS: Ability[] = [
     range: 0,
     shape: "SELF",
     scalingAttribute: "bukijutsu",
+    // Exige arma EQUIPADA — sao os tres unicos itens com acao EQUIP do jogo.
+    // A checagem mora em payReaction() (combat-engine.ts): o caminho de reacao
+    // nao passa por validateAndConsumeAbilityItems(). Ela tambem olha o flag
+    // `weaponDropped`, entao Desarme agora tira o aparo de verdade.
+    equippedItemIds: ["kunai", "katana", "lamina_chakra"],
     requirements: { anyAttribute: { bukijutsu: 5, kenjutsu: 5 } },
     tags: ["arma", "defesa"],
     description: "Desvia o ataque com a arma antes que ele alcance o corpo.",

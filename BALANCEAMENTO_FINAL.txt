@@ -1,6 +1,6 @@
 ================================================================================
 BALANCEAMENTO FINAL - ARVORES DE DANO
-Atualizado em 06/08/2026
+Atualizado em 09/08/2026
 ================================================================================
 
 1. OBJETIVO DE CADA CATEGORIA
@@ -51,12 +51,12 @@ Cla          PN    Passivas       Dano medio   Melhor   Custo/dano   Pico/PN
 Akimichi      45    +20% / +25%       39,60       54,00       0,77        1,20
 Inuzuka       46    +15% / +20%       39,19       52,44       0,90        1,14
 Kaguya        38    +10% / +15%       37,95       55,66       0,82        1,46
-Hyuuga        37    +10% / +20%       38,28       52,80       0,76        1,43
+Hyuuga        37    +10% / +20%       38,28       52,80       0,78        1,43
 Raikage       35    +10% / +10%       38,72       50,82       0,91        1,45
 Hoshigaki     34    +10% / +20%       38,54       55,44       0,85        1,63
-Chinoike      33    +10% / +20%       38,28       51,48       0,76        1,56
+Chinoike      33    +10% / +20%       38,28       51,48       0,81        1,56
 Kamaitachi    26     +0% /  +5%       30,45       39,90       1,29        1,53
-Hozuki        27     +5% / +10%       33,50       39,27       0,74        1,45
+Hozuki        27     +5% / +10%       33,50       39,27       1,02        1,45
 
 
 4. CLAS COM AFINIDADES NATURAIS
@@ -131,8 +131,8 @@ passivas genericas de Taijutsu. Modos nao entram nestes numeros.
 
 Estilo              PN   Jutsus de dano   Dano medio   Melhor golpe   Custo/dano
 -----------------------------------------------------------------------------------
-Punho Forte        127        12             33,47         49,25          0,99
-Punho Arhat         22         6             29,69         43,55          0,90
+Punho Forte        127         9             28,51         42,77          0,94
+Punho Arhat         22         6             29,70         43,55          0,80
 Punho Adamantino    33         5             40,35         58,50          0,77
 
 Os numeros acima nao incluem modos. O Punho Forte tem o maior investimento,
@@ -149,25 +149,25 @@ DANO REAL - arsenal medio com passivas proprias, sem transformacao
 
   Nivel   Bukijutsu   Elemental   Cla   Estilo
   nv 10      25,91       20,62    22,57   18,30
-  nv 20      33,15       30,86    32,17   22,70
-  nv 30      36,43       34,78    36,77   27,88
-  nv 45      36,43       37,96    37,17   34,50
+  nv 20      33,54       30,86    32,16   22,70
+  nv 30      36,37       34,78    36,77   27,37
+  nv 45      36,37       37,96    37,17   32,85
 
 MELHOR GOLPE DISPONIVEL - com passivas, sem transformacao
 
   Nivel   Bukijutsu   Elemental   Cla   Estilo
   nv 10      29,90       24,34    25,02   23,04
   nv 20      38,09       41,51    40,35   29,84
-  nv 30      50,25       52,48    49,20   41,31
-  nv 45      50,25       63,07    50,20   50,43
+  nv 30      50,25       52,48    49,20   40,23
+  nv 45      50,25       63,07    50,20   48,27
 
 CUSTO / DANO REAL - menor e melhor
 
   Nivel   Bukijutsu   Elemental   Cla   Estilo
-  nv 10      0,92        0,99     0,81   1,06
-  nv 20      1,05        0,80     0,88   1,07
-  nv 30      1,09        0,80     0,87   1,05
-  nv 45      1,09        0,82     0,87   0,88
+  nv 10      0,92        0,99     0,91   1,03
+  nv 20      1,05        0,80     0,92   1,03
+  nv 30      1,08        0,81     0,90   1,00
+  nv 45      1,08        0,82     0,91   0,83
 
 COMO AS TABELAS DE CLASSES SAO CALCULADAS
 
@@ -182,7 +182,23 @@ com a arvore propria do estilo mais as passivas genericas de Taijutsu. Nao
 considera modos, Portoes ou outras transformacoes temporarias.
 
 Elemental: media dos 5 elementos basicos (Fogo, Agua, Vento, Terra, Raio),
-alvo seco, so' passivas proprias de cada elemento.
+alvo seco, so' passivas proprias de cada elemento. Kekkei genkai NAO entra
+(sera revisada separadamente). Tecnica de CLA com natureza de chakra tambem
+nao entra aqui, mesmo tendo campo de elemento: ela e' contada na coluna Cla.
+O escopo e' o NO DA ARVORE, nao a etiqueta de elemento da habilidade.
+
+O QUE FICA DE FORA DE TODAS AS TABELAS
+
+Tecnica que exige TRANSFORMACAO aberta. Na pratica sao as cinco do Punho
+Forte que dependem de Portao — Lotus Oculta, Pavao do Amanhecer, Tigre
+Diurno, Elefante do Anoitecer e Guy Noturno — mais os proprios nos de Portao.
+Uso unico por combate NAO e' motivo de exclusao por si so': Kirin e Cadeia do
+Desastre Celestial entram normalmente.
+
+Ate 06/08/2026 esta regra nao estava escrita e era aplicada de forma
+inconsistente: Pavao e Tigre entravam na conta do Punho Forte, mas Elefante e
+Guy nao. Por isso o Estilo caiu de 50,43 pra 48,27 no melhor golpe do nv45 —
+nao houve nerf nenhum, so' a regra passou a valer pras cinco.
 
 HIERARQUIA POR FAIXA DE NIVEL - dano real, sem modos ou afinidades externas
 
@@ -198,7 +214,7 @@ Elemental ultrapassa o Cla mesmo sem afinidade nenhuma (37,96 contra 37,17) -
 o cla so' fica claramente a frente do elemental somando a arvore externa
 (ver capitulo 4), que e' exatamente o que o capitulo 1 promete. Estilo fica
 atras em dano medio a faixa toda, mas o melhor golpe dele se aproxima do
-resto no fim de jogo (nv 45: 50,43, quase igual ao Cla) - isso sem contar
+resto no fim de jogo (nv 45: 48,27, quase igual ao Cla) - isso sem contar
 os Portoes, que mudam o teto dele por completo (ver capitulo 9).
 
 
@@ -206,7 +222,7 @@ os Portoes, que mudam o teto dele por completo (ver capitulo 9).
 --------------------------------------------------------------------------------
 
 Maestria Marcial no nivel 40: +20% de dano em Taijutsu.
-Estilo no nivel 45: dano medio sem modo 34,50; melhor golpe 50,43; custo/dano 0,88.
+Estilo no nivel 45: dano medio sem modo 32,85; melhor golpe 48,27; custo/dano 0,83.
 8o Portao: 2,50x em Taijutsu, 80 HP por turno e irreversivel ate a morte.
 Pico estimado com 8o Portao: aproximadamente 168,5.
 

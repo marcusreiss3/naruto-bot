@@ -5,10 +5,11 @@ import { allNodes } from "../src/data/element-trees/index.js";
 import { buildMechanicsSummary } from "../src/services/characters/skill-description.js";
 
 describe("árvore de Bukijutsu", () => {
-  it("entra no índice global e concede todas as oito técnicas ativas", () => {
+  it("entra no índice global e concede todas as nove técnicas ativas", () => {
     const indexed = new Set(allNodes().map((node) => node.id));
     for (const node of BUKIJUTSU_TREE) expect(indexed.has(node.id)).toBe(true);
-    expect(BUKIJUTSU_TREE.filter((node) => node.kind === "JUTSU")).toHaveLength(8);
+    // 9 desde 09/08/2026: a Resma de Amuletos Explosivos era passiva e virou jutsu.
+    expect(BUKIJUTSU_TREE.filter((node) => node.kind === "JUTSU")).toHaveLength(9);
     for (const node of BUKIJUTSU_TREE.filter((entry) => entry.kind === "JUTSU")) {
       expect(getAbility(node.grantsAbilityId!)).toBeDefined();
     }

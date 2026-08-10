@@ -32,6 +32,32 @@ export const BUKIJUTSU_ABILITIES: Ability[] = [
     description: "Dois pergaminhos giram no ar como dragões de fumaça e cercam a área com armas.",
   },
   {
+    // Degrau entre os Dragoes Gemeos (nv4, 32) e a Esfera Explosiva (nv15, 44)
+    // no ramo de Pergaminhos. Sai em LINHA pra nao ser a terceira area seguida
+    // do ramo, e aplica Queimadura em vez de Minado — o Minado e' a assinatura
+    // da Esfera e nao deve aparecer antes dela.
+    // Dano calibrado contra o BALANCEAMENTO_FINAL.txt, nao contra o consumo:
+    // o doc poe o MELHOR golpe de Bukijutsu em ~30 no nv10 e ~38 no nv20, e
+    // Bukijutsu ja' e' a categoria mais forte nessa faixa. 26 de base da' 29,9
+    // com os Fundamentos e 35,9 com a Polvora Refinada — dentro da curva.
+    // O payoff sobre arremessar uma kunai explosiva sozinha (25 de base) nao
+    // esta' no numero e sim na LINHA: acerta todo mundo no caminho.
+    id: "buki_resma_explosiva", name: "Resma de Amuletos Explosivos",
+    category: "BUKIJUTSU", tier: 2, resource: "energia", cost: 36, actionType: "COMUM",
+    baseDamage: 26, scalingAttribute: "bukijutsu", range: 5, shape: "LINE",
+    effects: [{ effectId: "BURN", duration: 2, chance: 0.6 }],
+    requirements: { manualOnly: true },
+    requiredItems: [
+      { itemId: "pergaminho_arsenal", amount: 1, exhaustToItemId: "pergaminho_arsenal_gasto" },
+      { itemId: "kunai_explosiva", amount: 4, consume: true },
+    ],
+    tags: ["projétil", "pergaminho", "explosivo"],
+    visualDescription:
+      "O pergaminho se desenrola de uma vez e cospe uma fileira de kunai, cada uma com vários papéis-bomba presos ao cabo, que detonam em sequência ao longo da linha.",
+    description:
+      "O pergaminho se desenrola de uma vez e cospe uma fileira de kunai, cada uma com vários papéis-bomba presos ao cabo, que detonam em sequência ao longo da linha.",
+  },
+  {
     id: "buki_voo_andorinha", name: "Voo da Andorinha",
     category: "BUKIJUTSU", tier: 2, resource: "chakra", cost: 25, actionType: "COMUM",
     baseDamage: 26, scalingAttribute: "bukijutsu", range: 3, shape: "LINE",
@@ -68,6 +94,9 @@ export const BUKIJUTSU_ABILITIES: Ability[] = [
     description: "Uma shuriken se transforma em uma nuvem de cópias que fecha todas as rotas de fuga.",
   },
   {
+    // Dano bruto 24 mantido de proposito mesmo com a Resma (26) entrando no
+    // degrau anterior: a Esfera cobra parte do dano ATRASADO, pelo Minado
+    // (20 por acumulo), e o total dela — 53 contra 36 — segue bem acima.
     id: "buki_esfera_explosiva", name: "Esfera Explosiva",
     category: "BUKIJUTSU", tier: 3, resource: "energia", cost: 44, actionType: "COMUM",
     baseDamage: 24, scalingAttribute: "bukijutsu", range: 5, shape: "RADIUS",

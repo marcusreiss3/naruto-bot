@@ -1560,9 +1560,9 @@ export async function resolveHit(
     let canDodge = true;
     if (reactAb) {
       const paid = await payReaction(target, reactAb);
-      if (paid === null) {
+      if (!paid.ok) {
         canDodge = false;
-        logs.push(`❌ ${target.name} não tinha ${reactAb.resource} para usar ${reactAb.name}.`);
+        logs.push(`❌ ${paid.reason}`);
       }
     } else {
       const resource: "chakra" | "energia" = physical ? "energia" : "chakra";
@@ -1626,9 +1626,9 @@ export async function resolveHit(
     }
   } else if ((reaction === "BLOCK" || reaction === "PARRY") && !ability.unblockable && !ability.unguardable) {
     const reactAb = opts.reactionAbilityId ? getAbility(opts.reactionAbilityId) : undefined;
-    const paid = reactAb ? await payReaction(target, reactAb) : 0;
-    if (paid === null) {
-      logs.push(`❌ ${target.name} não tinha ${reactAb!.resource} para usar ${reactAb!.name}.`);
+    const paid: ReactionPayment = reactAb ? await payReaction(target, reactAb) : { ok: true, cost: 0 };
+    if (!paid.ok) {
+      logs.push(`❌ ${paid.reason}`);
     } else {
       await setFlag(target.id, "reactionUsedRound", s.round);
       if (reactAb) await applyReactionBenefits(target, reactAb, logs);
@@ -2019,17 +2019,45 @@ function hasImpactPassive(
   return ability.element === "VENTO" && ownedNodes(attacker).includes("vento_vacuo");
 }
 
+// Devolve o custo pago, ou o MOTIVO da falha — quem chama precisa distinguir
+// pra logar a mensagem certa ("sem chakra" e' bem diferente de "sem arma").
+type ReactionPayment = { ok: true; cost: number } | { ok: false; reason: string };
+
 async function payReaction(
   target: SessionFull["participants"][number],
   reactAb: Ability,
-): Promise<number | null> {
+): Promise<ReactionPayment> {
+  // Reacao que exige arma equipada (o Aparar) precisa checar DUAS coisas: ter
+  // a arma na mao e nao ter sido desarmado. O caminho de reacao nao passa por
+  // validateAndConsumeAbilityItems() — ele so' roda em useAbility —, entao a
+  // checagem mora aqui. Sem isso, `equippedItemIds` no Aparar seria enfeite e
+  // o Desarme continuaria sem tirar o aparo de ninguem.
+  if (reactAb.equippedItemIds?.length) {
+    if (target.flags.weaponDropped) {
+      return { ok: false, reason: `${target.name} está desarmado e não pôde usar ${reactAb.name}.` };
+    }
+    if (!target.charId) {
+      return { ok: false, reason: `${target.name} não tem arma equipada para usar ${reactAb.name}.` };
+    }
+    const char = await prisma.userCharacter.findUnique({
+      where: { id: target.charId },
+      select: { equippedItemId: true },
+    });
+    const equipada = char?.equippedItemId;
+    if (!equipada || !reactAb.equippedItemIds.includes(equipada)) {
+      return { ok: false, reason: `${target.name} não tem arma equipada para usar ${reactAb.name}.` };
+    }
+  }
+
   const mastery = await masteryFor(target, reactAb.resource);
   const mods = passiveMods(ownedNodes(target), reactAb);
   const cost = Math.max(1, Math.round(costAfterMastery(reactAb.cost, mastery) * mods.costMult));
   const pool = reactAb.resource === "chakra" ? target.chakra : target.energia;
-  if (pool < cost) return null;
+  if (pool < cost) {
+    return { ok: false, reason: `${target.name} não tinha ${reactAb.resource} para usar ${reactAb.name}.` };
+  }
   await deductResource(target.id, reactAb.resource, cost);
-  return cost;
+  return { ok: true, cost };
 }
 
 async function applyReactionBenefits(

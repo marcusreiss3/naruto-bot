@@ -807,8 +807,13 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
     damageMult: 1.15, rangeBonus: 1, rangeShapes: ["SINGLE_TARGET", "LINE", "RADIUS"],
   },
   {
-    nodeId: "buki_resma_explosiva", clanId: "bukijutsu",
-    abilityIds: ["buki_esfera_explosiva", "item_kunai_explosiva_arremessar"], damageMult: 1.2,
+    // Era `buki_resma_explosiva`; renomeada em 09/08/2026 porque o nome "Resma
+    // de Amuletos Explosivos" passou a ser um JUTSU. Efeito inalterado (+20%),
+    // com o jutsu novo somado a' lista: e' a tecnica mais "papel-bomba" do ramo,
+    // seria estranho a passiva de polvora nao valer nela.
+    nodeId: "buki_polvora_refinada", clanId: "bukijutsu",
+    abilityIds: ["buki_esfera_explosiva", "buki_resma_explosiva", "item_kunai_explosiva_arremessar"],
+    damageMult: 1.2,
   },
   // --------------------------------------------------------- IRYO NINJUTSU
   // Árvore genérica: crossCategory permite que os nós funcionem sem exigir
