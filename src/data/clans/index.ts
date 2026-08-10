@@ -2093,15 +2093,6 @@ export const CLANS: ClanDef[] = [
     activeIds: ["hatake_caes_ninja", "hatake_cerco_matilha", "hatake_lamina"],
     hooks: {},
   },
-  {
-    id: "lee",
-    name: "Lee",
-    description: "Sem linhagem de sangue: pura mestria em taijutsu e trabalho duro.",
-    passiveIds: [],
-    activeIds: [],
-    hooks: {},
-  },
-
   // ---- Suna ----
   {
     id: "kazekage",
@@ -2180,14 +2171,6 @@ export const CLANS: ClanDef[] = [
     hooks: {},
   },
   {
-    id: "karatachi",
-    name: "Casa Karatachi",
-    description: "Casa Karatachi de Kiri: linhagem do Yondaime Mizukage, Yagura.",
-    passiveIds: [],
-    activeIds: [],
-    hooks: {},
-  },
-  {
     id: "yuki",
     name: "Yuki",
     description: "Clã de Kiri: afinidade de Água, o elemento que funde no próprio kekkei genkai — o Hyoton (Gelo).",
@@ -2226,14 +2209,6 @@ export const CLANS: ClanDef[] = [
       "chinoike_genjutsu_ketsuryuugan",
       "chinoike_dragao_sangue",
     ],
-    hooks: {},
-  },
-  {
-    id: "darui",
-    name: "Darui",
-    description: "Linhagem de Kumo: Ranton (Tempestade) e raio negro.",
-    passiveIds: [],
-    activeIds: [],
     hooks: {},
   },
   {
@@ -2292,14 +2267,6 @@ export const CLANS: ClanDef[] = [
     // pra Terra e pro kekkei genkai Poeira (ver clan-trees/index.ts), mesmo
     // padrao do Sarutobi (arvore 100% passiva, sem ability nova pra registrar
     // aqui).
-    activeIds: [],
-    hooks: {},
-  },
-  {
-    id: "kakuzu",
-    name: "Kakuzu",
-    description: "Linhagem de Takigakure: domina as cinco naturezas (Corações de Terror).",
-    passiveIds: [],
     activeIds: [],
     hooks: {},
   },

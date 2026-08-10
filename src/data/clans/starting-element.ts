@@ -10,7 +10,7 @@
 //
 // Cla ausente deste mapa (ou sem cla) => todo elemento SORTEADO. Isso e
 // proposital para clas sem natureza de chakra canonica (Hyuuga, Inuzuka,
-// Aburame, Lee, ...) e para o Kakuzu, que no canon domina as cinco naturezas.
+// Aburame, Lee, ...).
 //
 // A chave e o `clanId` (slug) — o mesmo valor gravado em CharacterClan.clanId.
 // So os cinco elementos BASICOS entram aqui; kekkei genkai nunca e sorteado
@@ -20,9 +20,9 @@ import type { Element } from "../../config/enums.js";
 
 export const CLAN_STARTING_ELEMENTS: Record<string, Element[]> = {
   // ---- Konoha ----
-  senju: ["AGUA"], // Tobirama, mestre de Suiton (e base do Mokuton)
+  senju: ["AGUA", "TERRA"], // Tobirama, mestre de Suiton (e base do Mokuton, que funde com Doton)
   uchiha: ["FOGO"], // Katon: "nao e um Uchiha ate cuspir fogo"
-  sarutobi: ["VENTO"], // Asuma, laminas de Fuuton
+  sarutobi: ["VENTO", "FOGO"], // Asuma, laminas de Fuuton, depois o Katon do cla
   uzumaki: ["VENTO"], // Naruto, Fuuton
   hatake: ["RAIO"], // Kakashi, Raikiri/Chidori
   // ---- Suna ----
@@ -31,11 +31,10 @@ export const CLAN_STARTING_ELEMENTS: Record<string, Element[]> = {
   // ---- Kiri ----
   hoshigaki: ["AGUA"], // Kisame, Suiton
   hozuki: ["AGUA"], // hidrificacao (Suigetsu/Mangetsu)
-  karatachi: ["AGUA"], // Yagura, Kirigakure
   yuki: ["AGUA", "VENTO"], // pedido explicito: agua primeiro, depois vento — os dois que fundem no proprio Hyoton (Gelo)
   // ---- Kumo ----
   yotsuki: ["RAIO"], // Killer B, afinidade de raio de Kumo
-  darui: ["RAIO"], // raio negro
+  chinoike: ["AGUA"], // as tecnicas proprias do cla (Chuva de Granizo, Bolhas de Agua) ja sao AGUA
   raikage: ["RAIO"], // armadura de raio
   // ---- Iwa ----
   kamizuru: ["TERRA"], // cla das abelhas de Iwagakure
@@ -45,7 +44,7 @@ export const CLAN_STARTING_ELEMENTS: Record<string, Element[]> = {
   onoki: ["TERRA", "VENTO", "FOGO"], // Tsuchikage: Doton nativo, depois Fuuton e Katon (os dois que fundem em Jinton)
   bakurei: ["TERRA", "RAIO"], // Doton nativo, depois Raiton
   // Aleatorios (omitidos de proposito): nara, hyuuga, inuzuka, yamanaka,
-  // akimichi, aburame, lee, shirogane, kaguya, chinoike, kakuzu.
+  // akimichi, aburame, lee, shirogane, kaguya.
 };
 
 // Compat: primeiro elemento do clã, usado so' pra pintar o icone do no'

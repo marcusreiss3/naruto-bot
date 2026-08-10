@@ -140,7 +140,7 @@ describe("clanStartingElement: primeiro elemento vem do cla", () => {
   });
 
   it("cla sem natureza canonica sorteia (null = chamador sorteia)", () => {
-    for (const c of ["nara", "hyuuga", "lee", "kakuzu"]) {
+    for (const c of ["nara", "hyuuga", "lee", "inuzuka"]) {
       expect(clanStartingElement(c, []), c).toBeNull();
     }
   });
