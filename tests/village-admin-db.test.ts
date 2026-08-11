@@ -235,6 +235,58 @@ describe("cofre do Kage", () => {
   });
 });
 
+describe("ajuste de Ryō pessoal pela staff", () => {
+  it("set define o saldo exato e grava o delta no livro-caixa", async () => {
+    const char = await novoNinja({ ryo: 300 });
+    const economy = await import("../src/services/economy/character-economy.js");
+
+    const r = await economy.adminSetCharacterRyo(char.id, 5000, "teste", "staff1");
+
+    expect(r).toEqual({ antes: 300, depois: 5000 });
+    expect((await prisma.userCharacter.findUniqueOrThrow({ where: { id: char.id } })).ryo).toBe(5000);
+    const linha = await prisma.villageLedger.findFirstOrThrow({
+      where: { charId: char.id },
+      orderBy: { createdAt: "desc" },
+    });
+    expect(linha.ryoDelta).toBe(4700);
+    expect(linha.reason).toBe("teste");
+    expect(linha.actorDiscordId).toBe("staff1");
+  });
+
+  it("add soma sem sobrescrever quando dois ajustes chegam juntos", async () => {
+    const char = await novoNinja({ ryo: 0 });
+    const economy = await import("../src/services/economy/character-economy.js");
+
+    await Promise.all([
+      economy.adminAddCharacterRyo(char.id, 100, "a", "staff1"),
+      economy.adminAddCharacterRyo(char.id, 250, "b", "staff1"),
+    ]);
+
+    expect((await prisma.userCharacter.findUniqueOrThrow({ where: { id: char.id } })).ryo).toBe(350);
+  });
+
+  it("permite deixar negativo, e a dívida continua bloqueando gasto", async () => {
+    const char = await novoNinja({ ryo: 100 });
+    const economy = await import("../src/services/economy/character-economy.js");
+
+    await economy.adminSetCharacterRyo(char.id, -62, "simular dívida", "staff1");
+
+    expect((await prisma.userCharacter.findUniqueOrThrow({ where: { id: char.id } })).ryo).toBe(-62);
+    // Nenhum caminho de jogo ganhou permissão nova: doar continua recusando.
+    const doacao = await treasury.donateRyo(char.id, "KONOHA", 10, "u1");
+    expect(doacao.ok).toBe(false);
+  });
+
+  it("recusa valor não inteiro e delta zero", async () => {
+    const char = await novoNinja({ ryo: 100 });
+    const economy = await import("../src/services/economy/character-economy.js");
+
+    await expect(economy.adminSetCharacterRyo(char.id, 1.5, "x", "s")).rejects.toThrow();
+    await expect(economy.adminAddCharacterRyo(char.id, 0, "x", "s")).rejects.toThrow();
+    expect((await prisma.userCharacter.findUniqueOrThrow({ where: { id: char.id } })).ryo).toBe(100);
+  });
+});
+
 describe("estoque", () => {
   it("retirada entrega ao ninja e gera STOCK_WITHDRAWAL", async () => {
     const char = await novoNinja();

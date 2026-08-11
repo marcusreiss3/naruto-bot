@@ -9,7 +9,12 @@ import { NINJA_RANKS, NINJA_RANK_LABELS, type NinjaRank } from "../config/enums.
 import { VILLAGE_IDS, VILLAGE_NAMES, normalizeVillageId } from "../data/villages.js";
 import { VILLAGE_MANSIONS } from "../services/village-service.js";
 import { getOrCreateCharacter } from "../services/characters/character-service.js";
-import { formatRyo, normalizeNinjaRank } from "../services/economy/character-economy.js";
+import {
+  adminAddCharacterRyo,
+  adminSetCharacterRyo,
+  formatRyo,
+  normalizeNinjaRank,
+} from "../services/economy/character-economy.js";
 import { getVillage } from "../services/economy/village-economy.js";
 import { prisma } from "../db/client.js";
 import { recordLedger } from "../services/economy/ledger.js";
@@ -173,6 +178,31 @@ export const adminVila: Command = {
     )
     .addSubcommandGroup((g) =>
       g
+        .setName("ryo")
+        .setDescription("Ryō pessoal de um ninja")
+        .addSubcommand((s) =>
+          s
+            .setName("set")
+            .setDescription("Define o saldo exato de Ryō de um ninja")
+            .addUserOption((o) => o.setName("usuario").setDescription("Ninja").setRequired(true))
+            .addIntegerOption((o) =>
+              o.setName("valor").setDescription("Saldo exato (negativo vira dívida)").setRequired(true),
+            )
+            .addStringOption((o) => o.setName("motivo").setDescription("Motivo").setRequired(true)),
+        )
+        .addSubcommand((s) =>
+          s
+            .setName("add")
+            .setDescription("Soma ou subtrai Ryō de um ninja")
+            .addUserOption((o) => o.setName("usuario").setDescription("Ninja").setRequired(true))
+            .addIntegerOption((o) =>
+              o.setName("delta").setDescription("Positivo credita, negativo debita").setRequired(true),
+            )
+            .addStringOption((o) => o.setName("motivo").setDescription("Motivo").setRequired(true)),
+        ),
+    )
+    .addSubcommandGroup((g) =>
+      g
         .setName("nivel")
         .setDescription("Nível dos setores da vila")
         .addSubcommand((s) =>
@@ -282,6 +312,9 @@ export const adminVila: Command = {
     await interaction.deferReply({ ephemeral: true });
 
     if (group === "rank" && sub === "set") return handleRankSet(interaction);
+    // `ryo` e `rank` sao sobre um NINJA, nao sobre uma vila: nao tem opcao
+    // `vila` e por isso nao passam pelo handleVillageAdmin.
+    if (group === "ryo") return handleRyoSet(interaction, sub);
     if (!group && sub === "ver") return handleVer(interaction);
     if (group) return handleVillageAdmin(interaction, group, sub);
     await interaction.editReply("Subcomando desconhecido.");
@@ -442,6 +475,43 @@ async function handleVillageAdmin(
   }
 
   await interaction.editReply("Subcomando desconhecido.");
+}
+
+// Ajuste do Ryo pessoal. E' a unica porta, alem da cobranca semanal de imposto,
+// que pode deixar um saldo negativo — e so' porque e' staff, com motivo e
+// auditoria. Nenhum caminho de jogo ganhou permissao nova.
+async function handleRyoSet(
+  interaction: ChatInputCommandInteraction,
+  sub: string,
+): Promise<void> {
+  const guildId = interaction.guildId ?? "global";
+  const user = interaction.options.getUser("usuario", true);
+  const motivo = interaction.options.getString("motivo", true).trim();
+  const char = await getOrCreateCharacter(user.id, guildId, user.username);
+  const quem = char.displayName?.trim() || char.name;
+
+  const r =
+    sub === "set"
+      ? await adminSetCharacterRyo(
+          char.id,
+          interaction.options.getInteger("valor", true),
+          motivo,
+          interaction.user.id,
+        )
+      : await adminAddCharacterRyo(
+          char.id,
+          interaction.options.getInteger("delta", true),
+          motivo,
+          interaction.user.id,
+        );
+
+  await interaction.editReply(
+    `✅ **${quem}**: ${formatRyo(r.antes)} → **${formatRyo(r.depois)}**.` +
+      (r.depois < 0
+        ? "\n⚠️ _Saldo negativo: ele não consegue comprar, doar nem sacar até voltar ao positivo._"
+        : "") +
+      `\nMotivo: ${motivo}`,
+  );
 }
 
 function resumoLimpeza(obras: number, reformas: number): string {
