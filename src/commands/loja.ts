@@ -258,6 +258,10 @@ async function renderShop(
   embed.setDescription(`${descricao}\nSeu saldo: **${formatRyo(charRyo)}**`);
 
   const aVenda = view.produtos.filter((linha) => linha.price > 0);
+  // Tres estados diferentes, e confundi-los faz o painel parecer quebrado:
+  // loja sem CATALOGO nunca vai vender nada (Marcenaria só compra); loja com
+  // catalogo e sem estoque vende quando for abastecida.
+  const semCatalogo = view.produtos.length === 0;
   embed.addFields({
     name: "Comprar",
     value: aVenda.length
@@ -265,7 +269,9 @@ async function renderShop(
           .map((linha) => precoTexto(view, linha))
           .join(" • ")
           .slice(0, 1024)
-      : "_Sem produto em estoque agora._",
+      : semCatalogo
+        ? "_Esta loja não vende nada: ela só compra matéria-prima da vila._"
+        : "_Sem produto em estoque agora. O Kage abastece pela aba Comércio de `/vila`._",
   });
 
   if (view.municipal) {
