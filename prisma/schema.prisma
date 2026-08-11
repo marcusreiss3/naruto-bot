@@ -14,8 +14,8 @@ model UserCharacter {
   id              String   @id @default(cuid())
   discordId       String
   guildId         String
-  name            String   // username do Discord (fallback de exibicao)
-  displayName     String?  // nome RP do personagem; tem prioridade sobre name
+  name            String // username do Discord (fallback de exibicao)
+  displayName     String? // nome RP do personagem; tem prioridade sobre name
   level           Int      @default(1)
   xp              Int      @default(0)
   ryo             Int      @default(0)
@@ -24,21 +24,35 @@ model UserCharacter {
   hpMax           Int      @default(100)
   // contador de evolucoes de maestria liberadas (1 a cada 15 niveis)
   masteryPoints   Int      @default(0)
+  // Rank narrativo do ninja (NinjaRank em src/config/enums.ts). Fonte de verdade
+  // do gate financeiro: cargo do Discord pode espelhar depois, mas a regra de
+  // imposto consulta este campo. ACADEMIA nao e' tributado.
+  ninjaRank       String   @default("ACADEMIA") // ACADEMIA | GENIN | CHUNIN | JONIN | KAGE
+  // Vila de origem persistida (VillageId). Espelha o cargo do Discord, mas a
+  // economia le daqui: a missao precisa gravar a vila do INSTANTE da conclusao,
+  // e trocar de cargo depois nao pode mover imposto ja acumulado. Nulo = sem
+  // cargo de vila; nesse caso nao acumula atividade tributavel.
+  villageId       String?
   // Uma única arma preparada por vez. Equipar não remove o item do inventário.
   equippedItemId  String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  attributes CharacterAttributes?
-  resources  CharacterResourceState?
-  mastery    CharacterMastery?
-  clan       CharacterClan?
-  elements   CharacterElement[]
-  fightingStyles CharacterFightingStyle[]
-  jutsus     CharacterJutsu[]
-  missions   MissionInstance[]
-  inventory  InventoryItem[]
-  skillNodes CharacterSkillNode[]
+  attributes      CharacterAttributes?
+  resources       CharacterResourceState?
+  mastery         CharacterMastery?
+  clan            CharacterClan?
+  economy         CharacterEconomyState?
+  elements        CharacterElement[]
+  fightingStyles  CharacterFightingStyle[]
+  jutsus          CharacterJutsu[]
+  missions        MissionInstance[]
+  inventory       InventoryItem[]
+  skillNodes      CharacterSkillNode[]
+  taxActivities   WeeklyTaxActivity[]
+  taxCharges      WeeklyTaxCharge[]
+  gatherCooldowns GatheringCooldown[]
+  economyActions  EconomyActionLog[]
 
   @@unique([discordId, guildId])
   @@index([guildId])
@@ -128,6 +142,24 @@ model CharacterJutsu {
   @@unique([charId, jutsuId])
 }
 
+// Estado economico do personagem que nao e' saldo nem item: saciedade e, nas
+// etapas seguintes, cooldowns de coleta/craft.
+model CharacterEconomyState {
+  id            String        @id @default(cuid())
+  character     UserCharacter @relation(fields: [charId], references: [id], onDelete: Cascade)
+  charId        String        @unique
+  satiety       Int           @default(100)
+  // Ordem de coleta aceita no momento. Nulo = livre. A unicidade e' este campo:
+  // aceitar e' um UPDATE condicional em activeOrderId = null, entao o ninja nao
+  // consegue aceitar duas ordens nem com dois cliques simultaneos.
+  activeOrderId String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+// Uma pilha por personagem/item: a unicidade abaixo e' a trava real contra
+// duplicacao. Os helpers de inventario usam upsert/updateMany condicional em
+// cima dela — nunca findFirst como se fosse lock.
 model InventoryItem {
   id        String        @id @default(cuid())
   character UserCharacter @relation(fields: [charId], references: [id], onDelete: Cascade)
@@ -135,24 +167,150 @@ model InventoryItem {
   itemId    String
   name      String
   qty       Int           @default(1)
+
+  @@unique([charId, itemId])
+}
+
+// ---------------- Economia / vilas ----------------
+
+// As cinco vilas. id = VillageId (src/data/villages.ts). Criadas pelo seed
+// idempotente; nunca apagadas.
+model Village {
+  id                    String   @id // KONOHA | SUNA | IWA | KUMO | KIRI
+  name                  String
+  taxRate               Float    @default(0.05)
+  treasuryRyo           Int      @default(0)
+  // Parte do cofre comprometida com ordem de coleta aberta (e, na etapa 6, com
+  // obra/manutencao). Saque do Kage NUNCA pode encostar nisto.
+  reservedRyo           Int      @default(0)
+  kageDiscordId         String?
+  managedByStaff        Boolean  @default(true)
+  withdrawalsLocked     Boolean  @default(false)
+  populationOverride    Int?
+  // Vagas de obra ocupadas AGORA. E' a trava atomica da fila de construcao:
+  // comecar uma obra e' um UPDATE condicional em `constructionSlotsUsed < cap`,
+  // entao dois cliques simultaneos nao iniciam duas obras. A etapa 06 sobe o
+  // cap (ECONOMY.constructionSlots) sem mexer nesta coluna.
+  constructionSlotsUsed Int      @default(0)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  stock         VillageStock[]
+  ledger        VillageLedger[]
+  taxPeriods    VillageTaxPeriod[]
+  shops         VillageShop[]
+  constructions VillageConstruction[]
+  upgrades      VillageUpgrade[]
+  center        VillageCenter?
+}
+
+model VillageStock {
+  id        String   @id @default(cuid())
+  village   Village  @relation(fields: [villageId], references: [id], onDelete: Cascade)
+  villageId String
+  itemId    String
+  name      String
+  qty       Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  @@unique([villageId, itemId])
+}
+
+// Livro-caixa append-only. Nenhum servico atualiza ou apaga linha daqui: a
+// correcao de um erro e' um lancamento novo de sinal contrario.
+// villageId nulo = movimento que nao envolve cofre/estoque de vila
+// (ex.: recompensa de missao, compra de NPC), mantido no mesmo livro para
+// que toda alteracao de Ryo tenha auditoria.
+model VillageLedger {
+  id             String   @id @default(cuid())
+  village        Village? @relation(fields: [villageId], references: [id], onDelete: Cascade)
+  villageId      String?
+  type           String // LedgerType em src/config/enums.ts
+  ryoDelta       Int      @default(0)
+  itemId         String?
+  itemQty        Int?
+  actorDiscordId String?
+  charId         String?
+  reason         String   @default("")
+  metaJson       String   @default("{}")
+  createdAt      DateTime @default(now())
+
+  @@index([villageId, createdAt])
+  @@index([charId, createdAt])
+}
+
+// Taxa congelada na ABERTURA da competencia. A cobranca da etapa 2 usa este
+// valor, nao Village.taxRate do domingo de fechamento.
+model VillageTaxPeriod {
+  id            String    @id @default(cuid())
+  village       Village   @relation(fields: [villageId], references: [id], onDelete: Cascade)
+  villageId     String
+  weekKey       String // competencia semanal (ver weekKeyFor em economy/week.ts)
+  taxRateFrozen Float
+  status        String    @default("OPEN") // OPEN | CLOSED
+  openedAt      DateTime  @default(now())
+  closedAt      DateTime?
+
+  @@unique([villageId, weekKey])
+}
+
+// Acumulador da semana por personagem/vila de origem. Alimentado por
+// completeMission na etapa 2; aqui so' existe a estrutura.
+model WeeklyTaxActivity {
+  id                String        @id @default(cuid())
+  character         UserCharacter @relation(fields: [charId], references: [id], onDelete: Cascade)
+  charId            String
+  weekKey           String
+  villageId         String
+  rankAtEarn        String        @default("ACADEMIA")
+  taxableXp         Int           @default(0)
+  taxableMissionRyo Int           @default(0)
+  status            String        @default("OPEN") // OPEN | ISENTO_INATIVO | CLOSED
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@unique([weekKey, charId, villageId])
+  @@index([weekKey, status])
+}
+
+// Recibo da cobranca. A unicidade e' o que impede dupla cobranca em reinicio
+// ou execucao concorrente do job da etapa 2.
+model WeeklyTaxCharge {
+  id            String        @id @default(cuid())
+  character     UserCharacter @relation(fields: [charId], references: [id], onDelete: Cascade)
+  charId        String
+  weekKey       String
+  villageId     String
+  taxRate       Float
+  taxableBase   Int
+  taxRyo        Int
+  balanceBefore Int
+  balanceAfter  Int
+  chargedAt     DateTime      @default(now())
+  // Recibo: a DM foi entregue? Nulo = falhou ou ainda nao tentou; a linha em si
+  // JA e' o recibo persistido para consulta privada (aba Relatorios de /vila).
+  receiptSentAt DateTime?
+
+  @@unique([weekKey, charId, villageId])
+  @@index([charId, weekKey])
 }
 
 // ---------------- Combate ----------------
 
 model CombatSession {
-  id            String   @id @default(cuid())
-  channelId     String
-  guildId       String
-  scenarioId    String
-  status        String   @default("ACTIVE") // ACTIVE | ENDED
-  round         Int      @default(1)
-  activeIndex   Int      @default(0)
-  turnOrderJson String   @default("[]") // array de participantId
+  id                String   @id @default(cuid())
+  channelId         String
+  guildId           String
+  scenarioId        String
+  status            String   @default("ACTIVE") // ACTIVE | ENDED
+  round             Int      @default(1)
+  activeIndex       Int      @default(0)
+  turnOrderJson     String   @default("[]") // array de participantId
   // manchas de terreno temporario: [{cell,kind,untilRound}] (ver combat/terrain.ts)
-  terrainJson   String   @default("[]")
+  terrainJson       String   @default("[]")
   missionInstanceId String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   participants CombatParticipant[]
   drops        DroppedItem[]
@@ -161,52 +319,52 @@ model CombatSession {
 }
 
 model CombatParticipant {
-  id           String        @id @default(cuid())
-  session      CombatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  sessionId    String
-  charId       String? // null = NPC
-  isNpc        Boolean       @default(false)
-  npcTemplate  String? // id do template de NPC
-  name         String
-  teamId       String        @default("A")
-  cell         String        @default("A1")
-  hpCurrent    Int
-  hpMax        Int
-  chakra       Float         @default(100)
-  energia      Float         @default(100)
-  actedCommon  Boolean       @default(false)
-  actedBonus   Boolean       @default(false)
-  actedMove    Boolean       @default(false)
+  id             String           @id @default(cuid())
+  session        CombatSession    @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId      String
+  charId         String? // null = NPC
+  isNpc          Boolean          @default(false)
+  npcTemplate    String? // id do template de NPC
+  name           String
+  teamId         String           @default("A")
+  cell           String           @default("A1")
+  hpCurrent      Int
+  hpMax          Int
+  chakra         Float            @default(100)
+  energia        Float            @default(100)
+  actedCommon    Boolean          @default(false)
+  actedBonus     Boolean          @default(false)
+  actedMove      Boolean          @default(false)
   // controle de corpo (Yamanaka): id do participante que controla este
   controlledById String?
   // flags voláteis: waterWalk, height, weaponDropped, etc.
-  flagsJson    String        @default("{}")
-  jutsuIdsJson String        @default("[]") // jutsus disponiveis (snapshot p/ NPC)
-  effects      EffectInstance[]
+  flagsJson      String           @default("{}")
+  jutsuIdsJson   String           @default("[]") // jutsus disponiveis (snapshot p/ NPC)
+  effects        EffectInstance[]
 
   @@index([sessionId])
 }
 
 model EffectInstance {
-  id           String            @id @default(cuid())
-  participant  CombatParticipant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  id            String            @id @default(cuid())
+  participant   CombatParticipant @relation(fields: [participantId], references: [id], onDelete: Cascade)
   participantId String
-  effectId     String // BURN | POISON | BLEED | STUN | SLOW | DISARM | CONFUSION | ROOT | ...
-  name         String
-  stacks       Int               @default(1)
-  duration     Int               @default(1)
-  sourceId     String? // participantId fonte
-  dataJson     String            @default("{}")
+  effectId      String // BURN | POISON | BLEED | STUN | SLOW | DISARM | CONFUSION | ROOT | ...
+  name          String
+  stacks        Int               @default(1)
+  duration      Int               @default(1)
+  sourceId      String? // participantId fonte
+  dataJson      String            @default("{}")
 }
 
 model DroppedItem {
-  id        String        @id @default(cuid())
-  session   CombatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  sessionId String
-  cell      String
-  itemId    String
-  name      String
-  kind      String        @default("WEAPON") // WEAPON | ITEM
+  id          String        @id @default(cuid())
+  session     CombatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId   String
+  cell        String
+  itemId      String
+  name        String
+  kind        String        @default("WEAPON") // WEAPON | ITEM
   ownerCharId String?
 }
 
@@ -221,23 +379,23 @@ model ScenarioState {
 // ---------------- Missoes ----------------
 
 model MissionDefinition {
-  id          String @id
+  id          String  @id
   name        String
   rank        String // D | C | B | A
   description String
   channelId   String?
-  dataJson    String @default("{}")
+  dataJson    String  @default("{}")
 }
 
 model MissionInstance {
-  id           String        @id @default(cuid())
-  character    UserCharacter @relation(fields: [charId], references: [id], onDelete: Cascade)
-  charId       String
-  missionId    String
-  status       String        @default("ACTIVE") // ACTIVE | COMPLETED | FAILED
-  stateJson    String        @default("{}")
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  id        String        @id @default(cuid())
+  character UserCharacter @relation(fields: [charId], references: [id], onDelete: Cascade)
+  charId    String
+  missionId String
+  status    String        @default("ACTIVE") // ACTIVE | COMPLETED | FAILED
+  stateJson String        @default("{}")
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
 
   objectives MissionObjectiveState[]
 
@@ -301,4 +459,271 @@ model CharacterAppearance {
   @@unique([discordId, guildId]) // 1 aparência por usuário por servidor
   @@unique([guildId, characterKey]) // 1 dono por personagem por servidor
   @@index([guildId])
+}
+
+// Cooldown de coleta por personagem e por tipo de acao (15 min).
+// A unicidade e' a trava: o claim e' um UPDATE condicional em `availableAt`,
+// entao duas execucoes concorrentes da mesma acao nao geram duas recompensas.
+model GatheringCooldown {
+  id          String        @id @default(cuid())
+  character   UserCharacter @relation(fields: [charId], references: [id], onDelete: Cascade)
+  charId      String
+  action      String // GatherAction em src/data/gathering.ts
+  availableAt DateTime
+
+  @@unique([charId, action])
+}
+
+// Trilha de coleta/craft/comida: canal, vila, acao, itens e horario. Serve para
+// populacao ativa e investigacao de abuso; nao e' livro-caixa (nao move Ryo).
+model EconomyActionLog {
+  id          String        @id @default(cuid())
+  character   UserCharacter @relation(fields: [charId], references: [id], onDelete: Cascade)
+  charId      String
+  action      String // MINERAR | COLETAR | CACAR | PESCAR | COLETAR_AGUA | CRAFT | COMER
+  channelId   String?
+  villageId   String?
+  detailsJson String        @default("{}")
+  createdAt   DateTime      @default(now())
+
+  @@index([charId, action, createdAt])
+  @@index([villageId, createdAt])
+}
+
+// Ordem de coleta criada pelo Kage. O orcamento maximo e' reservado do cofre na
+// criacao: o Kage nao consegue prometer Ryo que a vila nao tem, e esse Ryo nao
+// pode ser sacado nem usado em outra ordem.
+model CollectionOrder {
+  id                 String    @id @default(cuid())
+  villageId          String
+  itemId             String
+  targetQty          Int
+  deliveredQty       Int       @default(0)
+  rewardPerUnit      Int
+  budgetMax          Int
+  budgetSpent        Int       @default(0)
+  // OPEN = anunciada a vila | INVITE = convite individual
+  audience           String    @default("OPEN")
+  // ACTIVE | COMPLETED | CANCELLED | EXPIRED
+  status             String    @default("ACTIVE")
+  deadline           DateTime
+  createdByDiscordId String
+  announceChannelId  String?
+  announceMessageId  String?
+  closedReason       String?
+  createdAt          DateTime  @default(now())
+  closedAt           DateTime?
+
+  members CollectionOrderMember[]
+
+  @@index([villageId, status])
+  @@index([status, deadline])
+}
+
+// Participacao de um ninja numa ordem. INVITED cobre o convite individual que
+// ainda nao foi respondido.
+model CollectionOrderMember {
+  id           String          @id @default(cuid())
+  order        CollectionOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId      String
+  charId       String
+  // INVITED | ACCEPTED | DECLINED | LEFT
+  status       String          @default("ACCEPTED")
+  deliveredQty Int             @default(0)
+  paidRyo      Int             @default(0)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  @@unique([orderId, charId])
+  @@index([charId, status])
+}
+
+// ---------------- Lojas de vila (etapa 05) ----------------
+
+// Uma loja por vila e por tipo. Nao tem nivel: a secao 7.2 do spec proibe
+// evolucao de loja nesta economia. Os contadores abaixo sao "chave + numero":
+// a chave guarda a competencia/dia a que o numero pertence, entao o reset e'
+// a comparacao com a chave atual, nao um job que pode nao rodar.
+model VillageShop {
+  id         String  @id @default(cuid())
+  village    Village @relation(fields: [villageId], references: [id], onDelete: Cascade)
+  villageId  String
+  shopType   String // ShopType em src/data/shops.ts
+  // LOCKED | CONSTRUCTING | AWAITING_CHANNEL | ACTIVE | SUSPENDED
+  status     String  @default("ACTIVE")
+  capacity   Int     @default(500)
+  // Total de unidades no estoque desta loja. Denormalizado de proposito: a
+  // capacidade precisa ser checada na clausula WHERE do UPDATE, e SOMA de
+  // varias linhas nao cabe num WHERE. Toda escrita de VillageShopStock passa
+  // pelos helpers que mantem os dois em sincronia na mesma transacao.
+  stockUnits Int     @default(0)
+
+  // Orcamento diario de compra de ingrediente (500 x fator de populacao).
+  budgetDayKey     String @default("")
+  dailyBudgetSpent Int    @default(0)
+
+  // Escassez da Oficina de Selos: 3 Pergaminhos por vila por competencia.
+  weeklyCraftKey   String @default("")
+  weeklyCraftCount Int    @default(0)
+
+  // Contrato de Empreendedor NPC: no maximo 1 por dia.
+  wholesaleDayKey String @default("")
+  wholesaleCount  Int    @default(0)
+
+  // Canal de RP proprio (hoje so' o Ichiraku tem). Preenchido na conclusao da
+  // obra; enquanto estiver nulo a loja fica em AWAITING_CHANNEL.
+  discordChannelId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  stock VillageShopStock[]
+
+  @@unique([villageId, shopType])
+  @@index([status])
+}
+
+// Estoque da loja. Separado de VillageStock (estoque central) de proposito: a
+// secao 7.3 exige que os dois nunca se confundam.
+model VillageShopStock {
+  id        String      @id @default(cuid())
+  shop      VillageShop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  shopId    String
+  itemId    String
+  name      String
+  qty       Int         @default(0)
+  updatedAt DateTime    @updatedAt
+
+  @@unique([shopId, itemId])
+}
+
+// Modelo unico de obra: Ichiraku agora, Centro e setores na etapa 06. A vaga na
+// fila NAO e' contada daqui — quem trava e' Village.constructionSlotsUsed, que
+// cabe num WHERE. Esta tabela guarda o que foi congelado e quando conclui.
+model VillageConstruction {
+  id                 String    @id @default(cuid())
+  village            Village   @relation(fields: [villageId], references: [id], onDelete: Cascade)
+  villageId          String
+  buildingType       String // SHOP | SECTOR | CENTER
+  buildingKey        String // ICHIRAKU | ...
+  targetLevel        Int?
+  // Custo e fator de populacao CONGELADOS no inicio: a vila crescer ou encolher
+  // no meio da obra nao muda o que ja foi cobrado.
+  costRyo            Int
+  costItemsJson      String    @default("{}")
+  populationFactor   Float     @default(1)
+  // IN_PROGRESS | COMPLETED | CANCELLED
+  status             String    @default("IN_PROGRESS")
+  startedAt          DateTime  @default(now())
+  finishesAt         DateTime
+  completedAt        DateTime?
+  startedByDiscordId String
+
+  @@index([status, finishesAt])
+  @@index([villageId, status])
+}
+
+// Sessao do painel efemero de /loja. Vive no banco (nao em memoria) para
+// sobreviver a reinicio; o customId carrega so' o id dela. Nenhum saldo, preco
+// ou quantidade confiavel e' guardado aqui: tudo e' relido do banco na
+// confirmacao. `dataJson` guarda apenas a escolha pendente (item e quantidade
+// que o jogador digitou), que ainda sera validada.
+//
+// NAO existe campo de permissao aqui, e isso e' de proposito: quem pode
+// administrar loja e' decidido a cada clique por `podeKage` no /vila, nunca por
+// um dado guardado na sessao.
+model DiscordUiSession {
+  id             String   @id @default(cuid())
+  ownerDiscordId String
+  guildId        String
+  channelId      String
+  villageId      String
+  charId         String
+  shopType       String?
+  screen         String   @default("HOME")
+  dataJson       String   @default("{}")
+  expiresAt      DateTime
+  createdAt      DateTime @default(now())
+
+  @@index([ownerDiscordId, expiresAt])
+  @@index([expiresAt])
+}
+
+// ---------------- Evolucao de vila (etapa 06) ----------------
+
+// Um dos quatro setores de uma vila. O nivel NUNCA regride por falta de
+// reforma: `status` suspende o beneficio, `level` guarda o investimento.
+model VillageUpgrade {
+  id             String   @id @default(cuid())
+  village        Village  @relation(fields: [villageId], references: [id], onDelete: Cascade)
+  villageId      String
+  sectorKey      String // SectorKey em src/data/sectors.ts
+  level          Int      @default(0)
+  // OK | NECESSITA_REFORMA
+  status         String   @default("OK")
+  // Nivel-alvo da obra em andamento NESTE predio, ou nulo. E' a trava contra
+  // empilhar dois niveis do mesmo setor: iniciar e' um UPDATE condicional em
+  // `constructingTo IS NULL`, entao dois cliques nao passam os dois.
+  constructingTo Int?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([villageId, sectorKey])
+}
+
+// Centro da Vila. Comeca no nivel 1, de graca, e nunca e' demolido. Define a
+// capacidade global da fila de obras e o desconto no Ryo da reforma.
+model VillageCenter {
+  id             String   @id @default(cuid())
+  village        Village  @relation(fields: [villageId], references: [id], onDelete: Cascade)
+  villageId      String   @unique
+  level          Int      @default(1)
+  status         String   @default("OK") // OK | NECESSITA_REFORMA
+  constructingTo Int?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+// Chave de execucao da producao diaria: uma linha por vila, predio e dia. A
+// unicidade e' o que impede depositar duas vezes depois de reinicio ou de dois
+// timers armados — nao existe contador em memoria.
+model VillageProductionRun {
+  id          String   @id @default(cuid())
+  villageId   String
+  buildingKey String
+  dayKey      String // dia local (dayKeyFor em economy/week.ts)
+  level       Int
+  factor      Float
+  itemsJson   String   @default("{}")
+  createdAt   DateTime @default(now())
+
+  @@unique([villageId, buildingKey, dayKey])
+  @@index([villageId, dayKey])
+}
+
+// Cobranca semanal de reforma. A unicidade (vila, predio, ciclo) impede cobrar
+// duas vezes a mesma semana; o servico so' abre cobranca nova quando nao ha
+// pendencia aberta, porque "uma pendencia representa a reforma em atraso" —
+// nao existe juro nem acumulo de semanas.
+model VillageMaintenanceCharge {
+  id              String    @id @default(cuid())
+  villageId       String
+  buildingType    String // SECTOR | CENTER | SHOP
+  buildingKey     String
+  cycleKey        String // segunda-feira 00:15 que abriu o ciclo
+  levelAtCharge   Int
+  factorFrozen    Float
+  centerDiscount  Float     @default(1)
+  ryoDue          Int
+  itemsJson       String    @default("{}")
+  // PENDING | PAID | OVERDUE
+  status          String    @default("PENDING")
+  dueAt           DateTime
+  paidAt          DateTime?
+  paidByDiscordId String?
+  createdAt       DateTime  @default(now())
+
+  @@unique([villageId, buildingKey, cycleKey])
+  @@index([status, dueAt])
+  @@index([villageId, status])
 }

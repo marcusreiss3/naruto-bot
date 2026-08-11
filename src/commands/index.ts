@@ -9,17 +9,28 @@ import { party } from "./party.js";
 import { missoes } from "./missoes.js";
 import { interagir } from "./interagir.js";
 import { admin } from "./admin.js";
+import { adminVila } from "./admin-vila.js";
+import { vila } from "./vila.js";
+import { loja } from "./loja.js";
 import { aparencia } from "./aparencia.js";
 import { clear } from "./clear.js";
 import { bonecoTreino } from "./boneco-treino.js";
 import { invocacao } from "./invocacao.js";
 import { inventario } from "./inventario.js";
+import { acao } from "./acao.js";
+import { craft } from "./craft.js";
+import { comer } from "./comer.js";
 import { arremessar, atacar, darItem, desequipar, equipar, largarItem, restaurarPergaminho, usarItem } from "./itens.js";
 
 export const commands: Command[] = [
   perfil,
   atributos,
   inventario,
+  acao,
+  craft,
+  comer,
+  vila,
+  loja,
   equipar,
   desequipar,
   restaurarPergaminho,
@@ -36,6 +47,7 @@ export const commands: Command[] = [
   missoes,
   interagir,
   admin,
+  adminVila,
   aparencia,
   clear,
   bonecoTreino,

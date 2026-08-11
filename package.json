@@ -16,6 +16,7 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:push": "prisma db push",
     "seed": "tsx prisma/seed.ts",
+    "migrate:inventory-dedup": "tsx scripts/migrate-inventory-dedup.ts",
     "icons": "tsx scripts/resize-icons.mjs",
     "bg": "tsx scripts/optimize-bg.mjs",
     "test": "vitest run",

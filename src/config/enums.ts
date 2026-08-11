@@ -218,3 +218,58 @@ export const EFFECT_LABELS: Record<EffectId, string> = {
 export function effectLabel(effectId: string): string {
   return EFFECT_LABELS[effectId as EffectId] ?? effectId;
 }
+
+// ---------------- Economia ----------------
+
+// Rank narrativo do ninja. Fonte de verdade em UserCharacter.ninjaRank; e' o
+// gate do imposto pessoal semanal (ACADEMIA nunca e' tributado). Ordem =
+// progressao, usada por rankAtLeast().
+export const NINJA_RANKS = ["ACADEMIA", "GENIN", "CHUNIN", "JONIN", "KAGE"] as const;
+export type NinjaRank = (typeof NINJA_RANKS)[number];
+
+export const NINJA_RANK_LABELS: Record<NinjaRank, string> = {
+  ACADEMIA: "Academia",
+  GENIN: "Genin",
+  CHUNIN: "Chūnin",
+  JONIN: "Jōnin",
+  KAGE: "Kage",
+};
+
+// Tipos de lancamento do livro-caixa (VillageLedger). Append-only: cada linha
+// e' um fato, nunca editada. Os tipos das etapas seguintes ja entram aqui para
+// que o helper de ledger nao precise mudar de assinatura depois.
+//
+// NPC_SALE e' RALO, nao transferencia: o Ryo sai do personagem e nao e'
+// creditado em lugar nenhum — some do jogo. E' o controle de inflacao. Nao
+// criar saldo de NPC. MISSION_REWARD e' o oposto: cria Ryo do nada.
+export const LEDGER_TYPES = [
+  "WEEKLY_ACTIVITY_TAX",
+  "DONATION_RYO",
+  "DONATION_ITEM",
+  "CONSTRUCTION_COST",
+  "MAINTENANCE_COST",
+  "PASSIVE_PRODUCTION",
+  "STOCK_WITHDRAWAL",
+  "STOCK_DEPOSIT",
+  "NPC_SALE",
+  "KAGE_WITHDRAWAL",
+  "KAGE_DEPOSIT",
+  "ADMIN_ADJUSTMENT",
+  "SHOP_BUY_FROM_PLAYER",
+  "SHOP_SALE_TO_PLAYER",
+  "SHOP_WHOLESALE_CONTRACT",
+  "SHOP_RESTOCK",
+  "SHOP_CRAFT",
+  "SHOP_WITHDRAWAL",
+  // Virada do dia da loja: zera orcamento de compra e contrato de atacado.
+  // Nao move Ryo — existe para o reset preguicoso (chave do dia ao lado do
+  // contador) deixar rastro em vez de acontecer em silencio.
+  "SHOP_DAILY_RESET",
+  "MISSION_REWARD",
+  // Ordem de coleta: reserva na criacao, pagamento por entrega, devolucao do
+  // que sobrou no fechamento. As tres somadas sempre zeram a reserva.
+  "COLLECTION_ORDER_RESERVE",
+  "COLLECTION_ORDER_PAYOUT",
+  "COLLECTION_ORDER_REFUND",
+] as const;
+export type LedgerType = (typeof LEDGER_TYPES)[number];

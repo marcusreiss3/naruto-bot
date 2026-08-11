@@ -3,6 +3,7 @@ import { BALANCE } from "../../config/balance.js";
 import { ATTRIBUTES, type Attribute, type Element, type FightingStyle } from "../../config/enums.js";
 import { ALL_ABILITIES, getClan } from "../../data/index.js";
 import { getNode } from "../../data/element-trees/index.js";
+import { ensureEconomyState } from "../economy/character-economy.js";
 import { maxHp, expectedMasteryPoints } from "./formulas.js";
 import { meetsRequirements } from "./requirements.js";
 
@@ -26,6 +27,7 @@ export async function getFullCharacter(discordId: string, guildId: string) {
       resources: true,
       mastery: true,
       clan: true,
+      economy: true,
       elements: true,
       jutsus: true,
       inventory: true,
@@ -36,7 +38,14 @@ export async function getFullCharacter(discordId: string, guildId: string) {
 
 export async function getOrCreateCharacter(discordId: string, guildId: string, name: string) {
   const existing = await getFullCharacter(discordId, guildId);
-  if (existing) return existing;
+  if (existing) {
+    // Backfill de quem foi criado antes do estado economico existir.
+    if (!existing.economy) {
+      await ensureEconomyState(existing.id);
+      return (await getFullCharacter(discordId, guildId))!;
+    }
+    return existing;
+  }
 
   const created = await prisma.userCharacter.create({
     data: {
@@ -48,6 +57,8 @@ export async function getOrCreateCharacter(discordId: string, guildId: string, n
       attributes: { create: {} },
       resources: { create: {} },
       mastery: { create: {} },
+      // Nasce ACADEMIA (default do schema), 100 de saciedade e 0 Ryo.
+      economy: { create: {} },
     },
   });
   await refreshDerived(created.id);

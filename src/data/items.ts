@@ -48,6 +48,21 @@ export interface ItemDef {
   throwAbilityId?: string;
   ryoValue?: number;
   restoresItemId?: string;
+  // Saciedade devolvida por unidade em /comer. So' alimentos tem.
+  satiety?: number;
+  // Material raro: nunca sai de producao passiva nem e' capturado
+  // automaticamente por ordem de coleta, e nao e' vendido a NPC.
+  rare?: boolean;
+}
+
+// Atalhos para o bloco de materiais/alimentos: todos empilhaveis, sem acao de
+// combate. Sem eles o catalogo vira parede de boilerplate.
+function mat(id: string, name: string, description: string): ItemDef {
+  return { id, name, description, category: "MATERIAL", stackable: true, actions: [] };
+}
+
+function food(id: string, name: string, description: string, satiety: number): ItemDef {
+  return { id, name, description, category: "FOOD", stackable: true, actions: [], satiety };
 }
 
 export const ITEMS: ItemDef[] = [
@@ -192,10 +207,80 @@ export const ITEMS: ItemDef[] = [
     stackable: true,
     actions: [],
   },
+
+  // ---------------- Materiais comuns (coleta) ----------------
+  // Todos empilhaveis e sem acao: viram produto pelo /craft ou pela loja da
+  // vila. Preco de NPC e' da etapa 05; nada aqui tem ryoValue ainda.
+  mat("madeira", "Madeira", "Toras cortadas de árvores comuns, base de qualquer construção ninja."),
+  mat("pedra", "Pedra", "Blocos brutos arrancados da rocha, usados em obras e muros."),
+  mat("minerio_ferro", "Minério de Ferro", "Rocha com veios metálicos, ainda impura, pronta para a fundição."),
+  mat("carvao", "Carvão", "Combustível escuro que sustenta forjas e fogueiras."),
+  mat("argila", "Argila", "Barro úmido moldável, matéria-prima de cápsulas e recipientes."),
+  mat("fibra_vegetal", "Fibra Vegetal", "Talos fibrosos trançáveis em cordas, papel e estopim."),
+  mat("erva_medicinal", "Erva Medicinal", "Folhas de propriedades curativas colhidas em matas e encostas."),
+  mat("grao", "Grão", "Sementes colhidas em campo aberto, moídas em farinha."),
+  mat("agua_limpa", "Água Limpa", "Água potável recolhida de rios e nascentes subterrâneas."),
+  mat("couro", "Couro", "Pele curtida de caça, usada em cabos, alças e proteções."),
+  mat("sal", "Sal", "Cristais extraídos de solo árido, conservam alimento e entram na pólvora."),
+
+  // ---------------- Materiais raros ----------------
+  // 5% fixo por acao, cada ocorrencia da' exatamente 1 unidade. Minerio Raro so'
+  // de mineracao; Madeira Reforcada so' de coleta natural.
+  {
+    id: "minerio_raro",
+    name: "Minério Raro",
+    description: "Veio metálico incomum, denso e frio ao toque. Só aparece nas profundezas da rocha.",
+    category: "MATERIAL",
+    stackable: true,
+    actions: [],
+    rare: true,
+  },
+  {
+    id: "madeira_reforcada",
+    name: "Madeira Reforçada",
+    description: "Cerne de árvore antiga, duro como metal. Só aparece na coleta de matas fechadas.",
+    category: "MATERIAL",
+    stackable: true,
+    actions: [],
+    rare: true,
+  },
+
+  // ---------------- Materiais processados ----------------
+  mat("lingote_ferro", "Lingote de Ferro", "Ferro fundido e moldado em barra, pronto para a bancada."),
+  mat("aco", "Aço", "Liga endurecida na fundição da vila, base das lâminas sérias."),
+  mat("papel", "Papel", "Folhas prensadas de fibra vegetal, suporte de selos e explosivos."),
+  mat("polvora", "Pólvora", "Mistura instável que transforma uma cápsula em arma."),
+  mat("farinha", "Farinha", "Grão moído fino, base de pão, dango e lámen."),
+  mat("lenha", "Lenha", "Madeira rachada em toras curtas, queima limpa no fogão."),
+  mat("caldo", "Caldo", "Fundo de carne apurado com água e fogo brando."),
+  mat("tempero", "Tempero", "Mistura de erva e sal que dá caráter ao prato."),
+  mat(
+    "tinta_de_selo",
+    "Tinta de Selo",
+    "Tinta condutora de chakra. Só a Oficina de Selos da vila sabe prepará-la.",
+  ),
+
+  // ---------------- Alimentos ----------------
+  // `satiety` e' o que /comer devolve por unidade, limitado a 100.
+  food("carne_crua", "Carne Crua", "Corte fresco de caça. Sustenta, mas o sabor cobra o preço.", 4),
+  food("peixe_cru", "Peixe Cru", "Pescado ainda escorrendo do rio.", 4),
+  food("fruta", "Fruta", "Fruta madura colhida no galho.", 8),
+  food("pao", "Pão", "Pão assado em forno de lenha, denso e simples.", 16),
+  food("carne_cozida", "Carne Cozida", "Carne selada com sal sobre a brasa.", 18),
+  food("peixe_cozido", "Peixe Cozido", "Peixe assado inteiro, temperado com sal.", 16),
+  food("ensopado", "Ensopado", "Panela de carne e fruta cozidas devagar.", 25),
+  food("dango", "Dango", "Bolinhos doces espetados, três por vareta.", 22),
+  food("lamen", "Lámen", "Tigela completa: caldo apurado, macarrão e carne. O prato do ninja.", 40),
 ];
 
 const ITEM_MAP = new Map(ITEMS.map((item) => [item.id, item]));
 
 export function getItem(id: string): ItemDef | undefined {
   return ITEM_MAP.get(id);
+}
+
+export const FOOD_ITEMS: ItemDef[] = ITEMS.filter((item) => typeof item.satiety === "number");
+
+export function isRareResource(id: string): boolean {
+  return getItem(id)?.rare === true;
 }

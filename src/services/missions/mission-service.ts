@@ -3,6 +3,8 @@ import { prisma } from "../../db/client.js";
 import { getMission } from "../../data/missions/index.js";
 import type { MissionDef } from "../../data/types.js";
 import { addXp } from "../characters/character-service.js";
+import { grantCharacterRyo } from "../economy/character-economy.js";
+import { accumulateMissionActivity } from "../economy/weekly-tax.js";
 
 const CHECK_EMOJI = "<:check:1517556025614532658>";
 const EXP_EMOJI = "<:exp:1523544859103854712>";
@@ -148,8 +150,37 @@ export async function completeMission(charId: string, missionId: string): Promis
   const inst = await prisma.missionInstance.findFirst({ where: { charId, missionId, status: "ACTIVE" } });
   if (!def || !inst) return null;
   await prisma.missionInstance.update({ where: { id: inst.id }, data: { status: "COMPLETED" } });
-  // recompensas
+
+  // Rank e vila do INSTANTE da conclusao: subir de rank ou trocar de cargo
+  // depois nao pode mexer no que ja foi acumulado (sem imposto retroativo).
+  const snapshot = await prisma.userCharacter.findUnique({
+    where: { id: charId },
+    select: { ninjaRank: true, villageId: true },
+  });
+
+  // A recompensa e' SEMPRE integral e imediata; o imposto e' semanal e so'
+  // desconta no fechamento de domingo. Ryo e acumulador tributavel entram na
+  // mesma transacao: ou os dois, ou nenhum.
+  await prisma.$transaction(async (tx) => {
+    await grantCharacterRyo(tx, {
+      charId,
+      amount: def.rewards.ryo,
+      type: "MISSION_REWARD",
+      reason: `Missão ${def.name}`,
+      meta: { missionId, rank: def.rank },
+    });
+    await accumulateMissionActivity(tx, {
+      charId,
+      ninjaRank: snapshot?.ninjaRank ?? "ACADEMIA",
+      villageId: snapshot?.villageId ?? null,
+      xp: def.rewards.xp,
+      ryo: def.rewards.ryo,
+    });
+  });
+
+  // addXp por ultimo: ele consome XP ao subir de nivel, entao UserCharacter.xp
+  // e' residual e nunca serve de base para a meta semanal — quem guarda a base
+  // e' o WeeklyTaxActivity acima, com def.rewards.xp cru.
   await addXp(charId, def.rewards.xp);
-  await prisma.userCharacter.update({ where: { id: charId }, data: { ryo: { increment: def.rewards.ryo } } });
   return { rewards: def.rewards };
 }

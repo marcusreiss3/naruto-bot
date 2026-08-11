@@ -10,8 +10,13 @@ import { buildEquipmentCatalog } from "../src/services/characters/equipment-cata
 
 describe("catálogo de itens", () => {
   it("registra os nove itens básicos e os equipamentos especiais com ids únicos", () => {
-    expect(ITEMS).toHaveLength(14);
-    expect(new Set(ITEMS.map((item) => item.id)).size).toBe(14);
+    // Equipamento continua sendo 14; materiais e alimentos da coleta entraram
+    // depois no mesmo array e são contados no bloco de economia.
+    const equipamento = ITEMS.filter(
+      (item) => item.category === "WEAPON" || item.category === "NINJA_TOOL",
+    );
+    expect(equipamento).toHaveLength(14);
+    expect(new Set(ITEMS.map((item) => item.id)).size).toBe(ITEMS.length);
     expect(ITEMS.slice(0, 9).map((item) => item.name)).toEqual([
       "Kunai",
       "Shuriken",
@@ -23,7 +28,7 @@ describe("catálogo de itens", () => {
       "Fios de Aço Ninja",
       "Katana",
     ]);
-    expect(ITEMS.slice(9).map((item) => item.name)).toEqual([
+    expect(ITEMS.slice(9, 14).map((item) => item.name)).toEqual([
       "Lâmina de Chakra",
       "Pergaminho de Arsenal",
       "Pergaminho de Arsenal (gasto)",

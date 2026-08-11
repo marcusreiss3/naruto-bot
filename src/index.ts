@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits, Events, MessageFlags } from "discord.js";
+import { Client, GatewayIntentBits, Events, MessageFlags, type GuildMember } from "discord.js";
 import { ENV } from "./config/env.js";
 import { commandMap } from "./commands/index.js";
 import { log } from "./utils/logger.js";
@@ -47,6 +47,14 @@ import { continueCorpsePulseMessage } from "./services/missions/corpse-pulse.js"
 import { continueEliteMaskMessage } from "./services/missions/elite-mask.js";
 import { continueForbiddenBellMessage } from "./services/missions/forbidden-bell.js";
 import { restoreTrainingExpirations } from "./services/combat/training-dummy.js";
+import { startTaxScheduler } from "./services/economy/tax-scheduler.js";
+import { formatReceipt } from "./services/economy/weekly-tax.js";
+import { syncCharacterVillage } from "./services/economy/village-sync.js";
+import { closeFinishedOrders } from "./services/economy/collection-orders.js";
+import { ensureVillageShops } from "./services/economy/shop-service.js";
+import { ensureVillageBuildings } from "./services/economy/constructions.js";
+import { startVillageSchedulers } from "./services/economy/village-scheduler.js";
+import { purgeExpiredSessions } from "./services/economy/ui-session.js";
 
 const client = new Client({
   intents: [
@@ -64,6 +72,37 @@ client.once(Events.ClientReady, async (c) => {
       await channel.send("⏱️ O Boneco de Treino desapareceu após 30 minutos.");
     }
   }).catch((err) => log.error("Falha ao restaurar temporizadores de treino:", err));
+
+  // Relogio do imposto semanal. Processa competencia vencida (bot fora do ar
+  // num domingo) e arma o proximo corte. A DM do recibo sai daqui porque so'
+  // aqui existe cliente do Discord; o calculo em si nao conhece Discord.
+  await startTaxScheduler(async (receipt) => {
+    const user = await c.users.fetch(receipt.discordId).catch(() => null);
+    if (!user) return false;
+    const enviado = await user.send(formatReceipt(receipt)).catch(() => null);
+    return Boolean(enviado);
+  }).catch((err) => log.error("Falha ao iniciar o relógio do imposto semanal:", err));
+
+  // Ordens de coleta vencidas enquanto o bot esteve fora: fecha e devolve a
+  // reserva. Idempotente, igual ao fechamento do imposto.
+  await closeFinishedOrders().catch((err) =>
+    log.error("Falha ao encerrar ordens de coleta vencidas:", err),
+  );
+
+  // Lojas das cinco vilas. Idempotente: nao devolve um Ichiraku ativo para
+  // LOCKED nem zera estoque num redeploy.
+  await ensureVillageShops().catch((err) => log.error("Falha ao garantir as lojas de vila:", err));
+  await ensureVillageBuildings().catch((err) =>
+    log.error("Falha ao garantir os setores e o Centro:", err),
+  );
+  await purgeExpiredSessions().catch(() => undefined);
+
+  // Obras vencidas enquanto o bot esteve fora + criacao/retomada do canal do
+  // Ichiraku. O anuncio publico sai daqui porque so' aqui existe cliente do
+  // Discord; a conclusao em si nao conhece Discord.
+  await startVillageSchedulers(c).catch((err) =>
+    log.error("Falha ao iniciar os relógios da vila:", err),
+  );
 });
 
 // Sobe o site da árvore de habilidades no mesmo processo (no-op se nao configurado).
@@ -143,13 +182,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
     return;
   }
 
-  // botões / modais: customId no formato "<comando>:<ação>"
-  if (interaction.isButton() || interaction.isModalSubmit()) {
+  // botões / modais / selects: customId no formato "<comando>:<ação>"
+  if (interaction.isButton() || interaction.isModalSubmit() || interaction.isAnySelectMenu()) {
     const name = interaction.customId.split(":")[0]!;
     const cmd = commandMap.get(name);
     try {
       if (interaction.isButton() && cmd?.handleButton) await cmd.handleButton(interaction);
       else if (interaction.isModalSubmit() && cmd?.handleModal) await cmd.handleModal(interaction);
+      else if (interaction.isAnySelectMenu() && cmd?.handleSelect) await cmd.handleSelect(interaction);
     } catch (err) {
       log.error(`Erro no componente ${interaction.customId}:`, err);
     }
@@ -159,6 +199,15 @@ client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
   const command = commandMap.get(interaction.commandName);
   if (!command) return;
+  // Espelha o cargo de vila no banco antes de executar: e' o unico ponto por
+  // onde todo comando passa, e completeMission precisa da vila ja gravada.
+  if (interaction.guildId) {
+    await syncCharacterVillage(
+      interaction.user.id,
+      interaction.guildId,
+      interaction.member as GuildMember | null,
+    ).catch((err) => log.error("Falha ao sincronizar vila:", err));
+  }
   try {
     await command.execute(interaction);
   } catch (err) {
