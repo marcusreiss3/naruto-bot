@@ -5,6 +5,13 @@ import {
   ITEMS,
 } from "../../data/items.js";
 import { getAbility } from "../../data/index.js";
+
+// Categorias que a pagina de equipamento cobre. MATERIAL e FOOD ficam de fora:
+// sao insumo de coleta/craft, nao equipamento com habilidade.
+const EQUIPMENT_ITEMS = ITEMS.filter(
+  (item) => item.category === "WEAPON" || item.category === "NINJA_TOOL" || item.category === "CONSUMABLE",
+);
+
 import { buildMechanicsSummary } from "./skill-description.js";
 import { buildEffectCatalog } from "./effect-catalog.js";
 
@@ -107,7 +114,9 @@ export function buildEquipmentCatalog() {
       label,
       icon: ITEM_CATEGORY_ICONS[id as keyof typeof ITEM_CATEGORY_ICONS],
     })),
-    items: ITEMS.map((item) => ({
+    // So' equipamento: a pagina e' sobre arma/ferramenta e suas habilidades.
+    // Materiais e alimentos da coleta tem economia propria e nao entram aqui.
+    items: EQUIPMENT_ITEMS.map((item) => ({
       id: item.id,
       name: item.name,
       description: item.description,

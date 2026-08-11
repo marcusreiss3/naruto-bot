@@ -8,6 +8,8 @@ import {
 } from "../data/items.js";
 import { getOrCreateCharacter } from "../services/characters/character-service.js";
 import { groupInventory } from "../services/characters/inventory.js";
+import { formatRyo } from "../services/economy/character-economy.js";
+import { ECONOMY } from "../config/balance.js";
 
 export const inventario: Command = {
   data: new SlashCommandBuilder()
@@ -27,10 +29,16 @@ export const inventario: Command = {
       0,
     );
 
+    // Cabecalho unico: Ryo (divida quando negativo) e saciedade. As duas
+    // reescritas de descricao mais abaixo reaproveitam esta linha.
+    const cabecalho =
+      `💰 **${formatRyo(char.ryo)}**  •  ` +
+      `🍙 Saciedade: **${char.economy?.satiety ?? ECONOMY.satietyMax}/${ECONOMY.satietyMax}**`;
+
     const embed = new EmbedBuilder()
       .setColor(0x8b5a2b)
       .setTitle(`🎒 Inventário de ${char.displayName?.trim() || char.name}`)
-      .setDescription(`💰 **${char.ryo.toLocaleString("pt-BR")} Ryō**`)
+      .setDescription(cabecalho)
       .setFooter({
         text: [
           `${total} item(ns) carregado(s)`,
@@ -53,9 +61,9 @@ export const inventario: Command = {
     });
 
     if (!groups.length) {
-      embed.setDescription(`💰 **${char.ryo.toLocaleString("pt-BR")} Ryō**\n\nSua mochila está vazia.`);
+      embed.setDescription(`${cabecalho}\n\nSua mochila está vazia.`);
     } else {
-      embed.setDescription(`💰 **${char.ryo.toLocaleString("pt-BR")} Ryō**\n\nOs itens estão organizados por tipo.`);
+      embed.setDescription(`${cabecalho}\n\nOs itens estão organizados por tipo.`);
       embed.addFields(
         groups.map((group) => ({
           name: `${ITEM_CATEGORY_ICONS[group.category]} ${ITEM_CATEGORY_LABELS[group.category]}`,

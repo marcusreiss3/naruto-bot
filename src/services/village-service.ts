@@ -8,7 +8,12 @@ import {
   MANSAO_TSUCHIKAGE_CHANNEL_ID,
 } from "../data/scenarios/index.js";
 
-export type VillageId = "KONOHA" | "SUNA" | "IWA" | "KUMO" | "KIRI";
+// Identidade das vilas mora em src/data/villages.ts (puro). Aqui fica so' o
+// que depende do Discord. Reexportado para nao quebrar quem ja importava daqui.
+export { VILLAGE_IDS, VILLAGE_NAMES, isVillageId, normalizeVillageId } from "../data/villages.js";
+export type { VillageId } from "../data/villages.js";
+
+import { VILLAGE_IDS, type VillageId } from "../data/villages.js";
 
 export const VILLAGE_ROLES: Record<VillageId, string> = {
   KONOHA: "1523372974965522582",
@@ -26,25 +31,10 @@ export const VILLAGE_MANSIONS: Record<VillageId, string> = {
   KIRI: MANSAO_MIZUKAGE_CHANNEL_ID,
 };
 
-export const VILLAGE_NAMES: Record<VillageId, string> = {
-  KONOHA: "Konoha",
-  SUNA: "Sunagakure",
-  IWA: "Iwagakure",
-  KUMO: "Kumogakure",
-  KIRI: "Kirigakure",
-};
-
 export function villageFromMember(member: GuildMember | null | undefined): VillageId {
   if (!member) return "KONOHA";
-  for (const village of Object.keys(VILLAGE_ROLES) as VillageId[]) {
+  for (const village of VILLAGE_IDS) {
     if (member.roles.cache.has(VILLAGE_ROLES[village])) return village;
-  }
-  return "KONOHA";
-}
-
-export function normalizeVillageId(value: unknown): VillageId {
-  if (value === "SUNA" || value === "IWA" || value === "KUMO" || value === "KIRI" || value === "KONOHA") {
-    return value;
   }
   return "KONOHA";
 }
@@ -60,7 +50,7 @@ export async function villageForDiscordUser(guildId: string, discordId: string):
   if (!res?.ok) return "KONOHA";
   const body = await res.json().catch(() => null) as { roles?: unknown } | null;
   const roles = Array.isArray(body?.roles) ? body.roles : [];
-  for (const village of Object.keys(VILLAGE_ROLES) as VillageId[]) {
+  for (const village of VILLAGE_IDS) {
     if (roles.includes(VILLAGE_ROLES[village])) return village;
   }
   return "KONOHA";

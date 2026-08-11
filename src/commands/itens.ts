@@ -14,6 +14,7 @@ import {
   dropInventoryItem,
   unequipInventoryItem,
   restoreSpentScroll,
+  hasInventoryItem,
 } from "../services/characters/inventory.js";
 import {
   displayName,
@@ -171,12 +172,7 @@ async function autocompleteTarget(interaction: AutocompleteInteraction): Promise
 }
 
 async function hasOwnedItem(charId: string, itemId: string): Promise<boolean> {
-  return Boolean(
-    await prisma.inventoryItem.findFirst({
-      where: { charId, itemId, qty: { gt: 0 } },
-      select: { id: true },
-    }),
-  );
+  return hasInventoryItem(prisma, charId, itemId);
 }
 
 export const equipar: Command = {

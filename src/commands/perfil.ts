@@ -4,6 +4,7 @@ import { ATTRIBUTES, ATTRIBUTE_LABELS } from "../config/enums.js";
 import { getOrCreateCharacter, setCharacterName } from "../services/characters/character-service.js";
 import { getClan } from "../data/index.js";
 import { moveRange } from "../services/characters/formulas.js";
+import { formatRyo } from "../services/economy/character-economy.js";
 
 export const perfil: Command = {
   data: new SlashCommandBuilder()
@@ -68,7 +69,8 @@ export const perfil: Command = {
           name: "Geral",
           value: [
             `XP: **${char.xp}**`,
-            `Ryo: **${char.ryo}**`,
+            // Saldo negativo aparece como divida, nunca como "disponivel".
+            char.ryo < 0 ? `Ryo: **${formatRyo(char.ryo)}**` : `Ryo: **${char.ryo}**`,
             `Pontos de atributo: **${char.attributePoints}**`,
             `Elementos: ${elements}`,
             `Clã: ${clan}`,

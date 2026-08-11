@@ -448,3 +448,110 @@ export const BALANCE = {
 } as const;
 
 export type Balance = typeof BALANCE;
+
+// ---------------- Economia / vilas ----------------
+// Separado de BALANCE porque a economia tem ciclo de ajuste proprio (o Kage
+// muda taxa em jogo) e nao entra em nenhuma formula de combate.
+export const ECONOMY = {
+  // Taxa inicial do imposto pessoal semanal de cada vila. O Kage altera em
+  // jogo; a competencia congela o valor na abertura (VillageTaxPeriod).
+  defaultTaxRate: 0.05,
+  minTaxRate: 0,
+  maxTaxRate: 0.15,
+
+  // Saciedade: 100 = cheio. A queda por acao entra na etapa 3.
+  satietyStart: 100,
+  satietyMax: 100,
+
+  // Meta oculta de atividade semanal, em XP tributavel (~3 missoes rank B).
+  // Abaixo dela a competencia fecha como ISENTO_INATIVO. Nunca exibir ao
+  // jogador — ver secao 3.2 de docs/economia-vilas.md.
+  weeklyTaxableXpGoal: 1600,
+
+  // ---- Coleta (secao 4.3) ----
+  // 15 min por personagem E por tipo de acao.
+  gatherCooldownMs: 15 * 60_000,
+  // Coleta/mineracao/agua: 3 a 7 unidades distribuidas na tabela da area.
+  gatherMin: 3,
+  gatherMax: 7,
+  // Caca/pesca: 2 a 5 do alvo principal e 0 a 2 do secundario.
+  huntMin: 2,
+  huntMax: 5,
+  huntSecondaryMax: 2,
+  // Raro: fixo, sem bonus de nivel ou de obra. Exatamente 1 unidade.
+  rareResourceChance: 0.05,
+
+  // ---- Cofre da vila (secao 3.3) ----
+  // Saque do Kage: 10% do saldo DISPONIVEL (cofre menos reserva) por semana,
+  // com teto por saque. A janela e' a mesma competencia do imposto.
+  kageWeeklyWithdrawalRate: 0.1,
+  kageWithdrawalCap: 2000,
+  withdrawalReasonMin: 10,
+  withdrawalReasonMax: 200,
+
+  // ---- Ordens de coleta (secao 4.2.1) ----
+  orderMinDurationMs: 60 * 60_000, // 1 hora
+  orderMaxDurationMs: 7 * 24 * 60 * 60_000, // 7 dias
+
+  // ---- Lojas de vila (secao 7) ----
+  // Capacidade fixa de estoque por loja. Nao ha evolucao de loja nesta
+  // economia: nivel, melhoria de capacidade e limite diario extra sao
+  // explicitamente proibidos pela secao 7.2.
+  shopCapacity: 500,
+  // Orcamento diario de compra de ingrediente: 500 x fator de populacao, por
+  // loja. Impede que uma vila de cofre baixo compre coleta infinitamente.
+  shopDailyBudgetBase: 500,
+  // Recompra de emergencia do Mercado Geral: 30% do valor de referencia
+  // (secao 3.1). E' de proposito pior que vender a loja municipal — a saida de
+  // emergencia existe, mas craft e doacao continuam valendo mais.
+  npcBuybackRate: 0.3,
+  // Markup do Mercado Geral sobre a base de compra da materia bruta. Precisa
+  // ser > 1 / (1 - taxa maxima): se o NPC vendesse madeira mais barato do que a
+  // Marcenaria paga por ela, o par de lojas viraria uma impressora de Ryo.
+  generalMarketMarkup: 2,
+  // Valor do contrato de atacado = piso(lote x referencia x esta taxa).
+  // 10 Lámen x 48 x 0,875 = 420 Ryo, o exemplo da secao 7.6.
+  wholesaleRate: 0.875,
+  // Contratos de atacado por loja e por dia (secao 7.6).
+  wholesaleContractsPerDay: 1,
+  // Escassez da Oficina de Selos: Pergaminhos de Arsenal por vila e por
+  // competencia semanal (secao 7.2). Reseta junto do corte de domingo 22:00.
+  sealScrollsPerWeek: 3,
+  // Piso de obras simultaneas por vila. A capacidade real vem do nivel do
+  // Centro da Vila (`centerCapacity` em src/data/sectors.ts): 1, 2 ou 3. Este
+  // numero e' o que sobra quando o Centro esta em NECESSITA_REFORMA.
+  constructionSlots: 1,
+  // Vida da sessao do painel de /loja. Depois disso o painel velho e' recusado.
+  shopSessionTtlMs: 15 * 60_000,
+
+  // ---- Manutencao semanal (secao 6.4) ----
+  // Reforma cobra 3% do Ryo-base ja investido no predio e 1% de cada material
+  // acumulado, ambos multiplicados pelo fator de populacao. So' o Ryo recebe o
+  // desconto do Centro.
+  maintenanceRyoRate: 0.03,
+  maintenanceItemRate: 0.01,
+  // Prazo de graca depois da cobranca. Vencido, o predio vai para
+  // NECESSITA_REFORMA — sem perder nivel e sem juros.
+  maintenanceGraceMs: 72 * 3_600_000,
+  // Segunda-feira, 00:15 no fuso da competencia.
+  maintenanceWeekday: 1,
+  maintenanceHour: 0,
+  maintenanceMinute: 15,
+  // Producao passiva e recalculo da populacao: 00:05 todo dia.
+  dailyProductionHour: 0,
+  dailyProductionMinute: 5,
+  // Bonus de coleta por nivel de setor acima do 1 (secao 6.3): +5% por nivel,
+  // ate +20% no nivel 5. So' recurso COMUM, nunca raro.
+  sectorGatherBonusPerLevel: 0.05,
+  sectorGatherBonusMax: 0.2,
+
+  // ---- Populacao ativa (secao 6.2) ----
+  // Janela de atividade e os limites do fator. O fator NAO e' aplicado a custo
+  // nem producao nesta etapa: e' so' leitura de painel ate a etapa 6.
+  activeWindowDays: 14,
+  populationBaseline: 20,
+  populationFactorMin: 0.3,
+  populationFactorMax: 1.5,
+} as const;
+
+export type Economy = typeof ECONOMY;
