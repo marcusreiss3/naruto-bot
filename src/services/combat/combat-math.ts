@@ -108,16 +108,30 @@ export function dodgeChance(ctx: DodgeContext): number {
 }
 
 // Resolve as celulas atingidas por uma ability dada origem/alvo.
+//
+// `rangeBonus` e' o alcance extra vindo de passiva/trait (Alcance Estendido do
+// Vento, Ascendente da Lua). Tem que entrar AQUI e nao so' na validacao de
+// distancia do useAbility: pra LINE e CONE o alcance E' a extensao da area, e
+// sem isso a mira chega mais longe do que o traco desenhado — o preview mostra
+// menos celulas do que o certo e quem esta na faixa alem do alcance declarado
+// nao e' atingido.
+//
+// RADIUS fica de fora de proposito: nele alcance e tamanho da explosao sao
+// coisas separadas (raio = range/2 em volta do ALVO). Esticar o alcance deixa
+// mirar mais longe — o que ja' e' resolvido pela validacao de distancia — mas
+// nao deve inflar a explosao, que cresce ao quadrado.
 export function resolveAreaCells(
   ability: Ability,
   originCell: string,
   targetCell: string,
   scenario: ScenarioDef,
+  rangeBonus = 0,
 ): string[] {
   const origin = parseCell(originCell);
   const target = parseCell(targetCell);
   if (!origin) return [];
   const { rows, cols } = scenario;
+  const alcance = ability.range + rangeBonus;
   let coords: Coord[] = [];
   switch (ability.shape) {
     case "SELF":
@@ -129,10 +143,10 @@ export function resolveAreaCells(
       coords = target ? [target] : [];
       break;
     case "LINE":
-      if (target) coords = lineCells(origin, target, ability.range, rows, cols);
+      if (target) coords = lineCells(origin, target, alcance, rows, cols);
       break;
     case "CONE":
-      if (target) coords = coneCells(origin, target, ability.range, rows, cols);
+      if (target) coords = coneCells(origin, target, alcance, rows, cols);
       break;
     case "RADIUS":
       if (target) coords = radiusCells(target, Math.max(1, Math.floor(ability.range / 2)), rows, cols);

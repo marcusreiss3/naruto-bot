@@ -821,6 +821,10 @@ export interface AbilityPreview {
   allies: SessionFull["participants"];
   // atacante confuso: o alvo pode ser redirecionado no uso real
   confused: boolean;
+  // alcance JA' somado com o bonus de passiva/trait deste personagem. O
+  // comando mostra este, nao `ability.range` — senao quem tem Alcance
+  // Estendido ou Ascendente da Lua le' um numero menor do que alcanca.
+  range: number;
 }
 
 export function isAreaShape(ability: Ability): boolean {
@@ -841,7 +845,8 @@ export function previewAbilityArea(
   const scenario = getScenarioById(s.scenarioId);
   if (!scenario) return null;
 
-  const cells = resolveAreaCells(ability, actor.cell, targetCell, scenario);
+  const rangeBonus = passiveMods(ownedNodes(actor), ability).rangeBonus;
+  const cells = resolveAreaCells(ability, actor.cell, targetCell, scenario, rangeBonus);
   if (cells.length === 0) return null;
 
   const hit = ability.chainWetTargets
@@ -854,6 +859,7 @@ export function previewAbilityArea(
     enemies: hit.filter((p) => p.teamId !== actor.teamId),
     allies: hit.filter((p) => p.teamId === actor.teamId),
     confused: isConfused(actor.effects),
+    range: ability.range + rangeBonus,
   };
 }
 
@@ -1184,7 +1190,7 @@ export async function useAbility(
     const maxRange = ability.shape === "MELEE" ? Math.max(1, baseRange) : baseRange;
     if (d > maxRange) return fail("Alvo fora do alcance.");
     // linha de visao: muro, arvore e fumaca cortam a mira (corpo a corpo ignora)
-    // Olho que Tudo Alcanca (trait) da a versao de PERSONAGEM do
+    // Ascendente da Lua (trait) da a versao de PERSONAGEM do
     // pierceObstacles, que ate' entao so' existia por Ability.
     const veAtravesDeTudo =
       ability.pierceObstacles || characterPassiveMods(ownedNodes(actor)).piercesObstacles;
@@ -1416,7 +1422,7 @@ export async function useAbility(
     const origin = parseCell(actor.cell);
     const shaped = ability.shape === "SELF" && ability.selfTerrainRadius !== undefined && origin
       ? radiusCells(origin, ability.selfTerrainRadius, scenario.rows, scenario.cols).map(toCell)
-      : resolveAreaCells(ability, actor.cell, effectiveTarget, scenario);
+      : resolveAreaCells(ability, actor.cell, effectiveTarget, scenario, mods.rangeBonus);
     const cells = shaped.length ? shaped : [effectiveTarget];
     let next = s.terrain;
     if (ability.clearsTerrain) next = clearKindAt(next, cells, ability.clearsTerrain);
@@ -1459,7 +1465,7 @@ export async function useAbility(
       // alvo único e específico: acerta só aquele participante (não toda a célula)
       targets = targetP.id !== actor.id && targetP.hpCurrent > 0 ? [targetP] : [];
     } else {
-      const cells = resolveAreaCells(ability, actor.cell, effectiveTarget, scenario);
+      const cells = resolveAreaCells(ability, actor.cell, effectiveTarget, scenario, mods.rangeBonus);
       targets = s.participants.filter(
         (p) => p.hpCurrent > 0 && p.id !== actor.id && cells.includes(p.cell),
       );
@@ -1500,9 +1506,9 @@ export async function useAbility(
 
     // ---- condicionais de TRAIT (data/traits.ts) ----
     // Todos dependem so' do estado do ATOR ou do campo, entao saem do laco.
-    // Ultimo em Pe: abaixo de metade da vida.
+    // Imortal: abaixo de metade da vida.
     const wounded = actor.hpCurrent / actor.hpMax <= 0.5;
-    // Furia Crescente: cresce com a vida JA' perdida, ate o teto declarado.
+    // Monstro da Nevoa Oculta: cresce com a vida JA' perdida, ate o teto.
     const hpLostFraction = 1 - actor.hpCurrent / actor.hpMax;
     const outnumbered = isOutnumbered(s, actor);
     // Ashura: cada invocacao/clone VIVO do proprio time desconta rodadas do
@@ -1524,7 +1530,7 @@ export async function useAbility(
       const kenjutsuMult = (firstKenjutsu ? perTarget.firstKenjutsuDamageMult : 1) *
         (decisiveKenjutsu ? perTarget.decisiveKenjutsuDamageMult : 1);
       // ---- multiplicadores de TRAIT ----
-      // Furia Crescente e Raizes que Sustentam sao ADITIVOS ate um teto, entao
+      // Monstro da Nevoa Oculta e Deus Shinobi sao ADITIVOS ate um teto, entao
       // viram (1 + bonus) em vez de multiplicar direto.
       const rageMult = perTarget.rageDamagePerHpLost
         ? 1 + Math.min(perTarget.rageDamageCap, hpLostFraction * perTarget.rageDamagePerHpLost)
@@ -1539,7 +1545,7 @@ export async function useAbility(
         (t.isNpc ? perTarget.damageMultVsNpc : 1) *
         rageMult *
         rampMult *
-        // Pacto de Sangue: quem bate e' a invocacao, mas o bonus e' da trait
+        // Sabio das Invocacoes: quem bate e' a invocacao, mas o bonus e' da trait
         // de quem invocou — por isso vem dos flags dela, carimbado na criacao
         // (ver createSummon), e nao de perTarget, que pra NPC vem vazio.
         (typeof actor.flags.summonDamageBonus === "number"
@@ -1711,7 +1717,7 @@ export async function resolveHit(
           // inclusive Substituição/Hidratação, que já chegam aqui via
           // reactAb.reactionDodgeBonus acima.
           defenseMods.dodgeBonus +
-          // Lobo Solitario (trait): so' enquanto o DEFENSOR estiver cercado —
+          // Caminho da Dor (trait): so' enquanto o DEFENSOR estiver cercado —
           // mais inimigos vivos que aliados dele, contando ele proprio.
           (defenseMods.outnumberedDodgeBonus && isOutnumbered(s, target)
             ? defenseMods.outnumberedDodgeBonus
@@ -1918,7 +1924,7 @@ export async function resolveHit(
         1,
         (ae.chance ?? 1) + (atkMods?.effectChanceBonus[ae.effectId] ?? 0) +
           // bonus "vale pra qualquer efeito" (traits: Especialista em Genjutsu,
-          // Olho que Tudo Alcanca) — soma por cima do bonus por efeito.
+          // Ascendente da Lua) — soma por cima do bonus por efeito.
           (atkMods?.effectChanceBonusAll ?? 0),
       );
       if (!chance(effectChance)) continue;
@@ -1999,7 +2005,7 @@ export async function resolveHit(
   // fogo junto e queima o alvo. E' o combo Fogo -> Vento em forma mecanica.
   if (damage > 0 && atkMods?.spreadsBurn && attacker) {
     const scenario = getScenarioById(s.scenarioId)!;
-    const caminho = resolveAreaCells(ability, attacker.cell, target.cell, scenario);
+    const caminho = resolveAreaCells(ability, attacker.cell, target.cell, scenario, atkMods.rangeBonus);
     const passouPorFogo = [...caminho, attacker.cell].some((c) =>
       hasKindAt(s.terrain, c, "FIRE", s.round),
     );

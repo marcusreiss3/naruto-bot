@@ -192,10 +192,18 @@ export const TRAITS: TraitDef[] = [
     id: "trait_furia_crescente",
     name: "Monstro da Névoa Oculta",
     rarity: "EPICA",
-    pp: 6,
+    pp: 7,
     description:
-      "Você causa 1% mais dano a cada 4% da sua vida perdida, até o limite de 20% (atingido com 80% da vida perdida).",
-    mods: { crossCategory: TUDO, rageDamagePerHpLost: 0.25, rageDamageCap: 0.20 },
+      "Você causa 1% mais dano a cada 4% da sua vida perdida, chegando a 25% quando está à beira da morte.",
+    // A INCLINACAO NAO SOBE, de proposito: o desenho e' ficar mais forte
+    // conforme a luta AVANCA, nao no meio dela. Dobrar a inclinacao poria o
+    // pico com 40% da vida perdida, o que descaracteriza a trait.
+    //
+    // Por isso o teto e' que subiu, de 20% pra 25%. Consequencia honesta: o
+    // teto vira assintotico (exigiria 100% da vida perdida), entao na pratica
+    // o jogador ve +23% a +25% so' no fim de uma luta dura. E' exatamente o
+    // fim de luta que a trait quer premiar.
+    mods: { crossCategory: TUDO, rageDamagePerHpLost: 0.25, rageDamageCap: 0.25 },
   },
   {
     id: "trait_lamina_sem_bainha",

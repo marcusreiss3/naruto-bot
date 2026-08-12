@@ -25,6 +25,34 @@ describe("seleção de alvos / área", () => {
     const cells = resolveAreaCells(ab, "A1", "A2", scenario);
     expect(cells).toEqual(["A2"]);
   });
+
+  // Regressao: o bonus de alcance (Alcance Estendido do Vento, Ascendente da
+  // Lua) so' entrava na validacao de distancia do useAbility, nunca aqui.
+  // Resultado: a mira alcancava mais longe do que o traco desenhado, o preview
+  // mostrava menos celulas do que o certo e quem estava na faixa extra nao era
+  // atingido.
+  it("LINE estica com o bônus de alcance", () => {
+    const scenario = getScenarioById("floresta")!;
+    const ab = getAbility("katon_ryuuka")!; // LINE range 6
+    expect(resolveAreaCells(ab, "A1", "A8", scenario)).not.toContain("A8");
+    expect(resolveAreaCells(ab, "A1", "A8", scenario, 2)).toContain("A8");
+  });
+
+  it("CONE estica com o bônus de alcance", () => {
+    const scenario = getScenarioById("floresta")!;
+    const cone = { ...getAbility("katon_ryuuka")!, shape: "CONE", range: 3 } as Ability;
+    expect(resolveAreaCells(cone, "A1", "A5", scenario)).not.toContain("A5");
+    expect(resolveAreaCells(cone, "A1", "A5", scenario, 2)).toContain("A5");
+  });
+
+  // RADIUS fica de fora de proposito: nele alcance (ate onde da' pra mirar) e
+  // tamanho da explosao sao coisas separadas, e a explosao cresce ao quadrado.
+  it("RADIUS não infla a explosão com o bônus de alcance", () => {
+    const scenario = getScenarioById("floresta")!;
+    const radius = { ...getAbility("katon_ryuuka")!, shape: "RADIUS", range: 4 } as Ability;
+    const semBonus = resolveAreaCells(radius, "A1", "C3", scenario);
+    expect(resolveAreaCells(radius, "A1", "C3", scenario, 2)).toEqual(semBonus);
+  });
 });
 
 describe("dodgeChance: base única + cap único", () => {

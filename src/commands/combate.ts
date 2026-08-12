@@ -820,7 +820,9 @@ async function confirmAreaAbility(
   const shapeLabel =
     ability.shape === "CONE" ? "cone" : ability.shape === "LINE" ? "linha" : "área";
   const lines: string[] = [
-    `**${ability.name}** — ${shapeLabel}, alcance ${ability.range}, custo ${ability.cost}% ${ability.resource}.`,
+    // alcance EFETIVO (preview.range), nao o declarado: passiva/trait de
+    // alcance so' aparece pro jogador se for mostrada aqui.
+    `**${ability.name}** — ${shapeLabel}, alcance ${preview.range}, custo ${ability.cost}% ${ability.resource}.`,
     `Atinge **${preview.cells.length}** célula(s).`,
   ];
   if (preview.enemies.length) {
