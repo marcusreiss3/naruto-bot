@@ -13,10 +13,13 @@ import {
   isKekkeiGenkai,
   type Attribute,
   type Element,
+  TRAIT_RARITY_LABELS,
   type FightingStyle,
 } from "../src/config/enums.js";
 import { ELEMENT_TREES, getNode, type SkillNodeDef } from "../src/data/element-trees/index.js";
 import { CLAN_TREES } from "../src/data/clan-trees/index.js";
+import { getTrait } from "../src/data/traits.js";
+import { characterPassiveMods } from "../src/services/combat/passives.js";
 import { FUNDAMENTOS } from "../src/data/element-trees/fundamentals.js";
 import { BUKIJUTSU_TREE } from "../src/data/bukijutsu-tree.js";
 import { IRYO_NINJUTSU_TREE } from "../src/data/iryo-ninjutsu-tree.js";
@@ -65,15 +68,35 @@ const fightingStyles = new Set<FightingStyle>();
 const owned = new Set<string>(["funda_elemento_1", "funda_disciplina_chakra"].filter((id) => getNode(id)));
 const conditions = new Set<string>(["TRAUMA"]);
 let mangekyoVariant: string | null = null;
+// Trait do personagem de demo. Troque por ?trait=<id> na URL (ou aqui) pra ver
+// o efeito no dossie — e, no caso do Fantasma do Cla, no custo dos nos.
+let demoTraitId: string | null = null;
 
 type PoolMap = Partial<Record<Attribute, number>>;
+
+// Espelha effectiveNodeCost de services/characters/skill-tree.ts. Duplicado de
+// proposito: este demo nao importa skill-tree.ts porque aquele modulo puxa
+// Prisma no topo, e o demo roda sem banco.
+function effectiveNodeCost(node: SkillNodeDef, ctx: { clanId?: string | null; traitId?: string | null }): number {
+  if (!ctx.traitId) return node.cost;
+  const penalty = characterPassiveMods([ctx.traitId]).offClanNodeCostPenalty;
+  if (!penalty) return node.cost;
+  const doProprioCla = node.clanId !== undefined && node.clanId === ctx.clanId;
+  return doProprioCla ? node.cost : node.cost + penalty;
+}
+
+function traitPayload(id: string) {
+  const t = getTrait(id);
+  if (!t) return null;
+  return { id: t.id, name: t.name, rarity: t.rarity, rarityLabel: TRAIT_RARITY_LABELS[t.rarity], description: t.description };
+}
 
 function spentOf(ownedSet: Set<string>): PoolMap {
   const s: PoolMap = {};
   for (const id of ownedSet) {
     const node = getNode(id);
     if (!node) continue;
-    s[node.pool] = (s[node.pool] ?? 0) + node.cost;
+    s[node.pool] = (s[node.pool] ?? 0) + effectiveNodeCost(node, { clanId: DEMO_CLAN_ID, traitId: demoTraitId });
   }
   return s;
 }
@@ -94,6 +117,7 @@ function snapshot() {
     owned,
     conditions,
     clanId: DEMO_CLAN_ID as string | null,
+    traitId: demoTraitId,
     attributes,
   };
 }
@@ -161,7 +185,8 @@ function lockReason(snap: ReturnType<typeof snapshot>, node: SkillNodeDef): stri
   const requiredPool = effectiveReqPool(node);
   if ((snap.attributes[node.pool] ?? 1) < requiredPool) return `Requer ${label} ${requiredPool}.`;
   const left = snap.pointsByPool[node.pool] ?? (snap.attributes[node.pool] ?? 1);
-  if (left < node.cost) return `Pontos de ${label} insuficientes (precisa ${node.cost}, restam ${left}).`;
+  const custo = effectiveNodeCost(node, snap);
+  if (left < custo) return `Pontos de ${label} insuficientes (precisa ${custo}, restam ${left}).`;
   return null;
 }
 
@@ -175,13 +200,13 @@ function viewNodes(snap: ReturnType<typeof snapshot>, nodes: SkillNodeDef[]) {
       : undefined;
     const effectiveRequired = effectiveReqPool(node);
     if (snap.owned.has(node.id)) {
-      return { ...node, combat, visualDescription, mechanics, effectiveReqPool: effectiveRequired, status: "OWNED" as const };
+      return { ...node, combat, visualDescription, mechanics, effectiveReqPool: effectiveRequired, cost: effectiveNodeCost(node, snap), status: "OWNED" as const };
     }
     const visibleNode = node.concealUntilOwned ? { ...node, img: undefined, icon: "?" } : node;
     const reason = lockReason(snap, node);
     return reason
-      ? { ...visibleNode, combat, visualDescription, mechanics, effectiveReqPool: effectiveRequired, status: "LOCKED" as const, reason }
-      : { ...visibleNode, combat, visualDescription, mechanics, effectiveReqPool: effectiveRequired, status: "BUYABLE" as const };
+      ? { ...visibleNode, combat, visualDescription, mechanics, effectiveReqPool: effectiveRequired, cost: effectiveNodeCost(node, snap), status: "LOCKED" as const, reason }
+      : { ...visibleNode, combat, visualDescription, mechanics, effectiveReqPool: effectiveRequired, cost: effectiveNodeCost(node, snap), status: "BUYABLE" as const };
   });
 }
 
@@ -230,6 +255,7 @@ function buildState() {
       clanId: snap.clanId,
       clanName: snap.clanId ? CLANS.find((c) => c.id === snap.clanId)?.name ?? snap.clanId : null,
       mangekyoVariant,
+      trait: demoTraitId ? traitPayload(demoTraitId) : null,
     },
     copiedJutsus: [],
     equipment: buildEquipmentCatalog(),
@@ -241,7 +267,14 @@ async function main() {
   const app = Fastify({ logger: false });
   await app.register(staticPlugin, { root: path.join(process.cwd(), "public"), prefix: "/" });
 
-  app.get("/api/state", async (_req, reply) => reply.send(buildState()));
+  // ?trait=<id> troca a trait do personagem de demo sem reiniciar o processo.
+  // Vazio ou ausente limpa. Sem isso seria preciso editar demoTraitId e subir
+  // o servidor de novo pra ver cada uma das 26.
+  app.get("/api/state", async (req, reply) => {
+    const q = (req.query as { trait?: string } | undefined)?.trait;
+    if (q !== undefined) demoTraitId = q && getTrait(q) ? q : null;
+    return reply.send(buildState());
+  });
 
   app.post("/api/buy", async (req, reply) => {
     const body = req.body as { nodeId?: string } | undefined;
