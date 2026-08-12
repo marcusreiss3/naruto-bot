@@ -15,13 +15,13 @@ O SORTEIO em si não é escopo deste documento e está com outra pessoa.
 
 >> ESTADO DO CÓDIGO <<
 
-O sistema está implementado e em uso. Comum, rara e épica estão no código com
-os valores abaixo.
+O sistema está implementado e em uso, e este documento está SINCRONIZADO com
+`src/data/traits.ts`. A revisão de faixas de 12/08/2026 — orçamento lendária
+11→13, mítica 16→25, e todos os valores de lendária/mítica que dependem dela —
+foi aplicada no código na mesma data.
 
-A REVISÃO DE FAIXAS de 12/08/2026 — orçamento lendária 11→13, mítica 16→25, e
-todos os valores de lendária/mítica que dependem dela — está fechada no papel
-e NÃO ESTÁ NO CÓDIGO. Os blocos LENDÁRIA e MÍTICA descrevem o alvo, não o que
-`src/data/traits.ts` contém hoje.
+O que continua fora do código: nada deste documento. O SORTEIO nunca esteve
+aqui — segue com outra pessoa.
 
 
 --------------------------------------------------------------------------------
@@ -222,7 +222,7 @@ Artista de Explosão
     Suas técnicas custam 12% a mais
 
 --------------------------------------------------------------------------------
-LENDÁRIA — 13 PP                                          [NÃO está no código]
+LENDÁRIA — 13 PP                                                [no código]
 --------------------------------------------------------------------------------
 
 Besta Verde                                                   15,9 de 16,3
@@ -260,7 +260,7 @@ Fantasma do Clã                                               12,9 de 13,0
 Besta Verde e O Professor têm orçamento 16,3 porque os nerfs devolvem 3,3.
 
 --------------------------------------------------------------------------------
-MÍTICA — 25 PP                                            [NÃO está no código]
+MÍTICA — 25 PP                                                  [no código]
 --------------------------------------------------------------------------------
 
 Três traits: Índra e Ashura (filhos do Hagoromo) e Hamura (irmão do Hagoromo).

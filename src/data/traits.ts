@@ -44,8 +44,12 @@ export const TRAIT_BUDGET: Record<TraitRarity, { alvo: number; min: number; max:
   COMUM: { alvo: 2, min: 1, max: 3 },
   RARA: { alvo: 4, min: 3, max: 5 },
   EPICA: { alvo: 7, min: 6, max: 9 },
-  LENDARIA: { alvo: 11, min: 10, max: 14 },
-  MITICA: { alvo: 16, min: 15, max: 20 },
+  // Lendaria e mitica revisadas em 12/08/2026 (eram 11 e 16). A escada antiga
+  // desacelerava no topo "pra nao explodir" e o resultado medido foi o
+  // oposto: epica, lendaria e mitica EMPATAVAM em 4,33-4,00 golpes ate matar.
+  // Ver TRAITS.txt, secao "ORCAMENTO POR RARIDADE".
+  LENDARIA: { alvo: 13, min: 11, max: 17 },
+  MITICA: { alvo: 25, min: 21, max: 29 },
 };
 
 // "vale pra qualquer tecnica"
@@ -236,12 +240,12 @@ export const TRAITS: TraitDef[] = [
     id: "trait_corpo_celestial",
     name: "Besta Verde",
     rarity: "LENDARIA",
-    pp: 12.7,
+    pp: 15.9,
     description:
-      "Seus Taijutsus, Bukijutsus e Kenjutsus causam 20% mais dano. Sua vida máxima é 15% maior e sua energia máxima, 15% maior. Seus Ninjutsus causam 30% menos dano e seu chakra máximo é 20% menor.",
+      "Seus Taijutsus, Bukijutsus e Kenjutsus causam 30% mais dano. Sua vida máxima é 15% maior e sua energia máxima, 15% maior. Seus Ninjutsus causam 30% menos dano e seu chakra máximo é 20% menor.",
     mods: {
       crossCategory: [...FISICO],
-      damageMult: 1.20,
+      damageMult: 1.30,
       maxHpBonus: 0.15,
       maxEnergyBonus: 0.15,
       maxChakraBonus: -0.20,
@@ -255,14 +259,14 @@ export const TRAITS: TraitDef[] = [
     id: "trait_espirito_celestial",
     name: "O Professor",
     rarity: "LENDARIA",
-    pp: 11.4,
+    pp: 15.8,
     description:
-      "Seus Ninjutsus, Iryō Ninjutsus, Genjutsus e Fuinjutsus causam 20% mais dano e custam 5% menos. Seu chakra máximo é 25% maior. Seus golpes físicos causam 30% menos dano, sua vida máxima é 10% menor e sua energia máxima, 20% menor.",
+      "Seus Ninjutsus, Iryō Ninjutsus, Genjutsus e Fuinjutsus causam 30% mais dano e custam 5% menos. Seu chakra máximo é 35% maior. Seus golpes físicos causam 30% menos dano, sua vida máxima é 10% menor e sua energia máxima, 20% menor.",
     mods: {
       crossCategory: [...CHAKRA],
-      damageMult: 1.20,
+      damageMult: 1.30,
       costMult: 0.95,
-      maxChakraBonus: 0.25,
+      maxChakraBonus: 0.35,
       maxHpBonus: -0.10,
       maxEnergyBonus: -0.20,
       offPillarCategories: [...FISICO],
@@ -273,7 +277,7 @@ export const TRAITS: TraitDef[] = [
     id: "trait_prodigio",
     name: "Prodígio Ninja",
     rarity: "LENDARIA",
-    pp: 10.4,
+    pp: 11.8,
     description:
       "Você causa 15% mais dano com tudo, sua vida e seus recursos máximos são 8% maiores, e você ganha 20% mais experiência.",
     mods: {
@@ -289,20 +293,39 @@ export const TRAITS: TraitDef[] = [
     id: "trait_genio",
     name: "Gênio Ninja",
     rarity: "LENDARIA",
-    pp: 11,
+    pp: 13,
     description:
-      "Você causa 10% mais dano com tudo, suas técnicas custam 5% menos, e você recebe 5 pontos em uma bolsa de atributo à sua escolha.",
-    mods: { crossCategory: TUDO, damageMult: 1.10, costMult: 0.95, freeAttributePoints: 5 },
+      "Você causa 15% mais dano com tudo, suas técnicas custam 5% menos, e você recebe 15 pontos em uma bolsa de atributo à sua escolha.",
+    // 15 pontos de atributo valem 5,0 PP, nao 15. Mecanicamente +1 de atributo
+    // e' +1 ponto de no' — mas a ancora precifica o ponto MARGINAL de uma
+    // build sendo montada, e concessao unica nao e' isso: com
+    // attributePointsPerLevel=4, os mesmos 15 pontos sao +37% de progressao no
+    // nv10 e +8% no nv45. Ver TRAITS.txt, regra 3.
+    mods: { crossCategory: TUDO, damageMult: 1.15, costMult: 0.95, freeAttributePoints: 15 },
   },
   {
     id: "trait_herdeiro_de_sangue",
     name: "Fantasma do Clã",
     rarity: "LENDARIA",
-    pp: 11,
+    pp: 12.9,
     description:
-      "O bônus de dano das passivas do seu clã é 25% maior — uma passiva que dava +20% passa a dar +25%. " +
-      "Nós de árvores que não são do seu clã custam 1 ponto a mais.",
-    mods: { clanPassiveAmplifier: 0.25, offClanNodeCostPenalty: 1 },
+      "O bônus de dano das passivas do seu clã é 30% maior — uma passiva que dava +20% passa a dar +26%. " +
+      "Você também causa 15% mais dano com tudo e sua vida máxima é 15% maior.",
+    // REDESENHADA em 12/08/2026. A versao antiga cobrava +1 PN em todo no' fora
+    // do cla, e isso era prejuizo liquido: 267 nos fora de cla, custo medio
+    // 3,69 PN virando 4,69 = 27% menos arvore comprada pelo resto do jogo,
+    // contra um ganho de ~+10% de dano num escopo estreito. Como 1 PP = 1 ponto
+    // de no', efeito de +-1 PN sobre centenas de nos vale dezenas de PP e a
+    // regua nao enxerga — ver TRAITS.txt, regra 2. NAO REINTRODUZIR.
+    //
+    // O dano e a vida entraram porque toda trait de faixa alta precisa de um
+    // dos dois: sem isso o jogador nao SENTE a trait (regra 1).
+    mods: {
+      crossCategory: TUDO,
+      clanPassiveAmplifier: 0.30,
+      damageMult: 1.15,
+      maxHpBonus: 0.15,
+    },
   },
 
   // ----------------------------------------------------------------- MITICA
@@ -310,25 +333,46 @@ export const TRAITS: TraitDef[] = [
     id: "trait_indra",
     name: "Salvador do Mundo",
     rarity: "MITICA",
-    pp: 16,
+    pp: 23,
     description:
-      "Você causa 30% mais dano com tudo e suas técnicas custam 15% menos. Você não recebe cura de técnicas de aliados.",
-    mods: { crossCategory: TUDO, damageMult: 1.30, costMult: 0.85, refusesAllyHealing: true },
+      "Você causa 40% mais dano com tudo, sua vida máxima é 10% maior e suas técnicas custam 15% menos. Você não recebe cura de técnicas de aliados.",
+    // A vida entrou em 12/08/2026 porque ele era o unico mitico 100% dano, e
+    // sem corpo ficava ABAIXO de uma lendaria na metrica de poder (dano x
+    // vida): Besta Verde 1,30 x 1,15 = 1,49 contra 1,40 x 1,00 dele.
+    mods: {
+      crossCategory: TUDO,
+      damageMult: 1.40,
+      maxHpBonus: 0.10,
+      costMult: 0.85,
+      refusesAllyHealing: true,
+    },
   },
   {
     id: "trait_ashura",
     name: "Deus Shinobi",
     rarity: "MITICA",
-    pp: 16,
+    pp: 22.8,
     description:
-      "Sua vida máxima é 20% maior e seu chakra e energia máximos, 15% maiores. A cada rodada de combate você causa 3% mais dano, até o limite de 30%. Cada invocação ou clone vivo seu acelera esse limite em 2 rodadas.",
+      "Você causa 10% mais dano com tudo, sua vida máxima é 20% maior e seu chakra e energia máximos, 15% maiores. A cada rodada de combate você causa 4% mais dano, até o limite de 40%. Cada invocação ou clone vivo seu acelera esse limite em 2 rodadas.",
+    // A TAXA SUBIU JUNTO COM O TETO (3%->4%, 30%->40%) e isso nao e' detalhe:
+    // teto 40% a 3% levaria 13,3 rodadas (7,3 com tres invocacoes) e ele
+    // ganharia um pico que quase nunca veria. A 4% sao 10 rodadas sozinho e 4
+    // com tres invocacoes — o tempo do desenho original.
+    //
+    // O dano base de 10% existe pra ele nao ficar longe demais do Indra no
+    // turno 1 depois que o Indra ganhou vida. Ele CONTINUA comecando atras
+    // (0,86 do poder do Indra) e chega a 1,20 no pico, que e' o alvo do
+    // desenho. Consequencia aceita: no pico o dano dele (1,10 x 1,40 = 1,54)
+    // PASSA o do Indra (1,40) — a regra antiga de "nunca passa" foi revogada,
+    // ver TRAITS.txt, "O TRIANGULO DOS TRES".
     mods: {
       crossCategory: TUDO,
+      damageMult: 1.10,
       maxHpBonus: 0.20,
       maxChakraBonus: 0.15,
       maxEnergyBonus: 0.15,
-      rampDamagePerRound: 0.03,
-      rampDamageCap: 0.30,
+      rampDamagePerRound: 0.04,
+      rampDamageCap: 0.40,
       rampRoundsPerSummon: 2,
     },
   },
@@ -336,12 +380,15 @@ export const TRAITS: TraitDef[] = [
     id: "trait_hamura",
     name: "Ascendente da Lua",
     rarity: "MITICA",
-    pp: 16,
+    pp: 25,
     description:
-      "Você causa 20% mais dano com tudo e seus ataques ignoram 25% da redução de Bloqueio e Aparo. Suas técnicas à distância alcançam 2 casas a mais e sua linha de visão atravessa obstáculos. Seus efeitos têm 10 pontos percentuais a mais de chance.",
+      "Você causa 35% mais dano com tudo, sua vida máxima é 10% maior e seus ataques ignoram 25% da redução de Bloqueio e Aparo. Suas técnicas à distância alcançam 2 casas a mais e sua linha de visão atravessa obstáculos. Seus efeitos têm 10 pontos percentuais a mais de chance.",
+    // Unico mitico que NAO encosta no teto de +40% de dano da faixa: os ~8 PP
+    // que ele gasta em utilidade exclusiva nao sobram pra isso. E' a troca dele.
     mods: {
       crossCategory: TUDO,
-      damageMult: 1.20,
+      damageMult: 1.35,
+      maxHpBonus: 0.10,
       armorPierce: 0.25,
       rangeBonus: 2,
       // MELEE fica de fora de proposito: com ele, Punho Suave e katana
