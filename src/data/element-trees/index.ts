@@ -252,7 +252,7 @@ const RAIO: SkillNodeDef[] = [
   R.jutsu("raio_armadura", "Armadura do Ataque Relâmpago", "🛡️", "B", "Tempestade", -1, 3, ["raio_clone"], 12, 10, "O chakra acumulado se solta de uma vez e envolve o corpo inteiro numa casca de eletricidade crepitante, que salta para qualquer metal por perto — corrente, shuriken, fio de aço."),
   R.pass("raio_nuvens", "Nuvens de Tempestade", "⛈️", "Tempestade", -1, 4, ["raio_armadura"], 25, 18, "Passiva: libera o uso do Kirin sem depender de chamas no campo, e alvos Encharcados passam a tomar +75% de dano de Raio."),
   R.jutsu("raio_assassinato", "Assassinato Eletromagnético", "🧲", "B", "Perfuração", 0, 5, ["raio_clone"], 15, 12, "Envia eletricidade através de um condutor (água ou metal): atinge em cadeia todos os alvos Encharcados e os Atordoa com certeza."),
-  R.pass("raio_perfurante", "Ponta Perfurante", "📍", "Perfuração", 1, 5, ["raio_assassinato"], 20, 14, "Passiva: seus jutsus de Raio ignoram a Barreira do alvo e causam +25% de dano em quem estiver abaixo de 30% de vida."),
+  R.pass("raio_perfurante", "Ponta Perfurante", "📍", "Perfuração", 1, 5, ["raio_assassinato"], 20, 14, "Passiva: seus jutsus de Raio ignoram a Barreira do alvo. Além disso, causam +25% de dano em quem estiver abaixo de 30% de vida."),
   R.jutsu("raio_pararaios", "Para-Raios", "🗼", "A", "Perfuração", 1, 6, ["raio_perfurante"], 22, 16, "Você ergue o braço e descarrega um raio que percorre o seu corpo até o alvo em um único impacto."),
   R.jutsu("raio_kirin", "Kirin", "🌩️", "S", "Ápice", 0, 7, ["raio_assassinato"], 35, 24, "Guia um raio de verdade das nuvens de tempestade: causa dano enorme em área e é Inevitável. Precisa de nuvens de tempestade (criadas por jutsus de Fogo) e só pode ser usado 1 vez por combate."),
 ];

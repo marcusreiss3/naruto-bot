@@ -2,8 +2,10 @@ import { SlashCommandBuilder, type ChatInputCommandInteraction, type Autocomplet
 import type { Command } from "./types.js";
 import { prisma } from "../db/client.js";
 import { isAdmin } from "../utils/permissions.js";
-import { ATTRIBUTES, ATTRIBUTE_LABELS, ELEMENTS, FIGHTING_STYLES, FIGHTING_STYLE_LABELS, MASTERY_LEVELS, RESOURCES, EFFECT_IDS, effectLabel } from "../config/enums.js";
+import { ATTRIBUTES, ATTRIBUTE_LABELS, ELEMENTS, FIGHTING_STYLES, FIGHTING_STYLE_LABELS, MASTERY_LEVELS, RESOURCES, EFFECT_IDS, effectLabel, TRAIT_RARITIES, TRAIT_RARITY_LABELS } from "../config/enums.js";
 import type { Attribute, Element, EffectId, FightingStyle } from "../config/enums.js";
+import { getTrait, traitsByRarity } from "../data/traits.js";
+import { getCharacterTrait, setCharacterTrait, clearCharacterTrait } from "../services/characters/trait-service.js";
 import { respec } from "../services/characters/attribute-allocator.js";
 import {
   getOrCreateCharacter,
@@ -195,6 +197,25 @@ export const admin: Command = {
     )
     .addSubcommand((s) =>
       s
+        .setName("trait-set")
+        .setDescription("Define a trait (substitui a atual)")
+        .addUserOption((o) => o.setName("usuario").setDescription("Usuário").setRequired(true))
+        .addStringOption((o) => o.setName("trait").setDescription("Trait").setAutocomplete(true).setRequired(true)),
+    )
+    .addSubcommand((s) =>
+      s
+        .setName("trait-ver")
+        .setDescription("Mostra a trait do personagem")
+        .addUserOption((o) => o.setName("usuario").setDescription("Usuário").setRequired(true)),
+    )
+    .addSubcommand((s) =>
+      s
+        .setName("trait-limpar")
+        .setDescription("Remove a trait do personagem")
+        .addUserOption((o) => o.setName("usuario").setDescription("Usuário").setRequired(true)),
+    )
+    .addSubcommand((s) =>
+      s
         .setName("combate-encerrar")
         .setDescription("Encerra o combate do canal")
         .addChannelOption((o) => o.setName("canal").setDescription("Canal (padrão: atual)").setRequired(false)),
@@ -238,6 +259,14 @@ export const admin: Command = {
       choices = [...CLANS]
         .sort((a, b) => a.name.localeCompare(b.name))
         .map((c) => ({ name: `${c.name} (${c.id})`.slice(0, 100), value: c.id }));
+    } else if (focused.name === "trait") {
+      // Ordena por raridade (a ordem de TRAIT_RARITIES ja' e' comum -> mitica)
+      choices = TRAIT_RARITIES.flatMap((r) =>
+        traitsByRarity(r).map((t) => ({
+          name: `${t.name} [${TRAIT_RARITY_LABELS[r]}, ${t.pp} PP]`.slice(0, 100),
+          value: t.id,
+        })),
+      );
     } else if (focused.name === "efeito") {
       choices = EFFECT_IDS.map((e) => ({ name: effectLabel(e), value: e }));
     }
@@ -455,6 +484,38 @@ export const admin: Command = {
         const cla = interaction.options.getString("cla", true);
         await setClan(char.id, cla);
         await interaction.editReply(`✅ Clã ${cla} para **${char.name}**.`);
+        return;
+      }
+      case "trait-set": {
+        const char = await getChar();
+        const traitId = interaction.options.getString("trait", true);
+        const trait = getTrait(traitId);
+        if (!trait) {
+          await interaction.editReply(`❌ Trait desconhecida: \`${traitId}\`.`);
+          return;
+        }
+        await setCharacterTrait(char.id, traitId);
+        await interaction.editReply(
+          `✅ **${char.name}** agora tem **${trait.name}** ` +
+            `[${TRAIT_RARITY_LABELS[trait.rarity]}, ${trait.pp} PP].\n${trait.description}`,
+        );
+        return;
+      }
+      case "trait-ver": {
+        const char = await getChar();
+        const trait = await getCharacterTrait(char.id);
+        await interaction.editReply(
+          trait
+            ? `🎲 **${char.name}** — **${trait.name}** ` +
+              `[${TRAIT_RARITY_LABELS[trait.rarity]}, ${trait.pp} PP]\n${trait.description}`
+            : `🎲 **${char.name}** não tem trait.`,
+        );
+        return;
+      }
+      case "trait-limpar": {
+        const char = await getChar();
+        await clearCharacterTrait(char.id);
+        await interaction.editReply(`✅ Trait de **${char.name}** removida.`);
         return;
       }
       case "combate-encerrar": {

@@ -215,6 +215,9 @@ export async function startCombat(opts: {
     const hpMax = Math.round(p.hpMax * (1 + cMods.maxHpBonus));
     const hpCurrent = Math.round(p.hpCurrent * (1 + cMods.maxHpBonus));
     const energia = Math.round(p.energia * (1 + cMods.maxEnergyBonus));
+    // Determinacao / Celestiais (traits) mexem no teto de chakra do mesmo
+    // jeito que maxEnergyBonus ja' fazia com a energia.
+    const chakra = Math.round(p.chakra * (1 + cMods.maxChakraBonus));
     const cp = await prisma.combatParticipant.create({
       data: {
         sessionId: session.id,
@@ -224,7 +227,7 @@ export async function startCombat(opts: {
         cell,
         hpCurrent,
         hpMax,
-        chakra: p.chakra,
+        chakra,
         energia,
         jutsuIdsJson: JSON.stringify(p.jutsuIds),
         flagsJson: JSON.stringify({
@@ -319,7 +322,8 @@ export async function attemptFlee(sessionId: string, participantId: string): Pro
     taijutsu: getAttr(p, "taijutsu"),
     fleeLocked: isFleeLocked(p.effects),
     guaranteed: p.flags.guaranteedFlee === true,
-    chanceBonus: hasteFleeChanceBonus(p.effects),
+    // Corredor (trait) soma no mesmo bonus que a Aceleracao ja' usava.
+    chanceBonus: hasteFleeChanceBonus(p.effects) + characterPassiveMods(ownedNodes(p)).fleeBonus,
     energia: p.energia,
   });
   if (!check.allowed) {
@@ -364,6 +368,10 @@ async function createSummon(
   summon: NonNullable<Ability["summon"]>,
   logs: string[],
   hpBonus = 0, // Vinculo de Barro (Terra) engorda as invocacoes
+  // Pacto de Sangue (trait): a invocacao e' NPC, e ownedNodes() devolve vazio
+  // pra NPC — ela nao enxerga a trait de quem a invocou. Entao o bonus e'
+  // carimbado nos flags dela AQUI, na criacao, igual ja' se faz com a vida.
+  damageBonus = 0,
 ): Promise<void> {
   const tpl = getNpc(summon.templateId);
   if (!tpl) return;
@@ -421,6 +429,7 @@ async function createSummon(
         flagsJson: JSON.stringify({
           isSummon: true,
           summonerId: summoner.id,
+          summonDamageBonus: damageBonus,
           summonTemplateId: summon.templateId,
           onHit: summon.onHit ?? null,
           onDeath: summon.onDeath ?? null,
@@ -757,12 +766,43 @@ function ownedNodes(p: SessionFull["participants"][number]): string[] {
   return Array.isArray(nodes) ? (nodes as string[]) : [];
 }
 
+// O que conta como CONTROLE pro Sangue Frio (trait): efeito que tira ou limita
+// a ACAO do alvo. Dano por turno (Queimadura, Veneno...) e debuff de numero
+// (Defesa Reduzida) ficam de fora — a trait e' contra perder o turno, nao
+// contra levar dano.
+const CONTROL_EFFECTS: ReadonlySet<EffectId> = new Set<EffectId>([
+  "STUN",
+  "ROOT",
+  "SLOW",
+  "CONFUSION",
+  "DISARM",
+  "FLEE_LOCK",
+  "NINJUTSU_BLOCK",
+  "TENKETSU_SEAL",
+  "SHADOW_BOUND",
+  "FROZEN_SOLID",
+]);
+
+// Lobo Solitario (trait): mais inimigos VIVOS que aliados, contando o proprio.
+// Em 1x1 da' falso de proposito — 1 contra 1 nao e' estar cercado.
+function isOutnumbered(s: SessionFull, p: SessionFull["participants"][number]): boolean {
+  const vivos = s.participants.filter((x) => x.hpCurrent > 0);
+  const aliados = vivos.filter((x) => x.teamId === p.teamId).length;
+  const inimigos = vivos.filter((x) => x.teamId !== p.teamId).length;
+  return inimigos > aliados;
+}
+
 // ---------------- Uso de habilidade ----------------
 
 export interface AbilityHit {
   targetId: string;
   ability: Ability;
   rawDamage: number;
+  // "golpe decisivo" (uma rodada inteira sem atacar). Viaja no hit porque a
+  // condicao so' e' avaliavel em useAbility: la' embaixo, `lastOffensiveRound`
+  // ja' foi sobrescrito pro turno atual, e resolveHit — que roda depois dos
+  // 20s de janela de reacao — leria sempre "atacou nesta rodada".
+  decisiveKenjutsu?: boolean;
 }
 
 export interface UseAbilityResult {
@@ -1144,7 +1184,11 @@ export async function useAbility(
     const maxRange = ability.shape === "MELEE" ? Math.max(1, baseRange) : baseRange;
     if (d > maxRange) return fail("Alvo fora do alcance.");
     // linha de visao: muro, arvore e fumaca cortam a mira (corpo a corpo ignora)
-    if (ability.shape !== "MELEE" && !ability.pierceObstacles) {
+    // Olho que Tudo Alcanca (trait) da a versao de PERSONAGEM do
+    // pierceObstacles, que ate' entao so' existia por Ability.
+    const veAtravesDeTudo =
+      ability.pierceObstacles || characterPassiveMods(ownedNodes(actor)).piercesObstacles;
+    if (ability.shape !== "MELEE" && !veAtravesDeTudo) {
       const blockers = effectiveLineBlockers(scenario, s.terrain, s.round);
       if (!lineIsClear(actor.cell, effectiveTarget, blockers, scenario)) {
         return fail("Sem linha de visão: algo bloqueia o caminho até o alvo.");
@@ -1160,6 +1204,7 @@ export async function useAbility(
       actor.charId,
       ability.requiredItems,
       ability.equippedItemIds,
+      characterPassiveMods(ownedNodes(actor)).itemCostReduction,
     );
     if (!itemUse.ok) return fail(itemUse.error);
     if (itemUse.consumed.length) logs.push(`🎒 Consumiu ${itemUse.consumed.join(", ")}.`);
@@ -1225,18 +1270,37 @@ export async function useAbility(
         getAttr(actor, "iryoNinjutsu"),
         healMultiplier(healTarget.effects) * passiveHealMult,
       );
-      const newHp = Math.min(healTarget.hpMax, healTarget.hpCurrent + heal);
-      await prisma.combatParticipant.update({
-        where: { id: healTarget.id },
-        data: { hpCurrent: newHp },
-      });
-      logs.push(`💚 ${healTarget.name} recuperou ${heal} HP.`);
+      // Salvador do Mundo (trait): recusa cura vinda de OUTRO personagem. A
+      // propria regeneracao continua — por isso a checagem e' de quem lancou,
+      // nao do efeito em si.
+      const recusaCura =
+        healTarget.id !== actor.id &&
+        characterPassiveMods(ownedNodes(healTarget)).refusesAllyHealing;
+      if (recusaCura) {
+        logs.push(`🚫 ${healTarget.name} não aceita cura de aliados.`);
+      } else {
+        const newHp = Math.min(healTarget.hpMax, healTarget.hpCurrent + heal);
+        await prisma.combatParticipant.update({
+          where: { id: healTarget.id },
+          data: { hpCurrent: newHp },
+        });
+        logs.push(`💚 ${healTarget.name} recuperou ${heal} HP.`);
+      }
     }
     if (ability.restoreResource) {
-      const { resource, amount } = ability.restoreResource;
+      const { resource } = ability.restoreResource;
+      // Ultimo em Pe (trait): abaixo de metade da vida, Concentrar Chakra e
+      // Recuperar o Folego devolvem mais. Vale pra quem RECEBE a recuperacao.
+      const alvoMods = characterPassiveMods(ownedNodes(healTarget));
+      const amount =
+        ability.restoreResource.amount +
+        (healTarget.hpCurrent / healTarget.hpMax <= 0.5 ? alvoMods.woundedResourceRecoveryBonus : 0);
       const pool = resource === "chakra" ? healTarget.chakra : healTarget.energia;
-      const energyCap = Math.round(100 * (1 + characterPassiveMods(ownedNodes(healTarget)).maxEnergyBonus));
-      const cap = resource === "chakra" ? 100 : energyCap;
+      const energyCap = Math.round(100 * (1 + alvoMods.maxEnergyBonus));
+      // o teto de chakra tambem sobe com trait (Determinacao, Celestiais)
+      const cap = resource === "chakra"
+        ? Math.round(100 * (1 + alvoMods.maxChakraBonus))
+        : energyCap;
       const restored = Math.min(cap, pool + amount) - pool;
       if (restored > 0) {
         await prisma.combatParticipant.update({
@@ -1344,7 +1408,7 @@ export async function useAbility(
   }
 
   // invocacao: entra no grid ao lado de quem chamou
-  if (ability.summon) await createSummon(s, actor, ability.summon, logs, mods.summonHpBonus);
+  if (ability.summon) await createSummon(s, actor, ability.summon, logs, mods.summonHpBonus, mods.summonDamageBonus);
 
   // terreno: o jutsu marca as celulas atingidas (chamas, poca, muro, fumaca,
   // pantano) — do proprio jutsu ou de passiva (ex: Pavio deixa tudo em chamas)
@@ -1433,6 +1497,20 @@ export async function useAbility(
     const lastAttackRound = typeof actor.flags.lastOffensiveRound === "number" ? actor.flags.lastOffensiveRound : -99;
     const decisiveKenjutsu = ability.category === "KENJUTSU" && s.round - lastAttackRound >= 2;
     const mistActive = hasActiveKind(s.terrain, "SMOKE", s.round);
+
+    // ---- condicionais de TRAIT (data/traits.ts) ----
+    // Todos dependem so' do estado do ATOR ou do campo, entao saem do laco.
+    // Ultimo em Pe: abaixo de metade da vida.
+    const wounded = actor.hpCurrent / actor.hpMax <= 0.5;
+    // Furia Crescente: cresce com a vida JA' perdida, ate o teto declarado.
+    const hpLostFraction = 1 - actor.hpCurrent / actor.hpMax;
+    const outnumbered = isOutnumbered(s, actor);
+    // Ashura: cada invocacao/clone VIVO do proprio time desconta rodadas do
+    // tempo pra chegar no teto.
+    const invocacoesVivas = s.participants.filter(
+      (p) => p.hpCurrent > 0 && p.teamId === actor.teamId && p.flags.isSummon === true,
+    ).length;
+
     for (const t of targets) {
       // dano condicional (ex: Fio d'Agua so vale contra alvo Encharcado) precisa
       // do estado DESTE alvo, entao recalcula por alvo em vez de uma vez so.
@@ -1445,14 +1523,36 @@ export async function useAbility(
       const mistMult = mistActive ? perTarget.mistDamageMult : 1;
       const kenjutsuMult = (firstKenjutsu ? perTarget.firstKenjutsuDamageMult : 1) *
         (decisiveKenjutsu ? perTarget.decisiveKenjutsuDamageMult : 1);
+      // ---- multiplicadores de TRAIT ----
+      // Furia Crescente e Raizes que Sustentam sao ADITIVOS ate um teto, entao
+      // viram (1 + bonus) em vez de multiplicar direto.
+      const rageMult = perTarget.rageDamagePerHpLost
+        ? 1 + Math.min(perTarget.rageDamageCap, hpLostFraction * perTarget.rageDamagePerHpLost)
+        : 1;
+      const rampRodadas = Math.max(0, s.round - 1) + invocacoesVivas * perTarget.rampRoundsPerSummon;
+      const rampMult = perTarget.rampDamagePerRound
+        ? 1 + Math.min(perTarget.rampDamageCap, rampRodadas * perTarget.rampDamagePerRound)
+        : 1;
+      const traitMult =
+        (wounded ? perTarget.woundedDamageMult : 1) *
+        (outnumbered ? perTarget.outnumberedDamageMult : 1) *
+        (t.isNpc ? perTarget.damageMultVsNpc : 1) *
+        rageMult *
+        rampMult *
+        // Pacto de Sangue: quem bate e' a invocacao, mas o bonus e' da trait
+        // de quem invocou — por isso vem dos flags dela, carimbado na criacao
+        // (ver createSummon), e nao de perTarget, que pra NPC vem vazio.
+        (typeof actor.flags.summonDamageBonus === "number"
+          ? 1 + actor.flags.summonDamageBonus
+          : 1);
       const raw = computeDamage(ability, {
         attrValue: getAttr(actor, ability.scalingAttribute ?? "ninjutsu"),
-        scenarioDmgMult: (scenarioMod ?? 1) * perTarget.damageMult * executeMult * empoweredMult * gateMult * pilotedMult * firstHitMult * mistMult * kenjutsuMult,
+        scenarioDmgMult: (scenarioMod ?? 1) * perTarget.damageMult * executeMult * empoweredMult * gateMult * pilotedMult * firstHitMult * mistMult * kenjutsuMult * traitMult,
         burnTaiMult: burnMult,
         weakenMult,
         heightBonus,
       });
-      hits.push({ targetId: t.id, ability, rawDamage: raw });
+      hits.push({ targetId: t.id, ability, rawDamage: raw, decisiveKenjutsu });
     }
     if (targets.length > 0) {
       await setFlag(actor.id, "lastOffensiveRound", s.round);
@@ -1610,7 +1710,12 @@ export async function resolveHit(
           // vale contra qualquer ataque e qualquer reação escolhida —
           // inclusive Substituição/Hidratação, que já chegam aqui via
           // reactAb.reactionDodgeBonus acima.
-          defenseMods.dodgeBonus -
+          defenseMods.dodgeBonus +
+          // Lobo Solitario (trait): so' enquanto o DEFENSOR estiver cercado —
+          // mais inimigos vivos que aliados dele, contando ele proprio.
+          (defenseMods.outnumberedDodgeBonus && isOutnumbered(s, target)
+            ? defenseMods.outnumberedDodgeBonus
+            : 0) -
           // cada acumulo de cristal trava mais um pouco o corpo do alvo
           crystalDodgePenalty(target.effects),
       });
@@ -1650,9 +1755,19 @@ export async function resolveHit(
         if (hpAtk <= 0) logs.push(`☠️ ${attacker.name} foi derrotado pelo próprio golpe!`);
       }
     } else {
-      const base = reaction === "PARRY" ? BALANCE.parryReductionBase : BALANCE.blockReductionBase;
-      // Fio de Navalha (Vento) corta parte da reducao: o corte passa pela guarda
-      const factor = base * (1 - (atkMods?.armorPierce ?? 0));
+      // Muralha (trait) reforca a guarda de quem defende — espelho exato do
+      // armorPierce, que corta a guarda de quem e' atingido.
+      const guardBonus = characterPassiveMods(ownedNodes(target)).guardStrengthBonus;
+      const baseGuard = reaction === "PARRY" ? BALANCE.parryReductionBase : BALANCE.blockReductionBase;
+      const base = Math.min(0.9, baseGuard * (1 + guardBonus));
+      // Fio de Navalha (Vento) corta parte da reducao: o corte passa pela guarda.
+      // O Corte Decisivo soma a parte dele so' quando a condicao bateu — ela
+      // vem carimbada no hit, calculada la' em useAbility (ver AbilityHit).
+      const pierce = Math.min(
+        1,
+        (atkMods?.armorPierce ?? 0) + (hit.decisiveKenjutsu ? (atkMods?.decisiveArmorPierce ?? 0) : 0),
+      );
+      const factor = base * (1 - pierce);
       const reduced = Math.round(damage * (1 - factor));
       logs.push(
         `🛡️ ${target.name} ${reaction === "PARRY" ? "aparou" : "bloqueou"} e reduziu o dano de ${damage} para ${reduced}.`,
@@ -1801,11 +1916,15 @@ export async function resolveHit(
     for (const ae of ability.effects) {
       const effectChance = Math.min(
         1,
-        (ae.chance ?? 1) + (atkMods?.effectChanceBonus[ae.effectId] ?? 0),
+        (ae.chance ?? 1) + (atkMods?.effectChanceBonus[ae.effectId] ?? 0) +
+          // bonus "vale pra qualquer efeito" (traits: Especialista em Genjutsu,
+          // Olho que Tudo Alcanca) — soma por cima do bonus por efeito.
+          (atkMods?.effectChanceBonusAll ?? 0),
       );
       if (!chance(effectChance)) continue;
       // passiva pode esticar a duracao (ex: Mare Condutora estende Encharcado)
-      const bonus = atkMods?.effectDurationBonus[ae.effectId] ?? 0;
+      const bonus = (atkMods?.effectDurationBonus[ae.effectId] ?? 0) +
+        (atkMods?.effectDurationBonusAll ?? 0);
       // Faceta Cortante (Cristal) crava um acumulo a mais por acerto
       const extraStacks =
         (ae.effectId === "CRYSTALLIZED" ? (atkMods?.extraCrystalStacks ?? 0) : 0) +
@@ -2155,11 +2274,14 @@ export async function applyEffect(
     select: { flagsJson: true },
   });
   const participantFlags = parseFlags(participant?.flagsJson ?? "{}");
-  const reduction = receivedEffectDurationReduction(
-    Array.isArray(participantFlags.nodes) ? participantFlags.nodes as string[] : [],
-    effectId as EffectId,
-  );
-  const dur = clampDuration(effectId as EffectId, Math.max(1, duration - reduction));
+  const nodesDoAlvo = Array.isArray(participantFlags.nodes) ? participantFlags.nodes as string[] : [];
+  const reduction = receivedEffectDurationReduction(nodesDoAlvo, effectId as EffectId);
+  // Sangue Frio (trait): corta 1 rodada de qualquer efeito de CONTROLE, sem
+  // nunca zerar — o Math.max(1, ...) abaixo ja' garante o piso de 1 rodada.
+  const controlCut = CONTROL_EFFECTS.has(effectId as EffectId)
+    ? characterPassiveMods(nodesDoAlvo).controlDurationResistance
+    : 0;
+  const dur = clampDuration(effectId as EffectId, Math.max(1, duration - reduction - controlCut));
 
   // cristal: acumula ate SELAR. Mesma forma da queimadura, payoff invertido —
   // em vez de explodir em dano, o casulo fecha e trava o alvo (Atordoar+Imobilizar).
@@ -2669,9 +2791,13 @@ async function processTurnStart(sessionId: string, participantId: string, logs: 
   // 0 nesse mesmo tick de efeitos/terreno acima).
   if (hp > 0) {
     const cMods = characterPassiveMods(Array.isArray(flags.nodes) ? (flags.nodes as string[]) : []);
-    if (cMods.hpRegenPerTurn > 0) {
+    // Ultimo em Pe (trait): a regeneracao dele so' liga abaixo de metade da
+    // vida, entao soma na regeneracao normal em vez de ter tick proprio.
+    const regenTotal =
+      cMods.hpRegenPerTurn + (hp / p.hpMax <= 0.5 ? cMods.woundedHpRegen : 0);
+    if (regenTotal > 0) {
       const before = hp;
-      hp = Math.min(p.hpMax, hp + cMods.hpRegenPerTurn);
+      hp = Math.min(p.hpMax, hp + regenTotal);
       if (hp > before) logs.push(`💗 ${p.name} regenerou ${hp - before} HP.`);
     }
     if (cMods.chakraRegenPerTurn > 0) {

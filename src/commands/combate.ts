@@ -65,6 +65,7 @@ import { buildCombatEmbed, buildStatusEmbed, combatRows, turnPhase } from "../se
 import { startKidDialogue } from "../services/missions/kid-dialogue.js";
 import { moverCleanVillage } from "../services/missions/clean-village.js";
 import { moverRoofCleanup } from "../services/missions/roof-cleanup.js";
+import { withTraitNode } from "../services/characters/trait-service.js";
 
 // Tempo para confirmar um jutsu de area antes de cancelar sozinho.
 const PREVIEW_TIMEOUT_MS = 30_000;
@@ -356,7 +357,7 @@ async function iniciar(interaction: ChatInputCommandInteraction): Promise<void> 
       energia: char.resources!.energia,
       jutsuIds: char.jutsus.map((j) => j.jutsuId),
       attrs: attrsFromRow(char.attributes!),
-      nodes: char.skillNodes.map((n) => n.nodeId),
+      nodes: withTraitNode(char.skillNodes.map((n) => n.nodeId), char.trait?.traitId),
       elements: char.elements.map((e) => e.element as Element),
     });
   }

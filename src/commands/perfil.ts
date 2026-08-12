@@ -1,8 +1,9 @@
 import { EmbedBuilder, SlashCommandBuilder, type ChatInputCommandInteraction } from "discord.js";
 import type { Command } from "./types.js";
-import { ATTRIBUTES, ATTRIBUTE_LABELS } from "../config/enums.js";
+import { ATTRIBUTES, ATTRIBUTE_LABELS, TRAIT_RARITY_LABELS } from "../config/enums.js";
 import { getOrCreateCharacter, setCharacterName } from "../services/characters/character-service.js";
 import { getClan } from "../data/index.js";
+import { getTrait } from "../data/traits.js";
 import { moveRange } from "../services/characters/formulas.js";
 import { formatRyo } from "../services/economy/character-economy.js";
 
@@ -43,6 +44,7 @@ export const perfil: Command = {
     const m = char.mastery!;
     const elements = char.elements.map((e) => e.element).join(", ") || "nenhum";
     const clan = char.clan ? getClan(char.clan.clanId)?.name ?? char.clan.clanId : "nenhum";
+    const trait = char.trait ? getTrait(char.trait.traitId) : undefined;
 
     const embed = new EmbedBuilder()
       .setTitle(`📜 ${char.displayName?.trim() || char.name} — Nível ${char.level}`)
@@ -74,8 +76,12 @@ export const perfil: Command = {
             `Pontos de atributo: **${char.attributePoints}**`,
             `Elementos: ${elements}`,
             `Clã: ${clan}`,
+            `Trait: ${trait ? `**${trait.name}** [${TRAIT_RARITY_LABELS[trait.rarity]}]` : "nenhuma"}`,
           ].join("\n"),
         },
+        // Descricao completa em campo proprio: no "Geral" ela estouraria a
+        // linha e as traits miticas tem texto longo.
+        ...(trait ? [{ name: `🎲 ${trait.name}`, value: trait.description }] : []),
         {
           name: `Jutsus (${char.jutsus.length})`,
           value: char.jutsus.length

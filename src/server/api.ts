@@ -2,11 +2,12 @@
 // validada no servidor (skill-tree.buyNode) — o cliente só manda o nodeId.
 import type { FastifyInstance } from "fastify";
 import { ENV } from "../config/env.js";
-import { ATTRIBUTE_LABELS, type Attribute, type Element } from "../config/enums.js";
+import { ATTRIBUTE_LABELS, TRAIT_RARITY_LABELS, type Attribute, type Element } from "../config/enums.js";
 import { getSessionDiscordId } from "./auth.js";
 import { ELEMENT_TREES } from "../data/element-trees/index.js";
 import { CLAN_TREES } from "../data/clan-trees/index.js";
 import { CLANS, getAbility } from "../data/index.js";
+import { getTrait } from "../data/traits.js";
 import { loadSnapshot, viewTree, viewFundamentosTree, viewClanTree, viewBukijutsuTree, viewIryoNinjutsuTree, viewGenjutsuTree, viewFuinjutsuTree, viewTaijutsuTree, viewArhatTree, viewAdamantinoTree, viewTaijutsuPassivesTree, viewAssassinatoNinjaTree, viewTaijutsuAgitacaoTree, buyNode } from "../services/characters/skill-tree.js";
 import { villageForDiscordUser } from "../services/village-service.js";
 import { buildMechanicsSummary, buildVisualDescription } from "../services/characters/skill-description.js";
@@ -65,6 +66,11 @@ export function registerApi(app: FastifyInstance): void {
         clanId: snap.clanId,
         clanName: snap.clanId ? CLANS.find((c) => c.id === snap.clanId)?.name ?? snap.clanId : null,
         mangekyoVariant: snap.mangekyoVariant ? MANGEKYO_VARIANT_LABEL[snap.mangekyoVariant] : null,
+        trait: (() => {
+          const t = snap.traitId ? getTrait(snap.traitId) : undefined;
+          if (!t) return null;
+          return { id: t.id, name: t.name, rarity: t.rarity, rarityLabel: TRAIT_RARITY_LABELS[t.rarity], description: t.description };
+        })(),
       },
       copiedJutsus: snap.clanId === "uchiha"
         ? (snap.copiedJutsuIds ?? []).flatMap((id) => {

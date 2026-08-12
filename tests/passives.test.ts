@@ -290,6 +290,23 @@ describe("passivas: Raio", () => {
       dodgeBonus: 0,
       maxEnergyBonus: 0,
       moveBonus: 0,
+      // Campos do sistema de traits (data/traits.ts). Neutros pra quem nao
+      // tem trait — este teste usa so' a raiz de Raio.
+      maxChakraBonus: 0,
+      guardStrengthBonus: 0,
+      fleeBonus: 0,
+      controlDurationResistance: 0,
+      piercesObstacles: false,
+      refusesAllyHealing: false,
+      outnumberedDodgeBonus: 0,
+      woundedHpRegen: 0,
+      woundedResourceRecoveryBonus: 0,
+      ryoBonus: 0,
+      xpBonus: 0,
+      itemCostReduction: 0,
+      freeAttributePoints: 0,
+      offClanNodeCostPenalty: 0,
+      clanPassiveAmplifier: 0,
     });
   });
 });

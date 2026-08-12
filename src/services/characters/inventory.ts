@@ -208,7 +208,12 @@ export async function validateAndConsumeAbilityItems(
   charId: string,
   requiredItems: { itemId: string; amount: number; consume?: boolean; exhaustToItemId?: string }[] = [],
   equippedItemIds: string[] = [],
+  // Faro para Negocios (trait): unidades a menos por requisito. Piso de 1 —
+  // a tecnica nunca fica de graca, so' mais barata. Vale tambem na CHECAGEM,
+  // senao o desconto so' apareceria depois de ja' ter barrado o uso.
+  itemCostReduction = 0,
 ): Promise<{ ok: true; consumed: string[] } | { ok: false; error: string }> {
+  const amountOf = (amount: number) => Math.max(1, amount - itemCostReduction);
   return prisma.$transaction(async (tx) => {
     const char = await tx.userCharacter.findUnique({
       where: { id: charId },
@@ -224,27 +229,29 @@ export async function validateAndConsumeAbilityItems(
     // Checagem previa so' para a mensagem de erro ficar boa; a trava de
     // verdade e' o WHERE condicional dentro de removeInventoryItem abaixo.
     for (const requirement of requiredItems) {
-      if (!(await hasInventoryItem(tx, charId, requirement.itemId, requirement.amount))) {
+      const amount = amountOf(requirement.amount);
+      if (!(await hasInventoryItem(tx, charId, requirement.itemId, amount))) {
         const name = getItem(requirement.itemId)?.name ?? requirement.itemId;
-        return { ok: false as const, error: `Esta técnica exige ${requirement.amount}x ${name}.` };
+        return { ok: false as const, error: `Esta técnica exige ${amount}x ${name}.` };
       }
     }
 
     const consumed: string[] = [];
     for (const requirement of requiredItems.filter((entry) => entry.consume || entry.exhaustToItemId)) {
       const name = getItem(requirement.itemId)?.name ?? requirement.itemId;
+      const amount = amountOf(requirement.amount);
       await removeInventoryItem(
         tx,
         charId,
         requirement.itemId,
-        requirement.amount,
-        `Esta técnica exige ${requirement.amount}x ${name}.`,
+        amount,
+        `Esta técnica exige ${amount}x ${name}.`,
       );
       if (requirement.exhaustToItemId) {
-        await addInventoryItem(tx, charId, requirement.exhaustToItemId, requirement.amount);
-        consumed.push(`${requirement.amount}x ${name} (gasto)`);
+        await addInventoryItem(tx, charId, requirement.exhaustToItemId, amount);
+        consumed.push(`${amount}x ${name} (gasto)`);
       } else {
-        consumed.push(`${requirement.amount}x ${name}`);
+        consumed.push(`${amount}x ${name}`);
       }
     }
     return { ok: true as const, consumed };

@@ -6,6 +6,7 @@ import { getNode } from "../../data/element-trees/index.js";
 import { ensureEconomyState } from "../economy/character-economy.js";
 import { maxHp, expectedMasteryPoints } from "./formulas.js";
 import { meetsRequirements } from "./requirements.js";
+import { traitMods } from "./trait-service.js";
 
 export { meetsRequirements };
 
@@ -27,6 +28,7 @@ export async function getFullCharacter(discordId: string, guildId: string) {
       resources: true,
       mastery: true,
       clan: true,
+      trait: true, // trait entra no combate junto dos nos — ver trait-service
       economy: true,
       elements: true,
       jutsus: true,
@@ -111,7 +113,10 @@ export async function setLevel(charId: string, level: number): Promise<void> {
 export async function addXp(charId: string, xp: number): Promise<{ leveledTo: number | null }> {
   const char = await prisma.userCharacter.findUnique({ where: { id: charId } });
   if (!char) return { leveledTo: null };
-  let total = char.xp + xp;
+  // Prodigio (trait): ponto unico de entrada de XP no jogo, entao o bonus
+  // mora aqui e vale pra qualquer fonte (missao, combate, admin).
+  const bonus = await traitMods(charId);
+  let total = char.xp + Math.round(xp * (1 + bonus.xpBonus));
   let level = char.level;
   let gained = 0;
   while (level < BALANCE.maxLevel && total >= BALANCE.xpPerLevel(level)) {

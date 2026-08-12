@@ -108,6 +108,19 @@ export type Category = (typeof CATEGORIES)[number];
 export const RESOURCES = ["chakra", "energia"] as const;
 export type Resource = (typeof RESOURCES)[number];
 
+// Raridade de trait. A ordem importa: e' usada pra ordenar e pra comparar
+// faixa de orcamento (ver TRAIT_BUDGET em data/traits.ts).
+export const TRAIT_RARITIES = ["COMUM", "RARA", "EPICA", "LENDARIA", "MITICA"] as const;
+export type TraitRarity = (typeof TRAIT_RARITIES)[number];
+
+export const TRAIT_RARITY_LABELS: Record<TraitRarity, string> = {
+  COMUM: "Comum",
+  RARA: "Rara",
+  EPICA: "Épica",
+  LENDARIA: "Lendária",
+  MITICA: "Mítica",
+};
+
 export const MASTERY_LEVELS = ["BASICO", "CONTROLADO", "MESTRE"] as const;
 export type MasteryLevel = (typeof MASTERY_LEVELS)[number];
 

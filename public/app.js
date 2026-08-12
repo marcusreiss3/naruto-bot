@@ -517,6 +517,11 @@ function updateDossier(elId) {
   $("dsClan").textContent = c.clanName || "Sem clã";
   $("dsLevel").textContent = "Nv. " + c.level;
 
+  // Trait: nome no dossiê, descrição completa no title (o painel é estreito).
+  const dsTrait = $("dsTrait");
+  dsTrait.textContent = c.trait ? `${c.trait.name} (${c.trait.rarityLabel})` : "Sem trait";
+  dsTrait.title = c.trait ? c.trait.description : "";
+
   // técnicas = nós JUTSU possuídos em todas as árvores
   let techs = 0;
   for (const t of Object.values(state.trees)) {

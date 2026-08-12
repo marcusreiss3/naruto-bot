@@ -447,7 +447,7 @@ const HYUUGA: SkillNodeDef[] = [
     ["hyuuga_128_palmas", "hyuuga_guarda_perpetua"],
     24,
     20,
-    "Passiva: todo golpe do seu clã mira direto nos órgãos internos. Seus jutsus de clã causam mais 20% de dano, ignoram a Barreira e causam mais 25% em quem estiver abaixo de 30% de vida. O Selo dos Tenketsu que aplicarem dura 1 rodada a mais.",
+    "Passiva: todo golpe do seu clã mira direto nos órgãos internos. Seus jutsus de clã causam mais 20% de dano e ignoram a Barreira. Contra quem estiver abaixo de 30% de vida, causam mais 25%. O Selo dos Tenketsu que aplicarem dura 1 rodada a mais.",
   ),
   H.jutsu(
     "hyuuga_leoes_gemeos",
@@ -1224,7 +1224,7 @@ const HOSHIGAKI: SkillNodeDef[] = [
     ["hoshigaki_fio_afiado"],
     15,
     12,
-    "Passiva sempre ativa: a mira do clã encontra a brecha certa na guarda do alvo. Seus golpes de Kenjutsu ignoram Barreira e causam mais 15% em quem estiver abaixo de 30% de vida.",
+    "Passiva sempre ativa: a mira do clã encontra a brecha certa na guarda do alvo. Seus golpes de Kenjutsu ignoram a Barreira. Contra quem estiver abaixo de 30% de vida, causam mais 15%.",
     false,
     undefined,
     "kenjutsu",
@@ -1358,7 +1358,7 @@ const HOZUKI: SkillNodeDef[] = [
     ["hozuki_lamina_liquida"],
     17,
     14,
-    "Passiva sempre ativa: o corpo líquido guia a lâmina pelos pontos fracos da guarda. Seus golpes de Kenjutsu ignoram Barreira e causam mais 15% em quem estiver abaixo de 30% de vida.",
+    "Passiva sempre ativa: o corpo líquido guia a lâmina pelos pontos fracos da guarda. Seus golpes de Kenjutsu ignoram a Barreira. Contra quem estiver abaixo de 30% de vida, causam mais 15%.",
     false,
     undefined,
     "kenjutsu",
@@ -2355,7 +2355,7 @@ const YOTSUKI: SkillNodeDef[] = [
   YT.pass("yotsuki_assassinato", "Corrente Amplificada", "🧲", "Raio", -1, 4, ["yotsuki_armadura"], 18, 18, "Passiva: o Assassinato Eletromagnético causa +15% de dano e perfura 20% da redução de quem bloqueia ou apara."),
   YT.pass("yotsuki_pilares", "Prisão Amplificada", "🏛️", "Raio", -1, 5, ["yotsuki_assassinato"], 22, 22, "Passiva: a Prisão dos Quatro Pilares causa +15% de dano e alcança 1 casa a mais."),
   YT.pass("yotsuki_kenjutsu_1", "Estilo das Sete Lâminas", "⚔️", "Kenjutsu", 1, 2, ["yotsuki_raiton"], 14, 10, "Passiva sempre ativa: seus golpes de Kenjutsu causam +15% de dano."),
-  YT.pass("yotsuki_kenjutsu_2", "Corte Fulminante", "🗲", "Kenjutsu", 1, 3, ["yotsuki_kenjutsu_1"], 20, 14, "Passiva sempre ativa: seus golpes de Kenjutsu ignoram a Barreira do alvo e causam +15% de dano em quem estiver abaixo de 30% de vida."),
+  YT.pass("yotsuki_kenjutsu_2", "Corte Fulminante", "🗲", "Kenjutsu", 1, 3, ["yotsuki_kenjutsu_1"], 20, 14, "Passiva sempre ativa: seus golpes de Kenjutsu ignoram a Barreira do alvo. Além disso, causam +15% de dano em quem estiver abaixo de 30% de vida."),
 ];
 
 // ---------------------------------------------------------------- BAKUREI

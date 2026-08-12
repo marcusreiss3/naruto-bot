@@ -7,6 +7,9 @@ import { BALANCE } from "../../config/balance.js";
 import type { Category, EffectId, TerrainKind } from "../../config/enums.js";
 import { getPassive, type PassiveDef } from "../../data/element-trees/passives.js";
 import { getClanPassive, type ClanPassiveDef } from "../../data/clan-trees/passives.js";
+// Trait entra no MESMO array de nos do personagem e e' resolvida pelos mesmos
+// lookups — ver o cabecalho de data/traits.ts.
+import { getTraitPassive } from "../../data/traits.js";
 import type { Ability } from "../../data/types.js";
 import { hasEffect, type EffectState } from "./effects.js";
 
@@ -27,12 +30,18 @@ export interface PassiveMods {
   terrainOnHit: { kind: TerrainKind; duration: number }[];
   effectDurationBonus: Partial<Record<EffectId, number>>;
   armorPierce: number;
+  // perfuracao extra que so' entra no golpe decisivo — quem consome decide,
+  // porque passiveMods nao sabe se a condicao bateu (ver resolveHit).
+  decisiveArmorPierce: number;
   rangeBonus: number;
   spreadsBurn: boolean;
   summonHpBonus: number;
   terrainDurationBonus: number;
   ignoresShield: boolean;
   effectChanceBonus: Partial<Record<EffectId, number>>;
+  // somam por cima do bonus por efeito, valendo pra qualquer EffectId aplicado
+  effectChanceBonusAll: number;
+  effectDurationBonusAll: number;
   effectStacksBonus: Partial<Record<EffectId, number>>;
   executeBonus: { hpThreshold: number; mult: number } | null;
   extraCrystalStacks: number;
@@ -46,6 +55,17 @@ export interface PassiveMods {
   firstKenjutsuDamageMult: number;
   decisiveKenjutsuDamageMult: number;
   dodgePenalty: number;
+  // ---- traits: condicionais que a engine resolve na hora do golpe ----
+  // (ver data/traits.ts). Todos neutros por padrao.
+  summonDamageBonus: number;
+  damageMultVsNpc: number;
+  woundedDamageMult: number;
+  rageDamagePerHpLost: number;
+  rageDamageCap: number;
+  outnumberedDamageMult: number;
+  rampDamagePerRound: number;
+  rampDamageCap: number;
+  rampRoundsPerSummon: number;
 }
 
 export const NEUTRAL_MODS: PassiveMods = {
@@ -60,12 +80,15 @@ export const NEUTRAL_MODS: PassiveMods = {
   terrainOnHit: [],
   effectDurationBonus: {},
   armorPierce: 0,
+  decisiveArmorPierce: 0,
   rangeBonus: 0,
   spreadsBurn: false,
   summonHpBonus: 0,
   terrainDurationBonus: 0,
   ignoresShield: false,
   effectChanceBonus: {},
+  effectChanceBonusAll: 0,
+  effectDurationBonusAll: 0,
   effectStacksBonus: {},
   executeBonus: null,
   extraCrystalStacks: 0,
@@ -76,6 +99,15 @@ export const NEUTRAL_MODS: PassiveMods = {
   firstKenjutsuDamageMult: 1,
   decisiveKenjutsuDamageMult: 1,
   dodgePenalty: 0,
+  summonDamageBonus: 0,
+  damageMultVsNpc: 1,
+  woundedDamageMult: 1,
+  rageDamagePerHpLost: 0,
+  rageDamageCap: 0,
+  outnumberedDamageMult: 1,
+  rampDamagePerRound: 0,
+  rampDamageCap: 0,
+  rampRoundsPerSummon: 0,
 };
 
 // targetEffects e' opcional porque na hora de calcular custo ainda nao ha alvo.
@@ -106,13 +138,22 @@ export function passiveMods(
   // ele nunca bate no `elementMatch` (a ability nao tem `element`).
   const clanId = ability.requirements?.clanId;
 
+  // Fantasma do Cla (trait): amplifica as passivas do PROPRIO cla. Precisa
+  // ser lido antes do laco porque atua SOBRE as outras passivas — a ordem em
+  // que elas aparecem no array nao pode importar.
+  let clanAmp = 0;
+  for (const nodeId of ownedNodeIds) {
+    const amp = getTraitPassive(nodeId)?.clanPassiveAmplifier;
+    if (amp) clanAmp += amp;
+  }
+
   for (const nodeId of ownedNodeIds) {
     // tenta os dois catalogos (nao so' o "esperado" pelo tipo da ability):
     // uma passiva de clã com crossCategory (ex: Olhos de Sangue do Chinoike)
     // precisa ser encontrada mesmo quando a ability sendo usada não é do
     // clã dono dela (ex: um genjutsu generico de fundamentos).
     const p: (Partial<PassiveDef> & Partial<ClanPassiveDef>) | undefined =
-      getClanPassive(nodeId) ?? getPassive(nodeId);
+      getClanPassive(nodeId) ?? getPassive(nodeId) ?? getTraitPassive(nodeId);
     if (!p) continue;
 
     // ESCAPE HATCH: passiva com crossCategory ignora os dois gates abaixo e
@@ -145,7 +186,32 @@ export function passiveMods(
     const categoryScopeOk = p.crossCategory === undefined || matchesCategory(p.crossCategory, ability.category);
     const scaleScopeOk = !p.damageMultScalingAttribute || ability.scalingAttribute === p.damageMultScalingAttribute;
     const scopeOk = categoryScopeOk && scaleScopeOk;
-    if (p.damageMult && scopeOk) mods.damageMult *= p.damageMult;
+    if (p.damageMult && scopeOk) {
+      // Herdeiro amplifica so' o que veio da arvore do PROPRIO cla: um
+      // damageMult 1.20 com amp 0.25 vira 1.25 (os 20% de bonus viram 25%),
+      // nao 1.50 — amplifica o BONUS, nao o multiplicador inteiro.
+      const ampliado =
+        clanAmp > 0 && getClanPassive(nodeId)?.clanId === clanId
+          ? 1 + (p.damageMult - 1) * (1 + clanAmp)
+          : p.damageMult;
+      mods.damageMult *= ampliado;
+    }
+    // pilar OPOSTO: o nerf das Celestiais. Escopo proprio, independente do
+    // crossCategory que abriu o buff — os dois lados sao conjuntos disjuntos.
+    if (p.offPillarDamageMult && p.offPillarCategories?.includes(ability.category)) {
+      mods.damageMult *= p.offPillarDamageMult;
+    }
+    if (p.summonDamageBonus) mods.summonDamageBonus += p.summonDamageBonus;
+    if (scopeOk) {
+      if (p.damageMultVsNpc) mods.damageMultVsNpc *= p.damageMultVsNpc;
+      if (p.woundedDamageMult) mods.woundedDamageMult *= p.woundedDamageMult;
+      if (p.rageDamagePerHpLost) mods.rageDamagePerHpLost += p.rageDamagePerHpLost;
+      if (p.rageDamageCap) mods.rageDamageCap += p.rageDamageCap;
+      if (p.outnumberedDamageMult) mods.outnumberedDamageMult *= p.outnumberedDamageMult;
+      if (p.rampDamagePerRound) mods.rampDamagePerRound += p.rampDamagePerRound;
+      if (p.rampDamageCap) mods.rampDamageCap += p.rampDamageCap;
+      if (p.rampRoundsPerSummon) mods.rampRoundsPerSummon += p.rampRoundsPerSummon;
+    }
     if (p.healMult) mods.healMult *= p.healMult;
     if (p.criticalHealBonus) mods.criticalHealBonus = p.criticalHealBonus;
     if (p.costMult) {
@@ -160,6 +226,7 @@ export function passiveMods(
     }
     if (p.pushBonus) mods.pushBonus += p.pushBonus;
     if (p.armorPierce) mods.armorPierce = Math.min(1, mods.armorPierce + p.armorPierce);
+    if (p.decisiveArmorPierce) mods.decisiveArmorPierce += p.decisiveArmorPierce;
     if (p.spreadsBurn) mods.spreadsBurn = true;
     if (p.ignoresShield && scopeOk) mods.ignoresShield = true;
     if (p.effectChanceBonus) {
@@ -167,6 +234,9 @@ export function passiveMods(
         mods.effectChanceBonus[effectId] = (mods.effectChanceBonus[effectId] ?? 0) + bonus;
       }
     }
+    // versao "vale pra qualquer efeito" — some por cima do bonus por efeito
+    if (p.effectChanceBonusAll && scopeOk) mods.effectChanceBonusAll += p.effectChanceBonusAll;
+    if (p.effectDurationBonusAll && scopeOk) mods.effectDurationBonusAll += p.effectDurationBonusAll;
     if (p.effectStacksBonus) {
       for (const [effectId, bonus] of Object.entries(p.effectStacksBonus) as [EffectId, number][]) {
         mods.effectStacksBonus[effectId] = (mods.effectStacksBonus[effectId] ?? 0) + bonus;
@@ -232,6 +302,27 @@ export interface CharacterPassiveMods {
   mindControlNinjutsuBonus: number;
   maxEnergyBonus: number;
   moveBonus: number;
+  // ---- traits (data/traits.ts) ----
+  maxChakraBonus: number;
+  // reforca a PROPRIA reducao de Bloqueio/Aparo (espelho do armorPierce)
+  guardStrengthBonus: number;
+  fleeBonus: number;
+  // rodadas a menos nos efeitos de controle RECEBIDOS, com piso de 1
+  controlDurationResistance: number;
+  // versao de personagem do pierceObstacles (que hoje so' existe por Ability)
+  piercesObstacles: boolean;
+  // recusa cura vinda de outro personagem; a propria regeneracao continua
+  refusesAllyHealing: boolean;
+  outnumberedDodgeBonus: number;
+  woundedHpRegen: number;
+  woundedResourceRecoveryBonus: number;
+  // fora de combate
+  ryoBonus: number;
+  xpBonus: number;
+  itemCostReduction: number;
+  freeAttributePoints: number;
+  offClanNodeCostPenalty: number;
+  clanPassiveAmplifier: number;
 }
 
 // Modificadores que pertencem ao personagem, e nao a um jutsu especifico.
@@ -252,10 +343,40 @@ export function characterPassiveMods(ownedNodeIds: string[]): CharacterPassiveMo
   let mindControlNinjutsuBonus = 0;
   let maxEnergyBonus = 0;
   let moveBonus = 0;
+  let maxChakraBonus = 0;
+  let guardStrengthBonus = 0;
+  let fleeBonus = 0;
+  let controlDurationResistance = 0;
+  let piercesObstacles = false;
+  let refusesAllyHealing = false;
+  let outnumberedDodgeBonus = 0;
+  let woundedHpRegen = 0;
+  let woundedResourceRecoveryBonus = 0;
+  let ryoBonus = 0;
+  let xpBonus = 0;
+  let itemCostReduction = 0;
+  let freeAttributePoints = 0;
+  let offClanNodeCostPenalty = 0;
+  let clanPassiveAmplifier = 0;
   for (const nodeId of owned) {
     const p: (Partial<PassiveDef> & Partial<ClanPassiveDef>) | undefined =
-      getPassive(nodeId) ?? getClanPassive(nodeId);
+      getPassive(nodeId) ?? getClanPassive(nodeId) ?? getTraitPassive(nodeId);
     if (!p) continue;
+    maxChakraBonus += p.maxChakraBonus ?? 0;
+    guardStrengthBonus += p.guardStrengthBonus ?? 0;
+    fleeBonus += p.fleeBonus ?? 0;
+    controlDurationResistance += p.controlDurationResistance ?? 0;
+    if (p.piercesObstacles) piercesObstacles = true;
+    if (p.refusesAllyHealing) refusesAllyHealing = true;
+    outnumberedDodgeBonus += p.outnumberedDodgeBonus ?? 0;
+    woundedHpRegen += p.woundedHpRegen ?? 0;
+    woundedResourceRecoveryBonus += p.woundedResourceRecoveryBonus ?? 0;
+    ryoBonus += p.ryoBonus ?? 0;
+    xpBonus += p.xpBonus ?? 0;
+    itemCostReduction += p.itemCostReduction ?? 0;
+    freeAttributePoints += p.freeAttributePoints ?? 0;
+    offClanNodeCostPenalty += p.offClanNodeCostPenalty ?? 0;
+    clanPassiveAmplifier += p.clanPassiveAmplifier ?? 0;
     ninjutsuDodgeBonus += p.ninjutsuDodgeBonus ?? 0;
     dodgeBonus += p.dodgeBonus ?? 0;
     initiativePriority += p.initiativePriority ?? 0;
@@ -282,13 +403,29 @@ export function characterPassiveMods(ownedNodeIds: string[]): CharacterPassiveMo
     mindControlNinjutsuBonus,
     maxEnergyBonus: Math.min(0.5, maxEnergyBonus),
     moveBonus,
+    // mesmo teto da energia: reserva nao passa de +50%
+    maxChakraBonus: Math.min(0.5, maxChakraBonus),
+    guardStrengthBonus,
+    fleeBonus,
+    controlDurationResistance,
+    piercesObstacles,
+    refusesAllyHealing,
+    outnumberedDodgeBonus,
+    woundedHpRegen,
+    woundedResourceRecoveryBonus,
+    ryoBonus,
+    xpBonus,
+    itemCostReduction,
+    freeAttributePoints,
+    offClanNodeCostPenalty,
+    clanPassiveAmplifier,
   };
 }
 
 export function receivedEffectDurationReduction(ownedNodeIds: string[], effectId: EffectId): number {
   let total = 0;
   for (const nodeId of new Set(ownedNodeIds)) {
-    const passive = (getPassive(nodeId) ?? getClanPassive(nodeId)) as
+    const passive = (getPassive(nodeId) ?? getClanPassive(nodeId) ?? getTraitPassive(nodeId)) as
       | (Partial<PassiveDef> & Partial<ClanPassiveDef>)
       | undefined;
     total += passive?.receivedEffectDurationReduction?.[effectId] ?? 0;

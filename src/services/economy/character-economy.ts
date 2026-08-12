@@ -1,6 +1,7 @@
 import { prisma } from "../../db/client.js";
 import { NINJA_RANKS, type NinjaRank } from "../../config/enums.js";
 import { EconomyError } from "./errors.js";
+import { characterPassiveMods } from "../combat/passives.js";
 import { recordLedger, type LedgerEntry, type Tx } from "./ledger.js";
 
 // ---------------- Rank ----------------
@@ -65,15 +66,21 @@ function assertPositiveRyo(amount: number): void {
 
 export async function grantCharacterRyo(tx: Tx, move: RyoMove): Promise<number> {
   assertPositiveRyo(move.amount);
+  // Faro para Negocios / Cacador de Recompensas (traits): este e' o unico
+  // caminho de ENTRADA de ryo do jogador, entao o bonus mora aqui e vale pra
+  // qualquer fonte. Gasto (spendCharacterRyo) nao e' afetado de proposito.
+  const trait = await tx.characterTrait.findUnique({ where: { charId: move.charId } });
+  const bonus = characterPassiveMods(trait ? [trait.traitId] : []).ryoBonus;
+  const amount = bonus > 0 ? Math.round(move.amount * (1 + bonus)) : move.amount;
   const char = await tx.userCharacter.update({
     where: { id: move.charId },
-    data: { ryo: { increment: move.amount } },
+    data: { ryo: { increment: amount } },
     select: { ryo: true },
   });
   await recordLedger(tx, {
     type: move.type,
     villageId: move.villageId ?? null,
-    ryoDelta: move.amount,
+    ryoDelta: amount,
     charId: move.charId,
     actorDiscordId: move.actorDiscordId,
     reason: move.reason,

@@ -1,0 +1,402 @@
+================================================================================
+TRAITS — PLANO FECHADO
+09/08/2026
+================================================================================
+
+Traits são passivas permanentes sorteadas na criação do personagem. Cada
+personagem tem UMA. Como os clãs são balanceados entre si, a trait passa a ser
+a maior fonte de variação entre dois personagens do mesmo nível.
+
+O jogador tem 3 sorteios de clã e escolhe qual fica. Então trait que só
+funciona com um tipo de build (Sábio das Invocações, por exemplo) não é azar — é
+uma BÚSSOLA: tirou ela, escolhe o clã que combina.
+
+
+--------------------------------------------------------------------------------
+COMO O EQUILÍBRIO É MEDIDO
+--------------------------------------------------------------------------------
+
+A unidade é o PP (ponto de poder): 1 PP = o valor de 1 ponto de nó gasto numa
+árvore. A âncora é a árvore de Fundamentos de Taijutsu, porque é a única
+universal — disponível a qualquer personagem, sem clã, elemento ou estilo.
+Exatamente como uma trait.
+
+TABELA DE CONVERSÃO
+
+  +5% de dano numa categoria .................. 1,0 PP
+  +5% de dano em tudo ......................... 2,0 PP
+  +5% de dano num pilar (físico ou chakra) .... 1,6 PP
+  +10% de vida máxima ......................... 3,0 PP
+  +25% de chakra ou energia máxima ............ 3,0 PP
+  +1 de regeneração de vida por rodada ........ 1,0 PP
+  +1 casa de movimento ........................ 3,0 PP
+  +1,5 ponto percentual de esquiva ............ 1,0 PP
+  −5% de custo em tudo ........................ 2,0 PP
+
+A tabela cobre o que já existe na árvore de Fundamentos, que é a âncora.
+Mecânica NOVA (ignorar redução de guarda, dano cumulativo por rodada, alcance
+extra, chance de efeito) não tem entrada aqui — foi estimada por comparação
+com o efeito mais parecido que já existe. Ao criar trait com mecânica
+inédita, diga que o PP dela é estimativa, não cálculo.
+
+MULTIPLICADOR DE CONDIÇÃO
+
+  Sempre ativo ................................ ×1,0
+  Condição frequente (abaixo de 50% de vida) .. ×0,7
+  Condição rara (abaixo de 25%) ............... ×0,5
+
+NERF
+
+  Devolve 60% do valor, com teto de metade do orçamento da raridade. Os 60%
+  existem porque nerf se contorna com a build — quem pega Besta Verde
+  simplesmente não investe em Ninjutsu, e metade da punição evapora. O teto
+  impede "−90% em tudo por +200% de dano".
+
+ORÇAMENTO POR RARIDADE
+
+  Comum ........  2 PP
+  Rara .........  4 PP
+  Épica ........  7 PP
+  Lendária ..... 11 PP
+  Mítica ....... 16 PP
+
+Os saltos são 2×, 1,75×, 1,57×, 1,45× — multiplicador decrescente, pro topo
+não explodir. E há buraco entre as faixas, o que garante mecanicamente que
+nenhuma comum encoste numa rara.
+
+ESCOPO ESTREITO CUSTA MENOS
+
+É o que faz trait focada valer a pena. Com o mesmo orçamento, quem foca leva
+número maior: "Especialista em Ninjutsu" dá +10% numa categoria por 2 PP,
+enquanto +10% em TUDO custaria 4. Isso precisa estar claro pro jogador, senão
+a lendária parece pior que a comum porque o número na tela é menor.
+
+
+--------------------------------------------------------------------------------
+COMUM — 2 PP
+--------------------------------------------------------------------------------
+
+Especialista em Ninjutsu        +10% de dano de Ninjutsu
+Especialista em Taijutsu        +10% de dano de Taijutsu
+Especialista em Bukijutsu       +10% de dano de Bukijutsu
+Especialista em Genjutsu        +5% de dano de Genjutsu e +5 pontos
+                                percentuais na chance dos seus efeitos
+Especialista em Fuinjutsu       Seus selos duram 1 rodada a mais
+
+Genjutsu e Fuinjutsu fogem do molde de propósito: as duas categorias entregam
+pouco dano bruto, então +10% ali valeria bem menos que nas outras três. Trocar
+por chance e duração iguala o valor real sem mudar o orçamento.
+
+
+--------------------------------------------------------------------------------
+RARA — 4 PP
+--------------------------------------------------------------------------------
+
+O Mais Forte Escudo
+    +10% de vida máxima; Bloqueio e Aparo reduzem 10% mais dano
+
+Relâmpago Azul
+    +1 casa de movimento, +10 pontos percentuais de fuga
+
+Determinação
+    +15% de chakra e de energia máximos
+
+Sangue Frio
+    Efeitos de controle em você duram 1 rodada a menos, nunca abaixo de 1
+
+Demônio da Névoa Oculta
+    +15% de dano contra alvos abaixo de 30% de vida
+
+Sábio das Invocações
+    Invocações e clones nascem com +25% de vida e causam +15% de dano
+
+Faro para Negócios
+    +25% de todo ryo obtido
+    Técnicas que consomem item gastam 1 unidade a menos
+
+FARO PARA NEGÓCIOS NÃO CABE NA RÉGUA. Ryo não vira poder de combate
+diretamente, então não dá pra dizer que ela vale 4 PP. O pé no combate (a
+unidade de item a menos) existe justamente pra ela não ser prêmio de
+consolação.
+
+
+--------------------------------------------------------------------------------
+ÉPICA — 7 PP
+--------------------------------------------------------------------------------
+
+Ninja que Viveu em Cinco Guerras
+    +20% de dano contra NPC
+    +10% de ryo em missão
+
+Imortal
+    Abaixo de 50% de vida: +15% de dano, +2 de regeneração por rodada, e
+    Concentrar Chakra / Recuperar o Fôlego devolvem 30 em vez de 20
+
+Monstro da Névoa Oculta
+    +1% de dano a cada 4% de vida perdida, até +20%
+
+Presa Branca
+    +20% de dano em tudo, −15% de vida máxima
+
+Caminho da Dor
+    Em desvantagem numérica (mais inimigos vivos que aliados, contando
+    você): +20% de dano e +3 pontos percentuais de esquiva
+
+Artista de Explosão
+    Seus efeitos duram 1 rodada a mais
+    Suas técnicas custam 12% a mais
+
+O MONSTRO DA NÉVOA OCULTA fica em 5,6 PP, abaixo do orçamento, DE PROPÓSITO: ela ganha
+dano alto sem pagar nada em troca. A Presa Branca entrega mais porque
+começa com o poder todo e cai mais fácil em combate. Não subir o Monstro
+sem dar um nerf a ele.
+
+O teto de +20% é atingido com 80% da vida perdida — não com 100%, que exigiria
+estar morto pra ver o número prometido.
+
+
+--------------------------------------------------------------------------------
+LENDÁRIA — 11 PP
+--------------------------------------------------------------------------------
+
+Besta Verde
+    +20% de dano físico (Taijutsu, Bukijutsu, Kenjutsu)
+    +15% de vida máxima
+    +15% de energia máxima
+    −30% de dano de Ninjutsu
+    −20% de chakra máximo
+
+O Professor
+    +20% de dano de Ninjutsu, Iryō, Genjutsu e Fuinjutsu
+    +25% de chakra máximo
+    −5% no custo
+    −30% de dano físico
+    −10% de vida máxima
+    −20% de energia máxima
+
+Prodígio Ninja
+    +15% de dano em tudo
+    +8% de vida e de recursos máximos
+    +20% de XP
+
+Gênio Ninja
+    +10% de dano em tudo
+    +5 pontos em uma bolsa de atributo à escolha
+    −5% no custo de tudo
+
+Fantasma do Clã
+    Passivas do seu clã são 25% mais fortes
+    Nós de árvores fora do seu clã custam 1 PN a mais
+
+A Besta Verde e O Professor aparecem acima de 11 PP na conta porque os nerfs
+devolvem 3,3 PP cada — o orçamento efetivo das duas é 14,3.
+
+PRODÍGIO NINJA fica em 10,4 PP mais o XP. A régua não sabe medir "subir de nível
+antes de todo mundo", e isso vale mais do que parece. Preferimos deixá-lo
+magro na conta a inflado no jogo.
+
+
+--------------------------------------------------------------------------------
+MÍTICA — 16 PP
+--------------------------------------------------------------------------------
+
+Três traits: Índra e Ashura (filhos do Hagoromo) e Hamura (irmão do Hagoromo).
+Nenhuma é reencarnação nem exige clã pra funcionar HOJE — qualquer um pode
+tirar no sorteio. Só o desbloqueio FUTURO (fora de escopo agora, ver seção
+própria) é que vai puxar pro clã certo.
+
+Cada uma opera num eixo de variação diferente, de propósito:
+
+  Índra   — constante. Não depende de nada externo. O mesmo poder desde o
+            turno 1 até o fim, sempre.
+  Hamura  — rende mais quando o ALVO reage com Bloqueio ou Aparo (em vez de
+            Esquiva). Não exige que o alvo tenha investido em nada especial:
+            Bloqueio/Aparo já dá 50%/60% de redução só por escolher essa
+            reação, e é isso que o Hamura corrói.
+  Ashura  — depende de VOCÊ. Começa fraco, cresce com o tempo de luta e com
+            invocação/clone vivo em campo.
+
+Índra   — "Salvador do Mundo"
+    +30% de dano em tudo
+    −15% no custo de tudo (controle de chakra preciso — gasta só o
+    necessário)
+    Você nunca recebe cura de técnicas de aliados
+
+    O "nerf" é a tradução mecânica de "resolvia tudo sozinho": em 1v1 não
+    faz NENHUMA diferença (não há aliado pra curar de qualquer forma). Só
+    pesa em luta de grupo, que é onde faz sentido punir quem não sabe
+    contar com ninguém. Sem gatilho, sem rampa — poder de gênio que já
+    nasce pronto.
+
+Ashura  — "Deus Shinobi"
+    +20% de vida máxima, +15% de chakra e de energia máximos
+    +3% de dano cumulativo a cada rodada de combate, até um teto de +30%
+    Cada invocação/clone vivo ACELERA o teto: −2 rodadas por invocação viva
+    (com 3, chega no teto já na rodada 4 em vez da 10)
+
+    O dano NUNCA passa do teto do Índra (30%) — a vantagem de ter invocação
+    é TEMPO pra chegar lá, não um teto mais alto. A vida dele é menor que
+    parece à primeira vista de propósito: numa versão anterior ela era
+    +30%/+25%/+25% e o pico dele passava 45% acima dos outros dois na
+    métrica de poder (dano × vida efetiva). A folga vinha da vida de graça
+    empilhada em cima de um dano já parecido, não do dano em si — cortar só
+    o dano não teria resolvido.
+
+    poder (dano × vida), turno 1: 1,20 — empata com o Hamura, de propósito
+    poder no pico (rodada 4-10, 3 invocações vivas): 1,56 — ~20% acima dos
+    outros dois, o prêmio por sobreviver e cooperar
+
+Hamura  — "Ascendente da Lua"
+    +20% de dano em tudo
+    Seus ataques ignoram 25% da redução de Bloqueio e Aparo
+    Alcance das suas técnicas À DISTÂNCIA +2 casas (não afeta corpo a corpo);
+    linha de visão ignora obstáculos
+    +10 pontos percentuais na chance dos seus efeitos de controle
+
+    +20% é MENOR que o +30% do Índra de propósito: "ignora redução de
+    guarda" não soma, MULTIPLICA em cima do que o Bloqueio/Aparo já reduz
+    (50%/60% base, sem precisar de nenhuma passiva especial) — mesmo
+    princípio de unblockable/unguardable na fórmula de custo de jutsu.
+    Contra um alvo que reage com Esquiva em vez de guarda, o efeito não
+    aparece (poder fica preso em 1,20, o mesmo chão do Ashura no turno 1).
+    Contra um alvo que Bloqueia ou Apara, ultrapassa os 30% do Índra só por
+    corroer a redução base — não precisa de meta nenhum, só precisa que o
+    alvo escolha essa reação, o que é comum (Bloqueio e Aparo são 2 das 3
+    reações do jogo).
+
+    O alcance +2 vale só pra técnica à distância, nunca pra corpo a corpo —
+    se pegasse MELEE, Punho Suave e katana acertariam de 2 casas de
+    distância. É o mesmo padrão de toda passiva de alcance do jogo.
+
+HIERARQUIA ENTRE OS TRÊS MÍTICOS: não há uma fixa. Cada um é mais forte sob
+uma condição diferente (Índra sempre, Hamura quando o alvo guarda, Ashura em
+luta longa com apoio). Mas dado que a maioria das lutas não chega a durar as
+4-10 rodadas que o Ashura precisa pra render o pico (ver simulação abaixo), a
+aposta é que o ÍNDRA é o mais forte NA MÉDIA de uma luta típica — ele cobra
+o preço cheio desde o primeiro golpe, os outros dois só cobram o preço cheio
+em cenário que nem sempre acontece.
+
+DESBLOQUEIOS FUTUROS (fora de escopo agora, só pra registro — NÃO mexer)
+
+  Índra   → Rinnegan, com ajuda da linhagem de Ashura, exige ser Uchiha
+  Ashura  → Mokuton do Hashirama, exige ser Senju
+  Hamura  → Tenseigan, exige ser Hyuuga
+
+Nenhum dos três exige o clã HOJE. Só o desbloqueio é que vai puxar pro clã
+certo — a trait continua sorteável por qualquer um, mantendo o princípio de
+"trait não depende de clã pra funcionar".
+
+
+--------------------------------------------------------------------------------
+RESULTADO DA SIMULAÇÃO
+--------------------------------------------------------------------------------
+
+Métrica: golpes até matar um defensor típico do mesmo nível, com o build mais
+favorável a cada trait. Faixa saudável documentada: 3 a 4 golpes — mas essa
+métrica assume dano cheio sem NENHUMA reação, e 21% do arsenal do jogo já
+ignora Bloqueio/Aparo/Esquiva por design. Na prática uma folga até uns 5
+golpes é saudável, não gordura.
+
+BASELINE: PISO REALISTA, não "sem trait nenhuma". O piso realista é o
+taijutsu MÍNIMO pra comprar só as passivas de vida já disponíveis no nível
+(10 até o nv29, 30 do nv30 em diante — Resistência Física só abre lá).
+Não "taijutsu zero": ninguém joga sem nenhum ponto na árvore mais barata do
+jogo, e um personagem que dumpa tudo fora de taijutsu ainda compra essas
+passivas de bandeja, sem tirar nada do atributo principal. Fórmula atual:
+hpPerLevel=3, hpPerTaijutsu=1 (balance.ts, revisado 09/08/2026).
+
+HP no piso realista, por nível:
+
+  nv10 = 165   nv20 = 201   nv30 = 271   nv45 = 326
+
+NÍVEL 45 — golpes até matar no piso realista, por trait
+
+  piso realista (sem trait) ......................... 5,2
+  Especialista (comum, +10%) ........................ 4,7
+  Demônio da Névoa Oculta (rara, +15% condicional) .. 4,5
+  Prodígio Ninja (lendária, +15%) ................... 4,5
+  Presa Branca (épica, +20%) ........................ 4,3
+  Monstro da Névoa Oculta no teto (épica) ........... 4,3
+  Besta Verde (lendária, +20% no pilar) ............. 4,3
+  Índra (mítica, +30%) .............................. 4,0
+
+Nenhuma trait sai da faixa saudável. O Índra é o piso da tabela (4,0) por
+ter o maior dano incondicional do jogo — e ainda assim fica dentro dos 3-4
+documentados. As outras duas míticas não entram nesta lista porque o dano
+delas não é fixo: o Hamura depende de o alvo guardar e o Ashura depende do
+tempo de luta, então não há um número único pra comparar aqui.
+
+A métrica assume dano cheio sem NENHUMA reação — na prática, com
+Bloqueio/Aparo/Esquiva funcionando, o número real de golpes tende a ser
+maior que estes.
+
+BESTA VERDE x O PROFESSOR, nv45, piso realista (HP=326)
+
+                    golpe   vida efetiva   poder
+  Besta Verde        84,0        375        100%
+  O Professor        97,2        293         91%
+
+Duelo direto: a Besta Verde mata O Professor em 3,5 golpes; O Professor mata
+a Besta Verde em 3,9.
+
+Os 9% que faltam vêm da diferença estrutural entre os pilares — o físico bate
+70 no nv45 e o de chakra bate 81 — e nenhuma trait resolve isso. A expectativa
+é que O Professor encoste ou passe a Besta Verde quando as Kekkei Genkai forem
+balanceadas, já que elas puxam o pilar de chakra pra cima.
+
+
+--------------------------------------------------------------------------------
+LACUNAS DE MOTOR ANTES DE IMPLEMENTAR
+--------------------------------------------------------------------------------
+
+1. DANO DE INVOCAÇÃO
+   `summonHpBonus` já existe e é consumido pela engine, mas não há
+   multiplicador de dano pra invocação. O Sábio das Invocações precisa disso.
+
+2. GANCHO DE RYO
+   `addXp()` é ponto único e resolve o Prodígio Ninja. O ryo é concedido em vários
+   lugares de missão e precisa ser centralizado antes do Faro para Negócios e
+   do Ninja que Viveu em Cinco Guerras.
+
+3. PASSIVAS DO CLÃ 25% MAIS FORTES
+   O Fantasma do Clã precisa de um multiplicador que atue SOBRE outras
+   passivas. Nada no motor faz isso hoje.
+
+4. CUSTO DE NÓ +1 FORA DO CLÃ
+   Também do Herdeiro. O custo do nó é dado estático; passaria a depender do
+   personagem.
+
+5. BLOQUEIO DE CURA RECEBIDA
+   O Índra precisa recusar cura vinda de OUTRO personagem (mas não a própria
+   regeneração). Hoje o ramo de cura em resolveHit não pergunta a origem.
+
+6. DANO CUMULATIVO POR RODADA
+   O Ashura precisa de um contador por combate que suba a cada rodada e pare
+   num teto. Não existe nada parecido — o mais próximo são os acúmulos de
+   efeito, que são por alvo, não por atacante.
+
+7. LINHA DE VISÃO IGNORANDO OBSTÁCULO, VIA PASSIVA
+   `pierceObstacles` existe como campo de Ability (combat-engine.ts:1147),
+   mas NÃO como mod de personagem. O Hamura precisa da versão de personagem.
+
+O QUE JÁ EXISTE E NÃO PRECISA DE CÓDIGO NOVO
+
+  `armorPierce` — faz exatamente o "ignora 25% da redução de Bloqueio e
+  Aparo" do Hamura: `factor = base * (1 - armorPierce)` em
+  combat-engine.ts:1655, aplicado sobre blockReductionBase/parryReductionBase.
+  O Vento já usa (vento_raiz, 0.2). Basta `armorPierce: 0.25`.
+
+  `teamId` — distingue aliado de inimigo, inclusive entre jogadores. Resolve
+  o Caminho da Dor e a contagem de invocação viva do Ashura (junto com a flag
+  `isSummon`).
+
+  `characterPassiveMods` — já agrega os campos de bônus por personagem; é o
+  lugar natural pra maioria das traits entrar.
+
+  `rangeBonus` + `rangeShapes` — o alcance +2 do Hamura, restringindo as
+  formas à distância pra não pegar corpo a corpo.
+
+  As ações Concentrar Chakra / Recuperar o Fôlego (usadas pelo Imortal)
+  foram implementadas em 09/08/2026.
+
+================================================================================

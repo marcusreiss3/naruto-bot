@@ -4,6 +4,7 @@ import { getOrCreateCharacter, attrsFromRow } from "../characters/character-serv
 import { partyMemberIds } from "../party/party-service.js";
 import type { SessionFull, StartPlayer } from "../combat/combat-engine.js";
 import { characterPassiveMods } from "../combat/passives.js";
+import { withTraitNode } from "../characters/trait-service.js";
 
 // Personagem que dispara o combate (já carregado pelo chamador).
 export interface StarterChar {
@@ -107,20 +108,20 @@ export async function cacheAttrs(
         where: { charId: p.charId },
         select: { nodeId: true },
       });
+      // a trait entra no mesmo array dos nos — ver trait-service.ts
+      const trait = await prisma.characterTrait.findUnique({ where: { charId: p.charId } });
+      const nodeIds = withTraitNode(nodes.map((n) => n.nodeId), trait?.traitId);
       await prisma.combatParticipant.update({
         where: { id: p.id },
         data: {
           flagsJson: JSON.stringify({
             ...p.flags,
             attrs: a,
-            nodes: nodes.map((n) => n.nodeId),
+            nodes: nodeIds,
           }),
         },
       });
-      priorities.set(
-        p.id,
-        characterPassiveMods(nodes.map((n) => n.nodeId)).initiativePriority,
-      );
+      priorities.set(p.id, characterPassiveMods(nodeIds).initiativePriority);
     }
   }
 

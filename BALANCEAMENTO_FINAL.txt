@@ -1,5 +1,5 @@
 ================================================================================
-BALANCEAMENTO FINAL - ARVORES DE DANO
+BALANCEAMENTO FINAL — ÁRVORES DE DANO
 Atualizado em 09/08/2026
 ================================================================================
 
@@ -7,46 +7,46 @@ Atualizado em 09/08/2026
 --------------------------------------------------------------------------------
 
 ELEMENTAIS COMUNS
-    Sao a base de comparacao. Crescem durante toda a progressao.
+    São a base de comparação. Crescem durante toda a progressão.
 
 BUKIJUTSU
     Entrega poder cedo e perde valor relativo no final.
 
-CLAS OFENSIVOS
-    Ficam proximos ou um pouco acima dos elementais quando afinidades naturais
-    sao consideradas.
+CLÃS OFENSIVOS
+    Ficam próximos ou um pouco acima dos elementais quando afinidades naturais
+    são consideradas.
 
 ESTILOS DE LUTA
-    Ficam abaixo dos elementais sem modo, mas tem picos altos com modos.
+    Ficam abaixo dos elementais sem modo, mas têm picos altos com modos.
 
 KEKKEI GENKAI
-    Serao revisadas separadamente.
+    Serão revisadas separadamente.
 
 
-2. COMO LER AS METRICAS
+2. COMO LER AS MÉTRICAS
 --------------------------------------------------------------------------------
 
 DANO REAL
-    Media do dano do arsenal ofensivo, com passivas proprias e sem modos.
+    Média do dano do arsenal ofensivo, com passivas próprias e sem modos.
 
 MELHOR GOLPE
-    Maior dano disponivel no nivel, com passivas proprias e sem modos.
+    Maior dano disponível no nível, com passivas próprias e sem modos.
 
 CUSTO / DANO
     Quanto menor, melhor: menos recurso gasto para cada ponto de dano.
 
 PICO / PN
     Melhor golpe dividido pelo custo total em PN. Quanto maior, mais dano
-    ofensivo por PN investido. Nao mede controle, defesa, regeneracao ou alcance.
+    ofensivo por PN investido. Não mede controle, defesa, regeneração ou alcance.
 
 
-3. BALANCEAMENTO FINAL DOS CLAS
+3. BALANCEAMENTO FINAL DOS CLÃS
 --------------------------------------------------------------------------------
 
-Os dois bonus de dano sao multiplicativos.
+Os dois bônus de dano são multiplicativos.
 
-Cla          PN    Passivas       Dano medio   Melhor   Custo/dano   Pico/PN
-                         proprias      nv.45       golpe
+Clã          PN    Passivas       Dano médio   Melhor   Custo/dano   Pico/PN
+                         próprias      nv.45       golpe
 --------------------------------------------------------------------------------
 Akimichi      45    +20% / +25%       39,60       54,00       0,77        1,20
 Inuzuka       46    +15% / +20%       39,19       52,44       0,90        1,14
@@ -59,181 +59,222 @@ Kamaitachi    26     +0% /  +5%       30,45       39,90       1,29        1,53
 Hozuki        27     +5% / +10%       33,50       39,27       1,02        1,45
 
 
-4. CLAS COM AFINIDADES NATURAIS
+4. CLÃS COM AFINIDADES NATURAIS
 --------------------------------------------------------------------------------
 
-Esta tabela mostra o teto teorico no nivel 45, com a arvore do cla e a arvore
-externa completa. Ela exige mais PN e nao deve ser comparada com uma unica
-arvore elemental.
+Esta tabela mostra o teto teórico no nível 45, com a árvore do clã e a árvore
+externa completa. Ela exige mais PN e não deve ser comparada com uma única
+árvore elemental.
 
-Cla          Afinidade considerada        Dano medio combinado   Melhor golpe
+Clã          Afinidade considerada        Dano médio combinado   Melhor golpe
 --------------------------------------------------------------------------------
 Akimichi      Taijutsu                              49,90             69,98
 Inuzuka       Taijutsu                              49,49             67,96
 Kaguya        Taijutsu                              47,19             72,14
 Hyuuga        Taijutsu                              49,61             68,43
 Raikage       Taijutsu e Raio em parte do arsenal   53,19             65,86
-Hoshigaki     Agua                                  55,41             79,69
-Chinoike      Agua em parte do arsenal              45,21             51,48
+Hoshigaki     Água                                  55,41             79,69
+Chinoike      Água em parte do arsenal              45,21             51,48
 Kamaitachi    Vento                                 61,36             80,40
-Hozuki        Agua                                  48,15             56,45
+Hozuki        Água                                  48,15             56,45
 
 
 5. INVESTIMENTOS COMBINADOS CAROS
 --------------------------------------------------------------------------------
 
-Build no nivel 45       PN       Dano medio    Melhor golpe   Custo/dano
+Build no nível 45       PN       Dano médio    Melhor golpe   Custo/dano
 --------------------------------------------------------------------------------
-Agua completa           52          28,43          54,63          0,75
+Água completa           52          28,43          54,63          0,75
 Hoshigaki completo      34          38,54          55,44          0,85
-Hoshigaki + Agua        86          55,41          79,69             -
+Hoshigaki + Água        86          55,41          79,69             -
 Vento completo          47          49,37          68,51          0,74
 Kamaitachi completo     26          30,45          39,90          1,29
 Kamaitachi + Vento      73          61,36          80,40             -
 
-Hoshigaki + Agua e Kamaitachi + Vento atingem numeros altos, mas nao sao
-comparaveis a uma unica arvore: exigem respectivamente 86 e 73 PN. O custo
-extra em pontos e a dependencia de duas arvores sao o contrapeso do pico.
+Hoshigaki + Água e Kamaitachi + Vento atingem números altos, mas não são
+comparáveis a uma única árvore: exigem respectivamente 86 e 73 PN. O custo
+extra em pontos e a dependência de duas árvores são o contrapeso do pico.
 
 
 6. ELEMENTAIS
 --------------------------------------------------------------------------------
 
-Comparacao no nivel 45, com as passivas proprias.
+Comparação no nível 45, com as passivas próprias.
 
-Elemento   PN   Jutsus de dano   Dano medio   Melhor golpe   Custo/dano
+Elemento   PN   Jutsus de dano   Dano médio   Melhor golpe   Custo/dano
 --------------------------------------------------------------------------------
 Fogo       53         8             47,35         80,60          0,59
-Agua 1     52         9             28,43         54,63          0,75
-Agua 2     52         9             42,65         81,95          0,50
+Água 1     52         9             28,43         54,63          0,75
+Água 2     52         9             42,65         81,95          0,50
 Vento      47         8             49,37         68,51          0,74
 Terra      51         7             35,12         56,42          0,81
 Raio 1     47         6             29,52         55,20          1,19
 Raio 2     47         6             51,66         96,60          0,68
 
-Fogo e Vento lideram dano bruto. Agua entrega controle e sinergias; Terra
-entrega resistencia; Raio entrega mobilidade e interacoes com Agua.
+Fogo e Vento lideram dano bruto. Água entrega controle e sinergias; Terra
+entrega resistência; Raio entrega mobilidade e interações com Água.
 
-Legenda: Agua 1 e Raio 1 usam alvo normal. Agua 2 e Raio 2 usam alvo
-Encharcado. Com a arvore completa, Agua fica em 1,4375x no alvo seco e
-2,15625x contra Encharcado. Raio 2 e um teto condicional: depende de Agua,
-cenario ou outra fonte de Encharcado, ao contrario de Agua 2.
+Legenda: Água 1 e Raio 1 usam alvo normal. Água 2 e Raio 2 usam alvo
+Encharcado. Com a árvore completa, Água fica em 1,4375× no alvo seco e
+2,15625× contra Encharcado. Raio 2 é um teto condicional: depende de Água,
+cenário ou outra fonte de Encharcado, ao contrário de Água 2.
 
-Contra Encharcado, Raio aplica o multiplicador condicional de 1,75x; alem disso,
-tecnicas de corrente podem usar alvos Encharcados como condutores.
+Contra Encharcado, Raio aplica o multiplicador condicional de 1,75×; além
+disso, técnicas de corrente podem usar alvos Encharcados como condutores.
+
+As passivas grandes de dano incondicional (Fôlego do Dragão, Corte Profundo e
+Peso da Montanha, todas ×1,55) abrem no nível 25 nos três elementos. Vento e
+Terra abriam no 18 até 09/08/2026 — sete níveis antes do Fogo, sem nada que
+justificasse. Era isso que fazia a build Kamaitachi + Vento matar em 2,8
+golpes no nível 20, quando a faixa saudável é de 3 a 4.
 
 
 7. ESTILOS DE LUTA
 --------------------------------------------------------------------------------
 
-Comparacao no nivel 45, com as passivas proprias de cada arvore E com as
-passivas genericas de Taijutsu. Modos nao entram nestes numeros.
+Comparação no nível 45, com as passivas próprias de cada árvore E com as
+passivas genéricas de Taijutsu. Modos não entram nestes números.
 
-Estilo              PN   Jutsus de dano   Dano medio   Melhor golpe   Custo/dano
+Estilo              PN   Jutsus de dano   Dano médio   Melhor golpe   Custo/dano
 -----------------------------------------------------------------------------------
 Punho Forte        127         9             28,51         42,77          0,94
 Punho Arhat         22         6             29,70         43,55          0,80
 Punho Adamantino    33         5             40,35         58,50          0,77
 
-Os numeros acima nao incluem modos. O Punho Forte tem o maior investimento,
-mas seus Portoes mudam seu teto: com o 8o Portao, o pico (Guy Noturno: 52 base
-x 2,50 do portao x 1,08 da Disciplina Corporal x 1,20 da Maestria Marcial)
-chega a aproximadamente 168,5. Esse valor e compensado por 80 HP perdidos por
-turno e pela impossibilidade de fechar ou trocar o Portao antes da morte.
+Os números acima não incluem modos. O Punho Forte tem o maior investimento,
+mas seus Portões mudam seu teto: com o 8º Portão, o pico (Guy Noturno: 52 base
+× 2,50 do portão × 1,08 da Disciplina Corporal × 1,20 da Maestria Marcial)
+chega a aproximadamente 168,5. Esse valor é compensado por 80 HP perdidos por
+turno e pela impossibilidade de fechar ou trocar o Portão antes da morte.
 
 
-8. NUMEROS FINAIS
+8. NÚMEROS FINAIS
 --------------------------------------------------------------------------------
 
-DANO REAL - arsenal medio com passivas proprias, sem transformacao
+DANO REAL — arsenal médio com passivas próprias, sem transformação
 
-  Nivel   Bukijutsu   Elemental   Cla   Estilo
+  Nível   Bukijutsu   Elemental   Clã   Estilo
   nv 10      25,91       20,62    22,57   18,30
   nv 20      33,54       30,86    32,16   22,70
   nv 30      36,37       34,78    36,77   27,37
   nv 45      36,37       37,96    37,17   32,85
 
-MELHOR GOLPE DISPONIVEL - com passivas, sem transformacao
+MELHOR GOLPE DISPONÍVEL — com passivas, sem transformação
 
-  Nivel   Bukijutsu   Elemental   Cla   Estilo
+  Nível   Bukijutsu   Elemental   Clã   Estilo
   nv 10      29,90       24,34    25,02   23,04
   nv 20      38,09       41,51    40,35   29,84
   nv 30      50,25       52,48    49,20   40,23
   nv 45      50,25       63,07    50,20   48,27
 
-CUSTO / DANO REAL - menor e melhor
+CUSTO / DANO REAL — menor é melhor
 
-  Nivel   Bukijutsu   Elemental   Cla   Estilo
+  Nível   Bukijutsu   Elemental   Clã   Estilo
   nv 10      0,92        0,99     0,91   1,03
   nv 20      1,05        0,80     0,92   1,03
   nv 30      1,08        0,81     0,90   1,00
   nv 45      1,08        0,82     0,91   0,83
 
-COMO AS TABELAS DE CLASSES SAO CALCULADAS
+COMO AS TABELAS DE CLASSES SÃO CALCULADAS
 
-Cla: media dos 9 clas de dano dos capitulos 3 e 4 (Akimichi, Inuzuka, Kaguya,
-Hyuuga, Raikage, Hoshigaki, Chinoike, Kamaitachi, Hozuki) - nao o roster
-completo de clas, que inclui varios de suporte puro sem multiplicador de dano
-(Nara, Aburame, Uzumaki...). Cada cla considera so' as passivas proprias
-permanentes. Nao considera afinidades externas ou modos/transformacoes.
+Clã: média dos 9 clãs de dano dos capítulos 3 e 4 (Akimichi, Inuzuka, Kaguya,
+Hyuuga, Raikage, Hoshigaki, Chinoike, Kamaitachi, Hozuki) — não o roster
+completo de clãs, que inclui vários de suporte puro sem multiplicador de dano
+(Nara, Aburame, Uzumaki...). Cada clã considera só as passivas próprias
+permanentes. Não considera afinidades externas ou modos/transformações.
 
-Estilo de luta: media de Punho Forte, Punho Arhat e Punho Adamantino, cada um
-com a arvore propria do estilo mais as passivas genericas de Taijutsu. Nao
-considera modos, Portoes ou outras transformacoes temporarias.
+Estilo de luta: média de Punho Forte, Punho Arhat e Punho Adamantino, cada um
+com a árvore própria do estilo mais as passivas genéricas de Taijutsu. Não
+considera modos, Portões ou outras transformações temporárias.
 
-Elemental: media dos 5 elementos basicos (Fogo, Agua, Vento, Terra, Raio),
-alvo seco, so' passivas proprias de cada elemento. Kekkei genkai NAO entra
-(sera revisada separadamente). Tecnica de CLA com natureza de chakra tambem
-nao entra aqui, mesmo tendo campo de elemento: ela e' contada na coluna Cla.
-O escopo e' o NO DA ARVORE, nao a etiqueta de elemento da habilidade.
+Elemental: média dos 5 elementos básicos (Fogo, Água, Vento, Terra, Raio),
+alvo seco, só passivas próprias de cada elemento. Kekkei genkai NÃO entra
+(será revisada separadamente). Técnica de CLÃ com natureza de chakra também
+não entra aqui, mesmo tendo campo de elemento: ela é contada na coluna Clã.
+O escopo é o NÓ DA ÁRVORE, não a etiqueta de elemento da habilidade.
 
 O QUE FICA DE FORA DE TODAS AS TABELAS
 
-Tecnica que exige TRANSFORMACAO aberta. Na pratica sao as cinco do Punho
-Forte que dependem de Portao — Lotus Oculta, Pavao do Amanhecer, Tigre
-Diurno, Elefante do Anoitecer e Guy Noturno — mais os proprios nos de Portao.
-Uso unico por combate NAO e' motivo de exclusao por si so': Kirin e Cadeia do
+Técnica que exige TRANSFORMAÇÃO aberta. Na prática são as cinco do Punho
+Forte que dependem de Portão — Lótus Oculta, Pavão do Amanhecer, Tigre
+Diurno, Elefante do Anoitecer e Guy Noturno — mais os próprios nós de Portão.
+Uso único por combate NÃO é motivo de exclusão por si só: Kirin e Cadeia do
 Desastre Celestial entram normalmente.
 
-Ate 06/08/2026 esta regra nao estava escrita e era aplicada de forma
-inconsistente: Pavao e Tigre entravam na conta do Punho Forte, mas Elefante e
-Guy nao. Por isso o Estilo caiu de 50,43 pra 48,27 no melhor golpe do nv45 —
-nao houve nerf nenhum, so' a regra passou a valer pras cinco.
+Até 06/08/2026 esta regra não estava escrita e era aplicada de forma
+inconsistente: Pavão e Tigre entravam na conta do Punho Forte, mas Elefante e
+Guy não. Por isso o Estilo caiu de 50,43 pra 48,27 no melhor golpe do nv45 —
+não houve nerf nenhum, só a regra passou a valer pras cinco.
 
-HIERARQUIA POR FAIXA DE NIVEL - dano real, sem modos ou afinidades externas
+HIERARQUIA POR FAIXA DE NÍVEL — dano real, sem modos ou afinidades externas
 
-  Inicio (nv 10):  Bukijutsu > Cla > Elemental > Estilo
-  Meio   (nv 20):  Bukijutsu > Cla > Elemental > Estilo
-  Meio   (nv 30):  Cla > Bukijutsu > Elemental > Estilo
-  Final  (nv 45):  Elemental > Cla > Bukijutsu > Estilo
+  Início (nv 10):  Bukijutsu > Clã > Elemental > Estilo
+  Meio   (nv 20):  Bukijutsu > Clã > Elemental > Estilo
+  Meio   (nv 30):  Clã > Bukijutsu > Elemental > Estilo
+  Final  (nv 45):  Elemental > Clã > Bukijutsu > Estilo
 
-Bukijutsu cumpre o objetivo de comecar forte e perder eficiencia depois (o
-custo/dano dele so' piora nivel a nivel, o unico assim) - inclusive lidera
-o inicio de jogo, antes do Cla assumir na faixa do meio. No nivel 45, o
-Elemental ultrapassa o Cla mesmo sem afinidade nenhuma (37,96 contra 37,17) -
-o cla so' fica claramente a frente do elemental somando a arvore externa
-(ver capitulo 4), que e' exatamente o que o capitulo 1 promete. Estilo fica
-atras em dano medio a faixa toda, mas o melhor golpe dele se aproxima do
-resto no fim de jogo (nv 45: 48,27, quase igual ao Cla) - isso sem contar
-os Portoes, que mudam o teto dele por completo (ver capitulo 9).
+Bukijutsu cumpre o objetivo de começar forte e perder eficiência depois (o
+custo/dano dele só piora nível a nível, o único assim) — inclusive lidera
+o início de jogo, antes do Clã assumir na faixa do meio. No nível 45, o
+Elemental ultrapassa o Clã mesmo sem afinidade nenhuma (37,96 contra 37,17) —
+o clã só fica claramente à frente do elemental somando a árvore externa
+(ver capítulo 4), que é exatamente o que o capítulo 1 promete. Estilo fica
+atrás em dano médio a faixa toda, mas o melhor golpe dele se aproxima do
+resto no fim de jogo (nv 45: 48,27, quase igual ao Clã) — isso sem contar
+os Portões, que mudam o teto dele por completo (ver capítulo 9).
 
 
 9. TAIJUTSU E MODOS
 --------------------------------------------------------------------------------
 
-Maestria Marcial no nivel 40: +20% de dano em Taijutsu.
-Estilo no nivel 45: dano medio sem modo 32,85; melhor golpe 48,27; custo/dano 0,83.
-8o Portao: 2,50x em Taijutsu, 80 HP por turno e irreversivel ate a morte.
-Pico estimado com 8o Portao: aproximadamente 168,5.
+Maestria Marcial no nível 40: +20% de dano em Taijutsu.
+Estilo no nível 45: dano médio sem modo 32,85; melhor golpe 48,27; custo/dano 0,83.
+8º Portão: 2,50× em Taijutsu, 80 HP por turno e irreversível até a morte.
+Pico estimado com 8º Portão: aproximadamente 168,5.
 
 
-10. VEREDITO FINAL
+10. VIDA E SOBREVIVÊNCIA
 --------------------------------------------------------------------------------
 
-Bukijutsu e melhor no comeco e perde eficiencia no final.
-Elementais comuns sao a base de comparacao.
-Clas ofensivos ficam proximos ou acima dos elementais com afinidades.
-Estilos de luta ficam abaixo dos elementais sem modo e tem explosao temporaria.
-Kekkei Genkai sera revisada separadamente.
+Fórmula: HP = 100 + nível × 3 + taijutsu × 1, multiplicado pelos bônus
+percentuais das passivas de vida da árvore de Fundamentos de Taijutsu
+(Vigor de Combate +10%, Corpo Temperado +8%, Resistência Física +5% —
+somam entre si, até +23%).
+
+O peso era 2/2 até 09/08/2026. O problema não era o piso: quem investe só o
+mínimo em taijutsu já sobrevivia bem. Era o TOPO — cada nível dá 4 pontos de
+atributo, então quem despejava tudo em taijutsu ganhava 5× mais HP por
+level-up que quem não investia nada, e essa distância só crescia (1,9× no
+nv10, 3,5× no nv45). Mover peso do atributo para o nível encolhe o topo sem
+mexer no piso.
+
+GOLPES ATÉ MATAR, no piso realista de investimento em taijutsu
+(o mínimo para comprar as passivas de vida já disponíveis no nível)
+
+  Nível   HP     Golpes até morrer
+  nv 10   165          5,5
+  nv 20   201          4,8
+  nv 30   271          5,2
+  nv 45   326          5,2
+
+A faixa saudável de referência é de 3 a 4 golpes, mas essa métrica assume
+dano cheio sem NENHUMA reação — e 21% do arsenal com dano já ignora
+Bloqueio, Aparo ou Esquiva por design. Com as reações funcionando, o número
+real é maior que o da tabela, então uma folga até uns 5 golpes é margem de
+segurança, não gordura.
+
+Para referência do outro extremo, no nível 45: um build de Taijutsu completo
+(Punho Forte + Fundamentos, 139 de taijutsu) chega a 460 de HP, e quem
+despeja 100% dos pontos de atributo em taijutsu (177) chega a 507.
+
+
+11. VEREDITO FINAL
+--------------------------------------------------------------------------------
+
+Bukijutsu é melhor no começo e perde eficiência no final.
+Elementais comuns são a base de comparação.
+Clãs ofensivos ficam próximos ou acima dos elementais com afinidades.
+Estilos de luta ficam abaixo dos elementais sem modo e têm explosão temporária.
+Kekkei Genkai será revisada separadamente.
 
 ================================================================================

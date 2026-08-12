@@ -7,8 +7,21 @@ export const BALANCE = {
   // HP cresce devagar de proposito: como o dano vem da arvore (funcao degrau,
   // limitada pelo total de nos) e nao do atributo, HP linear rapido faria a luta
   // esticar sem fim no fim de jogo. Ver a nota de escalas abaixo.
-  hpPerLevel: 2,
-  hpPerTaijutsu: 2,
+  //
+  // hpPerLevel 2->3 / hpPerTaijutsu 2->1 em 09/08/2026: quem NUNCA investe em
+  // taijutsu (piso realista: so' o minimo pra comprar as passivas de vida) ja'
+  // ficava saudavel (4,6-5,5 golpes ate morrer, doc pede 3-4). O problema era
+  // o TOPO — cada ponto de atributo vira 4 pontos de taijutsu por level-up, e
+  // com hpPerTaijutsu igual a hpPerLevel, quem despeja tudo em taijutsu ganhava
+  // 5x mais HP por level-up que quem nao investe nada, um gap que SO' cresce
+  // com o nivel (1,9x no nv10, 3,5x no nv45). Um personagem de Taijutsu
+  // completo (Punho Forte + Fundamentos, 139 de taijutsu) matava em 9,1 golpes
+  // no nv45, quase o dobro do saudavel. Mover peso de taijutsu pra nivel
+  // (sempre igual pra todo mundo) encolhe o gap sem mexer no piso: o hibrido
+  // (taijutsu = nivel) fica invariante — hpPerLevel+hpPerTaijutsu continua
+  // somando o mesmo total nesse caso especifico — so' os extremos se movem.
+  hpPerLevel: 3,
+  hpPerTaijutsu: 1,
 
   // nivel maximo
   maxLevel: 50,

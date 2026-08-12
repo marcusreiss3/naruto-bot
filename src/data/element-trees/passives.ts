@@ -7,7 +7,7 @@
 // Ao criar uma passiva nova: se ela precisar de um modificador que ainda nao
 // existe aqui, o campo tem que nascer em PassiveDef E ser consumido na engine —
 // campo sem consumo e' passiva morta (o jogador paga e nao ganha nada).
-import type { Category, EffectId, Element, Shape, TerrainKind } from "../../config/enums.js";
+import type { Attribute, Category, EffectId, Element, Shape, TerrainKind } from "../../config/enums.js";
 
 export interface PassiveDef {
   nodeId: string;
@@ -94,6 +94,87 @@ export interface PassiveDef {
   markOnFirstHit?: { duration: number };
   firstKenjutsuDamageMult?: number;
   decisiveKenjutsuDamageMult?: number;
+  // perfuracao de Bloqueio/Aparo que SO' vale no golpe decisivo (mesma
+  // condicao do decisiveKenjutsuDamageMult: uma rodada inteira sem atacar).
+  // Campo separado do `armorPierce` de proposito — aquele e' incondicional e
+  // e' somado em passiveMods, que nao conhece rodada nem historico do ator.
+  decisiveArmorPierce?: number;
+  // narrowing por ATRIBUTO de escala. Nao ABRE o match (isso e' papel de
+  // element/crossCategory/clanId/abilityIds), so' restringe depois. Serve pra
+  // separar coisas que dividem a mesma Category: Fuinjutsu e' `NINJUTSU`
+  // escalando por `fuinjutsu`, entao "so' selos" = crossCategory NINJUTSU +
+  // damageMultScalingAttribute fuinjutsu.
+  damageMultScalingAttribute?: Attribute;
+
+  // ---- versoes "vale pra todos os efeitos" dos bonus por efeito ----
+  // effectChanceBonus/effectDurationBonus sao por EffectId. Trait como
+  // "Especialista em Genjutsu" (+5pp na chance dos SEUS efeitos) precisa valer
+  // pro conjunto todo, sem listar efeito por efeito — listar quebraria toda
+  // vez que um EffectId novo nascesse.
+  effectChanceBonusAll?: number;
+  effectDurationBonusAll?: number;
+
+  // ==========================================================================
+  // Campos nascidos com o sistema de TRAITS (data/traits.ts). Passiva de
+  // arvore pode usar tambem — nada aqui e' exclusivo de trait.
+  // ==========================================================================
+
+  // reforca a reducao de Bloqueio/Aparo DO PROPRIO personagem (0.10 = a
+  // reducao base de 50%/60% vira 55%/66%). E' o espelho defensivo do
+  // armorPierce, que corta a reducao do alvo.
+  guardStrengthBonus?: number;
+  // pontos percentuais na chance de fuga
+  fleeBonus?: number;
+  // teto de chakra, igual maxEnergyBonus faz com energia
+  maxChakraBonus?: number;
+  // rodadas a MENOS nos efeitos de controle recebidos. Nunca zera o efeito:
+  // a engine mantem o piso de 1 rodada.
+  controlDurationResistance?: number;
+  // dano das invocacoes/clones do personagem (0.15 = +15%)
+  summonDamageBonus?: number;
+
+  // ---- fora de combate ----
+  ryoBonus?: number;
+  xpBonus?: number;
+  // unidades a menos consumidas por tecnica que gasta item (piso de 1)
+  itemCostReduction?: number;
+  // pontos de atributo extras concedidos uma vez, na atribuicao da trait
+  freeAttributePoints?: number;
+  // penalidade de PN em no' de arvore que nao e' do cla do personagem
+  offClanNodeCostPenalty?: number;
+  // amplifica o efeito das passivas do PROPRIO cla (0.25 = 25% mais fortes)
+  clanPassiveAmplifier?: number;
+
+  // ---- condicionais de combate ----
+  // so' contra participante NPC
+  damageMultVsNpc?: number;
+  // abaixo de 50% da vida
+  woundedDamageMult?: number;
+  woundedHpRegen?: number;
+  // quanto Concentrar Chakra / Recuperar o Folego devolvem A MAIS
+  woundedResourceRecoveryBonus?: number;
+  // dano que cresce com a vida JA' perdida: mult = 1 + perdido% * fator,
+  // limitado por rageDamageCap (0.20 = teto de +20%)
+  rageDamagePerHpLost?: number;
+  rageDamageCap?: number;
+  // enquanto houver mais inimigos vivos que aliados (contando o proprio)
+  outnumberedDamageMult?: number;
+  outnumberedDodgeBonus?: number;
+  // dano que cresce por RODADA de combate, com teto. rampRoundsPerSummon
+  // desconta rodadas por invocacao/clone vivo — chega ao teto mais cedo.
+  rampDamagePerRound?: number;
+  rampDamageCap?: number;
+  rampRoundsPerSummon?: number;
+  // recusa cura vinda de OUTRO personagem (a propria regeneracao continua)
+  refusesAllyHealing?: boolean;
+  // linha de visao do personagem atravessa muro/arvore/fumaca. E' a versao de
+  // PERSONAGEM do `pierceObstacles`, que hoje so' existe por Ability.
+  piercesObstacles?: boolean;
+  // categorias fora do pilar da trait, e o multiplicador que elas levam.
+  // Existe porque `damageMult` ja' esta' gasto no buff do pilar principal e os
+  // dois escopos sao opostos (Besta Verde: +20% fisico / -30% Ninjutsu).
+  offPillarCategories?: Category[];
+  offPillarDamageMult?: number;
   // reduz a chance final de Esquiva do alvo contra a técnica coberta, em
   // pontos percentuais. Mantido baixo porque esquiva é uma defesa universal.
   dodgePenalty?: number;
@@ -571,7 +652,10 @@ export const PASSIVES: PassiveDef[] = [
   { nodeId: "tai_nevoa_marca", crossCategory: ["TAIJUTSU", "KENJUTSU"], markOnFirstHit: { duration: 3 }, damageMultVsEffect: { effectId: "MARKED", mult: 1.10 } },
   { nodeId: "tai_nevoa_misericordia", crossCategory: ["TAIJUTSU", "KENJUTSU"], damageMult: 1.06, executeBonus: { hpThreshold: 0.20, mult: 1.18 } },
   { nodeId: "tai_nevoa_saque", crossCategory: "KENJUTSU", firstKenjutsuDamageMult: 1.14, initiativePriority: 1 },
-  { nodeId: "tai_nevoa_corte", crossCategory: "KENJUTSU", decisiveKenjutsuDamageMult: 1.18, armorPierce: 0.18 },
+  // `decisiveArmorPierce`, nao `armorPierce`: a descricao promete "apos passar
+  // uma rodada sem atacar", e o armorPierce comum e' incondicional — ficava
+  // valendo em TODO golpe de Kenjutsu, contradizendo o texto.
+  { nodeId: "tai_nevoa_corte", crossCategory: "KENJUTSU", decisiveKenjutsuDamageMult: 1.18, decisiveArmorPierce: 0.18 },
 ];
 
 export const PASSIVE_INDEX: Map<string, PassiveDef> = new Map(PASSIVES.map((p) => [p.nodeId, p]));

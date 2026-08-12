@@ -40,4 +40,26 @@ describe("árvore de Assassinato Ninja", () => {
     expect(mods.firstHitDamageMult).toBe(1.15);
     expect(mods.mistDamageMult).toBe(1.10);
   });
+
+  // A perfuracao do Corte Decisivo tem que ficar FORA do armorPierce comum: o
+  // texto promete "apos passar uma rodada sem atacar", e o armorPierce e'
+  // somado em passiveMods, que nao conhece rodada. Se voltar pra la', os 18%
+  // passam a valer em todo golpe de Kenjutsu e a descricao vira mentira.
+  it("Corte Decisivo separa a perfuração condicional da incondicional", () => {
+    const mods = passiveMods(
+      ["tai_nevoa_ponto_cego", "tai_nevoa_corte"],
+      getAbility("hatake_lamina")!,
+    );
+    // Ponto Cego e' incondicional; Corte Decisivo nao entra no total comum.
+    expect(mods.armorPierce).toBeCloseTo(0.12);
+    expect(mods.decisiveArmorPierce).toBeCloseTo(0.18);
+    // e o dano decisivo continua no campo proprio, com a mesma condicao
+    expect(mods.decisiveKenjutsuDamageMult).toBeCloseTo(1.18);
+  });
+
+  it("Corte Decisivo não vale fora de Kenjutsu", () => {
+    const mods = passiveMods(["tai_nevoa_corte"], getAbility("tai_furacao_folha")!);
+    expect(mods.decisiveArmorPierce).toBe(0);
+    expect(mods.armorPierce).toBe(0);
+  });
 });
