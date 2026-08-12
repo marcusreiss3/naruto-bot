@@ -1,27 +1,17 @@
 ================================================================================
-TRAITS — PLANO
-09/08/2026 · revisado 12/08/2026
+TRAITS
 ================================================================================
 
 Traits são passivas permanentes sorteadas na criação do personagem. Cada
-personagem tem UMA. Como os clãs são balanceados entre si, a trait passa a ser
-a maior fonte de variação entre dois personagens do mesmo nível.
+personagem tem UMA. Como os clãs são balanceados entre si, a trait é a maior
+fonte de variação entre dois personagens do mesmo nível.
 
 O jogador tem 3 sorteios de clã e escolhe qual fica. Então trait que só
-funciona com um tipo de build (Sábio das Invocações, por exemplo) não é azar — é
-uma BÚSSOLA: tirou ela, escolhe o clã que combina.
+funciona com um tipo de build (Sábio das Invocações, por exemplo) não é azar —
+é uma BÚSSOLA: tirou ela, escolhe o clã que combina.
 
-O SORTEIO em si não é escopo deste documento e está com outra pessoa.
-
->> ESTADO DO CÓDIGO <<
-
-O sistema está implementado e em uso, e este documento está SINCRONIZADO com
-`src/data/traits.ts`. A revisão de faixas de 12/08/2026 — orçamento lendária
-11→13, mítica 16→25, e todos os valores de lendária/mítica que dependem dela —
-foi aplicada no código na mesma data.
-
-O que continua fora do código: nada deste documento. O SORTEIO nunca esteve
-aqui — segue com outra pessoa.
+Este documento é a especificação de `src/data/traits.ts` e está sincronizado
+com ele. O SORTEIO não faz parte do escopo daqui.
 
 
 --------------------------------------------------------------------------------
@@ -36,60 +26,49 @@ Exatamente como uma trait.
 TABELA DE CONVERSÃO
 
   +5% de dano numa categoria .................. 1,0 PP
-  +5% de dano em tudo ......................... 2,0 PP
   +5% de dano num pilar (físico ou chakra) .... 1,6 PP
+  +5% de dano em tudo ......................... 2,0 PP
   +10% de vida máxima ......................... 3,0 PP
   +25% de chakra ou energia máxima ............ 3,0 PP
+  −5% de custo em tudo ........................ 2,0 PP
   +1 de regeneração de vida por rodada ........ 1,0 PP
   +1 casa de movimento ........................ 3,0 PP
   +1,5 ponto percentual de esquiva ............ 1,0 PP
-  −5% de custo em tudo ........................ 2,0 PP
   15 pontos de atributo concedidos ............ 5,0 PP   (ver regra 3)
 
-A tabela cobre o que já existe na árvore de Fundamentos, que é a âncora.
-Mecânica NOVA (ignorar redução de guarda, dano cumulativo por rodada, alcance
-extra, chance de efeito, amplificador de passiva) não tem entrada aqui — foi
-estimada por comparação com o efeito mais parecido que já existe. Ao criar
-trait com mecânica inédita, diga que o PP dela é estimativa, não cálculo.
+A tabela cobre o que existe na árvore de Fundamentos, que é a âncora. Mecânica
+que não está lá — ignorar redução de guarda, dano cumulativo por rodada,
+alcance extra, chance de efeito, amplificador de passiva — é ESTIMADA por
+comparação com o efeito mais parecido. Ao criar trait com mecânica inédita,
+diga que o PP dela é estimativa, não cálculo.
 
-MULTIPLICADOR DE CONDIÇÃO
+MULTIPLICADOR DE CONDIÇÃO       NERF
 
-  Sempre ativo ................................ ×1,0
-  Condição frequente (abaixo de 50% de vida) .. ×0,7
-  Condição rara (abaixo de 25%) ............... ×0,5
+  Sempre ativo ......... ×1,0     Devolve 60% do valor, com teto de metade do
+  Abaixo de 50% ........ ×0,7     orçamento da raridade. Os 60% porque nerf se
+  Abaixo de 25% ........ ×0,5     contorna com a build — quem pega Besta Verde
+                                  não investe em Ninjutsu e metade da punição
+                                  evapora. O teto impede "−90% em tudo por
+                                  +200% de dano".
 
-NERF
+ORÇAMENTO POR RARIDADE
 
-  Devolve 60% do valor, com teto de metade do orçamento da raridade. Os 60%
-  existem porque nerf se contorna com a build — quem pega Besta Verde
-  simplesmente não investe em Ninjutsu, e metade da punição evapora. O teto
-  impede "−90% em tudo por +200% de dano".
-
-ORÇAMENTO POR RARIDADE                         (lendária e mítica revisadas)
-
-  Comum ........  2 PP
+  Comum ........  2 PP        saltos de 2,00× / 1,75× / 1,86× / 1,92×
   Rara .........  4 PP
-  Épica ........  7 PP
-  Lendária ..... 13 PP      (era 11)
-  Mítica ....... 25 PP      (era 16)
+  Épica ........  7 PP        O multiplicador ACELERA no topo. Escada que
+  Lendária ..... 13 PP        desacelera achata as três faixas de cima num
+  Mítica ....... 25 PP        degrau só, porque dano tem retorno decrescente:
+                              dobrar o orçamento não dobra a sensação.
 
-Os saltos são 2,00× / 1,75× / 1,86× / 1,92×. A escada antiga (…1,57× / 1,45×)
-desacelerava no topo "pra não explodir", e o resultado medido foi o oposto do
-pretendido: ÉPICA, LENDÁRIA E MÍTICA EMPATAVAM. Presa Branca (+20% em tudo),
-Besta Verde/O Professor (+20% no pilar) e Hamura (+20% em tudo) davam todas
-4,33 golpes até matar — três raridades, um degrau, e a mítica inteira era só
-22% mais forte que a épica.
-
-Havia espaço de sobra: a faixa saudável do documento é 3-4 golpes, e o Índra
-(+30%, a trait mais forte do jogo) marcava 4,00 — encostado no CHÃO da faixa,
-com a metade de cima inteira sem uso.
+Há buraco entre as faixas de propósito: garante que nenhuma comum encoste numa
+rara. O teto da mítica é limitado pela faixa saudável de 3-4 golpes até matar —
+25 PP all-in daria +62,5% de dano, ou 3,20 golpes, no limite do defensável.
 
 ESCOPO ESTREITO CUSTA MENOS
 
 É o que faz trait focada valer a pena. Com o mesmo orçamento, quem foca leva
 número maior: "Especialista em Ninjutsu" dá +10% numa categoria por 2 PP,
-enquanto +10% em TUDO custaria 4. Isso precisa estar claro pro jogador, senão
-a lendária parece pior que a comum porque o número na tela é menor.
+enquanto +10% em TUDO custaria 4.
 
 CUIDADO: comparar "+30% num pilar" com "+20% em tudo" é erro de categoria — os
 dois eixos têm preços diferentes de propósito. A régua sabe disso; o jogador
@@ -100,65 +79,56 @@ daquele personagem, não o texto cru da trait.
 
 
 --------------------------------------------------------------------------------
-TRÊS REGRAS APRENDIDAS NA MARRA
+TRÊS REGRAS
 --------------------------------------------------------------------------------
 
 1. TODA TRAIT DE FAIXA ALTA CARREGA DANO OU VIDA.
 
    São os dois únicos eixos que o jogador SENTE. Uma lendária feita 100% de
-   utilidade vai parecer fraca por mais correta que a conta esteja. A Fantasma
-   do Clã foi a prova: 11 PP no papel, sensação de comum ruim. Utilidade é
-   tempero, não corpo.
+   utilidade parece fraca por mais correta que a conta esteja. Utilidade é
+   tempero, não corpo. `tests/traits.test.ts` trava isso.
 
 2. NUNCA USE CUSTO DE NÓ COMO BÔNUS OU PENALIDADE.
 
-   A versão antiga da Fantasma do Clã cobrava +1 PN em todo nó fora do clã.
-   Medindo: são 267 nós fora de clã, custo médio 3,69 PN, que vira 4,69 — ou
-   seja, 27% MENOS NÓS COMPRADOS pelo resto do jogo, contra um ganho de +10%
-   de dano num escopo estreito. Prejuízo líquido, e invisível para a régua,
-   que só olha números de combate.
+   São 267 nós fora de clã, custo médio 3,69 PN. Uma penalidade de +1 PN os
+   leva a 4,69 — 27% MENOS NÓS COMPRADOS pelo resto do jogo. Como 1 PP = 1
+   ponto de nó, qualquer efeito de ±1 PN sobre dezenas de nós vale dezenas de
+   PP, e a régua não enxerga nada disso porque só olha números de combate.
 
-   Como 1 PP = 1 ponto de nó, qualquer efeito de ±1 PN sobre dezenas de nós
-   vale dezenas de PP. Não existe dose segura. Penalidade e bônus vivem em
-   dano, vida, recurso ou custo — nunca na economia de progressão.
+   Não existe dose segura. Penalidade e bônus vivem em dano, vida, recurso ou
+   custo — nunca na economia de progressão. Também travado por teste.
 
 3. CONCESSÃO DE PONTO DE ATRIBUTO VALE 1/3 DO PONTO DE NÓ.
 
    Todos os `*Scaling` em balance.ts são 0 — atributo não escala dano nenhum.
-   O que ele faz é ser o orçamento que compra nós (`disponível = atributo −
-   Σ custos`) e destravar requisito. Mecanicamente, então, +1 de atributo é
-   +1 ponto de nó disponível.
+   Ele é o orçamento que compra nós (`disponível = atributo − Σ custos`) e o
+   destrave de requisito. Mecanicamente, +1 de atributo é +1 ponto de nó.
 
-   Pela âncora crua isso daria 1,0 PP por ponto. A RÉGUA COBRA 1/3 DISSO, de
-   propósito: a âncora precifica o ponto MARGINAL de uma build sendo montada,
-   e uma concessão única não é isso. `attributePointsPerLevel` é 4, então a
-   mesma concessão vale muito no começo e pouco no fim — 15 pontos são +37%
-   de progressão no nv10 e +8% no nv45. Cobrar preço cheio nos dois é cobrar
-   por um valor que não está lá na maior parte da vida do personagem.
+   Pela âncora crua isso daria 1,0 PP por ponto, e a régua cobra 1/3: a âncora
+   precifica o ponto MARGINAL de uma build sendo montada, e concessão única não
+   é isso. Com `attributePointsPerLevel` = 4, os mesmos 15 pontos são +37% de
+   progressão no nv10 e +8% no nv45.
 
-       15 pontos de atributo concedidos = 5,0 PP
-
-   NÃO CONFUNDIR COM A REGRA 2. Lá o problema é um imposto RECORRENTE de ±1 PN
-   sobre centenas de compras, que se acumula sem teto e sem o jogador ver.
-   Aqui é uma concessão única e limitada. Formas diferentes, preços
-   diferentes — e é por isso que uma pode ter desconto e a outra não pode
-   existir.
+   NÃO CONFUNDIR COM A REGRA 2. Lá é imposto RECORRENTE sobre centenas de
+   compras, que se acumula sem teto e sem o jogador ver. Aqui é concessão única
+   e limitada. Formas diferentes, preços diferentes — por isso uma pode ter
+   desconto e a outra não pode existir.
 
 
 --------------------------------------------------------------------------------
-COMUM — 2 PP                                                    [no código]
+COMUM — 2 PP
 --------------------------------------------------------------------------------
 
 Especialista em Ninjutsu        +10% de dano de Ninjutsu
 Especialista em Taijutsu        +10% de dano de Taijutsu
 Especialista em Bukijutsu       +10% de dano de Bukijutsu
-Especialista em Genjutsu        +5% de dano de Genjutsu e +5 pontos
-                                percentuais na chance dos seus efeitos
+Especialista em Genjutsu        +5% de dano de Genjutsu, +5 pontos percentuais
+                                na chance dos seus efeitos
 Especialista em Fuinjutsu       Seus selos duram 1 rodada a mais
 
-Genjutsu e Fuinjutsu fogem do molde de propósito: as duas categorias entregam
-pouco dano bruto, então +10% ali valeria bem menos que nas outras três. Trocar
-por chance e duração iguala o valor real sem mudar o orçamento.
+Genjutsu e Fuinjutsu fogem do molde de propósito: as duas entregam pouco dano
+bruto, então +10% ali valeria bem menos que nas outras três. Chance e duração
+igualam o valor real sem mudar o orçamento.
 
 Especialista em Ninjutsu NÃO pega selo de Fūinjutsu. Selo é categoria NINJUTSU
 mas escala por `fuinjutsu`, e o corte é feito por `damageMultScalingAttribute`.
@@ -166,42 +136,35 @@ Sem isso, uma trait de 2 PP buffaria a árvore de Fūinjutsu inteira de brinde.
 
 
 --------------------------------------------------------------------------------
-RARA — 4 PP                                                     [no código]
+RARA — 4 PP
 --------------------------------------------------------------------------------
 
-O Mais Forte Escudo
-    +10% de vida máxima; Bloqueio e Aparo reduzem 10% mais dano
+O Mais Forte Escudo         +10% de vida máxima; Bloqueio e Aparo reduzem 10%
+                            mais dano
+Relâmpago Azul              +1 casa de movimento, +10 pontos percentuais de fuga
+Determinação                +15% de chakra e de energia máximos
+Sangue Frio                 Efeitos de controle em você duram 1 rodada a menos,
+                            nunca abaixo de 1
+Demônio da Névoa Oculta     +15% de dano contra alvos abaixo de 30% de vida
+Sábio das Invocações        Invocações e clones nascem com +25% de vida e
+                            causam +15% de dano
+Faro para Negócios          +25% de todo ryo obtido; técnicas que consomem item
+                            gastam 1 unidade a menos
 
-Relâmpago Azul
-    +1 casa de movimento, +10 pontos percentuais de fuga
+FARO PARA NEGÓCIOS NÃO CABE NA RÉGUA. Ryo não vira poder de combate
+diretamente. O pé no combate (a unidade de item a menos) existe justamente pra
+ela não ser prêmio de consolação.
 
-Determinação
-    +15% de chakra e de energia máximos
-
-Sangue Frio
-    Efeitos de controle em você duram 1 rodada a menos, nunca abaixo de 1
-
-Demônio da Névoa Oculta
-    +15% de dano contra alvos abaixo de 30% de vida
-
-Sábio das Invocações
-    Invocações e clones nascem com +25% de vida e causam +15% de dano
-
-Faro para Negócios
-    +25% de todo ryo obtido
-    Técnicas que consomem item gastam 1 unidade a menos
 
 --------------------------------------------------------------------------------
-ÉPICA — 7 PP                                                    [no código]
+ÉPICA — 7 PP
 --------------------------------------------------------------------------------
 
-A épica NÃO foi tocada na revisão de faixas. Ela é o degrau logo acima da rara
-e o teto dela — +20% em tudo — continua sendo a referência de "trait forte que
+O teto da épica — +20% de dano em tudo — é a referência de "trait forte que
 qualquer um pode tirar".
 
 Ninja que Viveu em Cinco Guerras
-    +20% de dano contra NPC
-    +10% de ryo em missão
+    +20% de dano contra NPC, +10% de ryo em missão
 
 Imortal
     Abaixo de 50% de vida: +15% de dano, +2 de regeneração por rodada, e
@@ -214,129 +177,158 @@ Presa Branca
     +20% de dano em tudo, −15% de vida máxima
 
 Caminho da Dor
-    Em desvantagem numérica (mais inimigos vivos que aliados, contando
-    você): +20% de dano e +3 pontos percentuais de esquiva
+    Em desvantagem numérica (mais inimigos vivos que aliados, contando você):
+    +20% de dano e +3 pontos percentuais de esquiva
 
 Artista de Explosão
-    Seus efeitos duram 1 rodada a mais
-    Suas técnicas custam 12% a mais
+    Seus efeitos duram 1 rodada a mais; suas técnicas custam 12% a mais
+
+MONSTRO DA NÉVOA OCULTA — a inclinação de 1% a cada 4% é a identidade: ficar
+mais forte conforme a luta AVANÇA, não no meio dela. Consequência aceita: o
+teto de 25% é ASSINTÓTICO, exigiria 100% da vida perdida. Na prática o jogador
+vê +23% a +25% no fim de uma luta dura, que é o que ela quer premiar.
+
+  Nota de método: a régua ×0,7 enxerga só o TOPO da rampa, não a área embaixo
+  dela. O ganho médio ao longo de uma luta é `teto × (1 − ponto_de_teto/2)` =
+  12,5% aqui. Os 7,0 PP são a leitura da régua; pela média o número real fica
+  perto de 5. As duas contas ficam registradas de propósito: a régua compara
+  traits entre si, a média é o que o jogador sente.
+
+CAMINHO DA DOR — o multiplicador de condição dela é o mais frágil do documento.
+Diferente de "abaixo de 50% de vida", quem decide se você está cercado é o
+ENCONTRO, não você: em duelo 1v1 nunca liga, em missão solo contra 2-3 NPCs
+liga quase sempre. E `isOutnumbered` conta invocação como aliada, o que
+significa que INVOCAR DESLIGA A PRÓPRIA TRAIT.
+
 
 --------------------------------------------------------------------------------
-LENDÁRIA — 13 PP                                                [no código]
+LENDÁRIA — 13 PP
 --------------------------------------------------------------------------------
 
 Besta Verde                                                   15,9 de 16,3
-    +30% de dano físico (Taijutsu, Bukijutsu, Kenjutsu)        <- era +20%
-    +15% de vida máxima
-    +15% de energia máxima
-    −30% de dano de Ninjutsu
-    −20% de chakra máximo
+    +30% de dano físico (Taijutsu, Bukijutsu, Kenjutsu)
+    +15% de vida máxima, +15% de energia máxima
+    −30% de dano de Ninjutsu, −20% de chakra máximo
 
 O Professor                                                   15,8 de 16,3
-    +30% de dano de Ninjutsu, Iryō, Genjutsu e Fuinjutsu       <- era +20%
-    +35% de chakra máximo                                      <- era +25%
-    −5% no custo
-    −30% de dano físico
-    −10% de vida máxima
-    −20% de energia máxima
+    +30% de dano de Ninjutsu, Iryō, Genjutsu e Fuinjutsu
+    +35% de chakra máximo, −5% no custo
+    −30% de dano físico, −10% de vida máxima, −20% de energia máxima
 
 Prodígio Ninja                                                11,8 de 13,0
     +15% de dano em tudo
     +8% de vida e de recursos máximos
     +20% de XP
-    (inalterada — o aumento de faixa só cobre o estouro de 0,8 que ela tinha)
 
 Gênio Ninja                                                   13,0 de 13,0
-    +15% de dano em tudo                                       <- era +10%
-    +15 pontos em uma bolsa de atributo à escolha              <- era +5
+    +15% de dano em tudo
+    +15 pontos em uma bolsa de atributo à escolha
     −5% no custo de tudo
 
 Fantasma do Clã                                               12,9 de 13,0
-    O bônus de dano das passivas do seu clã é 30% maior         <- era 25%
-    +15% de dano em tudo                                       <- novo
-    +15% de vida máxima                                        <- novo
-    (a penalidade de +1 PN fora do clã foi REMOVIDA)
+    O bônus de dano das passivas do seu clã é 30% maior
+    +15% de dano em tudo
+    +15% de vida máxima
 
 Besta Verde e O Professor têm orçamento 16,3 porque os nerfs devolvem 3,3.
 
+GÊNIO NINJA — os 15 pontos são o corpo da trait e valem 5,0 PP pela regra 3.
+São ~3,75 níveis de atributo entregues na criação. A assimetria é aceita:
+empurrão grande no começo, modesto no fim. É o "gênio", ele começa na frente.
+
+FANTASMA DO CLÃ — uma trait não consegue escopar dano "nas técnicas do seu
+clã": o escopo de `damageMult` só entende categoria e atributo de escala, e a
+trait não sabe qual é o seu clã. O amplificador existe por isso — ele pega
+carona nas passivas do clã, que sabem.
+
+  Uma árvore de clã fechada tem ~3 passivas de dano, quase todas 1.15. Com o
+  amplificador cada uma vira 1.195 e o pacote sai de 1,52 pra 1,71: +12% de
+  dano no que as passivas do clã cobrem. Somado ao +15% base:
+
+      usando o kit do clã ...... 1,15 × 1,12 = 1,29   -> 4,04 golpes
+      fora do kit do clã ....... 1,15                 -> 4,52 golpes
+
+  O contraste é a trait: nível de lendária dentro do sangue, nível de rara fora
+  dele.
+
+  ATENÇÃO PRO SORTEIO: personagem SEM CLÃ tira só 10,5 dos 13 PP dela (perde o
+  amplificador inteiro). É a única trait que depende de clã pra render, o que
+  contraria o princípio de "trait não depende de clã pra funcionar". Ou ela sai
+  do sorteio de quem não tem clã, ou vira uma trait de desbloqueio.
+
+PRODÍGIO E GÊNIO ficam em 4,52 golpes, abaixo da épica Presa Branca (4,33) na
+coluna de dano. É consciente: elas compensam no pacote. Nenhuma das duas tem
+folga pra subir o dano sem estourar.
+
+
 --------------------------------------------------------------------------------
-MÍTICA — 25 PP                                                  [no código]
+MÍTICA — 25 PP
 --------------------------------------------------------------------------------
 
 Três traits: Índra e Ashura (filhos do Hagoromo) e Hamura (irmão do Hagoromo).
-Nenhuma é reencarnação nem exige clã pra funcionar HOJE — qualquer um pode
-tirar no sorteio. Só o desbloqueio FUTURO é que vai puxar pro clã certo.
+Nenhuma é reencarnação nem exige clã pra funcionar — qualquer um pode tirar no
+sorteio. Só o desbloqueio futuro é que vai puxar pro clã certo.
 
-Cada uma opera num eixo de variação diferente, de propósito:
+O que separa as três não é QUAL eixo cada uma tem, é QUANDO o poder chega:
 
-  Índra   — constante. Não depende de nada externo. O mesmo poder desde o
-            turno 1 até o fim, sempre.
-  Hamura  — rende mais quando o ALVO reage com Bloqueio ou Aparo (em vez de
-            Esquiva). Não exige que o alvo tenha investido em nada especial:
-            Bloqueio/Aparo já dá 50%/60% de redução só por escolher essa
-            reação, e é isso que o Hamura corrói.
+  Índra   — constante. Não depende de nada externo, do turno 1 ao fim.
+  Hamura  — depende do ALVO. Rende mais contra quem reage com Bloqueio ou
+            Aparo, e não exige que o alvo tenha investido em nada: as duas
+            reações já dão 50%/60% de redução, e é isso que ele corrói.
   Ashura  — depende de VOCÊ. Começa fraco, cresce com o tempo de luta e com
             invocação/clone vivo em campo.
 
 Índra   — "Salvador do Mundo"                                 23,0 de 27,0
-    +40% de dano em tudo                                       <- era +30%
-    +10% de vida máxima                                        <- novo
+    +40% de dano em tudo
+    +10% de vida máxima
     −15% no custo de tudo
     Você nunca recebe cura de técnicas de aliados
 
-    O "nerf" é a tradução mecânica de "resolvia tudo sozinho": em 1v1 não
-    faz NENHUMA diferença (não há aliado pra curar de qualquer forma). Só
-    pesa em luta de grupo, que é onde faz sentido punir quem não sabe
-    contar com ninguém. Sem gatilho, sem rampa — poder de gênio que já
-    nasce pronto.
-
-    Orçamento 27,0 porque o nerf devolve 2,0. A vida entrou porque ele era o
-    único mítico 100% dano, e sem corpo ele ficava ABAIXO de uma lendária na
-    métrica de poder (ver o triângulo). Combina com a ficção: quem recusa cura
-    de aliado depende do próprio corpo.
+    O "nerf" é a tradução mecânica de "resolvia tudo sozinho": em 1v1 não faz
+    NENHUMA diferença (não há aliado pra curar de qualquer forma). Só pesa em
+    luta de grupo, que é onde faz sentido punir quem não sabe contar com
+    ninguém. Sem gatilho, sem rampa — poder de gênio que já nasce pronto. A
+    vida combina com a ficção: quem recusa cura de aliado depende do próprio
+    corpo. Orçamento 27,0 porque o nerf devolve 2,0.
 
 Ashura  — "Deus Shinobi"                                      22,8 de 25,0
-    +10% de dano em tudo                                       <- novo
+    +10% de dano em tudo
     +20% de vida máxima, +15% de chakra e de energia máximos
     +4% de dano cumulativo a cada rodada, até um teto de +40%
-                                        <- era +3% até +30%
     Cada invocação/clone vivo ACELERA o teto: −2 rodadas por invocação viva
 
-    A TAXA SUBIU JUNTO COM O TETO, e isso não é detalhe. Teto +40% a 3% por
-    rodada levaria 13,3 rodadas (7,3 com três invocações) — ele ganharia um
-    pico que quase nunca veria. A 4% são 10 rodadas sozinho e 4 com três
-    invocações, exatamente o tempo do desenho original. A taxa não tem entrada
-    na régua; o PP acima cobra só o teto.
+    A TAXA ACOMPANHA O TETO, e isso não é detalhe: teto de +40% a 3% por rodada
+    levaria 13,3 rodadas (7,3 com três invocações) e ele ganharia um pico que
+    quase nunca veria. A 4% são 10 rodadas sozinho e 4 com três invocações. A
+    taxa não tem entrada na régua; o PP acima cobra só o teto.
 
-    O dano base de +10% existe pra ele não ficar 14% atrás do Índra no turno 1
-    depois que o Índra ganhou corpo. Ele CONTINUA começando atrás (0,86 do
-    poder do Índra) — só não começa do zero.
+    O dano base de +10% existe pra ele não começar longe demais do Índra. Ele
+    CONTINUA começando atrás (0,86 do poder do Índra), só não começa do zero.
 
-    A vida dele é menor do que parece à primeira vista de propósito: numa
-    versão anterior era +30%/+25%/+25% e o pico passava 45% acima dos outros
-    dois na métrica de poder. A folga vinha da vida de graça empilhada em cima
-    de um dano já parecido, não do dano em si.
+    A vida dele é menor do que parece à primeira vista de propósito: em
+    +30%/+25%/+25% o pico passava 45% acima dos outros dois na métrica de
+    poder. A folga vinha da vida de graça empilhada em cima de um dano já
+    parecido, não do dano em si.
 
 Hamura  — "Ascendente da Lua"                                 25,0 de 25,0
-    +35% de dano em tudo                                       <- era +20%
-    +10% de vida máxima                                        <- novo
+    +35% de dano em tudo
+    +10% de vida máxima
     Seus ataques ignoram 25% da redução de Bloqueio e Aparo
     Alcance das suas técnicas À DISTÂNCIA +2 casas (não afeta corpo a corpo);
     linha de visão ignora obstáculos
     +10 pontos percentuais na chance dos seus efeitos de controle
 
-    Único mítico que NÃO encosta no teto de +40% da faixa: os ~8 PP que ele
-    gasta em utilidade exclusiva não sobram pra isso. É a troca dele.
+    Único mítico que NÃO encosta no teto de +40% de dano da faixa: os ~8 PP que
+    ele gasta em utilidade exclusiva não sobram pra isso. É a troca dele.
 
     "Ignora redução de guarda" não soma, MULTIPLICA em cima do que o
-    Bloqueio/Aparo já reduz (50%/60% base, sem passiva nenhuma) — mesmo
-    princípio de unblockable/unguardable na fórmula de custo de jutsu. Contra
-    alvo que Esquiva, o efeito não aparece.
+    Bloqueio/Aparo já reduz — mesmo princípio de unblockable/unguardable na
+    fórmula de custo de jutsu. Contra alvo que Esquiva, o efeito não aparece.
 
-    O alcance +2 vale só pra técnica à distância, nunca pra corpo a corpo —
-    se pegasse MELEE, Punho Suave e katana acertariam de 2 casas. RADIUS
-    também fica de fora do ganho de ÁREA: nele alcance e tamanho da explosão
-    são coisas separadas, e a explosão cresce ao quadrado.
+    O alcance +2 vale só pra técnica à distância, nunca pra corpo a corpo: se
+    pegasse MELEE, Punho Suave e katana acertariam de 2 casas. RADIUS também
+    fica de fora do ganho de ÁREA — nele alcance e tamanho da explosão são
+    coisas separadas, e a explosão cresce ao quadrado.
 
 O TRIÂNGULO DOS TRÊS — poder = dano × vida
 
@@ -346,43 +338,36 @@ O TRIÂNGULO DOS TRÊS — poder = dano × vida
     Hamura                         1,35 × 1,10 = 1,49
     Hamura vs alvo que guarda      1,69 × 1,10 = 1,86   turno 1
 
-    Ashura no pico / Índra ....... 1,20   <- o alvo do desenho original
-    Ashura no turno 1 / Índra .... 0,86   <- continua começando atrás
+    Ashura no pico / Índra ....... 1,20   <- o prêmio por sobreviver e cooperar
+    Ashura no turno 1 / Índra .... 0,86   <- ele começa atrás, e deve começar
 
-POR QUE OS TRÊS GANHARAM O EIXO QUE FALTAVA. Sem isso havia uma INVERSÃO
-medida: a Besta Verde (lendária) tem poder 1,49, acima do Índra sem vida
-(1,40) e do Hamura sem vida (1,35). Uma lendária passava duas míticas — e
-justamente porque ela carrega dano E vida, enquanto elas carregavam um só.
-Poder é multiplicativo: 1,30 × 1,15 rende mais que 1,40 × 1,00.
+POR QUE OS TRÊS CARREGAM DANO E VIDA. Poder é multiplicativo, então trait com
+os dois eixos rende mais que trait com um só: 1,30 × 1,15 passa 1,40 × 1,00.
+Sem vida nas míticas, a Besta Verde (lendária, poder 1,49) ficaria ACIMA do
+Índra e do Hamura. Uma lendária passando duas míticas.
 
-E TEM QUE SER PACOTE FECHADO. Dar vida só ao Índra derruba a vantagem de pico
-do Ashura de 1,20 pra 1,09, e aí ele deixa de ter motivo pra existir: esperar
-10 rodadas pra ficar 9% na frente de quem já estava lá no turno 1. Ou os três
-recebem, ou nenhum recebe.
+E TEM QUE SER OS TRÊS. Vida só no Índra derruba a vantagem de pico do Ashura
+de 1,20 pra 1,09, e aí ele deixa de ter motivo pra existir: esperar 10 rodadas
+pra ficar 9% na frente de quem já estava lá no turno 1.
 
-ISTO REVOGA a regra antiga "o dano do Ashura NUNCA passa do teto do Índra". No
-pico ele bate 1,54 de dano contra 1,40 do Índra. Aquela regra foi escrita
-quando o Índra não tinha corpo, e naquele cenário os +20% de vida do Ashura
-sozinhos já davam os 20% de vantagem. Com o Índra em 1,54 de poder, os mesmos
-+20% de vida rendem 4% — a comparação precisou migrar de DANO para PODER, e é
-lá que o 1,20 se mantém. Não é o teto que subiu por acidente: é a consequência
-direta de dar corpo ao Índra, e as duas decisões são uma só.
+O PICO DO ASHURA PASSA O DANO DO ÍNDRA (1,54 contra 1,40), e é intencional. A
+comparação entre os três é feita em PODER, não em dano — com o Índra em 1,54 de
+poder, os +20% de vida do Ashura sozinhos renderiam 4%, não os 20% do desenho.
+Quem for comparar só a coluna de dano vai achar que há erro; não há.
 
-O QUE NÃO MEXER: a rampa do Ashura tem que continuar LARGA. A amplitude dela é
-a distância entre o chão e o teto dele — é a mecânica inteira. Encolher o teto
-força o dano base pra cima pra manter os 20% de pico, e dano base alto mata o
-"começa fraco". Medido: com teto +25% ele precisaria de +29% de dano base e
-começaria empatado com o Índra (0,96), virando estritamente melhor o tempo
-todo. Com teto +20%, +34% de base e empate exato. O teto de +40% é o que
-sustenta o 0,86 de largada.
-
-Dar MAIS vida ao Ashura refaz o erro de 2026-08 que já foi corrigido uma vez.
+A RAMPA DO ASHURA TEM QUE CONTINUAR LARGA. A amplitude dela é a distância entre
+o chão e o teto dele — é a mecânica inteira. Encolher o teto força o dano base
+pra cima pra manter os 20% de pico, e dano base alto mata o "começa fraco".
+Medido: com teto +25% ele precisaria de +29% de base e começaria empatado com o
+Índra (0,96), virando estritamente melhor o tempo todo. Com teto +20%, +34% de
+base e empate exato. O teto de +40% é o que sustenta o 0,86 de largada. Dar
+mais VIDA a ele também não: reproduz o pico 45% acima descrito na entrada dele.
 
 EXCLUSIVIDADE REAL DE MECÂNICA (auditado no código)
 
   Ashura   `rampDamagePerRound` + `rampRoundsPerSummon` — nada no jogo escala
-           por rodada, e invocação acelerar teto não existe em outro lugar.
-           É o mais exclusivo dos três.
+           por rodada, e invocação acelerar teto não existe em outro lugar. É o
+           mais exclusivo dos três.
   Hamura   `piercesObstacles` a nível de personagem é exclusivo. Mas
            `armorPierce 0.25` EMPATA com uma passiva de árvore elemental, e
            `rangeBonus` já existe no Vento. Uma mecânica única, três
@@ -392,20 +377,19 @@ EXCLUSIVIDADE REAL DE MECÂNICA (auditado no código)
 
 RARIDADE x FORÇA — PONTO ABERTO PRO SORTEIO
 
-Depois da revisão, a mítica fica ~17% acima da épica em DANO (1,40 ÷ 1,20) e
-~28% acima em PODER (1,54 do Índra ÷ 1,20 do Caminho da Dor, a melhor épica na
-métrica). Isso é o número CERTO para o jogo: numa luta de ~5 trocas significa
-matar meio turno antes, e posicionamento, altura, terreno e reação continuam
-decidindo. Mítica 2× mais forte transformaria o servidor em "você ganhou a
-loteria na criação?".
+A mítica fica ~17% acima da épica em DANO (1,40 ÷ 1,20) e ~28% em PODER (1,54
+do Índra ÷ 1,20 do Caminho da Dor). Isso é o número CERTO para o jogo: numa
+luta de ~5 trocas significa matar meio turno antes, e posicionamento, altura,
+terreno e reação continuam decidindo. Mítica 2× mais forte transformaria o
+servidor em "você ganhou a loteria na criação?".
 
-Mas 28% ainda não sustenta um sorteio de 0,5%: quem tirar 1-em-200 vai achar
-pouco, e num servidor pequeno ninguém nunca vê o conteúdo. A raridade e a
-força precisam combinar. Como não se deve inflar mais o dano, a saída é SUBIR
-A TAXA da mítica (2-3% seria visível e continua longe de opressivo). Decisão
-de quem tocar o sorteio.
+Mas 28% não sustenta um sorteio de 0,5%: quem tirar 1-em-200 vai achar pouco, e
+num servidor pequeno ninguém nunca vê o conteúdo. A raridade e a força precisam
+combinar. Como não se deve inflar mais o dano, a saída é SUBIR A TAXA da mítica
+(2-3% seria visível e continua longe de opressivo). Decisão de quem tocar o
+sorteio.
 
-DESBLOQUEIOS FUTUROS (fora de escopo agora, só pra registro — NÃO mexer)
+DESBLOQUEIOS FUTUROS (fora de escopo, só pra registro — NÃO mexer)
 
   Índra   → Rinnegan, com ajuda da trait de Ashura, exige ser Uchiha
   Ashura  → Mokuton do Hashirama, exige ser Senju
@@ -413,62 +397,57 @@ DESBLOQUEIOS FUTUROS (fora de escopo agora, só pra registro — NÃO mexer)
 
 
 --------------------------------------------------------------------------------
-RESULTADO DA SIMULAÇÃO
+SIMULAÇÃO
 --------------------------------------------------------------------------------
 
 Métrica: golpes até matar um defensor típico do mesmo nível, com o build mais
-favorável a cada trait. Faixa saudável documentada: 3 a 4 golpes — mas essa
-métrica assume dano cheio sem NENHUMA reação, e 21% do arsenal do jogo já
-ignora Bloqueio/Aparo/Esquiva por design. Na prática uma folga até uns 5
-golpes é saudável, não gordura.
+favorável a cada trait. Faixa saudável: 3 a 4 golpes — mas a métrica assume
+dano cheio sem NENHUMA reação, e 21% do arsenal do jogo já ignora
+Bloqueio/Aparo/Esquiva por design. Na prática uma folga até uns 5 golpes é
+saudável, não gordura.
 
-BASELINE: PISO REALISTA, não "sem trait nenhuma". O piso realista é o taijutsu
-MÍNIMO pra comprar só as passivas de vida já disponíveis no nível (10 até o
-nv29, 30 do nv30 em diante — Resistência Física só abre lá). Não "taijutsu
-zero": ninguém joga sem nenhum ponto na árvore mais barata do jogo. Fórmula
-atual: hpPerLevel=3, hpPerTaijutsu=1 (balance.ts, revisado 09/08/2026).
+BASELINE: PISO REALISTA, não "sem trait nenhuma". É o taijutsu MÍNIMO pra
+comprar só as passivas de vida disponíveis no nível (10 até o nv29, 30 do nv30
+em diante — Resistência Física só abre lá). Não "taijutsu zero": ninguém joga
+sem nenhum ponto na árvore mais barata do jogo. Fórmula: hpPerLevel=3,
+hpPerTaijutsu=1 (balance.ts).
 
-HP no piso realista, por nível:
+HP no piso realista:  nv10 = 165   nv20 = 201   nv30 = 271   nv45 = 326
 
-  nv10 = 165   nv20 = 201   nv30 = 271   nv45 = 326
+NÍVEL 45 — golpes até matar (HP 326, piso 5,20)
 
-NÍVEL 45 — golpes até matar no piso realista (HP 326, piso 5,20)
+  piso realista (sem trait) .................................  5,20
+  Ashura no turno 1 (mítica) ................................  4,73
+  Especialista em X (comum, +10%) ...........................  4,73
+  Demônio da Névoa Oculta (rara, +15% condicional) ..........  4,52
+  Prodígio Ninja (lendária, +15%) ...........................  4,52
+  Gênio Ninja (lendária, +15%) ..............................  4,52
+  Fantasma do Clã FORA do kit do clã (lendária) .............  4,52
+  Presa Branca (épica, +20%) ................................  4,33
+  Monstro da Névoa Oculta no teto (épica, +25%) .............  4,16
+  Fantasma do Clã COM o kit do clã (lendária) ...............  4,04
+  Besta Verde / O Professor (lendária, +30% no pilar) .......  4,00
+  Hamura (mítica, +35%) .....................................  3,85
+  Índra (mítica, +40%) ......................................  3,71
+  Ashura no teto (mítica, 1,10 base × 1,40 rampa) ...........  3,38
 
-                                                          hoje    revisado
-  piso realista (sem trait) ............................  5,20      5,20
-  Ashura no turno 1 (mítica, +10% base) ................  5,20      4,73
-  Especialista em X (comum, +10%) ......................  4,73      4,73
-  Gênio Ninja (lendária) ...............................  4,73      4,52
-  Demônio da Névoa Oculta (rara, +15% condicional) .....  4,52      4,52
-  Prodígio Ninja (lendária, +15%) ......................  4,52      4,52
-  Fantasma do Clã FORA do kit do clã (lendária) ........   —        4,52
-  Presa Branca (épica, +20%) ...........................  4,33      4,33
-  Monstro da Névoa Oculta no teto (épica, +25%) ........  4,16      4,16
-  Fantasma do Clã COM o kit do clã (lendária) ..........   —        4,04
-  Besta Verde / O Professor (lendária, pilar) ..........  4,33      4,00
-  Hamura (mítica, +35%) ................................  4,33      3,85
-  Índra (mítica, +40%) .................................  4,00      3,71
-  Ashura no teto (mítica, 1,10 base × 1,40 rampa) ......  4,00      3,38
+Épica 4,33, lendária 4,00, mítica 3,85-3,38. Cada faixa com o seu degrau, tudo
+dentro dos 3-4.
 
-Antes: as três faixas de cima empatadas em 4,33-4,00. Depois: épica 4,33,
-lendária 4,00, mítica 3,85-3,38. Cada faixa com o seu degrau, tudo dentro dos
-3-4, e o topo sai do chão da faixa.
+O PICO DO ASHURA (3,38) É O NÚMERO MAIS QUENTE DA TABELA. Ele só existe depois
+de 10 rodadas, ou 4 com três invocações vivas — o estado mais raro do jogo —
+mas é o primeiro lugar pra olhar se algo parecer forte demais em teste. Índra
+com +15% de vida em vez de +10% puxaria esse pico pra 3,23; ficou nos +10%
+justamente pra não chegar lá.
 
-O PICO DO ASHURA (3,38) É O NÚMERO MAIS QUENTE DA REVISÃO. Ele só existe
-depois de 10 rodadas, ou 4 com três invocações vivas — é o estado mais raro do
-jogo — mas é o que merece o primeiro olhar se algo parecer forte demais em
-teste. A alternativa medida era Índra com +15% de vida em vez de +10%, que
-puxaria o pico do Ashura pra 3,23; ficou nos +10% justamente pra não chegar lá.
+ESTA TABELA SÓ MEDE DANO. Vida não aparece nela — por isso o triângulo da seção
+mítica usa poder = dano × vida. Duas traits com o mesmo número aqui podem estar
+longe uma da outra em combate real.
 
-ESTA TABELA SÓ MEDE DANO. Vida não aparece nela — por isso o triângulo da
-seção mítica usa poder = dano × vida. Duas traits com o mesmo número aqui
-podem estar longe uma da outra em combate real.
-
-RESSALVA QUE NINGUÉM MEDIU AINDA: estes números são trait PURA sobre o piso
-realista. Trait multiplica com passiva de árvore, e uma árvore elemental
-fechada é ~2,0× sozinha. Essa combinação nunca foi simulada. Pela régua do
-documento estamos dentro; na luta real o topo bate mais forte do que a tabela
-sugere.
+O QUE NINGUÉM MEDIU AINDA: estes números são trait PURA sobre o piso realista.
+Trait multiplica com passiva de árvore, e uma árvore elemental fechada é ~2,0×
+sozinha. Essa combinação nunca foi simulada. Pela régua estamos dentro; na luta
+real o topo bate mais forte do que a tabela sugere.
 
 
 ================================================================================
