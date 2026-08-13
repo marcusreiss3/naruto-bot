@@ -16,6 +16,7 @@ import {
   ROTA_COMERCIAL_KONOHA_CHANNEL_ID,
 } from "../../data/scenarios/index.js";
 import { getMission } from "../../data/missions/index.js";
+import { pausedMissionNotice, sendMissionNotice } from "../../ui/mission-notice-v2.js";
 import { getOrCreateCharacter, attrsFromRow } from "../characters/character-service.js";
 import { getActiveSession, startCombat } from "../combat/combat-engine.js";
 import { formatPersonaLines, sendAsPersona } from "../discord/persona-webhook.js";
@@ -477,7 +478,14 @@ async function runDialogue(
       state.talks![npcKey] = 0;
       await markObjective(inst.id, "receber_ordem_praga");
       await setState(inst.id, state);
-      if (channel && "send" in channel) await channel.send(`Va ao ${ctx.variant.marketName}: <#${ctx.variant.marketChannelId}>.`);
+      await sendMissionNotice(channel, {
+        kind: "objetivo",
+        title: "Primeiro foco da praga",
+        description: "A investigação começa no estoque afetado do mercado.",
+        items: [`${ctx.variant.marketName} — <#${ctx.variant.marketChannelId}>`],
+        itemsTitle: "Destino",
+        footer: "Entre no canal e use /mapa.",
+      });
       return;
     }
     await setState(inst.id, state);
@@ -501,7 +509,14 @@ async function runDialogue(
       state.talks![npcKey] = 0;
       await markObjective(inst.id, "examinar_estoque");
       await setState(inst.id, state);
-      if (channel && "send" in channel) await channel.send(`Investigue os ninhos na ${ctx.variant.routeName}: <#${ctx.variant.routeChannelId}>.`);
+      await sendMissionNotice(channel, {
+        kind: "investigacao",
+        title: "Trilha de insetos encontrada",
+        description: "Os rastros do estoque levam a ninhos instalados na rota.",
+        items: [`${ctx.variant.routeName} — <#${ctx.variant.routeChannelId}>`],
+        itemsTitle: "Local dos ninhos",
+        footer: "Use /mapa para analisar os rastros sem dispersar a colônia.",
+      });
       return;
     }
     await setState(inst.id, state);
@@ -640,7 +655,7 @@ async function startNestInvestigation(
       state.running = false;
       await setState(instanceId, state);
       await msg.edit({ components: [] }).catch(() => undefined);
-      await channel.send("A trilha de insetos esfriou. Use `/mapa` para retomar a investigacao dos ninhos.");
+      await sendMissionNotice(channel, pausedMissionNotice("A trilha de insetos esfriou antes do fim da análise."));
       return;
     }
   }

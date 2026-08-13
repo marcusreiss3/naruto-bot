@@ -11,6 +11,7 @@ import {
 import { prisma } from "../../db/client.js";
 import { DESERTO_CHANNEL_ID, ROTA_COMERCIAL_KONOHA_CHANNEL_ID } from "../../data/scenarios/index.js";
 import { getMission } from "../../data/missions/index.js";
+import { pausedMissionNotice, sendMissionNotice } from "../../ui/mission-notice-v2.js";
 import { getOrCreateCharacter, attrsFromRow } from "../characters/character-service.js";
 import { getActiveSession, startCombat } from "../combat/combat-engine.js";
 import { formatPersonaLines, sendAsPersona } from "../discord/persona-webhook.js";
@@ -437,7 +438,7 @@ async function startDesertPanel(channel: TextBasedChannel | null, instanceId: st
       state.running = false;
       await setState(instanceId, state);
       await msg.edit({ components: [] }).catch(() => undefined);
-      await channel.send("A travessia expirou. Use `/mapa` para retomar do ponto atual.");
+      await sendMissionNotice(channel, pausedMissionNotice("A sessão da travessia pelo deserto expirou."));
       return;
     }
   }

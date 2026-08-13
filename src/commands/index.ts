@@ -21,6 +21,8 @@ import { acao } from "./acao.js";
 import { craft } from "./craft.js";
 import { comer } from "./comer.js";
 import { sincronizarVila } from "./sincronizar-vila.js";
+import { viajar } from "./viajar.js";
+import { ficha } from "./ficha.js";
 import { arremessar, atacar, darItem, desequipar, equipar, largarItem, restaurarPergaminho, usarItem } from "./itens.js";
 
 export const commands: Command[] = [
@@ -31,6 +33,8 @@ export const commands: Command[] = [
   craft,
   comer,
   sincronizarVila,
+  viajar,
+  ficha,
   vila,
   loja,
   equipar,

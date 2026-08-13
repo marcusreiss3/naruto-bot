@@ -11,6 +11,7 @@ import {
 import { prisma } from "../../db/client.js";
 import { DESERTO_CHANNEL_ID, ROTA_COMERCIAL_KONOHA_CHANNEL_ID } from "../../data/scenarios/index.js";
 import { getMission } from "../../data/missions/index.js";
+import { pausedMissionNotice, sendMissionNotice } from "../../ui/mission-notice-v2.js";
 import { getOrCreateCharacter, attrsFromRow } from "../characters/character-service.js";
 import { getActiveSession, startCombat } from "../combat/combat-engine.js";
 import { formatPersonaLines, sendAsPersona } from "../discord/persona-webhook.js";
@@ -435,7 +436,13 @@ async function runDialogue(
       state.talks![npcKey] = 0;
       await markObjective(inst.id, "receber_pedido_trupe");
       await setState(inst.id, state);
-      if (channel && "send" in channel) await channel.send("Use `/mapa` e ouca os tres artistas com `/interagir npc`.");
+      await sendMissionNotice(channel, {
+        kind: "investigacao",
+        title: "Sabotagem na trupe",
+        description: "Três artistas presenciaram partes diferentes do incidente.",
+        items: ["Use `/mapa` para localizar os artistas.", "Ouça cada depoimento com `/interagir npc`."],
+        itemsTitle: "Como investigar",
+      });
       return;
     }
     await setState(inst.id, state);
@@ -461,7 +468,13 @@ async function runDialogue(
       await markObjective(inst.id, artist.objectiveId);
       if (state.heard.length >= ctx.variant.artists.length) {
         state.stage = "ACCUSE";
-        if (channel && "send" in channel) await channel.send("Depoimentos reunidos. Use `/mapa` para identificar o sabotador sem acusar um inocente.");
+        await sendMissionNotice(channel, {
+          kind: "descoberta",
+          title: "Depoimentos reunidos",
+          description: "As três versões já podem ser comparadas para separar contradições de fatos.",
+          items: ["Use `/mapa` para revisar as provas e identificar o sabotador."],
+          itemsTitle: "Próximo passo",
+        });
       }
     }
     await setState(inst.id, state);
@@ -603,7 +616,7 @@ async function startAccusation(
     state.running = false;
     await setState(instanceId, state);
     await msg.edit({ components: [] }).catch(() => undefined);
-    await channel.send("A acusacao expirou. Use `/mapa` para revisar as pistas da trupe.");
+    await sendMissionNotice(channel, pausedMissionNotice("O tempo para registrar a acusação terminou.", "Use /mapa para revisar as pistas da trupe."));
   }
 }
 

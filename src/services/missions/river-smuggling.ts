@@ -11,6 +11,7 @@ import {
 import { prisma } from "../../db/client.js";
 import { MANSAO_HOKAGE_CHANNEL_ID, RIO_CHANNEL_ID } from "../../data/scenarios/index.js";
 import { getMission } from "../../data/missions/index.js";
+import { pausedMissionNotice, sendMissionNotice } from "../../ui/mission-notice-v2.js";
 import { getOrCreateCharacter, attrsFromRow } from "../characters/character-service.js";
 import { getActiveSession, startCombat } from "../combat/combat-engine.js";
 import { formatPersonaLines, sendAsPersona } from "../discord/persona-webhook.js";
@@ -308,7 +309,13 @@ async function runDialogue(
       state.talks![npcKey] = 0;
       await markObjective(inst.id, "receber_ordem_contrabando");
       await setState(inst.id, state);
-      if (channel && "send" in channel) await channel.send("Siga para o **Rio** e use `/mapa` para investigar a margem.");
+      await sendMissionNotice(channel, {
+        kind: "investigacao",
+        title: "Margem sob investigação",
+        description: "A carga clandestina pode ter deixado marcas entre a água e a vegetação.",
+        items: ["Siga para o **Rio** e use `/mapa` para examinar a margem."],
+        itemsTitle: "Próximo destino",
+      });
       return;
     }
     await setState(inst.id, state);
@@ -447,7 +454,7 @@ async function startRiverPanel(channel: TextBasedChannel | null, instanceId: str
       state.running = false;
       await setState(instanceId, state);
       await msg.edit({ components: [] }).catch(() => undefined);
-      await channel.send("A investigacao do rio expirou. Use `/mapa` para retomar do ponto atual.");
+      await sendMissionNotice(channel, pausedMissionNotice("A sessão de investigação do rio expirou."));
       return;
     }
   }

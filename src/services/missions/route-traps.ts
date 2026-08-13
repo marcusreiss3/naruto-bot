@@ -12,6 +12,7 @@ import {
 import { prisma } from "../../db/client.js";
 import { ROTA_COMERCIAL_KONOHA_CHANNEL_ID } from "../../data/scenarios/index.js";
 import { getMission } from "../../data/missions/index.js";
+import { pausedMissionNotice, sendMissionNotice } from "../../ui/mission-notice-v2.js";
 import { formatPersonaLines, sendAsPersona } from "../discord/persona-webhook.js";
 import type { RenderEntity } from "../maps/renderer.js";
 import { NpcAiService } from "../npc-ai/npc-ai-service.js";
@@ -399,7 +400,13 @@ async function runDialogue(
       state.talks![npcKey] = 0;
       await markObjective(inst.id, "receber_alerta_rota");
       await setState(inst.id, state);
-      if (channel && "send" in channel) await channel.send("Use `/mapa` para localizar e desarmar as armadilhas da rota.");
+      await sendMissionNotice(channel, {
+        kind: "investigacao",
+        title: "Varredura da rota iniciada",
+        description: "Localize os mecanismos antes de permitir a passagem dos civis.",
+        items: ["Use `/mapa` para localizar e desarmar as armadilhas."],
+        itemsTitle: "Próximo passo",
+      });
       return;
     }
     await setState(inst.id, state);
@@ -558,7 +565,7 @@ async function startDisarmPuzzle(
       state.running = false;
       await setState(instanceId, state);
       await msg.edit({ components: [] }).catch(() => undefined);
-      await channel.send("O desarme foi interrompido. Use `/mapa` para retomar a varredura da rota.");
+      await sendMissionNotice(channel, pausedMissionNotice("O desarme foi interrompido.", "Use /mapa para retomar a varredura da rota."));
       return;
     }
   }
@@ -655,7 +662,7 @@ async function startEscortPuzzle(
       state.running = false;
       await setState(instanceId, state);
       await msg.edit({ components: [] }).catch(() => undefined);
-      await channel.send("A orientacao dos civis foi interrompida. Use `/mapa` para retomar a travessia.");
+      await sendMissionNotice(channel, pausedMissionNotice("A orientação dos civis foi interrompida.", "Use /mapa para retomar a travessia."));
       return;
     }
   }

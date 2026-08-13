@@ -16,6 +16,7 @@ import {
   MANSAO_HOKAGE_CHANNEL_ID,
 } from "../../data/scenarios/index.js";
 import { getMission } from "../../data/missions/index.js";
+import { pausedMissionNotice, sendMissionNotice } from "../../ui/mission-notice-v2.js";
 import { formatPersonaLines, sendAsPersona } from "../discord/persona-webhook.js";
 import type { RenderEntity } from "../maps/renderer.js";
 import { NpcAiService } from "../npc-ai/npc-ai-service.js";
@@ -468,7 +469,7 @@ async function startPackageChoice(
       state.runningFor = null;
       await setState(instanceId, state);
       await msg.edit({ components: [] }).catch(() => undefined);
-      await channel.send("A escolha do pacote expirou. Use `/interagir npc` com o destinatario para tentar novamente.");
+      await sendMissionNotice(channel, pausedMissionNotice("O tempo para escolher o pacote terminou.", "Use /interagir npc com o destinatário para tentar novamente."));
       return;
     }
   }

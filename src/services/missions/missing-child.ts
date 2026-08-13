@@ -17,6 +17,7 @@ import {
   PRACA_VILA_DA_FOLHA_CHANNEL_ID,
 } from "../../data/scenarios/index.js";
 import { getMission } from "../../data/missions/index.js";
+import { pausedMissionNotice, sendMissionNotice } from "../../ui/mission-notice-v2.js";
 import { getOrCreateCharacter, attrsFromRow } from "../characters/character-service.js";
 import { getActiveSession, startCombat } from "../combat/combat-engine.js";
 import { formatPersonaLines, sendAsPersona } from "../discord/persona-webhook.js";
@@ -502,7 +503,13 @@ async function runDialogue(
       state.talks![npcKey] = 0;
       await markObjective(inst.id, "receber_pedido_familia");
       await setState(inst.id, state);
-      if (channel && "send" in channel) await channel.send(`Comece pelo ${ctx.variant.marketName}: <#${ctx.variant.marketChannelId}>.`);
+      await sendMissionNotice(channel, {
+        kind: "investigacao",
+        title: "Primeiro local da busca",
+        description: "A conversa com a família revelou onde Ayaka pretendia ir.",
+        items: [`**${ctx.variant.marketName}** — <#${ctx.variant.marketChannelId}>`],
+        footer: "Vá até o local indicado para continuar a investigação.",
+      });
       return;
     }
     await setState(inst.id, state);
@@ -526,7 +533,13 @@ async function runDialogue(
       state.talks![npcKey] = 0;
       await markObjective(inst.id, "ouvir_vendedor_mercado");
       await setState(inst.id, state);
-      if (channel && "send" in channel) await channel.send(`A pista leva ate ${ctx.variant.plazaName}: <#${ctx.variant.plazaChannelId}>.`);
+      await sendMissionNotice(channel, {
+        kind: "descoberta",
+        title: "Nova pista encontrada",
+        description: "O depoimento do mercado aponta para a praça.",
+        items: [`${ctx.variant.plazaName} — <#${ctx.variant.plazaChannelId}>`],
+        itemsTitle: "Próximo destino",
+      });
       return;
     }
     await setState(inst.id, state);
@@ -550,7 +563,14 @@ async function runDialogue(
       state.talks![npcKey] = 0;
       await markObjective(inst.id, "ouvir_testemunha_praca");
       await setState(inst.id, state);
-      if (channel && "send" in channel) await channel.send(`Procure pistas no ${ctx.variant.alleyName}: <#${ctx.variant.alleyChannelId}>.`);
+      await sendMissionNotice(channel, {
+        kind: "investigacao",
+        title: "Rastro em direção ao beco",
+        description: "A testemunha da praça viu a criança seguir por uma passagem menos movimentada.",
+        items: [`${ctx.variant.alleyName} — <#${ctx.variant.alleyChannelId}>`],
+        itemsTitle: "Local da próxima busca",
+        footer: "Use /mapa para procurar sinais sem destruir o rastro.",
+      });
       return;
     }
     await setState(inst.id, state);
@@ -688,7 +708,7 @@ async function startTrailPuzzle(
       state.running = false;
       await setState(instanceId, state);
       await msg.edit({ components: [] }).catch(() => undefined);
-      await channel.send("A investigacao esfriou. Use `/mapa` para retomar as pistas do beco.");
+      await sendMissionNotice(channel, pausedMissionNotice("A busca no beco esfriou antes da conclusão.", "Use /mapa para retomar as pistas do beco."));
       return;
     }
   }

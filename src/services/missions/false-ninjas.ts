@@ -15,6 +15,7 @@ import {
   ROTA_COMERCIAL_KONOHA_CHANNEL_ID,
 } from "../../data/scenarios/index.js";
 import { getMission } from "../../data/missions/index.js";
+import { pausedMissionNotice, sendMissionNotice } from "../../ui/mission-notice-v2.js";
 import { getOrCreateCharacter, attrsFromRow } from "../characters/character-service.js";
 import { getActiveSession, startCombat } from "../combat/combat-engine.js";
 import { formatPersonaLines, sendAsPersona } from "../discord/persona-webhook.js";
@@ -551,7 +552,13 @@ async function runDialogue(
       if (state.heard.length === ctx.variant.witnesses.length) {
         state.stage = "ORDER_CHECK";
         if (channel && "send" in channel) {
-          await channel.send("Os tres depoimentos foram reunidos. Use `/mapa` para identificar qual ordem e falsa.");
+          await sendMissionNotice(channel, {
+            kind: "descoberta",
+            title: "Três depoimentos reunidos",
+            description: "As versões dos suspeitos agora podem ser comparadas com as ordens oficiais.",
+            items: ["Use `/mapa` para identificar qual ordem é falsa."],
+            itemsTitle: "Próximo passo",
+          });
         }
       }
     }
@@ -733,7 +740,7 @@ async function startOrderCheck(
       state.running = false;
       await setState(instanceId, state);
       await msg.edit({ components: [] }).catch(() => undefined);
-      await channel.send("A analise expirou. Use `/mapa` para abrir os documentos novamente.");
+      await sendMissionNotice(channel, pausedMissionNotice("A sessão de análise dos documentos expirou."));
       return;
     }
   }
@@ -819,7 +826,7 @@ async function startAmbushSetup(
       state.running = false;
       await setState(instanceId, state);
       await msg.edit({ components: [] }).catch(() => undefined);
-      await channel.send("A preparacao expirou. Use `/mapa` para retomar a emboscada.");
+      await sendMissionNotice(channel, pausedMissionNotice("A preparação da emboscada foi interrompida.", "Use /mapa para retomar a emboscada."));
       return;
     }
   }

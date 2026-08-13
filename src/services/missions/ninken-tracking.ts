@@ -17,6 +17,7 @@ import {
   ROTA_COMERCIAL_KONOHA_CHANNEL_ID,
 } from "../../data/scenarios/index.js";
 import { getMission } from "../../data/missions/index.js";
+import { sendMissionNotice } from "../../ui/mission-notice-v2.js";
 import { NpcAiService } from "../npc-ai/npc-ai-service.js";
 import { getPersona } from "../npc-ai/personas.js";
 import { sendAsPersona, formatPersonaLines } from "../discord/persona-webhook.js";
@@ -344,7 +345,13 @@ async function runNinkenDialogue(
       state.activeNpc = null;
       await markObjective(inst.id, "falar_treinador");
       await setState(inst.id, state);
-      if (channel && "send" in channel) await channel.send("Use `/mapa` aqui na rota para comecar o rastreamento.");
+      await sendMissionNotice(channel, {
+        kind: "investigacao",
+        title: "Rastreamento liberado",
+        description: "Separe o cheiro verdadeiro de Mugi dos rastros falsos espalhados pela rota.",
+        items: ["Use `/mapa` neste canal para iniciar o rastreamento."],
+        itemsTitle: "Próximo passo",
+      });
       return;
     }
     await setState(inst.id, state);
@@ -366,7 +373,13 @@ async function runNinkenDialogue(
         2,
       );
       if (channel && "send" in channel) {
-        await channel.send(`Mugi aceitou voltar. Retorne para a **Rota Comercial de Konoha**: <#${ROTA_COMERCIAL_KONOHA_CHANNEL_ID}>.`);
+        await sendMissionNotice(channel, {
+          kind: "descoberta",
+          title: "Mugi foi encontrado",
+          description: "O ninken aceitou acompanhar a equipe de volta ao treinador.",
+          items: [`**Rota Comercial de Konoha** — <#${ROTA_COMERCIAL_KONOHA_CHANNEL_ID}>`],
+          itemsTitle: "Destino de retorno",
+        });
       }
       return;
     }

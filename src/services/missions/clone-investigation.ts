@@ -15,6 +15,7 @@ import { formatPersonaLines, sendAsPersona } from "../discord/persona-webhook.js
 import type { RenderEntity } from "../maps/renderer.js";
 import { NpcAiService } from "../npc-ai/npc-ai-service.js";
 import { getPersona } from "../npc-ai/personas.js";
+import { pausedMissionNotice, sendMissionNotice } from "../../ui/mission-notice-v2.js";
 import {
   completeMission,
   buildMissionCompleteEmbed,
@@ -275,9 +276,14 @@ async function runDialogue(
       await markObjective(inst.id, "falar_instrutor");
       await setState(inst.id, state);
       if (channel && "send" in channel) {
-        await channel.send(
-          "**Provas de Yori:** o verdadeiro voltou do patio com barro nos chinelos, carrega giz vermelho e senta perto da porta. Entreviste os tres com `/interagir npc`.",
-        );
+        await sendMissionNotice(channel, {
+          kind: "investigacao",
+          title: "Provas fornecidas por Yori",
+          description: "O Kenta verdadeiro pode ser identificado por três características verificáveis.",
+          itemsTitle: "Características",
+          items: ["Barro nos chinelos", "Giz vermelho", "Carteira perto da porta"],
+          footer: "Entreviste os três suspeitos usando /interagir npc.",
+        });
       }
       return;
     }
@@ -307,7 +313,13 @@ async function runDialogue(
     if (state.interviewed.length === SUSPECTS.length) {
       state.stage = "ACCUSE";
       if (channel && "send" in channel) {
-        await channel.send("As tres entrevistas terminaram. Use `/mapa` para comparar as provas e fazer a acusacao.");
+        await sendMissionNotice(channel, {
+          kind: "descoberta",
+          title: "Entrevistas concluídas",
+          description: "Os três relatos estão disponíveis para comparação.",
+          items: ["Use `/mapa` para revisar as provas e identificar o Kenta verdadeiro."],
+          itemsTitle: "Próximo passo",
+        });
       }
     }
   }
@@ -421,7 +433,7 @@ async function startAccusation(
       state.running = false;
       await setState(instanceId, state);
       await msg.edit({ components: [] }).catch(() => undefined);
-      await channel.send("A acusacao expirou. Use `/mapa` para abrir as provas novamente.");
+      await sendMissionNotice(channel, pausedMissionNotice("O tempo para registrar a acusação terminou."));
       return;
     }
   }

@@ -15,6 +15,7 @@ import {
   ROTA_COMERCIAL_KONOHA_CHANNEL_ID,
 } from "../../data/scenarios/index.js";
 import { getMission } from "../../data/missions/index.js";
+import { sendMissionNotice } from "../../ui/mission-notice-v2.js";
 import { partyMemberIds } from "../party/party-service.js";
 import { NpcAiService } from "../npc-ai/npc-ai-service.js";
 import { getPersona } from "../npc-ai/personas.js";
@@ -312,9 +313,17 @@ async function runWaterDialogue(
       await markObjective(inst.id, "falar_haru");
       await setState(inst.id, state);
       if (channel && "send" in channel) {
-        await channel.send(
-          `Analise agua limpa na **Floresta** (<#${FLORESTA_CHANNEL_ID}>) e na **Rota Comercial** (<#${ROTA_COMERCIAL_KONOHA_CHANNEL_ID}>) usando \`/mapa\`.`,
-        );
+        await sendMissionNotice(channel, {
+          kind: "investigacao",
+          title: "Dois pontos de coleta",
+          description: "Compare as amostras dos dois locais e descarte qualquer fonte contaminada.",
+          itemsTitle: "Locais para análise",
+          items: [
+            `**Floresta** — <#${FLORESTA_CHANNEL_ID}>`,
+            `**Rota Comercial** — <#${ROTA_COMERCIAL_KONOHA_CHANNEL_ID}>`,
+          ],
+          footer: "Entre em cada canal e use /mapa para analisar a água.",
+        });
       }
       return;
     }
@@ -449,7 +458,14 @@ async function startWaterPuzzle(
   }
 
   if (collectedCount(state) >= WATER_SITES.length) {
-    await channel.send(`Amostras limpas coletadas. Volte ao **Hospital de Konoha** e use \`/interagir npc\`: <#${HOSPITAL_KONOHA_CHANNEL_ID}>.`);
+    await sendMissionNotice(channel, {
+      kind: "descoberta",
+      title: "Amostras limpas coletadas",
+      description: "A água aprovada já pode ser entregue ao hospital.",
+      items: [`**Hospital de Konoha** — <#${HOSPITAL_KONOHA_CHANNEL_ID}>`],
+      itemsTitle: "Destino da entrega",
+      footer: "Use /interagir npc para concluir a entrega.",
+    });
   }
 }
 

@@ -12,6 +12,7 @@ import {
 import { prisma } from "../../db/client.js";
 import { CAVERNA_CHANNEL_ID, MANSAO_HOKAGE_CHANNEL_ID } from "../../data/scenarios/index.js";
 import { getMission } from "../../data/missions/index.js";
+import { pausedMissionNotice, sendMissionNotice } from "../../ui/mission-notice-v2.js";
 import { getOrCreateCharacter, attrsFromRow } from "../characters/character-service.js";
 import { getActiveSession, startCombat } from "../combat/combat-engine.js";
 import { formatPersonaLines, sendAsPersona } from "../discord/persona-webhook.js";
@@ -469,7 +470,13 @@ async function runDialogue(
       state.talks![npcKey] = 0;
       await markObjective(inst.id, "falar_sobrevivente");
       await setState(inst.id, state);
-      if (channel && "send" in channel) await channel.send("Os bandidos foram localizados no fundo da caverna. Use `/mapa` para confronta-los.");
+      await sendMissionNotice(channel, {
+        kind: "descoberta",
+        title: "Bandidos localizados",
+        description: "O sobrevivente confirmou que o grupo responsável está no fundo da caverna.",
+        items: ["Use `/mapa` para avançar e confrontá-los."],
+        itemsTitle: "Próximo passo",
+      });
       return;
     }
     await setState(inst.id, state);
@@ -623,7 +630,7 @@ async function startEntrancePuzzle(
       state.running = false;
       await setState(instanceId, state);
       await msg.edit({ components: [] }).catch(() => undefined);
-      await channel.send("A abertura foi interrompida. Use `/mapa` para retomar a entrada da caverna.");
+      await sendMissionNotice(channel, pausedMissionNotice("A abertura da entrada foi interrompida.", "Use /mapa para retomar a entrada da caverna."));
       return;
     }
   }

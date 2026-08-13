@@ -3,6 +3,10 @@ import { ENV } from "../config/env.js";
 
 export function isAdmin(interaction: Interaction): boolean {
   const member = interaction.member as GuildMember | null;
+  return isAdminMember(member);
+}
+
+export function isAdminMember(member: GuildMember | null | undefined): boolean {
   if (!member) return false;
   // Administrator
   if (

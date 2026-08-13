@@ -11,6 +11,7 @@ import {
 import { prisma } from "../../db/client.js";
 import { CENTRO_COMERCIAL_CHANNEL_ID } from "../../data/scenarios/index.js";
 import { getMission } from "../../data/missions/index.js";
+import { sendMissionNotice } from "../../ui/mission-notice-v2.js";
 import { getOrCreateCharacter, attrsFromRow } from "../characters/character-service.js";
 import { getActiveSession, startCombat } from "../combat/combat-engine.js";
 import { formatPersonaLines, sendAsPersona } from "../discord/persona-webhook.js";
@@ -537,7 +538,13 @@ async function startPatrolPanel(
     }
   }
 
-  await channel.send("Patrulha concluida. Use `/mapa` no **Centro Comercial** para localizar o batedor nos telhados.");
+  await sendMissionNotice(channel, {
+    kind: "descoberta",
+    title: "Patrulha concluída",
+    description: `A equipe preservou **${state.cluesFound ?? 0}** pista(s) e perdeu **${state.cluesLost ?? 0}** durante a ronda.`,
+    items: ["Use `/mapa` no **Centro Comercial** para localizar o batedor nos telhados."],
+    itemsTitle: "Próximo passo",
+  });
 }
 
 export async function onDistrictNightPatrolCombatWon(

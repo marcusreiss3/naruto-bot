@@ -12,6 +12,7 @@ import {
 import { prisma } from "../../db/client.js";
 import { HOSPITAL_KONOHA_CHANNEL_ID } from "../../data/scenarios/index.js";
 import { getMission } from "../../data/missions/index.js";
+import { pausedMissionNotice, sendMissionNotice } from "../../ui/mission-notice-v2.js";
 import { formatPersonaLines, sendAsPersona } from "../discord/persona-webhook.js";
 import type { RenderEntity } from "../maps/renderer.js";
 import { NpcAiService } from "../npc-ai/npc-ai-service.js";
@@ -395,7 +396,13 @@ async function runDialogue(
       state.talks![npcKey] = 0;
       await markObjective(inst.id, "receber_denuncia_hospital");
       await setState(inst.id, state);
-      if (channel && "send" in channel) await channel.send("Use `/mapa` e ouca a enfermeira e o paciente com `/interagir npc`.");
+      await sendMissionNotice(channel, {
+        kind: "investigacao",
+        title: "Depoimentos disponíveis",
+        description: "A enfermeira e o paciente observaram momentos diferentes do desaparecimento.",
+        items: ["Use `/mapa` para localizá-los.", "Ouça os dois com `/interagir npc`."],
+        itemsTitle: "Como investigar",
+      });
       return;
     }
     await setState(inst.id, state);
@@ -421,7 +428,13 @@ async function runDialogue(
       await markObjective(inst.id, npcKey === ctx.variant.nurse.key ? "ouvir_enfermeira" : "ouvir_paciente");
       if (state.heard.length >= 2) {
         state.stage = "STORAGE";
-        if (channel && "send" in channel) await channel.send("Depoimentos reunidos. Use `/mapa` para investigar o deposito.");
+        await sendMissionNotice(channel, {
+          kind: "descoberta",
+          title: "Depoimentos reunidos",
+          description: "Os relatos apontam para movimentação suspeita no depósito do hospital.",
+          items: ["Use `/mapa` para investigar o depósito."],
+          itemsTitle: "Próximo passo",
+        });
       }
       await setState(inst.id, state);
       return;
@@ -530,7 +543,7 @@ async function startStoragePuzzle(
       state.running = false;
       await setState(instanceId, state);
       await msg.edit({ components: [] }).catch(() => undefined);
-      await channel.send("A busca no deposito foi interrompida. Use `/mapa` para continuar a investigacao.");
+      await sendMissionNotice(channel, pausedMissionNotice("A busca no depósito foi interrompida."));
       return;
     }
   }
@@ -539,7 +552,13 @@ async function startStoragePuzzle(
   state.running = false;
   await markObjective(instanceId, "investigar_deposito");
   await setState(instanceId, state);
-  await channel.send("As pistas apontam para um ninja ferido na ala de recuperacao. Use `/mapa` e fale com ele.");
+  await sendMissionNotice(channel, {
+    kind: "descoberta",
+    title: "Suspeito identificado pelas pistas",
+    description: "As evidências do depósito apontam para um ninja ferido na ala de recuperação.",
+    items: ["Use `/mapa` para localizá-lo e fale com ele."],
+    itemsTitle: "Próximo passo",
+  });
 }
 
 function decisionEmbed(): EmbedBuilder {
@@ -611,7 +630,7 @@ async function startDecisionPanel(
     state.running = false;
     await setState(instanceId, state);
     await msg.edit({ components: [] }).catch(() => undefined);
-    await channel.send("A decisao expirou. Use `/mapa` para escolher como resolver o roubo.");
+    await sendMissionNotice(channel, pausedMissionNotice("O tempo para registrar a decisão terminou.", "Use /mapa para escolher como resolver o roubo."));
   }
 }
 

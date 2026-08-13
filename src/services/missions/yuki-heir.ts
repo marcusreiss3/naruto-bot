@@ -23,6 +23,7 @@ import { partyMemberIds } from "../party/party-service.js";
 import { normalizeVillageId, VILLAGE_MANSIONS, VILLAGE_NAMES, type VillageId } from "../village-service.js";
 import { v2Edit, v2Public } from "../../ui/economy-components-v2.js";
 import { investigationPanel, type InvestigationMemoryView } from "../../ui/mission-investigation-v2.js";
+import { pausedMissionNotice, sendMissionNotice } from "../../ui/mission-notice-v2.js";
 import { cacheAttrs, gatherPartyPlayers, type StarterChar } from "./combat-party.js";
 import {
   canUncoverClue,
@@ -542,7 +543,19 @@ async function runDialogue(
       await markObjective(inst.id, "receber_dossie_yuki");
       await setState(inst.id, state);
       if (channel && "send" in channel) {
-        await channel.send(`Investigue as quatro pistas: <#${CENTRO_COMERCIAL_SUNA_CHANNEL_ID}>, <#${CENTRO_COMERCIAL_KIRI_CHANNEL_ID}>, <#${PRACA_SUNA_CHANNEL_ID}> e <#${CENTRO_COMERCIAL_CHANNEL_ID}>.`);
+        await sendMissionNotice(channel, {
+          kind: "investigacao",
+          title: "Quatro cenas foram identificadas",
+          description: "Dividam a equipe e analisem cada local antes de formular uma tese sobre Hakuo Yuki.",
+          itemsTitle: "Locais da investigação",
+          items: [
+            `<#${CENTRO_COMERCIAL_SUNA_CHANNEL_ID}> — vidro congelado`,
+            `<#${CENTRO_COMERCIAL_KIRI_CHANNEL_ID}> — mensagem invertida`,
+            `<#${PRACA_SUNA_CHANNEL_ID}> — reflexos da fonte`,
+            `<#${CENTRO_COMERCIAL_CHANNEL_ID}> — carga falsa`,
+          ],
+          footer: "Entre no canal indicado e use /mapa para abrir a pista.",
+        });
       }
       return;
     }
@@ -899,7 +912,7 @@ async function startCluePuzzle(channel: TextBasedChannel | null, guildId: string
     state.runningClue = null;
     await setState(instanceId, state);
     await msg.edit(v2Edit(cluePanel(instanceId, state, clue, members, page, "A cena esfriou, mas o quadro foi preservado.", true))).catch(() => undefined);
-    await channel.send("A pista esfriou. Use `/mapa` neste canal para retomar a análise.");
+    await sendMissionNotice(channel, pausedMissionNotice("O painel foi preservado, mas esta sessão de análise expirou."));
   }
 }
 

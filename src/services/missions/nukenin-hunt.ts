@@ -15,6 +15,7 @@ import {
   MANSAO_HOKAGE_CHANNEL_ID,
 } from "../../data/scenarios/index.js";
 import { getMission } from "../../data/missions/index.js";
+import { pausedMissionNotice, sendMissionNotice } from "../../ui/mission-notice-v2.js";
 import { getOrCreateCharacter, attrsFromRow } from "../characters/character-service.js";
 import { getActiveSession, startCombat } from "../combat/combat-engine.js";
 import { formatPersonaLines, sendAsPersona } from "../discord/persona-webhook.js";
@@ -348,7 +349,13 @@ async function runDialogue(
       state.talks![npcKey] = 0;
       await markObjective(inst.id, "receber_ficha_nukenin");
       await setState(inst.id, state);
-      if (channel && "send" in channel) await channel.send("Va ao **Beco de Konoha** e use `/mapa` para encontrar o informante.");
+      await sendMissionNotice(channel, {
+        kind: "investigacao",
+        title: "Informante localizado",
+        description: "A ficha do nukenin aponta para um contato clandestino no Beco de Konoha.",
+        items: ["Vá ao **Beco de Konoha** e use `/mapa` para localizar o informante."],
+        itemsTitle: "Próximo passo",
+      });
       return;
     }
     await setState(inst.id, state);
@@ -372,7 +379,13 @@ async function runDialogue(
       state.talks![npcKey] = 0;
       await markObjective(inst.id, "interrogar_informante");
       await setState(inst.id, state);
-      if (channel && "send" in channel) await channel.send("Siga para a **Floresta** e use `/mapa` para rastrear o nukenin.");
+      await sendMissionNotice(channel, {
+        kind: "descoberta",
+        title: "Rota do alvo descoberta",
+        description: "O depoimento confirma que o nukenin escapou em direção à Floresta.",
+        items: ["Siga para a **Floresta** e use `/mapa` para iniciar o rastreamento."],
+        itemsTitle: "Próximo destino",
+      });
       return;
     }
     await setState(inst.id, state);
@@ -503,7 +516,7 @@ async function startTrackingPanel(channel: TextBasedChannel | null, instanceId: 
       state.running = false;
       await setState(instanceId, state);
       await msg.edit({ components: [] }).catch(() => undefined);
-      await channel.send("O rastreamento expirou. Use `/mapa` para retomar do ponto atual.");
+      await sendMissionNotice(channel, pausedMissionNotice("A sessão de rastreamento expirou."));
       return;
     }
   }

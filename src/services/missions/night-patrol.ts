@@ -11,6 +11,7 @@ import {
 import { prisma } from "../../db/client.js";
 import { BECO_KONOHA_CHANNEL_ID } from "../../data/scenarios/index.js";
 import { getMission } from "../../data/missions/index.js";
+import { sendMissionNotice } from "../../ui/mission-notice-v2.js";
 import { getOrCreateCharacter, attrsFromRow } from "../characters/character-service.js";
 import { getActiveSession, startCombat } from "../combat/combat-engine.js";
 import { partyMemberIds } from "../party/party-service.js";
@@ -463,7 +464,13 @@ async function startPatrolPuzzle(
     }
   }
 
-  await channel.send("Suspeito localizado. Use `/interagir npc` no **Beco de Konoha** para confrontar o arruaceiro.");
+  await sendMissionNotice(channel, {
+    kind: "descoberta",
+    title: "Suspeito localizado",
+    description: "As pistas da patrulha convergem para um arruaceiro escondido no Beco de Konoha.",
+    items: ["Use `/interagir npc` para confrontá-lo."],
+    itemsTitle: "Próximo passo",
+  });
 }
 
 async function failNightPatrolMission(instanceId: string, msg: Message, reason: string): Promise<void> {

@@ -3,6 +3,7 @@ import { ENV, HAS_GROQ } from "../../config/env.js";
 import { prisma } from "../../db/client.js";
 import { CENTRO_COMERCIAL_CHANNEL_ID } from "../../data/scenarios/index.js";
 import { getMission } from "../../data/missions/index.js";
+import { sendMissionNotice } from "../../ui/mission-notice-v2.js";
 import { log } from "../../utils/logger.js";
 import { NpcAiService } from "../npc-ai/npc-ai-service.js";
 import { getPersona } from "../npc-ai/personas.js";
@@ -243,7 +244,13 @@ async function runMarketDialogue(
       if (VENDORS.every((v) => state.heard?.[v.key])) {
         state.stage = "MEDIATE";
         if (channel && "send" in channel) {
-          await channel.send("Voce ouviu os dois lados. Use `/interagir npc` para reunir os vendedores e mediar a briga.");
+          await sendMissionNotice(channel, {
+            kind: "descoberta",
+            title: "Os dois lados foram ouvidos",
+            description: "Os argumentos dos vendedores já podem ser comparados antes da mediação.",
+            items: ["Use `/interagir npc` para reunir os envolvidos e mediar a disputa."],
+            itemsTitle: "Próximo passo",
+          });
         }
       }
     }

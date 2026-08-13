@@ -15,6 +15,7 @@ import {
   MANSAO_HOKAGE_CHANNEL_ID,
 } from "../../data/scenarios/index.js";
 import { getMission } from "../../data/missions/index.js";
+import { pausedMissionNotice, sendMissionNotice } from "../../ui/mission-notice-v2.js";
 import { getOrCreateCharacter, attrsFromRow } from "../characters/character-service.js";
 import { getActiveSession, startCombat } from "../combat/combat-engine.js";
 import { formatPersonaLines, sendAsPersona } from "../discord/persona-webhook.js";
@@ -320,7 +321,13 @@ async function runDialogue(
       state.talks![npcKey] = 0;
       await markObjective(inst.id, "receber_ordem_bandanas");
       await setState(inst.id, state);
-      if (channel && "send" in channel) await channel.send("Siga para o **Centro Comercial** e use `/mapa` para investigar.");
+      await sendMissionNotice(channel, {
+        kind: "objetivo",
+        title: "Investigação iniciada",
+        description: "Os primeiros rastros das bandanas roubadas levam ao Centro Comercial.",
+        items: ["Siga para o **Centro Comercial** e use `/mapa` para examinar o mercado."],
+        itemsTitle: "Próximo destino",
+      });
       return;
     }
     await setState(inst.id, state);
@@ -452,7 +459,7 @@ async function startMarketPanel(channel: TextBasedChannel | null, instanceId: st
       state.running = false;
       await setState(instanceId, state);
       await msg.edit({ components: [] }).catch(() => undefined);
-      await channel.send("A investigacao do mercado expirou. Use `/mapa` para retomar do ponto atual.");
+      await sendMissionNotice(channel, pausedMissionNotice("A sessão de investigação do mercado expirou."));
       return;
     }
   }

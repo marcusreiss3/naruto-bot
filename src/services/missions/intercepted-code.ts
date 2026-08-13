@@ -16,6 +16,7 @@ import {
   MANSAO_HOKAGE_CHANNEL_ID,
 } from "../../data/scenarios/index.js";
 import { getMission } from "../../data/missions/index.js";
+import { pausedMissionNotice, sendMissionNotice } from "../../ui/mission-notice-v2.js";
 import { getOrCreateCharacter, attrsFromRow } from "../characters/character-service.js";
 import { getActiveSession, startCombat } from "../combat/combat-engine.js";
 import { formatPersonaLines, sendAsPersona } from "../discord/persona-webhook.js";
@@ -429,7 +430,13 @@ async function runDialogue(
       state.talks![npcKey] = 0;
       await markObjective(inst.id, "receber_mensagem_interceptada");
       await setState(inst.id, state);
-      if (channel && "send" in channel) await channel.send("Use `/mapa` aqui na Mansao para abrir a mesa de decifragem.");
+      await sendMissionNotice(channel, {
+        kind: "investigacao",
+        title: "Mensagem pronta para decifragem",
+        description: "O conteúdo interceptado foi colocado sobre a mesa de análise da mansão.",
+        items: ["Use `/mapa` para abrir a mesa de decifragem."],
+        itemsTitle: "Próximo passo",
+      });
       return;
     }
     await setState(inst.id, state);
@@ -454,7 +461,13 @@ async function runDialogue(
       await markObjective(inst.id, "encontrar_contato_beco");
       await markObjective(inst.id, "descobrir_local_encontro");
       await setState(inst.id, state);
-      if (channel && "send" in channel) await channel.send(`O encontro foi movido para ${ctx.variant.forestName}: <#${ctx.variant.forestChannelId}>.`);
+      await sendMissionNotice(channel, {
+        kind: "descoberta",
+        title: "Local do encontro decifrado",
+        description: "A mensagem revela que o ponto de encontro foi alterado.",
+        items: [`${ctx.variant.forestName} — <#${ctx.variant.forestChannelId}>`],
+        itemsTitle: "Destino descoberto",
+      });
       return;
     }
     await setState(inst.id, state);
@@ -630,7 +643,7 @@ async function startCipherPuzzle(
       state.running = false;
       await setState(instanceId, state);
       await msg.edit({ components: [] }).catch(() => undefined);
-      await channel.send("A mesa de decifragem ficou parada. Use `/mapa` para retomar a mensagem interceptada.");
+      await sendMissionNotice(channel, pausedMissionNotice("A sessão de decifragem foi interrompida.", "Use /mapa para retomar a mensagem interceptada."));
       return;
     }
   }

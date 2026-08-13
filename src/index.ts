@@ -55,6 +55,10 @@ import { ensureVillageShops } from "./services/economy/shop-service.js";
 import { ensureVillageBuildings } from "./services/economy/constructions.js";
 import { startVillageSchedulers } from "./services/economy/village-scheduler.js";
 import { purgeExpiredSessions } from "./services/economy/ui-session.js";
+import { startTravelScheduler, stopTravelScheduler } from "./services/travel/travel-service.js";
+import { handleSheetMessage, startSheetScheduler, stopSheetScheduler } from "./services/sheet/sheet-service.js";
+import { SHEET_LAUNCH_CHANNEL_ID } from "./data/sheet-creation.js";
+import { isAdmin, isAdminMember } from "./utils/permissions.js";
 
 const client = new Client({
   intents: [
@@ -103,6 +107,12 @@ client.once(Events.ClientReady, async (c) => {
   await startVillageSchedulers(c).catch((err) =>
     log.error("Falha ao iniciar os relógios da vila:", err),
   );
+  await startTravelScheduler(c).catch((err) =>
+    log.error("Falha ao iniciar o relógio de viagens:", err),
+  );
+  await startSheetScheduler(c).catch((err) =>
+    log.error("Falha ao iniciar o relógio das fichas:", err),
+  );
 });
 
 // Sobe o site da árvore de habilidades no mesmo processo (no-op se nao configurado).
@@ -112,6 +122,12 @@ void startWebServer().catch((err) => log.error("Falha ao subir o site:", err));
 client.on(Events.MessageCreate, async (message) => {
   if (message.author.bot) return;
   try {
+    if (message.channelId === SHEET_LAUNCH_CHANNEL_ID) {
+      const member = message.member ?? await message.guild?.members.fetch(message.author.id).catch(() => null);
+      if (!isAdminMember(member)) await message.delete().catch(() => undefined);
+      return;
+    }
+    if (await handleSheetMessage(message)) return;
     if (await handleKidMessage(message)) return;
     if (await continueCleanVillageMessage(message)) return;
     if (await continuePurseTheftMessage(message)) return;
@@ -207,6 +223,17 @@ client.on(Events.InteractionCreate, async (interaction) => {
   }
 
   if (!interaction.isChatInputCommand()) return;
+  if (
+    interaction.channelId === SHEET_LAUNCH_CHANNEL_ID &&
+    interaction.commandName !== "ficha" &&
+    !isAdmin(interaction)
+  ) {
+    await interaction.reply({
+      content: "Neste canal só é permitido usar `/ficha`.",
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
   const command = commandMap.get(interaction.commandName);
   if (!command) return;
   // Espelha o cargo de vila no banco antes de executar: e' o unico ponto por
@@ -237,6 +264,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
 async function shutdown(): Promise<void> {
   log.info("Encerrando...");
+  stopTravelScheduler();
+  stopSheetScheduler();
   await disconnect();
   client.destroy();
   process.exit(0);

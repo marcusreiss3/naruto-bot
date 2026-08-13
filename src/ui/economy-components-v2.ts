@@ -21,6 +21,7 @@ import {
   ButtonStyle,
   ContainerBuilder,
   MessageFlags,
+  MediaGalleryBuilder,
   SectionBuilder,
   SeparatorBuilder,
   SeparatorSpacingSize,
@@ -56,6 +57,7 @@ export type ContainerChild =
   | TextDisplayBuilder
   | SeparatorBuilder
   | SectionBuilder
+  | MediaGalleryBuilder
   | ActionRowBuilder<MessageActionRowComponentBuilder>;
 
 export type TopLevel = JSONEncodable<APIMessageTopLevelComponent>;
@@ -68,6 +70,7 @@ export function economyContainer(accent: AccentName, children: ContainerChild[])
     if (child instanceof TextDisplayBuilder) container.addTextDisplayComponents(child);
     else if (child instanceof SeparatorBuilder) container.addSeparatorComponents(child);
     else if (child instanceof SectionBuilder) container.addSectionComponents(child);
+    else if (child instanceof MediaGalleryBuilder) container.addMediaGalleryComponents(child);
     else container.addActionRowComponents(child);
   }
   return container;

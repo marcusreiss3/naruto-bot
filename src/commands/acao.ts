@@ -19,11 +19,13 @@ import {
   economyContainer,
   itemLabel,
   listBlock,
+  noticeBlock,
   ryo,
   text,
   titleBlock,
   v2Edit,
   type AccentName,
+  type ContainerChild,
 } from "../ui/economy-components-v2.js";
 import type { EmojiKey } from "../ui/economy-emojis.js";
 import { getItem } from "../data/items.js";
@@ -57,12 +59,6 @@ const ACAO_EMOJI = {
   COLETAR_AGUA: "agua_limpa",
 } as const satisfies Record<GatherAction, EmojiKey>;
 
-function canaisPermitidos(action: GatherAction): string {
-  return areasForAction(action)
-    .map((area) => `<#${area.channelId}>`)
-    .join(", ");
-}
-
 export const acao: Command = {
   data: new SlashCommandBuilder()
     .setName("acao")
@@ -89,10 +85,24 @@ export const acao: Command = {
     });
 
     if (!outcome.ok) {
-      const canais = canaisPermitidos(action);
-      await interaction.editReply(
-        canais ? `${outcome.error}\nLocais possíveis: ${canais}` : outcome.error,
-      );
+      const areas = areasForAction(action);
+      const recovering = outcome.error.toLocaleLowerCase("pt-BR").includes("recuperando");
+      const blocks: ContainerChild[] = [
+        titleBlock(recovering ? "⏳" : "⚠️", recovering ? "Você ainda está se recuperando" : "Ação indisponível", GATHER_ACTION_LABELS[action]),
+        noticeBlock(recovering ? "aviso" : "erro", outcome.error),
+      ];
+      if (areas.length) {
+        blocks.push(
+          divider(),
+          listBlock(
+            "Locais permitidos para esta ação",
+            areas.map((area) => `• **${area.name}** — <#${area.channelId}>`),
+            "Nenhum local disponível.",
+          ),
+        );
+      }
+      blocks.push(text("-# Aguarde o tempo indicado antes de tentar novamente."));
+      await interaction.editReply(v2Edit([economyContainer(recovering ? "aviso" : "erro", blocks)]));
       return;
     }
 

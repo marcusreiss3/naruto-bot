@@ -8,6 +8,7 @@ import {
   ROTA_COMERCIAL_KONOHA_CHANNEL_ID,
 } from "../../data/scenarios/index.js";
 import { getMission } from "../../data/missions/index.js";
+import { sendMissionNotice } from "../../ui/mission-notice-v2.js";
 import { getOrCreateCharacter, attrsFromRow } from "../characters/character-service.js";
 import { getActiveSession, startCombat } from "../combat/combat-engine.js";
 import { formatPersonaLines, sendAsPersona } from "../discord/persona-webhook.js";
@@ -364,7 +365,14 @@ async function runDialogue(
       state.talks![npcKey] = 0;
       await markObjective(inst.id, "receber_dossie_sino");
       await setState(inst.id, state);
-      await sendLine(channel, `Siga para o **Centro Comercial de Konoha**: <#${CENTRO_COMERCIAL_CHANNEL_ID}>.`);
+      await sendMissionNotice(channel, {
+        kind: "investigacao",
+        title: "Sacristão encontrado em Konoha",
+        description: "Enji pode confirmar se o som vinha do sino físico ou de uma técnica de genjutsu.",
+        items: [`**Centro Comercial de Konoha** — <#${CENTRO_COMERCIAL_CHANNEL_ID}>`],
+        itemsTitle: "Destino da investigação",
+        footer: "Use /mapa e depois /interagir npc para ouvir o sacristão.",
+      });
       return;
     }
     await setState(inst.id, state);

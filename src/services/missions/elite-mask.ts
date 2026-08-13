@@ -8,6 +8,7 @@ import {
   ROTA_COMERCIAL_KONOHA_CHANNEL_ID,
 } from "../../data/scenarios/index.js";
 import { getMission } from "../../data/missions/index.js";
+import { sendMissionNotice } from "../../ui/mission-notice-v2.js";
 import { getOrCreateCharacter, attrsFromRow } from "../characters/character-service.js";
 import { getActiveSession, startCombat } from "../combat/combat-engine.js";
 import { formatPersonaLines, sendAsPersona } from "../discord/persona-webhook.js";
@@ -356,7 +357,14 @@ async function runDialogue(
       state.talks![npcKey] = 0;
       await markObjective(inst.id, "receber_dossie_mascara");
       await setState(inst.id, state);
-      await sendLine(channel, `Siga para o **Beco de Konoha**: <#${BECO_KONOHA_CHANNEL_ID}>.`);
+      await sendMissionNotice(channel, {
+        kind: "investigacao",
+        title: "Primeira testemunha localizada",
+        description: "Iori afirma ter visto o mascarado salvar uma criança antes de desaparecer.",
+        items: [`**Beco de Konoha** — <#${BECO_KONOHA_CHANNEL_ID}>`],
+        itemsTitle: "Destino da investigação",
+        footer: "Use /mapa e depois /interagir npc para ouvir a testemunha.",
+      });
       return;
     }
     await setState(inst.id, state);

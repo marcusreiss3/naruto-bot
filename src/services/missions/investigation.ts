@@ -13,6 +13,7 @@ import { NpcAiService } from "../npc-ai/npc-ai-service.js";
 import { getPersona } from "../npc-ai/personas.js";
 import { sendAsPersona, formatPersonaLines } from "../discord/persona-webhook.js";
 import type { RenderEntity } from "../maps/renderer.js";
+import { sendMissionNotice } from "../../ui/mission-notice-v2.js";
 
 // Estado da missão dos bandidos (etapas). Campos opcionais => valores default.
 export interface BanditState {
@@ -166,16 +167,24 @@ async function runNpcDialogue(
   await markObjective(instId, npc.objective);
 
   const got = (state.clues!.merchant ? 1 : 0) + (state.clues!.kid ? 1 : 0);
-  let note = `🔍 **Pista ${got}/2 descoberta!**`;
+  let description: string;
+  let next: string;
   if (state.clues!.merchant && state.clues!.kid) {
     state.stage = "FOREST";
-    note +=
-      "\n✅ Vocês juntaram as pistas: são **vários bandidos** atacando na **rota da Floresta**.\nVão até a **Floresta** e usem `/mapa` para enfrentá-los!";
+    description = "As duas pistas confirmam que vários bandidos estão atacando a rota da Floresta.";
+    next = "Siga para a **Floresta** e use `/mapa` para localizar o grupo.";
   } else {
-    note += `\nFale com ${state.clues!.merchant ? "a **Criança**" : "o **Mercador**"} para a próxima pista (\`/interagir npc\`).`;
+    description = `A equipe obteve a pista de **${npc.name}**, mas ainda falta comparar outro depoimento.`;
+    next = `Fale com ${state.clues!.merchant ? "a **Criança**" : "o **Mercador**"} usando \`/interagir npc\`.`;
   }
   await setState(instId, state);
-  if (channel && "send" in channel) await channel.send(note);
+  await sendMissionNotice(channel, {
+    kind: "descoberta",
+    title: `Pista ${got}/2 descoberta`,
+    description,
+    items: [next],
+    itemsTitle: "Próximo passo",
+  });
 }
 
 // Comando /interagir npc: inicia a conversa com um NPC da investigação.

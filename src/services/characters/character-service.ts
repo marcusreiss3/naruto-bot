@@ -28,6 +28,7 @@ export async function getFullCharacter(discordId: string, guildId: string) {
       resources: true,
       mastery: true,
       clan: true,
+      profile: true,
       trait: true, // trait entra no combate junto dos nos — ver trait-service
       economy: true,
       elements: true,

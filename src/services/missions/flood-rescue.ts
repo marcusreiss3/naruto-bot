@@ -14,6 +14,7 @@ import {
 import { prisma } from "../../db/client.js";
 import { RIO_CHANNEL_ID } from "../../data/scenarios/index.js";
 import { getMission } from "../../data/missions/index.js";
+import { pausedMissionNotice, sendMissionNotice } from "../../ui/mission-notice-v2.js";
 import { getOrCreateCharacter, attrsFromRow } from "../characters/character-service.js";
 import { getActiveSession, startCombat } from "../combat/combat-engine.js";
 import { formatPersonaLines, sendAsPersona } from "../discord/persona-webhook.js";
@@ -609,7 +610,7 @@ async function startRopePuzzle(
       state.running = false;
       await setState(instanceId, state);
       await msg.edit({ components: [] }).catch(() => undefined);
-      await channel.send("A linha de resgate foi interrompida. Use `/mapa` para retomar.");
+      await sendMissionNotice(channel, pausedMissionNotice("A montagem da linha de resgate foi interrompida."));
       return;
     }
   }
@@ -731,7 +732,7 @@ async function startPriorityPuzzle(
       state.running = false;
       await setState(instanceId, state);
       await msg.edit({ components: [] }).catch(() => undefined);
-      await channel.send("A escolha de prioridade expirou. Use `/mapa` para retomar o resgate.");
+      await sendMissionNotice(channel, pausedMissionNotice("O tempo para escolher a prioridade de resgate terminou.", "Use /mapa para retomar o resgate."));
       return;
     }
   }

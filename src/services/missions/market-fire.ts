@@ -11,6 +11,7 @@ import {
 import { prisma } from "../../db/client.js";
 import { CENTRO_COMERCIAL_CHANNEL_ID } from "../../data/scenarios/index.js";
 import { getMission } from "../../data/missions/index.js";
+import { pausedMissionNotice, sendMissionNotice } from "../../ui/mission-notice-v2.js";
 import { getOrCreateCharacter, attrsFromRow } from "../characters/character-service.js";
 import { getActiveSession, startCombat } from "../combat/combat-engine.js";
 import { formatPersonaLines, sendAsPersona } from "../discord/persona-webhook.js";
@@ -453,7 +454,7 @@ async function startEmergencyPanel(channel: TextBasedChannel | null, instanceId:
       state.running = false;
       await setState(instanceId, state);
       await msg.edit({ components: [] }).catch(() => undefined);
-      await channel.send("A resposta ao incendio expirou. Use `/mapa` para retomar do ponto atual.");
+      await sendMissionNotice(channel, pausedMissionNotice("A sessão de resposta ao incêndio expirou."));
       return;
     }
   }
@@ -547,7 +548,7 @@ async function startSealPanel(channel: TextBasedChannel | null, instanceId: stri
       state.running = false;
       await setState(instanceId, state);
       await msg.edit({ components: [] }).catch(() => undefined);
-      await channel.send("A analise dos selos expirou. Use `/mapa` para abrir o painel novamente.");
+      await sendMissionNotice(channel, pausedMissionNotice("A sessão de análise dos selos expirou.", "Use /mapa para abrir o painel novamente."));
       return;
     }
   }

@@ -21,6 +21,7 @@ import { getPersona } from "../npc-ai/personas.js";
 import { partyMemberIds } from "../party/party-service.js";
 import { v2Edit, v2Public } from "../../ui/economy-components-v2.js";
 import { investigationPanel, type InvestigationMemoryView } from "../../ui/mission-investigation-v2.js";
+import { pausedMissionNotice, sendMissionNotice } from "../../ui/mission-notice-v2.js";
 import { cacheAttrs, gatherPartyPlayers, type StarterChar } from "./combat-party.js";
 import {
   canUncoverClue,
@@ -451,7 +452,18 @@ async function runDialogue(
       await markObjective(inst.id, "receber_caso_cadaver");
       await setState(inst.id, state);
       if (channel && "send" in channel) {
-        await channel.send(`Investiguem as três frentes: <#${HOSPITAL_KONOHA_CHANNEL_ID}>, <#${CENTRO_COMERCIAL_CHANNEL_ID}> e <#${BECO_KONOHA_CHANNEL_ID}>.`);
+        await sendMissionNotice(channel, {
+          kind: "investigacao",
+          title: "Três frentes de investigação",
+          description: "O corpo, a compra suspeita e os rastros precisam ser comparados antes do confronto.",
+          itemsTitle: "Locais da investigação",
+          items: [
+            `<#${HOSPITAL_KONOHA_CHANNEL_ID}> — corpo em suspensão`,
+            `<#${CENTRO_COMERCIAL_CHANNEL_ID}> — compra realizada pela vítima`,
+            `<#${BECO_KONOHA_CHANNEL_ID}> — rastros sem pegadas`,
+          ],
+          footer: "Entre no canal indicado e use /mapa para abrir a pista.",
+        });
       }
       return;
     }
@@ -806,7 +818,7 @@ async function startCluePanel(channel: TextBasedChannel | null, guildId: string,
     state.runningClue = null;
     await setState(instanceId, state);
     await msg.edit(v2Edit(cluePanel(instanceId, state, clue, members, page, "A cena esfriou, mas o quadro foi preservado.", true))).catch(() => undefined);
-    await channel.send("A pista esfriou. Use `/mapa` neste canal para retomar a análise.");
+    await sendMissionNotice(channel, pausedMissionNotice("O painel foi preservado, mas esta sessão de análise expirou."));
   }
 }
 

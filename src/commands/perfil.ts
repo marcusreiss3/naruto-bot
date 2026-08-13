@@ -6,6 +6,7 @@ import { getClan } from "../data/index.js";
 import { getTrait } from "../data/traits.js";
 import { moveRange } from "../services/characters/formulas.js";
 import { formatRyo } from "../services/economy/character-economy.js";
+import { prisma } from "../db/client.js";
 
 export const perfil: Command = {
   data: new SlashCommandBuilder()
@@ -30,9 +31,18 @@ export const perfil: Command = {
 
     if (interaction.options.getSubcommand() === "nome") {
       const nome = interaction.options.getString("nome", true).trim();
-      await getOrCreateCharacter(interaction.user.id, guildId, interaction.user.username);
-      await setCharacterName(interaction.user.id, guildId, nome);
-      await interaction.reply({ content: `✅ Nome do personagem definido: **${nome}**.`, ephemeral: true });
+      const char = await getOrCreateCharacter(interaction.user.id, guildId, interaction.user.username);
+      if (!/^[\p{L}][\p{L}' -]{1,23}$/u.test(nome)) {
+        await interaction.reply({ content: "Nome inválido. Use de 2 a 24 caracteres, apenas com letras, espaços, hífen ou apóstrofo.", ephemeral: true });
+        return;
+      }
+      const clanName = char.clan ? getClan(char.clan.clanId)?.name : null;
+      const finalName = char.profile?.completedAt && clanName ? `${nome} ${clanName}` : nome;
+      await setCharacterName(interaction.user.id, guildId, finalName);
+      if (char.profile?.completedAt) {
+        await prisma.characterProfile.update({ where: { charId: char.id }, data: { givenName: nome } });
+      }
+      await interaction.reply({ content: `Nome do personagem definido: **${finalName}**.`, ephemeral: true });
       return;
     }
 
@@ -77,11 +87,13 @@ export const perfil: Command = {
             `Elementos: ${elements}`,
             `Clã: ${clan}`,
             `Trait: ${trait ? `**${trait.name}** [${TRAIT_RARITY_LABELS[trait.rarity]}]` : "nenhuma"}`,
+            ...(char.profile?.completedAt ? [`Idade: **${char.profile.age} anos**`] : []),
           ].join("\n"),
         },
         // Descricao completa em campo proprio: no "Geral" ela estouraria a
         // linha e as traits miticas tem texto longo.
         ...(trait ? [{ name: `🎲 ${trait.name}`, value: trait.description }] : []),
+        ...(char.profile?.completedAt ? [{ name: "História", value: char.profile.story.slice(0, 1024) }] : []),
         {
           name: `Jutsus (${char.jutsus.length})`,
           value: char.jutsus.length
@@ -89,6 +101,8 @@ export const perfil: Command = {
             : "nenhum",
         },
       );
+
+    if (char.profile?.completedAt) embed.setImage(char.profile.appearanceUrl);
 
     await interaction.reply({ embeds: [embed] });
   },

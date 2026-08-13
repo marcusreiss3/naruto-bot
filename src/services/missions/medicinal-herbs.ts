@@ -14,6 +14,7 @@ import {
   HOSPITAL_KONOHA_CHANNEL_ID,
 } from "../../data/scenarios/index.js";
 import { getMission } from "../../data/missions/index.js";
+import { sendMissionNotice } from "../../ui/mission-notice-v2.js";
 import { NpcAiService } from "../npc-ai/npc-ai-service.js";
 import { getPersona } from "../npc-ai/personas.js";
 import { sendAsPersona, formatPersonaLines } from "../discord/persona-webhook.js";
@@ -293,7 +294,14 @@ async function runMedicDialogue(
       await markObjective(inst.id, "falar_medico");
       await setState(inst.id, state);
       if (channel && "send" in channel) {
-        await channel.send(`Va para a **Floresta** e use \`/mapa\` para procurar as ervas: <#${FLORESTA_CHANNEL_ID}>.`);
+        await sendMissionNotice(channel, {
+          kind: "objetivo",
+          title: "Coleta de ervas medicinais",
+          description: "O hospital precisa de plantas frescas e corretamente identificadas.",
+          items: [`**Floresta** — <#${FLORESTA_CHANNEL_ID}>`],
+          itemsTitle: "Local da coleta",
+          footer: "Use /mapa para procurar as ervas.",
+        });
       }
       return;
     }
@@ -432,7 +440,14 @@ async function startHerbPuzzle(
     ],
     components: [],
   });
-  await channel.send(`Ervas coletadas. Volte ao **Hospital de Konoha** e use \`/interagir npc\`: <#${HOSPITAL_KONOHA_CHANNEL_ID}>.`);
+  await sendMissionNotice(channel, {
+    kind: "descoberta",
+    title: "Ervas necessárias coletadas",
+    description: "A seleção está completa e pronta para ser entregue ao ninja médico.",
+    items: [`**Hospital de Konoha** — <#${HOSPITAL_KONOHA_CHANNEL_ID}>`],
+    itemsTitle: "Destino da entrega",
+    footer: "Use /interagir npc para concluir a missão.",
+  });
 }
 
 async function failHerbsMission(instanceId: string, msg: Message, reason: string): Promise<void> {

@@ -43,6 +43,7 @@ model UserCharacter {
   mastery         CharacterMastery?
   clan            CharacterClan?
   trait           CharacterTrait?
+  profile         CharacterProfile?
   economy         CharacterEconomyState?
   elements        CharacterElement[]
   fightingStyles  CharacterFightingStyle[]
@@ -483,6 +484,66 @@ model GatheringCooldown {
   availableAt DateTime
 
   @@unique([charId, action])
+}
+
+// Dados narrativos preenchidos pelo fluxo de /ficha. `completedAt` so recebe
+// valor depois que todos os cargos do Discord foram aplicados com sucesso.
+// Sua ausencia e' a verificacao de "primeira ficha" usada nos tres sorteios.
+model CharacterProfile {
+  id            String        @id @default(cuid())
+  character     UserCharacter @relation(fields: [charId], references: [id], onDelete: Cascade)
+  charId        String        @unique
+  givenName     String
+  age           Int
+  story         String
+  appearanceUrl String
+  completedAt   DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+// Sessao do cadastro guiado. Sobrevive a reinicios e tambem e' o relogio do
+// canal: ativa expira em 1 hora; concluida recebe mais 30 segundos antes da
+// exclusao. `dataJson` guarda somente escolhas ainda nao efetivadas.
+model SheetCreationSession {
+  id                  String    @id @default(cuid())
+  guildId             String
+  discordId           String
+  channelId           String?   @unique
+  stage               String
+  dataJson            String    @default("{}")
+  // O rascunho nao expira. Somente o canal e' temporario; depois de apagado,
+  // /ficha cria outro e retoma esta mesma linha.
+  channelExpiresAt    DateTime?
+  // Prazo independente da primeira decisao. Vencido, uma das tres opcoes ja
+  // gravadas e' escolhida automaticamente — nunca ocorre um novo sorteio.
+  clanChoiceExpiresAt DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@unique([guildId, discordId])
+  @@index([channelExpiresAt])
+  @@index([clanChoiceExpiresAt])
+}
+
+// Viagem ativa de um membro. A linha sobrevive a reinicios do bot; ao vencer
+// `arriveAt`, o agendador troca o cargo de caminho pelo cargo do destino e
+// remove a linha. A chave composta impede duas viagens simultaneas.
+model ActiveTravel {
+  id            String   @id @default(cuid())
+  guildId       String
+  discordId     String
+  origin        String
+  destination   String
+  path          String
+  originRoleId  String
+  pathRoleId    String
+  targetRoleId  String
+  startedAt     DateTime @default(now())
+  arriveAt      DateTime
+
+  @@unique([guildId, discordId])
+  @@index([arriveAt])
 }
 
 // Trilha de coleta/craft/comida: canal, vila, acao, itens e horario. Serve para

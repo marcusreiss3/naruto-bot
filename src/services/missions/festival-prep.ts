@@ -14,6 +14,7 @@ import {
 import { prisma } from "../../db/client.js";
 import { CENTRO_COMERCIAL_CHANNEL_ID } from "../../data/scenarios/index.js";
 import { getMission } from "../../data/missions/index.js";
+import { sendMissionNotice } from "../../ui/mission-notice-v2.js";
 import { NpcAiService } from "../npc-ai/npc-ai-service.js";
 import { getPersona } from "../npc-ai/personas.js";
 import { sendAsPersona, formatPersonaLines } from "../discord/persona-webhook.js";
@@ -304,7 +305,13 @@ async function runFestivalDialogue(
       state.activeNpc = null;
       await markObjective(inst.id, "falar_organizadora");
       await setState(inst.id, state);
-      if (channel && "send" in channel) await channel.send("Use `/mapa` para abrir o painel de preparacao do festival.");
+      await sendMissionNotice(channel, {
+        kind: "objetivo",
+        title: "Preparação do festival iniciada",
+        description: "Barracas, lanternas e fiscalização precisam ser concluídas antes da abertura.",
+        items: ["Use `/mapa` para abrir o painel de preparação."],
+        itemsTitle: "Próximo passo",
+      });
       return;
     }
     await setState(inst.id, state);
@@ -325,7 +332,13 @@ async function runFestivalDialogue(
         "O jogador percebeu/fiscalizou a trapaça com chakra. Admita, pare de trapacear e recue sem combate.",
         2,
       );
-      if (channel && "send" in channel) await channel.send("Trapaça impedida. Fale com **Sayuri Matsu** usando `/interagir npc`.");
+      await sendMissionNotice(channel, {
+        kind: "descoberta",
+        title: "Trapaça impedida",
+        description: "A fiscalização terminou e os jogos estão seguros para o público.",
+        items: ["Fale com **Sayuri Matsu** usando `/interagir npc`."],
+        itemsTitle: "Encerramento",
+      });
       return;
     }
 
