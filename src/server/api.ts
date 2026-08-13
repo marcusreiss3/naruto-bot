@@ -22,7 +22,11 @@ export function registerApi(app: FastifyInstance): void {
 
     const villageId = await villageForDiscordUser(ENV.DISCORD_GUILD_ID, discordId);
     const snap = await loadSnapshot(discordId, ENV.DISCORD_GUILD_ID, villageId);
-    if (!snap) return reply.send({ authenticated: true, hasChar: false });
+    if (!snap) return reply.send({
+      authenticated: true,
+      hasChar: false,
+      equipment: buildEquipmentCatalog(),
+    });
 
     const trees: Record<string, unknown> = {
       FUNDAMENTOS: viewFundamentosTree(snap),

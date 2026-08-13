@@ -122,20 +122,30 @@ describe("catálogo de itens", () => {
       "/combate fugir",
       "/combate fim-turno",
       "/combate pegar-arma",
+      "/combate agua",
+      "/invocacao",
       "/equipar item",
       "/desequipar",
+      "/restaurar-pergaminho pergaminho",
       "/arremessar item alvo",
       "/usar item",
       "/missoes ativas",
       "/interagir npc",
+      "/acao minerar",
+      "/craft listar",
+      "/loja",
+      "/sincronizar-vila",
+      "/vila",
     ]));
     expect(catalog.commandGroups.map((group) => group.id)).toEqual([
       "character",
       "combat",
       "equipment",
       "missions",
+      "economy",
+      "village",
     ]);
-    expect(catalog.quickStart).toHaveLength(4);
+    expect(catalog.quickStart).toHaveLength(6);
     expect(catalog.items.find((item) => item.id === "katana")?.specialRule).toMatch(
       /somente ser equipada/i,
     );

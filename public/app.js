@@ -460,9 +460,33 @@ const CENTER_X = 432, COL_GAP = 180, ROW_GAP = 158, TOP_PAD = 72, WIDTH = 864;
 let state = null;      // resposta de /api/state
 let activeEl = null;   // elemento em exibição
 let modalNode = null;  // nó aberto no modal
-let equipmentOpen = false;
+let currentView = "trees";
+let guideCenter = null;
+let appReady = false;
+let hasCharacter = false;
+let activeDialog = null;
+let dialogReturnFocus = null;
 
 const $ = (id) => document.getElementById(id);
+
+function showDialog(id) {
+  const dialog = $(id);
+  if (!dialog) return;
+  dialogReturnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  activeDialog = dialog;
+  dialog.classList.remove("hidden");
+  requestAnimationFrame(() => dialog.querySelector(".modal-card")?.focus());
+}
+
+function hideDialog(id) {
+  const dialog = $(id);
+  if (!dialog) return;
+  dialog.classList.add("hidden");
+  if (activeDialog === dialog) activeDialog = null;
+  const target = dialogReturnFocus;
+  dialogReturnFocus = null;
+  if (target?.isConnected) target.focus();
+}
 
 async function fetchState() {
   const res = await fetch("/api/state", { credentials: "same-origin" });
@@ -472,6 +496,7 @@ async function fetchState() {
 
 function show(screen) {
   for (const s of ["login", "nochar", "app"]) $(s).classList.toggle("hidden", s !== screen);
+  $("skipLink")?.classList.toggle("hidden", screen !== "app");
 }
 
 // Quais bolsas de atributo a árvore aberta consome, em ordem de peso (a que
@@ -592,12 +617,42 @@ async function boot() {
     return show("login");
   }
   if (!state.authenticated) return show("login");
-  if (!state.hasChar) return show("nochar");
+  hasCharacter = Boolean(state.hasChar);
+  if (!hasCharacter) {
+    show("nochar");
+    $("nocharGuidesBtn").onclick = () => {
+      show("app");
+      $("treesNavBtn").classList.add("hidden");
+      $("charName").textContent = "Sem personagem";
+      $("charLevel").textContent = "Modo de consulta";
+      guideCenter = window.GuideCenter.create({
+        root: $("guidesRoot"),
+        scrollContainer: $("guidesPage"),
+        progress: $("readingProgress"),
+        progressBar: $("readingProgressBar"),
+        catalog: window.GUIDE_CATALOG,
+        runtime: state.equipment,
+      });
+      appReady = true;
+      navigate("#/guias/primeiros-passos");
+    };
+    return;
+  }
   show("app");
   buildElemBar();
   activeEl = state.char.elements[0] || "FUNDAMENTOS";
   renderTree(activeEl);
+  guideCenter = window.GuideCenter.create({
+    root: $("guidesRoot"),
+    scrollContainer: $("guidesPage"),
+    progress: $("readingProgress"),
+    progressBar: $("readingProgressBar"),
+    catalog: window.GUIDE_CATALOG,
+    runtime: state.equipment,
+  });
   lastSig = sigOf(state);
+  appReady = true;
+  handleRoute();
   startSync();
 }
 
@@ -619,95 +674,62 @@ async function pull() {
   state = ns;
   lastSig = g;
   buildElemBar();       // elementos podem ter sido concedidos
-  if (equipmentOpen) renderEquipmentPage();
-  else renderTree(activeEl); // mantém o elemento aberto, atualiza status/pontos/topo
+  guideCenter?.setRuntime(state.equipment);
+  if (currentView === "trees") renderTree(activeEl); // mantém a árvore aberta e atualiza o estado
 }
 
-function equipmentAbilityHtml(ability, command) {
-  if (!ability) return "";
-  const action = actionLabel(ability);
-  const damage = ability.baseDamage
-    ? `<span>Dano base: <b>${ability.baseDamage}</b></span>`
-    : "";
-  return `<div class="equipment-ability">
-    <div class="equipment-ability-head"><code>${escHtml(command)}</code><strong>${escHtml(ability.name)}</strong></div>
-    <div class="equipment-stats">
-      <span>${escHtml(CAT_LABEL[ability.category] || ability.category)}</span>
-      <span>${escHtml(action)}</span>
-      <span>${escHtml(areaText(ability))}</span>
-      <span>${escHtml(RES_LABEL[ability.resource] || ability.resource)}: <b>${ability.cost}%</b></span>
-      ${damage}
-    </div>
-    <p>${highlightEffects(ability.mechanics || ability.description)}</p>
-  </div>`;
+function parsedRoute() {
+  const raw = location.hash.replace(/^#\/?/, "");
+  const parts = raw.split("/").filter(Boolean);
+  if (parts[0] !== "guias") return { view: "trees", slug: null };
+  let slug = null;
+  if (parts[1]) {
+    try { slug = decodeURIComponent(parts[1]); }
+    catch { slug = parts[1]; }
+  }
+  return { view: "guides", slug };
 }
 
-function renderEquipmentPage() {
-  const catalog = state && state.equipment;
-  if (!catalog) return;
-  $("equipmentQuickStart").innerHTML =
-    `<div class="equipment-section-title"><span>🥷</span><div><small>Primeiros passos</small><h2>Fluxo rápido</h2></div></div>` +
-    `<ol>${catalog.quickStart.map((step) => `<li>${escHtml(step)}</li>`).join("")}</ol>`;
-  $("equipmentCommands").innerHTML = catalog.commandGroups.map((group) =>
-    `<section class="command-group">
-      <div class="equipment-section-title"><span>${group.icon}</span><div><small>Comandos básicos</small><h2>${escHtml(group.title)}</h2></div></div>
-      <div class="command-grid">${group.commands.map((entry) =>
-        `<article><code>${escHtml(entry.command)}</code><p>${escHtml(entry.description)}</p></article>`
-      ).join("")}</div>
-    </section>`
-  ).join("");
+function setCurrentView(view) {
+  currentView = view;
+  const guidesOpen = view === "guides";
+  $("treeView").classList.toggle("hidden", guidesOpen);
+  $("guidesPage").classList.toggle("hidden", !guidesOpen);
+  document.querySelector(".topbar-context").classList.toggle("hidden", guidesOpen);
 
-  // Glossario de efeitos: os textos vem prontos do servidor (effect-catalog.ts),
-  // com os numeros lidos de BALANCE — nao repetir nada aqui, senao desatualiza.
-  $("equipmentEffects").innerHTML = (catalog.effectGroups || []).map((group, index) =>
-    `<section class="effect-group">
-      ${index === 0 ? `<div class="equipment-section-title"><span>✨</span><div><small>Referência</small><h2>Efeitos e o que fazem</h2></div></div>` : ""}
-      <h3 class="effect-group-title">${escHtml(group.title)}</h3>
-      <div class="effect-grid">${group.effects.map((effect) =>
-        `<article class="effect-card">
-          <strong>${escHtml(effect.label)}</strong>
-          <p>${escHtml(effect.description)}</p>
-        </article>`
-      ).join("")}</div>
-    </section>`
-  ).join("");
-
-  $("equipmentUnarmed").innerHTML =
-    `<div class="equipment-section-title"><span>👊</span><div><small>Sem arma equipada</small><h2>Ataque desarmado</h2></div></div>` +
-    equipmentAbilityHtml(catalog.unarmedAttack, "/atacar alvo");
-
-  $("equipmentGroups").innerHTML = catalog.categories.flatMap((category) => {
-    const items = catalog.items.filter((item) => item.category === category.id);
-    if (!items.length) return [];
-    const cards = items.map((item) => {
-      const actions = item.actions.map((action) => `<span>${escHtml(action.label)}</span>`).join("");
-      const basicCommand = item.id === "kunai" ? "/atacar alvo" : `/usar ${item.id}`;
-      return `<article class="equipment-card">
-        <div class="equipment-card-head">
-          <div><small>${escHtml(category.label)}</small><h3>${escHtml(item.name)}</h3></div>
-          <div class="equipment-actions">${actions}</div>
-        </div>
-        <p class="equipment-description">${escHtml(item.description)}</p>
-        ${item.specialRule ? `<p class="equipment-special">${escHtml(item.specialRule)}</p>` : ""}
-        ${equipmentAbilityHtml(item.basicAbility, basicCommand)}
-        ${equipmentAbilityHtml(item.throwAbility, `/arremessar ${item.id} alvo`)}
-      </article>`;
-    }).join("");
-    return [`<section class="equipment-group">
-      <div class="equipment-section-title"><span>${category.icon}</span><div><small>Categoria</small><h2>${escHtml(category.label)}</h2></div></div>
-      <div class="equipment-grid">${cards}</div>
-    </section>`];
-  }).join("");
+  const treesButton = $("treesNavBtn");
+  const guidesButton = $("guidesNavBtn");
+  treesButton.classList.toggle("active", !guidesOpen);
+  guidesButton.classList.toggle("active", guidesOpen);
+  if (guidesOpen) {
+    guidesButton.setAttribute("aria-current", "page");
+    treesButton.removeAttribute("aria-current");
+  } else {
+    treesButton.setAttribute("aria-current", "page");
+    guidesButton.removeAttribute("aria-current");
+  }
 }
 
-function setEquipmentOpen(open) {
-  equipmentOpen = open;
-  $("equipmentPage").classList.toggle("hidden", !open);
-  document.querySelector(".workspace").classList.toggle("hidden", open);
-  $("elembar").classList.toggle("hidden", open);
-  $("equipmentBtn").classList.toggle("active", open);
-  $("charPointsBox").classList.toggle("hidden", open);
-  if (open) renderEquipmentPage();
+function handleRoute() {
+  if (!appReady || !guideCenter) return;
+  const route = parsedRoute();
+  if (!hasCharacter && route.view === "trees") {
+    navigate("#/guias/primeiros-passos");
+    return;
+  }
+  setCurrentView(route.view);
+  if (route.view === "guides") {
+    if (route.slug) guideCenter.showGuide(route.slug);
+    else guideCenter.showHome();
+    return;
+  }
+  document.title = `${ELEMENTS.find((entry) => entry.id === activeEl)?.name || "Árvores"} — Arquivo Shinobi`;
+  renderTree(activeEl);
+}
+
+function navigate(hash) {
+  if (location.hash === hash) handleRoute();
+  else location.hash = hash;
 }
 
 const STYLE_TREE_IDS = new Set([
@@ -733,7 +755,8 @@ function buildElemBar() {
         ? state.char.clanId === e.clanGate || (state.trees[e.id] || []).some((n) => n.status === "OWNED")
         : state.char.elements.includes(e.id));
     if (!unlocked && !showAllTrees) continue;
-    const div = document.createElement("div");
+    const div = document.createElement("button");
+    div.type = "button";
     div.className = "elem" + (!unlocked ? " locked" : "");
     div.style.setProperty("--ec", e.color);
     div.style.setProperty("--ecg", glow(e.color));
@@ -742,8 +765,9 @@ function buildElemBar() {
       ? `<img class="e-img" src="${iconImage}" alt="" loading="lazy">`
       : e.icon;
     div.innerHTML = `<div class="e-ico">${eface}</div><div class="e-name">${e.name}</div>`;
+    div.setAttribute("aria-label", `${e.name}${unlocked ? "" : " — somente consulta"}`);
+    div.setAttribute("aria-pressed", String(e.id === activeEl));
     div.onclick = () => {
-      setEquipmentOpen(false);
       activeEl = e.id;
       renderTree(e.id);
     };
@@ -780,7 +804,11 @@ function renderTree(elId) {
   $("copyArsenalBtn").classList.toggle("hidden", elId !== "UCHIHA");
 
   // marca ativo na barra
-  document.querySelectorAll(".elem").forEach((d) => d.classList.toggle("active", d.dataset.el === elId));
+  document.querySelectorAll(".elem").forEach((d) => {
+    const active = d.dataset.el === elId;
+    d.classList.toggle("active", active);
+    d.setAttribute("aria-pressed", String(active));
+  });
   updateTop(elId);
   updateDossier(elId);
 
@@ -878,6 +906,7 @@ function renderTree(elId) {
     div.style.left = x + "px";
     div.style.top = y + "px";
     div.tabIndex = 0;
+    div.dataset.nodeId = n.id;
     div.setAttribute("role", "button");
     div.setAttribute("aria-label", `${n.name}${n.rank ? " (rank " + n.rank + ")" : ""}`);
     const badge = n.rank ? `<span class="badge r-${n.rank}">${n.rank}</span>` : "";
@@ -909,11 +938,11 @@ function openCopyArsenal() {
       </article>`;
     }).join("");
   }
-  $("copyArsenalModal").classList.remove("hidden");
+  showDialog("copyArsenalModal");
 }
 
 function closeCopyArsenal() {
-  $("copyArsenalModal").classList.add("hidden");
+  hideDialog("copyArsenalModal");
 }
 
 // 1 casa do grid ≈ 1,5 m (escala tática usada só p/ exibir alcance no site).
@@ -1007,16 +1036,17 @@ function openModal(n) {
     buy.disabled = true;
     buy.textContent = "Bloqueado";
   }
-  $("modal").classList.remove("hidden");
+  showDialog("modal");
 }
 
 function closeModal() {
-  $("modal").classList.add("hidden");
+  hideDialog("modal");
   modalNode = null;
 }
 
 async function doBuy() {
   if (!modalNode) return;
+  const purchasedNodeId = modalNode.id;
   const buy = $("mBuy");
   buy.disabled = true;
   buy.textContent = "Comprando…";
@@ -1033,8 +1063,9 @@ async function doBuy() {
       // ressincroniza (estado pode ter mudado)
       state = await fetchState();
       lastSig = sigOf(state);
-      renderTree(activeEl);
       closeModal();
+      renderTree(activeEl);
+      requestAnimationFrame(() => document.querySelector(`[data-node-id="${CSS.escape(purchasedNodeId)}"]`)?.focus());
       return;
     }
     const elName = out.grantedElement && ELEMENTS.find((e) => e.id === out.grantedElement)?.name;
@@ -1051,11 +1082,12 @@ async function doBuy() {
               ? `Elemento sorteado: ${elName}! 🎴`
               : `Desbloqueado: ${modalNode.name}!`,
     );
-    closeModal();
     // recarrega o estado autoritativo e re-renderiza
     state = await fetchState();
     lastSig = sigOf(state);
+    closeModal();
     renderTree(activeEl);
+    requestAnimationFrame(() => document.querySelector(`[data-node-id="${CSS.escape(purchasedNodeId)}"]`)?.focus());
   } catch {
     toast("Erro de rede.", true);
     buy.disabled = false;
@@ -1078,6 +1110,34 @@ $("modal").onclick = (e) => { if (e.target.id === "modal") closeModal(); };
 $("copyArsenalBtn").onclick = openCopyArsenal;
 $("copyArsenalClose").onclick = closeCopyArsenal;
 $("copyArsenalModal").onclick = (e) => { if (e.target.id === "copyArsenalModal") closeCopyArsenal(); };
+document.addEventListener("keydown", (event) => {
+  if (!activeDialog) return;
+  if (event.key === "Escape") {
+    event.preventDefault();
+    if (activeDialog.id === "modal") closeModal();
+    else closeCopyArsenal();
+    return;
+  }
+  if (event.key !== "Tab") return;
+  const focusable = [...activeDialog.querySelectorAll(
+    'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])',
+  )].filter((element) => !element.classList.contains("hidden"));
+  if (!focusable.length) {
+    event.preventDefault();
+    activeDialog.querySelector(".modal-card")?.focus();
+    return;
+  }
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  const card = activeDialog.querySelector(".modal-card");
+  if (event.shiftKey && (document.activeElement === first || document.activeElement === card)) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
+  }
+});
 $("logoutBtn").onclick = async () => {
   await fetch("/auth/logout", { method: "POST", credentials: "same-origin" });
   location.reload();
@@ -1085,8 +1145,11 @@ $("logoutBtn").onclick = async () => {
 $("showAllBtn").onclick = () => {
   showAllTrees = !showAllTrees;
   $("showAllBtn").classList.toggle("active", showAllTrees);
+  $("showAllBtn").setAttribute("aria-pressed", String(showAllTrees));
   buildElemBar();
 };
-$("equipmentBtn").onclick = () => setEquipmentOpen(!equipmentOpen);
+$("treesNavBtn").onclick = () => navigate("#/arvores");
+$("guidesNavBtn").onclick = () => navigate("#/guias");
+window.addEventListener("hashchange", handleRoute);
 
 boot();

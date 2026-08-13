@@ -3,10 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Pergaminho das Técnicas — Árvore de Habilidades</title>
-  <link rel="stylesheet" href="/style.css?v=bg-arhat-1">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0d0f12">
+  <title>Arquivo Shinobi — Árvores e Guias</title>
+  <link rel="stylesheet" href="/style.css?v=graphite-guides-2">
 </head>
 <body>
+  <a class="skip-link hidden" id="skipLink" href="#mainContent">Pular para o conteúdo</a>
+
   <!-- Fundo -->
   <div class="bg"></div>
 
@@ -55,94 +59,112 @@
       <div class="empty-icon"><img src="/assets/icons/header/ninjutsu.png" alt=""></div>
       <span class="login-overline">Registro não localizado</span>
       <h1>Nenhum ninja encontrado</h1>
-      <p>Você ainda não tem um personagem neste servidor. Crie um no Discord primeiro.</p>
-      <button class="btn-ghost" onclick="location.reload()">Recarregar</button>
+      <p>Você ainda não tem um personagem neste servidor. Consulte os primeiros passos ou crie um no Discord.</p>
+      <div class="empty-actions">
+        <button class="btn-primary" id="nocharGuidesBtn" type="button">Abrir primeiros passos</button>
+        <button class="btn-ghost" type="button" onclick="location.reload()">Recarregar</button>
+      </div>
     </div>
   </section>
 
   <!-- App -->
   <section id="app" class="screen hidden">
     <header class="topbar">
-      <div class="who">
-        <span class="who-name" id="charName">—</span>
-        <span class="who-lvl" id="charLevel">Nv. —</span>
+      <div class="app-brand" aria-label="Arquivo Shinobi">
+        <span class="app-brand-mark" aria-hidden="true">忍</span>
+        <span class="app-brand-copy">
+          <strong>Arquivo Shinobi</strong>
+          <small>Portal de progressão</small>
+        </span>
       </div>
-      <div class="points-row" id="charPointsBox" title="Pontos disponíveis dos atributos que pagam esta árvore (valor do atributo − já gastos nele)"></div>
-      <button class="toggle-all equipment-nav-btn" id="equipmentBtn">Equipamentos e ações básicas</button>
-      <button class="toggle-all" id="showAllBtn" title="Mostra todas as árvores (elementos, kekkei genkai e clãs), mesmo as que você não desbloqueou — só pra consulta, não dá pra comprar nó de fora do seu clã/elemento">Ver todas as árvores</button>
-      <button class="logout" id="logoutBtn" title="Sair"><span class="x-ico"></span></button>
+
+      <nav class="primary-nav" aria-label="Principal">
+        <button class="nav-item active" id="treesNavBtn" type="button" aria-current="page">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3v5m0 0-5 4m5-4 5 4M7 12v5m10-5v5M4 21h6v-4H4v4Zm10 0h6v-4h-6v4Z"/></svg>
+          <span>Árvores</span>
+        </button>
+        <button class="nav-item" id="guidesNavBtn" type="button">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H11v16H6.5A2.5 2.5 0 0 0 4 21.5v-16Zm16 0A2.5 2.5 0 0 0 17.5 3H13v16h4.5a2.5 2.5 0 0 1 2.5 2.5v-16Z"/></svg>
+          <span>Guias</span>
+        </button>
+      </nav>
+
+      <div class="topbar-context">
+        <div class="points-row" id="charPointsBox" title="Pontos disponíveis dos atributos que pagam esta árvore (valor do atributo − já gastos nele)"></div>
+        <button class="btn-secondary compact" id="showAllBtn" type="button" aria-pressed="false" title="Mostra todas as árvores para consulta, inclusive as que seu personagem ainda não desbloqueou">Ver todas</button>
+      </div>
+
+      <div class="user-area">
+        <div class="who">
+          <span class="who-name" id="charName">—</span>
+          <span class="who-lvl" id="charLevel">Nv. —</span>
+        </div>
+        <button class="logout" id="logoutBtn" type="button" aria-label="Sair" title="Sair"><span class="x-ico"></span></button>
+      </div>
     </header>
 
-    <div class="workspace">
-      <!-- Dossiê shinobi: dados reais do personagem -->
-      <aside class="dossier" id="dossier">
-        <div class="dossier-head">
-          <span class="dossier-kanji">忍</span>
-          <div>
-            <span class="dossier-eyebrow">Dossiê shinobi</span>
-            <span class="dossier-name" id="dsName">—</span>
-          </div>
+    <main class="app-main" id="mainContent" tabindex="-1">
+      <section class="tree-view" id="treeView" aria-label="Árvores de habilidades">
+        <div class="workspace">
+          <!-- Dossiê shinobi: dados reais do personagem -->
+          <aside class="dossier" id="dossier">
+            <div class="dossier-head">
+              <span class="dossier-kanji" aria-hidden="true">忍</span>
+              <div>
+                <span class="dossier-eyebrow">Dossiê shinobi</span>
+                <span class="dossier-name" id="dsName">—</span>
+              </div>
+            </div>
+
+            <dl class="dossier-facts">
+              <div><dt>Clã</dt><dd id="dsClan">—</dd></div>
+              <div><dt>Nível</dt><dd id="dsLevel">—</dd></div>
+              <div><dt>Técnicas</dt><dd id="dsTechs">—</dd></div>
+              <div><dt>Trait</dt><dd id="dsTrait" title="">—</dd></div>
+            </dl>
+
+            <section class="dossier-block">
+              <span class="dossier-label">Naturezas de chakra</span>
+              <div class="nature-chips" id="dsNatures"></div>
+            </section>
+
+            <section class="dossier-block" id="dsPools"></section>
+
+            <section class="dossier-block">
+              <span class="dossier-label"><span id="dsTreeName">—</span></span>
+              <div class="meter meter-el"><div class="meter-fill" id="dsTreeBar"></div></div>
+              <span class="meter-cap" id="dsTreeCap">—</span>
+            </section>
+          </aside>
+
+          <!-- O palco ancora o fundo e a moldura; a rolagem acontece internamente. -->
+          <section class="stage" aria-labelledby="treeTitle">
+            <span class="hud-corner tl"></span><span class="hud-corner tr"></span>
+            <span class="hud-corner bl"></span><span class="hud-corner br"></span>
+            <div class="stage-scroll">
+              <h1 class="tree-title" id="treeTitle">Fogo</h1>
+              <button id="copyArsenalBtn" class="copy-arsenal-btn hidden" type="button">👁 Arsenal copiado</button>
+              <div class="canvas-wrap" id="canvasWrap">
+                <svg id="edges" class="edges" aria-hidden="true"></svg>
+                <div id="nodes" class="nodes"></div>
+              </div>
+            </div>
+          </section>
         </div>
 
-        <dl class="dossier-facts">
-          <div><dt>Clã</dt><dd id="dsClan">—</dd></div>
-          <div><dt>Nível</dt><dd id="dsLevel">—</dd></div>
-          <div><dt>Técnicas</dt><dd id="dsTechs">—</dd></div>
-          <div><dt>Trait</dt><dd id="dsTrait" title="">—</dd></div>
-        </dl>
+        <nav class="elembar" id="elembar" aria-label="Árvores disponíveis"></nav>
+      </section>
 
-        <section class="dossier-block">
-          <span class="dossier-label">Naturezas de chakra</span>
-          <div class="nature-chips" id="dsNatures"></div>
-        </section>
-
-        <!-- uma barra por atributo que a árvore aberta consome (o JS preenche) -->
-        <section class="dossier-block" id="dsPools"></section>
-
-        <section class="dossier-block">
-          <span class="dossier-label"><span id="dsTreeName">—</span></span>
-          <div class="meter meter-el"><div class="meter-fill" id="dsTreeBar"></div></div>
-          <span class="meter-cap" id="dsTreeCap">—</span>
-        </section>
-      </aside>
-
-      <!-- O palco nao rola: ele so' ancora o fundo e a moldura HUD. Quem rola e'
-           o .stage-scroll interno, senao o fundo (absolute) rola junto com a
-           arvore e some depois da primeira tela. -->
-      <main class="stage">
-        <span class="hud-corner tl"></span><span class="hud-corner tr"></span>
-        <span class="hud-corner bl"></span><span class="hud-corner br"></span>
-        <div class="stage-scroll">
-          <div class="tree-title" id="treeTitle">Fogo</div>
-          <button id="copyArsenalBtn" class="copy-arsenal-btn hidden" type="button">👁 Arsenal copiado</button>
-          <div class="canvas-wrap" id="canvasWrap">
-            <svg id="edges" class="edges"></svg>
-            <div id="nodes" class="nodes"></div>
-          </div>
-        </div>
-      </main>
-    </div>
-
-    <section class="equipment-page hidden" id="equipmentPage">
-      <header class="equipment-hero">
-        <span class="equipment-kicker">Referência shinobi</span>
-        <h1>Equipamentos e ações básicas</h1>
-        <p>Guia rápido dos comandos essenciais, do desenvolvimento do personagem ao combate e uso de equipamentos.</p>
-      </header>
-      <section class="equipment-quick" id="equipmentQuickStart"></section>
-      <div class="equipment-commands" id="equipmentCommands"></div>
-      <div class="equipment-effects" id="equipmentEffects"></div>
-      <section class="equipment-unarmed" id="equipmentUnarmed"></section>
-      <div class="equipment-groups" id="equipmentGroups"></div>
-    </section>
-
-    <!-- Seletor de elementos (embaixo) -->
-    <nav class="elembar" id="elembar"></nav>
+      <section class="guides-page hidden" id="guidesPage" aria-label="Central de Guias">
+        <div class="reading-progress hidden" id="readingProgress" aria-hidden="true"><span id="readingProgressBar"></span></div>
+        <div id="guidesRoot"></div>
+      </section>
+    </main>
   </section>
 
   <!-- Modal de compra -->
-  <div id="modal" class="modal hidden">
-    <div class="modal-card">
+  <div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="mName">
+    <div class="modal-card" tabindex="-1">
       <div class="modal-icon" id="mIcon"></div>
       <div class="modal-rank" id="mRank"></div>
       <h2 id="mName">—</h2>
@@ -150,28 +172,30 @@
       <div class="modal-meta" id="mMeta"></div>
       <div id="mReason" class="modal-reason hidden"></div>
       <div class="modal-actions">
-        <button class="btn-ghost" id="mCancel">Fechar</button>
-        <button class="btn-buy" id="mBuy">Comprar</button>
+        <button class="btn-ghost" id="mCancel" type="button">Fechar</button>
+        <button class="btn-buy" id="mBuy" type="button">Comprar</button>
       </div>
     </div>
   </div>
 
-  <div id="copyArsenalModal" class="modal hidden">
-    <div class="modal-card copy-arsenal-card">
+  <div id="copyArsenalModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="copyArsenalTitle">
+    <div class="modal-card copy-arsenal-card" tabindex="-1">
       <div class="modal-icon">👁️</div>
       <div class="modal-rank">SHARINGAN</div>
-      <h2>Arsenal copiado</h2>
+      <h2 id="copyArsenalTitle">Arsenal copiado</h2>
       <p class="modal-desc">Ninjutsus elementais aprendidos permanentemente ao serem observados com o terceiro tomoe.</p>
       <div id="copyArsenalList" class="copy-arsenal-list"></div>
       <div class="modal-actions">
-        <button class="btn-ghost" id="copyArsenalClose">Fechar</button>
+        <button class="btn-ghost" id="copyArsenalClose" type="button">Fechar</button>
       </div>
     </div>
   </div>
 
   <!-- Toast -->
-  <div id="toast" class="toast hidden"></div>
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
-  <script src="/app.js?v=bg-arhat-1"></script>
+  <script src="/guides.js?v=graphite-guides-2"></script>
+  <script src="/guides-ui.js?v=graphite-guides-2"></script>
+  <script src="/app.js?v=graphite-guides-2"></script>
 </body>
 </html>

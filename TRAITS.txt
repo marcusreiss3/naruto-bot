@@ -52,7 +52,7 @@ RARA — 4 PP
 
   Monstro da Névoa Oculta     +1% de dano a cada 4% de vida perdida, até +25%
 
-  Presa Branca                +20% de dano em tudo
+  Presa Branca                +20% de dano
                               −15% de vida máxima
 
   Caminho da Dor              Em desvantagem numérica:
