@@ -6,6 +6,7 @@ import { bonusUnits, distributeBonus, sectorGatherBonus } from "./sector-math.js
 import {
   areaForChannel,
   GATHER_ACTION_LABELS,
+  GATHER_RARE_BY_ACTION,
   type GatherAction,
   type GatherAreaDef,
 } from "../../data/gathering.js";
@@ -71,7 +72,7 @@ export function rollGathering(
 
   // Raro: 5% fixo, exatamente 1 unidade, sem bonus de nivel ou de obra.
   // Minerio Raro so' de mineracao, Madeira Reforcada so' de coleta natural.
-  const rare = RARE_BY_ACTION[action];
+  const rare = GATHER_RARE_BY_ACTION[action];
   if (rare && rng() < ECONOMY.rareResourceChance) add(rare, 1);
 
   const bruto: GatherLoot[] = [...loot.entries()].map(([itemId, qty]) => ({ itemId, qty }));
@@ -114,11 +115,6 @@ export async function sectorBonusFor(
     onlyItemId: def.bonusOnlyItemId,
   };
 }
-
-const RARE_BY_ACTION: Partial<Record<GatherAction, string>> = {
-  MINERAR: "minerio_raro",
-  COLETAR: "madeira_reforcada",
-};
 
 // ---------------- Cooldown ----------------
 

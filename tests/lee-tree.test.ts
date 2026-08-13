@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { getAbility, getClan } from "../src/data/index.js";
 import { CLAN_TREES } from "../src/data/clan-trees/index.js";
+import { getNode } from "../src/data/element-trees/index.js";
 import { characterPassiveMods, passiveMods } from "../src/services/combat/passives.js";
 
 describe("clã Lee", () => {
@@ -10,6 +11,10 @@ describe("clã Lee", () => {
     expect(tree.every((node) => node.kind === "PASSIVE" && node.pool === "taijutsu" && node.clanId === "lee")).toBe(true);
     expect(new Set(tree.map((node) => node.branch))).toEqual(new Set(["Fundamento", "Punho Forte", "Corpo"]));
     expect(getClan("lee")?.activeIds).toEqual([]);
+  });
+
+  it("usa o símbolo oficial do clã na habilidade inicial da árvore", () => {
+    expect(getNode("lee_raiz")?.img).toBe("/assets/icons/footer/Lee_Symbol.png");
   });
 
   it("separa os buffs gerais do corpo dos aprimoramentos do Punho Forte", () => {

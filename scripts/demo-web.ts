@@ -42,7 +42,7 @@ import {
   mangekyoVariantNodeId,
   rollMangekyoVariant,
 } from "../src/services/characters/mangekyo.js";
-import { buildEquipmentCatalog } from "../src/services/characters/equipment-catalog.js";
+import { buildEquipmentCatalog, buildGuideCatalog } from "../src/services/characters/equipment-catalog.js";
 
 const BASIC_ELEMENTS: Element[] = ELEMENTS.filter((e) => !isKekkeiGenkai(e));
 const FIRST_ELEMENT_NODE_ID = "funda_elemento_1";
@@ -266,6 +266,12 @@ function buildState() {
 async function main() {
   const app = Fastify({ logger: false });
   await app.register(staticPlugin, { root: path.join(process.cwd(), "public"), prefix: "/" });
+
+  // Sem isso o boot() do app.js falha em fetchGuideCatalog() e a pagina
+  // inteira cai numa tela de erro ("Portal Indisponivel"), escondendo ate a
+  // arvore de habilidades atras do overlay. buildGuideCatalog() e' pura
+  // (mesma fonte que /api/guides/catalog em src/server/api.ts), sem Prisma.
+  app.get("/api/guides/catalog", async (_req, reply) => reply.send(buildGuideCatalog()));
 
   // ?trait=<id> troca a trait do personagem de demo sem reiniciar o processo.
   // Vazio ou ausente limpa. Sem isso seria preciso editar demoTraitId e subir

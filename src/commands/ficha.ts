@@ -30,7 +30,7 @@ export const ficha: Command = {
     const member = await interaction.guild.members.fetch(interaction.user.id);
     const result = await openSheetChannel(interaction.guild, member);
     if (result.status === "COMPLETED") {
-      await interaction.editReply("Sua ficha já foi concluída. Use `/perfil` para consultá-la.");
+      await interaction.editReply("Sua ficha já foi concluída. Use `/perfil ver` para consultá-la.");
       return;
     }
     if (result.status === "EXISTING") {

@@ -30,7 +30,7 @@ const ELEMENTS = [
   { id: "GELO", name: "Gelo", icon: "❄️", img: "/assets/icons/footer/gelo.png", color: "#a8d8e8" },
   // Árvores de clã (gate por clanId em vez de elemento — ver clanGate abaixo).
   // Ordem por vila, mesmo agrupamento de src/data/clans/index.ts.
-  // ---- Konoha ----
+  // ---- Konohagakure ----
   { id: "UCHIHA", name: "Uchiha", icon: "🔴", color: "#b83232", clanGate: "uchiha" },
   { id: "NARA", name: "Nara", icon: "🌑", color: "#5c5c7a", clanGate: "nara" },
   { id: "SENJU", name: "Senju", icon: "🌳", color: "#4f8a55", clanGate: "senju" },
@@ -43,20 +43,20 @@ const ELEMENTS = [
   { id: "SARUTOBI", name: "Sarutobi", icon: "🐒", color: "#6b8e4e", clanGate: "sarutobi" },
   { id: "HATAKE", name: "Hatake", icon: "⚔️", color: "#a8a8b0", clanGate: "hatake" },
   { id: "YAMANAKA", name: "Yamanaka", icon: "🧠", color: "#c9a6d9", clanGate: "yamanaka" },
-  // ---- Suna ----
+  // ---- Sunagakure ----
   { id: "KAMAITACHI", name: "Kamaitachi", icon: "🌪️", color: "#8fae8f", clanGate: "kamaitachi" },
-  // ---- Kiri ----
+  // ---- Kirigakure ----
   { id: "HOSHIGAKI", name: "Hoshigaki", icon: "🦈", color: "#4a7d8c", clanGate: "hoshigaki" },
   { id: "HOZUKI", name: "Hozuki", icon: "💧", color: "#3a8fbf", clanGate: "hozuki" },
   { id: "KAGUYA", name: "Kaguya", icon: "🦴", color: "#d9d0c1", clanGate: "kaguya" },
   { id: "YUKI", name: "Yuki", icon: "❄️", color: "#a8d8e8", clanGate: "yuki" },
-  // ---- Kumo ----
+  // ---- Kumogakure ----
   { id: "CHINOIKE", name: "Chinoike", icon: "🩸", color: "#8c2f2f", clanGate: "chinoike" },
   { id: "RAIKAGE", name: "Raikage", icon: "⚡", color: "#f0c419", clanGate: "raikage" },
   // azul eletrico (nao o amarelo de Raio/Raikage): o Yotsuki e' cla de Raio,
   // mas pedido explicito pra diferenciar pelo azul do relampago.
   { id: "YOTSUKI", name: "Yotsuki", icon: "🐝", color: "#4fb8ff", clanGate: "yotsuki" },
-  // ---- Iwa ----
+  // ---- Iwagakure ----
   { id: "KAMIZURU", name: "Kamizuru", icon: "🐝", color: "#d9a441", clanGate: "kamizuru" },
   { id: "ONOKI", name: "Onoki", icon: "🗿", color: "#8a7a5a", clanGate: "onoki" },
   { id: "BAKUREI", name: "Bakurei", icon: "💥", color: "#c9a227", clanGate: "bakurei" },
@@ -84,7 +84,7 @@ const NODE_IMAGE_FALLBACKS = {
   tai_adamantino_controle: "/assets/icons/punho-adamantino/controle-de-chakra-preciso.png",
   tai_adamantino_ruptura: "/assets/icons/punho-adamantino/ruptura-concentrada.png",
   tai_adamantino_forca: "/assets/icons/punho-adamantino/forca-acumulada.png",
-  lee_raiz: "/assets/icons/lee/espirito-da-juventude.png",
+  lee_raiz: "/assets/icons/footer/Lee_Symbol.png",
   lee_folha_furacao: "/assets/icons/lee/furacao-da-folha.png",
   lee_entrada_dinamica: "/assets/icons/lee/entrada-dinamica.png",
   lee_pesos: "/assets/icons/lee/pesos-de-treinamento.png",
@@ -185,7 +185,7 @@ const NODE_IMAGE_FALLBACKS = {
   bakurei_cupula: "/assets/icons/bakurei/cupula-sufocante.png",
 };
 
-const ICON_ASSET_VERSION = "20260806-fuinjutsu-punho-forte-2";
+const ICON_ASSET_VERSION = "20260813-simbolos-cla";
 
 function versionedIcon(path) {
   if (!path || !path.startsWith("/assets/icons/")) return path;
@@ -199,8 +199,8 @@ function nodeImage(node) {
 // Símbolos dos clãs na seleção inferior. Mantidos fora dos metadados de cada
 // árvore para que árvores sem arquivo continuem usando seu ícone de reserva.
 const CLAN_FOOTER_ICONS = {
-  // ---- Konoha ----
-  uchiha: "/assets/icons/uchiha/sharingan-3-tomoe.png",
+  // ---- Konohagakure ----
+  uchiha: "/assets/icons/footer/Uchiha_Symbol.png",
   nara: "/assets/icons/footer/Nara_Symbol.png",
   senju: "/assets/icons/footer/Senju_Symbol.png",
   hyuuga: "/assets/icons/footer/Hyuga_symbol.png",
@@ -211,18 +211,19 @@ const CLAN_FOOTER_ICONS = {
   sarutobi: "/assets/icons/footer/Sarutobi_Symbol.png",
   hatake: "/assets/icons/footer/Hatake_Symbol.png",
   yamanaka: "/assets/icons/footer/Yamanaka_Symbol.png",
-  // ---- Suna ----
+  lee: "/assets/icons/footer/Lee_Symbol.png",
+  // ---- Sunagakure ----
   kamaitachi: "/assets/icons/footer/Kamaitachi_Symbol.png",
-  // ---- Kiri ----
+  // ---- Kirigakure ----
   hoshigaki: "/assets/icons/footer/Hoshigaki_Symbol.png",
   hozuki: "/assets/icons/footer/Hozuki_Symbol.png",
   kaguya: "/assets/icons/footer/Kaguya_Symbol.png",
   yuki: "/assets/icons/footer/Yuki_Symbol.png",
-  // ---- Kumo ----
+  // ---- Kumogakure ----
   chinoike: "/assets/icons/footer/Chinoike_Symbol.png",
   raikage: "/assets/icons/footer/Raikage_Symbol.png",
   yotsuki: "/assets/icons/footer/yotsuki.png",
-  // ---- Iwa ----
+  // ---- Iwagakure ----
   kamizuru: "/assets/icons/footer/Kamiuru_Symbol.png",
   onoki: "/assets/icons/footer/onoki.png",
   bakurei: "/assets/icons/footer/bakurei.png",
@@ -491,12 +492,40 @@ function hideDialog(id) {
 async function fetchState() {
   const res = await fetch("/api/state", { credentials: "same-origin" });
   if (res.status === 401) return { authenticated: false };
-  return res.json();
+  if (!res.ok) throw new Error(`Estado do personagem indisponível (${res.status})`);
+  const nextState = await res.json();
+  if (typeof nextState?.authenticated !== "boolean") {
+    throw new Error("Resposta inválida do estado do personagem.");
+  }
+  return nextState;
+}
+
+async function fetchGuideCatalog() {
+  const res = await fetch("/api/guides/catalog", {
+    credentials: "same-origin",
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`Catálogo de Guias indisponível (${res.status})`);
+  const catalog = await res.json();
+  const valid = catalog?.schemaVersion === 5
+    && Array.isArray(catalog.traits) && catalog.traits.length > 0
+    && Array.isArray(catalog.clanGroups) && catalog.clanGroups.some((group) => group.clans?.length)
+    && Array.isArray(catalog.items) && catalog.items.length > 0
+    && Array.isArray(catalog.commandGroups) && catalog.commandGroups.length > 0;
+  if (!valid) throw new Error("Versão incompatível do catálogo de Guias.");
+  return catalog;
 }
 
 function show(screen) {
-  for (const s of ["login", "nochar", "app"]) $(s).classList.toggle("hidden", s !== screen);
+  for (const s of ["login", "nochar", "systemError", "app"]) $(s).classList.toggle("hidden", s !== screen);
   $("skipLink")?.classList.toggle("hidden", screen !== "app");
+}
+
+function showSystemError(message) {
+  $("systemErrorMessage").textContent = message;
+  $("systemRetryBtn").onclick = () => location.reload();
+  show("systemError");
+  requestAnimationFrame(() => $("systemErrorTitle").focus());
 }
 
 // Quais bolsas de atributo a árvore aberta consome, em ordem de peso (a que
@@ -609,18 +638,24 @@ let lastSig = "";
 const sigOf = (s) => JSON.stringify([s.char, s.trees]);
 
 async function boot() {
+  let runtimeCatalog;
   try {
     state = await fetchState();
-  } catch {
-    // Permite visualizar a tela de login mesmo quando o HTML está sendo
-    // servido sem o backend/API do bot.
-    return show("login");
+  } catch (error) {
+    console.error(error);
+    return showSystemError("Não foi possível consultar sua sessão e seu personagem. Tente novamente.");
   }
   if (!state.authenticated) return show("login");
+  try {
+    runtimeCatalog = await fetchGuideCatalog();
+  } catch (error) {
+    console.error(error);
+    return showSystemError("Não foi possível carregar a Central de Guias. Tente novamente.");
+  }
   hasCharacter = Boolean(state.hasChar);
   if (!hasCharacter) {
     show("nochar");
-    $("nocharGuidesBtn").onclick = () => {
+    const openGuidesWithoutCharacter = () => {
       show("app");
       $("treesNavBtn").classList.add("hidden");
       $("charName").textContent = "Sem personagem";
@@ -631,11 +666,13 @@ async function boot() {
         progress: $("readingProgress"),
         progressBar: $("readingProgressBar"),
         catalog: window.GUIDE_CATALOG,
-        runtime: state.equipment,
+        runtime: runtimeCatalog,
       });
       appReady = true;
-      navigate("#/guias/primeiros-passos");
+      navigate(location.hash.startsWith("#/guias") ? location.hash : "#/guias/primeiros-passos");
     };
+    $("nocharGuidesBtn").onclick = openGuidesWithoutCharacter;
+    if (location.hash.startsWith("#/guias")) openGuidesWithoutCharacter();
     return;
   }
   show("app");
@@ -648,7 +685,7 @@ async function boot() {
     progress: $("readingProgress"),
     progressBar: $("readingProgressBar"),
     catalog: window.GUIDE_CATALOG,
-    runtime: state.equipment,
+    runtime: runtimeCatalog,
   });
   lastSig = sigOf(state);
   appReady = true;
@@ -674,20 +711,24 @@ async function pull() {
   state = ns;
   lastSig = g;
   buildElemBar();       // elementos podem ter sido concedidos
-  guideCenter?.setRuntime(state.equipment);
   if (currentView === "trees") renderTree(activeEl); // mantém a árvore aberta e atualiza o estado
 }
 
 function parsedRoute() {
   const raw = location.hash.replace(/^#\/?/, "");
   const parts = raw.split("/").filter(Boolean);
-  if (parts[0] !== "guias") return { view: "trees", slug: null };
+  if (parts[0] !== "guias") return { view: "trees", slug: null, section: null };
   let slug = null;
+  let section = null;
   if (parts[1]) {
     try { slug = decodeURIComponent(parts[1]); }
     catch { slug = parts[1]; }
   }
-  return { view: "guides", slug };
+  if (parts[2]) {
+    try { section = decodeURIComponent(parts[2]); }
+    catch { section = parts[2]; }
+  }
+  return { view: "guides", slug, section };
 }
 
 function setCurrentView(view) {
@@ -719,7 +760,7 @@ function handleRoute() {
   }
   setCurrentView(route.view);
   if (route.view === "guides") {
-    if (route.slug) guideCenter.showGuide(route.slug);
+    if (route.slug) guideCenter.showGuide(route.slug, route.section);
     else guideCenter.showHome();
     return;
   }

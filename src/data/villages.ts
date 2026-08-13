@@ -6,7 +6,7 @@ export const VILLAGE_IDS = ["KONOHA", "SUNA", "IWA", "KUMO", "KIRI"] as const;
 export type VillageId = (typeof VILLAGE_IDS)[number];
 
 export const VILLAGE_NAMES: Record<VillageId, string> = {
-  KONOHA: "Konoha",
+  KONOHA: "Konohagakure",
   SUNA: "Sunagakure",
   IWA: "Iwagakure",
   KUMO: "Kumogakure",

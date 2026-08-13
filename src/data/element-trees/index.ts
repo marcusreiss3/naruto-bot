@@ -745,7 +745,7 @@ const NODE_ICONS: Record<string, string> = {
   tai_adamantino_ruptura: "punho-adamantino/ruptura-concentrada.png",
   tai_adamantino_forca: "punho-adamantino/forca-acumulada.png",
 
-  lee_raiz: "lee/espirito-da-juventude.png",
+  lee_raiz: "footer/Lee_Symbol.png",
   lee_folha_furacao: "lee/ritmo-da-folha.png",
   lee_entrada_dinamica: "lee/entrada-demolidora.png",
   lee_pesos: "lee/pesos-de-treino.png",

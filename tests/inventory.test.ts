@@ -6,7 +6,10 @@ import {
 } from "../src/data/items.js";
 import { groupInventory } from "../src/services/characters/inventory.js";
 import { getAbility } from "../src/data/index.js";
-import { buildEquipmentCatalog } from "../src/services/characters/equipment-catalog.js";
+import {
+  buildEquipmentCatalog,
+  GUIDE_CATALOG_SCHEMA_VERSION,
+} from "../src/services/characters/equipment-catalog.js";
 
 describe("catálogo de itens", () => {
   it("registra os nove itens básicos e os equipamentos especiais com ids únicos", () => {
@@ -109,14 +112,24 @@ describe("catálogo de itens", () => {
 
   it("expõe o mesmo catálogo para a página do site", () => {
     const catalog = buildEquipmentCatalog();
+    // Compara com a constante, nao com um literal: o numero sobe sempre que o
+    // formato do catalogo muda, e um literal aqui envelhece calado.
+    expect(catalog.schemaVersion).toBe(GUIDE_CATALOG_SCHEMA_VERSION);
     expect(catalog.unarmedAttack?.name).toBe("Soco");
-    expect(catalog.items).toHaveLength(14);
+    expect(catalog.items).toHaveLength(45);
+    expect(catalog.categories.map((category) => category.id)).toEqual([
+      "WEAPON",
+      "NINJA_TOOL",
+      "FOOD",
+      "MATERIAL",
+    ]);
     const commands = catalog.commands.map((entry) => entry.command);
     expect(commands).toEqual(expect.arrayContaining([
       "/atributos",
       "/inventario",
+      "/ficha",
+      "/viajar",
       "/mapa",
-      "/mover destino",
       "/atacar alvo",
       "/jutsu",
       "/combate fugir",
@@ -138,17 +151,44 @@ describe("catálogo de itens", () => {
       "/vila",
     ]));
     expect(catalog.commandGroups.map((group) => group.id)).toEqual([
+      "creation",
       "character",
       "combat",
       "equipment",
+      "world",
       "missions",
+      "resources",
       "economy",
       "village",
     ]);
     expect(catalog.quickStart).toHaveLength(6);
-    expect(catalog.items.find((item) => item.id === "katana")?.specialRule).toMatch(
-      /somente ser equipada/i,
+    expect(catalog.items.find((item) => item.id === "katana")?.specialRule).toBeNull();
+    expect(catalog.items.find((item) => item.id === "lamina_chakra")?.specialRule).toMatch(
+      /habilidade Lâmina de Chakra/i,
     );
+    expect(catalog.traits).toHaveLength(26);
+    expect(catalog.clanGroups.flatMap((group) => group.clans)).toHaveLength(25);
+    expect(catalog.items.find((item) => item.id === "madeira")?.gatheringSources.map((source) => source.area))
+      .toEqual(expect.arrayContaining(["Campo Aberto", "Floresta"]));
+    expect(catalog.items.find((item) => item.id === "minerio_raro")?.gatheringSources.map((source) => source.area))
+      .toEqual(["Montanha", "Caverna"]);
+    expect(catalog.items.find((item) => item.id === "minerio_raro")?.gatheringSources
+      .every((source) => source.rareChancePercent === 5)).toBe(true);
+    expect(catalog.items.find((item) => item.id === "madeira")?.soldBy)
+      .toContain("Mercado Geral (oferta diária)");
+    expect(catalog.items.find((item) => item.id === "madeira")?.boughtBy)
+      .toContain("Mercado Geral (recompra de emergência)");
+    expect(catalog.items.find((item) => item.id === "madeira_reforcada")?.boughtBy)
+      .not.toContain("Mercado Geral (recompra de emergência)");
+    expect(catalog.items.find((item) => item.id === "madeira")?.villageSectorSources)
+      .toContainEqual({ sector: "Silvicultura e Coleta", destination: "Estoque central da Vila" });
+    expect(catalog.items.find((item) => item.id === "pergaminho_arsenal_gasto")?.restoration)
+      .toEqual({ itemId: "pergaminho_arsenal", itemName: "Pergaminho de Arsenal", cost: 150 });
+    expect(catalog.items.find((item) => item.id === "pergaminho_arsenal_gasto")?.transformedFrom.length)
+      .toBeGreaterThan(0);
+    expect(catalog.items.find((item) => item.id === "kunai")?.requiredByAbilities.length).toBeGreaterThan(0);
+    expect(catalog.items.find((item) => item.id === "lamina_chakra")?.requiredByAbilities)
+      .toEqual(expect.arrayContaining(["Voo da Andorinha", "Aparar"]));
   });
 });
 

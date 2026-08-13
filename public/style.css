@@ -568,7 +568,8 @@ svg {
   line-height: 1.55;
 }
 
-#nochar {
+#nochar,
+#systemError {
   align-items: center;
   justify-content: center;
   padding: 24px;
@@ -2047,6 +2048,126 @@ svg {
   box-shadow: var(--shadow-sm), inset 0 1px rgba(255, 255, 255, 0.03);
 }
 
+.guides-hero-copy,
+.guide-search-form {
+  grid-row: 1;
+}
+
+.guide-search-form {
+  grid-column: 2;
+  align-self: end;
+}
+
+.guides-brand-lockup {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.guides-brand-kicker {
+  margin-bottom: 7px;
+  color: var(--text-muted);
+  font: 750 10px/1 var(--font-display);
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+
+.guides-brand-lockup h1 {
+  color: var(--accent);
+  text-shadow: 0 0 26px rgba(79, 156, 249, .2);
+}
+
+.guides-brand-lockup h1 span {
+  color: #73bdff;
+}
+
+.guides-brand-lockup > strong {
+  margin-top: 7px;
+  color: var(--text-primary);
+  font: 700 clamp(16px, 2vw, 21px)/1.2 var(--font-display);
+  letter-spacing: .04em;
+}
+
+.guides-hero-emblem {
+  position: absolute;
+  z-index: 0;
+  top: 50%;
+  right: clamp(290px, 29%, 410px);
+  display: grid;
+  width: 142px;
+  height: 142px;
+  place-items: center;
+  color: rgba(79, 156, 249, .2);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.hero-emblem-icon {
+  width: 62px;
+  height: 62px;
+  filter: drop-shadow(0 0 18px rgba(79, 156, 249, .28));
+  animation: guide-icon-float 4.8s ease-in-out infinite;
+}
+
+.hero-orbit {
+  position: absolute;
+  border: 1px solid rgba(79, 156, 249, .15);
+  border-radius: 50%;
+}
+
+.orbit-one { inset: 17px; animation: guide-orbit 16s linear infinite; }
+.orbit-two { inset: 2px; border-style: dashed; animation: guide-orbit 24s linear infinite reverse; }
+
+.guide-icon {
+  display: block;
+  width: 1em;
+  height: 1em;
+  overflow: visible;
+  color: inherit;
+}
+
+.guide-card-icon .guide-icon,
+.guide-header-icon .guide-icon {
+  width: 70%;
+  height: 70%;
+  filter: drop-shadow(0 0 7px currentColor);
+  animation: guide-icon-breathe 3.8s ease-in-out infinite;
+}
+
+.icon-guide-combat,
+.icon-cat-combat { color: #ff806d; }
+.icon-guide-economy { color: #e7b84c; }
+.icon-guide-travel,
+.icon-cat-world { color: #52c9e8; }
+.icon-guide-clans { color: #a98bff; }
+.icon-guide-traits { color: #72d994; }
+.icon-guide-items { color: #e3a968; }
+.icon-guide-effects { color: #d785ff; }
+.icon-guide-missions,
+.icon-cat-adventure { color: #57c9a0; }
+.icon-guide-attributes,
+.icon-cat-progress { color: #79aaff; }
+.icon-guide-skills { color: #66d29a; }
+.icon-guide-creation,
+.icon-cat-start { color: #78b8ff; }
+.icon-guide-commands,
+.icon-guide-faq,
+.icon-cat-reference { color: #9ba9bc; }
+
+@keyframes guide-icon-breathe {
+  0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 5px color-mix(in srgb, currentColor 35%, transparent)); }
+  50% { transform: translateY(-1px) scale(1.025); filter: drop-shadow(0 0 9px color-mix(in srgb, currentColor 55%, transparent)); }
+}
+
+@keyframes guide-icon-float {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-5px) rotate(2deg); }
+}
+
+@keyframes guide-orbit { to { transform: rotate(360deg); } }
+
 .guides-hero::after {
   content: "";
   position: absolute;
@@ -2284,6 +2405,26 @@ svg {
   color: var(--accent-hover);
 }
 
+.category-tab-icon,
+.sidebar-category-icon {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  color: var(--text-muted);
+}
+
+.category-tab-icon .guide-icon,
+.sidebar-category-icon .guide-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.category-tab:hover .category-tab-icon,
+.category-tab.active .category-tab-icon {
+  color: var(--accent-hover);
+}
+
 .start-section {
   margin-top: 38px;
 }
@@ -2361,21 +2502,35 @@ svg {
   font: 750 12px var(--font-display);
 }
 
-.learning-step > span:nth-child(2) {
+.learning-step-icon {
+  display: grid;
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  color: var(--accent-hover);
+}
+
+.learning-step-icon .guide-icon {
+  width: 22px;
+  height: 22px;
+}
+
+.learning-step > span:nth-child(3) {
   display: flex;
   min-width: 0;
   flex-direction: column;
   gap: 2px;
 }
 
-.learning-step > span:nth-child(2) strong {
+.learning-step > span:nth-child(3) strong {
   overflow: hidden;
   color: var(--text-primary);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.learning-step > span:nth-child(2) small {
+.learning-step > span:nth-child(3) small {
   display: -webkit-box;
   overflow: hidden;
   color: var(--text-muted);
@@ -2478,6 +2633,12 @@ svg {
   border-color: var(--accent-border);
   background: var(--accent-subtle);
   box-shadow: 0 0 16px rgba(79, 156, 249, 0.08);
+}
+
+.guide-card:hover .guide-card-icon .guide-icon,
+.guide-header:hover .guide-header-icon .guide-icon {
+  animation-duration: 1.9s;
+  transform: translateY(-1px) scale(1.04);
 }
 
 .guide-card-body {
@@ -3859,7 +4020,18 @@ details.guide-faq > div {
   }
 
   .guide-search-form {
+    grid-column: 1;
+    grid-row: 2;
     width: min(100%, 680px);
+  }
+
+  .guides-hero-emblem {
+    top: 66px;
+    right: 28px;
+    width: 110px;
+    height: 110px;
+    opacity: .55;
+    transform: none;
   }
 }
 
@@ -3911,6 +4083,11 @@ details.guide-faq > div {
 
   .guides-hero {
     padding: 25px 22px;
+  }
+
+  .guides-hero-emblem {
+    right: -16px;
+    opacity: .24;
   }
 
   .guides-hero::after {
@@ -4403,4 +4580,473 @@ details.guide-faq > div {
   .node.buyable {
     animation: none;
   }
+}
+
+/* Componentes editoriais da Central: progressões e compêndios */
+.guide-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.guide-info-card {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.guide-info-card small,
+.clan-card small {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--accent-hover);
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+.guide-info-card h3,
+.trait-card h3,
+.clan-card h3 {
+  margin: 0 0 7px;
+  color: var(--text-primary);
+  font-size: 16px;
+  line-height: 1.3;
+}
+
+.guide-info-card p,
+.trait-card p,
+.clan-card p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+/* Uma linha só, sempre. Cada etapa vira 2 itens no grid (a caixa e a seta que
+   a segue), então contar colunas fixas quebra assim que o fluxo muda de
+   tamanho: com 5 etapas são 9 itens, e os 2 últimos caíam numa segunda linha.
+   `grid-auto-flow: column` deixa a contagem seguir o conteúdo, e o
+   `overflow-x` abaixo dá a rolagem lateral. */
+.guide-flow {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: auto;
+  align-items: stretch;
+  gap: 10px;
+  margin: 20px 0;
+  overflow-x: auto;
+  padding: 2px 2px 8px;
+}
+
+.guide-flow-step {
+  display: grid;
+  grid-template-columns: 28px minmax(105px, auto);
+  align-content: center;
+  gap: 2px 9px;
+  min-height: 76px;
+  padding: 13px;
+  border: 1px solid var(--accent-border);
+  border-radius: 12px;
+  background: linear-gradient(145deg, var(--accent-subtle), var(--surface));
+}
+
+.guide-flow-step > span {
+  grid-row: 1 / span 2;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--text-inverse);
+  font-weight: 800;
+}
+
+.guide-flow-step strong { color: var(--text-primary); font-size: 13px; }
+.guide-flow-step small { color: var(--text-muted); font-size: 11px; }
+.guide-flow-arrow { align-self: center; color: var(--text-muted); font-size: 18px; }
+
+.guide-link-grid {
+  display: grid;
+  gap: 10px;
+  margin: 18px 0;
+}
+
+.guide-link-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  min-height: 58px;
+  padding: 13px 16px;
+  border: 1px solid var(--accent-border);
+  border-radius: 10px;
+  background: var(--accent-subtle);
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: border-color .16s ease, background .16s ease, transform .16s ease;
+}
+
+.guide-link-card:hover {
+  border-color: var(--accent);
+  background: rgba(79, 156, 249, .16);
+  transform: translateY(-1px);
+}
+
+.guide-link-card span:first-child { display: grid; gap: 3px; }
+.guide-link-card small { color: var(--text-secondary); font-size: 12px; }
+.guide-link-card > span:last-child { color: var(--accent-hover); font-size: 20px; }
+
+.compendium { margin-top: 18px; }
+
+.compendium-toolbar {
+  display: grid;
+  gap: 12px;
+  position: sticky;
+  top: 12px;
+  z-index: 3;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(25, 28, 34, .96);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .24);
+  backdrop-filter: blur(12px);
+}
+
+.compendium-search input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: 9px;
+  background: var(--surface-inset);
+  color: var(--text-primary);
+  font: inherit;
+}
+
+.compendium-search input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-color: var(--accent);
+}
+
+.compendium-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.compendium-filters button {
+  min-height: 38px;
+  padding: 7px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--surface-raised);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.compendium-filters button:hover,
+.compendium-filters button.active {
+  border-color: var(--accent);
+  background: var(--accent-subtle);
+  color: var(--text-primary);
+}
+
+.compendium-status {
+  margin: 10px 2px 14px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.trait-grid,
+.clan-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.trait-card,
+.clan-card {
+  display: block;
+  align-self: start;
+  min-width: 0;
+  overflow: hidden;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.trait-card:hover,
+.clan-card:hover { border-color: var(--border-strong); background: var(--surface-raised); }
+
+.trait-card > summary,
+.clan-card > summary {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) auto;
+  gap: 15px;
+  align-items: center;
+  min-height: 104px;
+  padding: 16px;
+  list-style: none;
+  cursor: pointer;
+}
+
+.trait-card > summary::-webkit-details-marker,
+.clan-card > summary::-webkit-details-marker,
+.item-card > summary::-webkit-details-marker { display: none; }
+
+.trait-card > summary:focus-visible,
+.clan-card > summary:focus-visible,
+.item-card > summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -3px;
+  border-radius: inherit;
+}
+
+.trait-card img,
+.clan-card img {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: var(--surface-inset);
+}
+
+.compendium-card-heading {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.compendium-card-heading > strong {
+  color: var(--text-primary);
+  font: 750 16px/1.3 var(--font-display);
+}
+
+.compendium-card-heading > small {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.compendium-card-details {
+  padding: 15px 16px 17px;
+  border-top: 1px solid var(--border);
+  background: var(--surface-inset);
+}
+
+.compendium-card-details > strong,
+.compendium-detail-row > strong {
+  color: var(--text-primary);
+  font: 700 12px var(--font-display);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.compendium-card-details p {
+  margin: 7px 0 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.compendium-detail-row {
+  display: grid;
+  gap: 7px;
+  margin-top: 15px;
+}
+
+.compendium-detail-row > span {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.detail-chip,
+.item-facts > span {
+  padding: 4px 8px;
+  border: 1px solid var(--accent-border);
+  border-radius: 999px;
+  background: var(--accent-subtle);
+  color: var(--accent-hover);
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.compendium-chevron {
+  color: var(--text-muted);
+  font-size: 20px;
+  transition: transform 160ms ease, color 160ms ease;
+}
+
+.trait-card[open] .compendium-chevron,
+.clan-card[open] .compendium-chevron,
+.item-card[open] .compendium-chevron {
+  transform: rotate(180deg);
+  color: var(--accent-hover);
+}
+
+.item-compendium > .equipment-group { margin-top: 24px; }
+
+.item-card {
+  align-self: start;
+  padding: 0;
+  overflow: hidden;
+}
+
+.item-card-summary {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  min-height: 78px;
+  padding: 14px;
+  list-style: none;
+  cursor: pointer;
+}
+
+.item-card-icon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-inset);
+  font-size: 25px;
+}
+
+.item-card-heading {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.item-card-heading > small {
+  color: var(--accent-hover);
+  font: 750 9.5px var(--font-display);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.item-card-heading > strong {
+  color: var(--text-primary);
+  font: 750 15px/1.3 var(--font-display);
+}
+
+.item-card-heading .equipment-actions { justify-content: flex-start; }
+
+.item-card-details {
+  padding: 0 15px 16px;
+  border-top: 1px solid var(--border);
+}
+
+.item-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0;
+}
+
+.item-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.item-info-block {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-inset);
+}
+
+.item-info-block > strong {
+  color: var(--text-primary);
+  font-size: 11px;
+}
+
+.item-info-block ul {
+  display: grid;
+  gap: 4px;
+  margin: 7px 0 0;
+  padding-left: 16px;
+  color: var(--text-secondary);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.rarity-badge {
+  display: inline-flex;
+  margin-bottom: 7px;
+  padding: 3px 7px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  color: var(--text-secondary);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.rarity-rara { border-color: #4797d0; color: #83c9fa; }
+.rarity-epica { border-color: #9868d8; color: #c6a0fa; }
+.rarity-lendaria { border-color: #d49a3f; color: #f2c572; }
+.rarity-mitica { border-color: #e05f8e; color: #ff9dbc; }
+
+@media (max-width: 860px) {
+  .guide-info-grid,
+  .trait-grid,
+  .clan-grid { grid-template-columns: 1fr; }
+
+  .compendium-toolbar { position: static; }
+}
+
+@media (max-width: 520px) {
+  .guide-info-card { padding: 15px; }
+
+  .trait-card,
+  .clan-card {
+    padding: 0;
+  }
+
+  .trait-card > summary,
+  .clan-card > summary {
+    grid-template-columns: 56px minmax(0, 1fr) auto;
+    gap: 12px;
+    min-height: 84px;
+    padding: 13px;
+  }
+
+  .trait-card img,
+  .clan-card img { width: 56px; height: 56px; }
+
+  .compendium-filters {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 3px;
+  }
+
+  .compendium-filters button { min-height: 44px; white-space: nowrap; }
+
+  .item-info-grid { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .guide-link-card,
+  .trait-card,
+  .clan-card,
+  .compendium-filters button { transition: none !important; }
 }

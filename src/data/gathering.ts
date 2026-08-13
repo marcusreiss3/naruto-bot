@@ -32,6 +32,14 @@ export const GATHER_ACTION_LABELS: Record<GatherAction, string> = {
   COLETAR_AGUA: "Coleta de água",
 };
 
+// Recursos raros concedidos pelo tipo de ação, além da lista comum da área.
+// Mantido junto das áreas para o bot e o catálogo do site compartilharem a
+// mesma fonte de obtenção.
+export const GATHER_RARE_BY_ACTION: Partial<Record<GatherAction, string>> = {
+  MINERAR: "minerio_raro",
+  COLETAR: "madeira_reforcada",
+};
+
 export interface GatherAreaDef {
   id: string;
   name: string;

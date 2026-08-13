@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="dark">
   <meta name="theme-color" content="#0d0f12">
   <title>Arquivo Shinobi — Árvores e Guias</title>
-  <link rel="stylesheet" href="/style.css?v=graphite-guides-2">
+  <link rel="stylesheet" href="/style.css?v=guide-catalog-5">
 </head>
 <body>
   <a class="skip-link hidden" id="skipLink" href="#mainContent">Pular para o conteúdo</a>
@@ -63,6 +63,19 @@
       <div class="empty-actions">
         <button class="btn-primary" id="nocharGuidesBtn" type="button">Abrir primeiros passos</button>
         <button class="btn-ghost" type="button" onclick="location.reload()">Recarregar</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- API ou catálogo temporariamente indisponível -->
+  <section id="systemError" class="screen hidden" role="alert">
+    <div class="empty-card">
+      <div class="empty-icon"><img src="/assets/icons/header/ninjutsu.png" alt=""></div>
+      <span class="login-overline">Portal indisponível</span>
+      <h1 id="systemErrorTitle" tabindex="-1">Não foi possível carregar</h1>
+      <p id="systemErrorMessage">O portal não conseguiu buscar os dados necessários.</p>
+      <div class="empty-actions">
+        <button class="btn-primary" id="systemRetryBtn" type="button">Tentar novamente</button>
       </div>
     </div>
   </section>
@@ -194,8 +207,8 @@
   <!-- Toast -->
   <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
-  <script src="/guides.js?v=graphite-guides-2"></script>
-  <script src="/guides-ui.js?v=graphite-guides-2"></script>
-  <script src="/app.js?v=graphite-guides-2"></script>
+  <script src="/guides.js?v=guide-catalog-5"></script>
+  <script src="/guides-ui.js?v=guide-catalog-5"></script>
+  <script src="/app.js?v=guide-catalog-5"></script>
 </body>
 </html>

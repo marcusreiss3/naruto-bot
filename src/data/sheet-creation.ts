@@ -111,11 +111,11 @@ export function rollTrait(): TraitRoll {
   return { rarity, options: [pool[randomInt(pool.length)]!] };
 }
 
-const CLAN_ICON_FILES: Record<string, string> = {
-  uchiha: "uchiha/sharingan-1-tomoe.png",
+export const CLAN_ICON_FILES: Record<string, string> = {
+  uchiha: "footer/Uchiha_Symbol.png",
   yamanaka: "footer/Yamanaka_Symbol.png",
   hyuuga: "footer/Hyuuga_Symbol.png",
-  lee: "footer/lee.webp",
+  lee: "footer/Lee_Symbol.png",
   nara: "footer/Nara_Symbol.png",
   senju: "footer/Senju_Symbol.png",
   inuzuka: "footer/Inuzuka_Symbol.png",
@@ -124,8 +124,8 @@ const CLAN_ICON_FILES: Record<string, string> = {
   uzumaki: "footer/Uzumaki_Symbol.png",
   aburame: "footer/Aburame_Symbol.png",
   hatake: "footer/Hatake_Symbol.png",
-  kazekage: "footer/doton.png",
-  shirogane: "footer/bukijutsu.png",
+  kazekage: "footer/Kazekage_Symbol.png",
+  shirogane: "footer/Shirogane_Symbol.png",
   kamaitachi: "footer/Kamaitachi_Symbol.png",
   hoshigaki: "footer/Hoshigaki_Symbol.png",
   hozuki: "footer/Hozuki_Symbol.png",
@@ -139,10 +139,14 @@ const CLAN_ICON_FILES: Record<string, string> = {
   onoki: "footer/onoki.png",
 };
 
-export function clanIconPath(clanId: string): string {
+export function clanIconUrl(clanId: string): string {
   const relative = CLAN_ICON_FILES[clanId];
   if (!relative || !CLAN_IDS.has(clanId)) throw new Error(`Ícone de clã não configurado: ${clanId}`);
-  return path.join(process.cwd(), "public", "assets", "icons", ...relative.split("/"));
+  return `/assets/icons/${relative}`;
+}
+
+export function clanIconPath(clanId: string): string {
+  return path.join(process.cwd(), "public", ...clanIconUrl(clanId).split("/").filter(Boolean));
 }
 
 function slug(value: string): string {
@@ -157,5 +161,9 @@ function slug(value: string): string {
 }
 
 export function traitIconPath(trait: TraitDef): string {
-  return path.join(process.cwd(), "public", "assets", "icons", "traits", `${slug(trait.name)}.png`);
+  return path.join(process.cwd(), "public", ...traitIconUrl(trait).split("/").filter(Boolean));
+}
+
+export function traitIconUrl(trait: TraitDef): string {
+  return `/assets/icons/traits/${slug(trait.name)}.png`;
 }

@@ -1968,7 +1968,7 @@ export const CLANS: ClanDef[] = [
   {
     id: "nara",
     name: "Nara",
-    description: "Clã das sombras de Konoha: estrategistas que manipulam a própria sombra para prender o inimigo.",
+    description: "Clã das sombras de Konohagakure: estrategistas que manipulam a própria sombra para prender o inimigo.",
     passiveIds: [],
     // concedidas pela arvore de cla (src/data/clan-trees/index.ts), nao por
     // requisito automatico — ver comentario acima das abilities "---- Nara ----".
@@ -1985,7 +1985,7 @@ export const CLANS: ClanDef[] = [
   {
     id: "senju",
     name: "Senju",
-    description: "Clã da Floresta, fundador de Konoha: vitalidade imensa e forte afinidade com a água.",
+    description: "Clã da Floresta, fundador de Konohagakure: vitalidade imensa e forte afinidade com a água.",
     passiveIds: [],
     activeIds: ["senju_ondas_cortantes"],
     hooks: {},
@@ -1999,7 +1999,7 @@ export const CLANS: ClanDef[] = [
     // 1.2 e o Bloqueio/Aparo continuam funcionando — o que faltava era o texto
     // dizer que isso e' a marca do cla, e nao coincidencia. Ver conversa de
     // 09/08/2026 em pendencias-balanceamento.
-    description: "Clã dos ninken de Konoha: luta ao lado de cães e faro apurado. As brocas giratórias do clã perseguem o alvo pelo cheiro — de meio caminho em diante, não dá para esquivar delas.",
+    description: "Clã dos ninken de Konohagakure: luta ao lado de cães e faro apurado. As brocas giratórias do clã perseguem o alvo pelo cheiro — de meio caminho em diante, não dá para esquivar delas.",
     passiveIds: [],
     // concedidas pela arvore de cla (src/data/clan-trees/index.ts). Cao Ninja
     // e' a excecao: nasce com o personagem (ver autoGrantedNodeIds abaixo),
@@ -2023,7 +2023,7 @@ export const CLANS: ClanDef[] = [
   {
     id: "akimichi",
     name: "Akimichi",
-    description: "Clã da expansão de Konoha: converte calorias em tamanho e força bruta.",
+    description: "Clã da expansão de Konohagakure: converte calorias em tamanho e força bruta.",
     passiveIds: [],
     // concedidas pela arvore de cla (src/data/clan-trees/index.ts), nao por
     // requisito automatico — mesmo padrao do Nara/Hyuuga.
@@ -2068,7 +2068,7 @@ export const CLANS: ClanDef[] = [
   {
     id: "aburame",
     name: "Aburame",
-    description: "Clã dos insetos de Konoha: hospedam kikaichu que drenam o chakra alheio.",
+    description: "Clã dos insetos de Konohagakure: hospedam kikaichu que drenam o chakra alheio.",
     passiveIds: [],
     // concedidas pela arvore de cla (src/data/clan-trees/index.ts), nao por
     // requisito automatico — mesmo padrao do Nara/Hyuuga/Akimichi.
@@ -2097,7 +2097,7 @@ export const CLANS: ClanDef[] = [
   {
     id: "kazekage",
     name: "Kazekage",
-    description: "Linhagem dos Kazekage de Suna: controle de areia e Doton.",
+    description: "Linhagem dos Kazekage de Sunagakure: controle de areia e Doton.",
     passiveIds: [],
     activeIds: [],
     hooks: {},
@@ -2113,7 +2113,7 @@ export const CLANS: ClanDef[] = [
   {
     id: "kamaitachi",
     name: "Kamaitachi",
-    description: "Clã do vento de Suna: golpes de foice de vento (kamaitachi).",
+    description: "Clã do vento de Sunagakure: golpes de foice de vento (kamaitachi).",
     passiveIds: [],
     // concedidas pela arvore de cla (src/data/clan-trees/index.ts), nao por
     // requisito automatico — mesmo padrao dos outros clas com arvore propria.
@@ -2130,7 +2130,7 @@ export const CLANS: ClanDef[] = [
   {
     id: "hoshigaki",
     name: "Hoshigaki",
-    description: "Clã de Kiri: aparência de tubarão e mestria absoluta em Suiton.",
+    description: "Clã de Kirigakure: aparência de tubarão e mestria absoluta em Suiton.",
     passiveIds: [],
     // concedidas pela arvore de cla (src/data/clan-trees/index.ts), nao por
     // requisito automatico — mesmo padrao dos outros clas com arvore propria.
@@ -2146,7 +2146,7 @@ export const CLANS: ClanDef[] = [
   {
     id: "hozuki",
     name: "Hozuki",
-    description: "Clã de Kiri: hidrificação — o corpo se converte em água.",
+    description: "Clã de Kirigakure: hidrificação — o corpo se converte em água.",
     passiveIds: [],
     // concedidas pela arvore de cla (src/data/clan-trees/index.ts), nao por
     // requisito automatico — mesmo padrao dos outros clas com arvore propria.
@@ -2156,7 +2156,7 @@ export const CLANS: ClanDef[] = [
   {
     id: "kaguya",
     name: "Kaguya",
-    description: "Clã de Kiri: Shikotsumyaku, a manipulação dos próprios ossos.",
+    description: "Clã de Kirigakure: Shikotsumyaku, a manipulação dos próprios ossos.",
     passiveIds: [],
     // concedidas pela arvore de cla (src/data/clan-trees/index.ts), nao por
     // requisito automatico — mesmo padrao dos outros clas com arvore propria.
@@ -2173,7 +2173,7 @@ export const CLANS: ClanDef[] = [
   {
     id: "yuki",
     name: "Yuki",
-    description: "Clã de Kiri: afinidade de Água, o elemento que funde no próprio kekkei genkai — o Hyoton (Gelo).",
+    description: "Clã de Kirigakure: afinidade de Água, o elemento que funde no próprio kekkei genkai — o Hyoton (Gelo).",
     passiveIds: [],
     // O Hyoton (Gelo) virou kekkei genkai de verdade (element-trees/index.ts,
     // secao GELO) — pedido explicito do usuario, migrado pra fora do clã. O
@@ -2187,7 +2187,7 @@ export const CLANS: ClanDef[] = [
   {
     id: "yotsuki",
     name: "Yotsuki",
-    description: "Clã de Kumo: força física, afinidade de raio e mestria em Kenjutsu.",
+    description: "Clã de Kumogakure: força física, afinidade de raio e mestria em Kenjutsu.",
     passiveIds: [],
     // Sem jutsu proprio — mesmo padrao do Onoki/Sarutobi: a arvore inteira
     // (clan-trees/index.ts) e' passiva, reforçando tecnicas de Raio
@@ -2198,7 +2198,7 @@ export const CLANS: ClanDef[] = [
   {
     id: "chinoike",
     name: "Chinoike",
-    description: "Clã de Kumo: Ketsuryugan, o olho que domina o sangue.",
+    description: "Clã de Kumogakure: Ketsuryugan, o olho que domina o sangue.",
     passiveIds: [],
     // concedidas pela arvore de cla (src/data/clan-trees/index.ts), nao por
     // requisito automatico — mesmo padrao dos outros clas com arvore propria.
@@ -2214,7 +2214,7 @@ export const CLANS: ClanDef[] = [
   {
     id: "raikage",
     name: "Raikage",
-    description: "Linhagem dos Raikage de Kumo: armadura de raio, velocidade extrema e força bruta corpo a corpo.",
+    description: "Linhagem dos Raikage de Kumogakure: armadura de raio, velocidade extrema e força bruta corpo a corpo.",
     passiveIds: [],
     // concedidas pela arvore de cla (src/data/clan-trees/index.ts), nao por
     // requisito automatico — mesmo padrao dos outros clas com arvore propria.
@@ -2245,7 +2245,7 @@ export const CLANS: ClanDef[] = [
   {
     id: "kamizuru",
     name: "Kamizuru",
-    description: "Clã das abelhas de Iwa, antigos rivais dos Aburame.",
+    description: "Clã das abelhas de Iwagakure, antigos rivais dos Aburame.",
     passiveIds: [],
     // concedidas pela arvore de cla (src/data/clan-trees/index.ts), nao por
     // requisito automatico — mesmo padrao dos outros clas com arvore propria.
@@ -2261,7 +2261,7 @@ export const CLANS: ClanDef[] = [
   {
     id: "onoki",
     name: "Onoki",
-    description: "Linhagem dos Tsuchikage de Iwa: Doton e o Jinton (Poeira).",
+    description: "Linhagem dos Tsuchikage de Iwagakure: Doton e o Jinton (Poeira).",
     passiveIds: [],
     // Sem jutsu proprio — pedido explicito do usuario: o cla so' da PASSIVA
     // pra Terra e pro kekkei genkai Poeira (ver clan-trees/index.ts), mesmo

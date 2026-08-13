@@ -238,7 +238,7 @@ export const ITEMS: ItemDef[] = [
   {
     id: "madeira_reforcada",
     name: "Madeira Reforçada",
-    description: "Cerne de árvore antiga, duro como metal. Só aparece na coleta de matas fechadas.",
+    description: "Cerne de árvore antiga, duro como metal. Pode surgir raramente durante uma ação de coleta natural.",
     category: "MATERIAL",
     stackable: true,
     actions: [],

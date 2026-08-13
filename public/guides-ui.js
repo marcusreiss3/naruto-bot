@@ -1,7 +1,8 @@
 "use strict";
 
 // Renderer da Central de Guias. O conteúdo editorial mora em guides.js e os
-// dados que mudam com o jogo (comandos, itens e efeitos) continuam vindo da API.
+// dados que mudam com o jogo (comandos, Traits, Clãs, itens e efeitos) vêm do
+// catálogo compartilhado da API.
 (function exposeGuideCenter() {
   const PROGRESS_KEY = "arquivo-shinobi:guias-concluidos:v1";
   const CATEGORY_LABELS = {
@@ -15,6 +16,7 @@
   };
   const ACTION_LABELS = { COMUM: "Ação comum", BONUS: "Ação bônus", MOVIMENTO: "Movimento", REACAO: "Reação" };
   const RESOURCE_LABELS = { chakra: "Chakra", energia: "Energia" };
+  const GUIDE_ICON_SPRITE = "/assets/guides/guide-icons.svg?v=1";
 
   const escapeHtml = (value) => String(value ?? "")
     .replace(/&/g, "&amp;")
@@ -23,12 +25,25 @@
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
 
-  const inline = (value) => escapeHtml(value).replace(/`([^`]+)`/g, "<code>$1</code>");
+  const inline = (value) => escapeHtml(value)
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+
+  function guideIcon(icon, className = "guide-icon") {
+    const safeIcon = /^[a-z0-9-]+$/i.test(String(icon || "")) ? icon : "cat-reference";
+    return `<svg class="${escapeHtml(className)} icon-${escapeHtml(safeIcon)}" aria-hidden="true" viewBox="0 0 48 48"><use href="${GUIDE_ICON_SPRITE}#${escapeHtml(safeIcon)}"></use></svg>`;
+  }
 
   const normalize = (value) => String(value ?? "")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLocaleLowerCase("pt-BR");
+
+  function matchesCompendiumEntry(filterValue, searchValue, filter, term) {
+    const matchesFilter = filter === "all" || filterValue === filter;
+    const matchesSearch = !term || normalize(searchValue).includes(normalize(term));
+    return matchesFilter && matchesSearch;
+  }
 
   function collectText(value, output = []) {
     if (typeof value === "string" || typeof value === "number") output.push(String(value));
@@ -74,7 +89,7 @@
     let sectionObserver = null;
 
     function categoryOf(guide) {
-      return categoryById.get(guide.category) || { id: guide.category, title: guide.category, icon: "•" };
+      return categoryById.get(guide.category) || { id: guide.category, title: guide.category, icon: "cat-reference" };
     }
 
     function readingLabel(guide) {
@@ -82,8 +97,9 @@
       return `${minutes} min de leitura`;
     }
 
-    function guideHref(slug) {
-      return `#/guias/${encodeURIComponent(slug)}`;
+    function guideHref(slug, section) {
+      const base = `#/guias/${encodeURIComponent(slug)}`;
+      return section ? `${base}/${encodeURIComponent(section)}` : base;
     }
 
     function completedBadge(slug) {
@@ -93,7 +109,7 @@
     function guideCard(guide, compact = false) {
       const category = categoryOf(guide);
       return `<a class="guide-card${compact ? " compact" : ""}${completed.has(guide.slug) ? " is-complete" : ""}" href="${guideHref(guide.slug)}">
-        <span class="guide-card-icon" aria-hidden="true">${escapeHtml(guide.icon)}</span>
+        <span class="guide-card-icon">${guideIcon(guide.icon)}</span>
         <span class="guide-card-body">
           <span class="guide-card-meta"><span>${escapeHtml(category.title)}</span><span>•</span><span>${escapeHtml(readingLabel(guide))}</span></span>
           <strong>${escapeHtml(guide.title)}</strong>
@@ -109,6 +125,7 @@
       if (!guide) return "";
       return `<a class="learning-step${completed.has(slug) ? " is-complete" : ""}" href="${guideHref(slug)}">
         <span class="learning-step-number">${completed.has(slug) ? "✓" : index + 1}</span>
+        <span class="learning-step-icon">${guideIcon(guide.icon)}</span>
         <span><strong>${escapeHtml(guide.title)}</strong><small>${escapeHtml(guide.description)}</small></span>
         <span class="learning-step-arrow" aria-hidden="true">→</span>
       </a>`;
@@ -127,6 +144,10 @@
             collectText(runtimeCatalog?.effectGroups || [], runtimeParts);
           } else if (block.type === "equipment") {
             collectText([runtimeCatalog?.categories || [], runtimeCatalog?.items || []], runtimeParts);
+          } else if (block.type === "traits") {
+            collectText(runtimeCatalog?.traits || [], runtimeParts);
+          } else if (block.type === "clans") {
+            collectText(runtimeCatalog?.clanGroups || [], runtimeParts);
           }
         }
       }
@@ -145,14 +166,21 @@
       return `<div class="guides-shell guides-home">
         <header class="guides-hero">
           <div class="guides-hero-copy">
-            <span class="guides-eyebrow">Base de conhecimento shinobi</span>
-            <h1 tabindex="-1">Aprenda tudo sobre o bot</h1>
+            <div class="guides-brand-lockup" aria-label="Naruto RP — Central de Guias">
+              <span class="guides-brand-kicker">Arquivo Shinobi</span>
+              <h1 tabindex="-1">Naruto <span>RP</span></h1>
+              <strong>Central de Guias</strong>
+            </div>
             <p>Encontre o próximo passo, entenda as regras e consulte comandos sem sair do seu pergaminho.</p>
             <div class="guides-summary" aria-label="Resumo da Central">
               <span><b>${guides.length}</b> guias</span>
               <span><b>${categories.length}</b> categorias</span>
               <span><b>${completeCount}</b> concluídos</span>
             </div>
+          </div>
+          <div class="guides-hero-emblem" aria-hidden="true">
+            <span class="hero-orbit orbit-one"></span><span class="hero-orbit orbit-two"></span>
+            ${guideIcon("guide-skills", "guide-icon hero-emblem-icon")}
           </div>
           <form class="guide-search-form" role="search" id="guideSearchForm">
             <label class="sr-only" for="guideSearch">Pesquisar nos guias</label>
@@ -167,7 +195,7 @@
 
         <nav class="category-tabs" aria-label="Categorias de guias" id="guideCategories">
           <button class="category-tab${activeCategory === "all" ? " active" : ""}" type="button" data-category="all" aria-pressed="${activeCategory === "all"}">Todos</button>
-          ${categories.map((category) => `<button class="category-tab${activeCategory === category.id ? " active" : ""}" type="button" data-category="${escapeHtml(category.id)}" aria-pressed="${activeCategory === category.id}"><span aria-hidden="true">${escapeHtml(category.icon)}</span>${escapeHtml(category.title)}</button>`).join("")}
+          ${categories.map((category) => `<button class="category-tab${activeCategory === category.id ? " active" : ""}" type="button" data-category="${escapeHtml(category.id)}" aria-pressed="${activeCategory === category.id}"><span class="category-tab-icon">${guideIcon(category.icon)}</span>${escapeHtml(category.title)}</button>`).join("")}
         </nav>
 
         <section class="start-section" aria-labelledby="startTitle">
@@ -325,40 +353,102 @@
       const selected = block.all
         ? groups
         : groups.filter((group) => (block.groupIds || []).includes(group.id));
-      if (!selected.length) {
-        return '<aside class="guide-callout info"><strong>Referência indisponível</strong><p>Os comandos não puderam ser carregados agora. Tente atualizar a página.</p></aside>';
-      }
+      if (!selected.length) return catalogContractError("comandos");
       return `<div class="guide-command-groups">${selected.map((group) => `<section class="command-group">
         <h3><span aria-hidden="true">${escapeHtml(group.icon)}</span>${escapeHtml(group.title)}</h3>
         <div class="command-grid">${group.commands.map((entry) => `<article class="command-card"><code>${escapeHtml(entry.command)}</code><p>${escapeHtml(entry.description)}</p></article>`).join("")}</div>
       </section>`).join("")}</div>`;
     }
 
+    function catalogContractError(subject) {
+      throw new Error(`Contrato incompleto do catálogo de ${subject}.`);
+    }
+
+    function itemInfoBlock(title, values) {
+      if (!values?.length) return "";
+      return `<section class="item-info-block"><strong>${escapeHtml(title)}</strong><ul>${values.map((value) => `<li>${escapeHtml(value)}</li>`).join("")}</ul></section>`;
+    }
+
+    function itemDetailMarkup(item) {
+      const gathering = (item.gatheringSources || []).map((source) =>
+        `${source.area} · ${(source.actions || []).join(" / ")}${source.rareChancePercent ? ` · ${source.rareChancePercent}% de chance` : ""}`,
+      );
+      const production = (item.recipeSources || []).map((source) =>
+        `${source.name} · ${source.source}${source.outputQty > 1 ? ` · produz ${source.outputQty}` : ""}`,
+      );
+      const facts = [
+        item.rare ? "Material raro" : null,
+        item.stackable ? "Empilhável" : "Não empilhável",
+        item.satiety ? `Recupera ${item.satiety} de saciedade` : null,
+      ].filter(Boolean);
+      const restoration = item.restoration
+        ? [`Restaura para ${item.restoration.itemName}${item.restoration.cost ? ` por ${item.restoration.cost} Ryō` : ""}`]
+        : [];
+      const transformations = (item.transformedFrom || []).map((source) =>
+        `${source.fromItem} após usar ${source.ability}`,
+      );
+      const villageProduction = (item.villageSectorSources || []).map((source) =>
+        `${source.sector} · ${source.destination}`,
+      );
+      const isEquippable = (item.actions || []).some((action) => action.id === "EQUIP");
+      const basicCommand = isEquippable ? "/atacar alvo" : `/usar ${item.id}`;
+
+      return `<div class="item-card-details">
+        <p class="equipment-description">${escapeHtml(item.description)}</p>
+        ${item.specialRule ? `<p class="equipment-special">${escapeHtml(item.specialRule)}</p>` : ""}
+        <div class="item-facts">${facts.map((fact) => `<span>${escapeHtml(fact)}</span>`).join("")}</div>
+        <div class="item-info-grid">
+          ${itemInfoBlock("Obtido por coleta", gathering)}
+          ${itemInfoBlock("Produzido em receita", production)}
+          ${itemInfoBlock("Gerado por uso", transformations)}
+          ${itemInfoBlock("Produção de setor", villageProduction)}
+          ${itemInfoBlock("Usado em receitas", item.usedInRecipes)}
+          ${itemInfoBlock("Exigido por técnicas", item.requiredByAbilities)}
+          ${itemInfoBlock("À venda em", item.soldBy)}
+          ${itemInfoBlock("Comprado por", item.boughtBy)}
+          ${itemInfoBlock("Restauração", restoration)}
+        </div>
+        ${abilityMarkup(item.basicAbility, basicCommand)}
+        ${abilityMarkup(item.throwAbility, `/arremessar ${item.id} alvo`)}
+      </div>`;
+    }
+
     function itemsMarkup() {
       const items = runtimeCatalog?.items || [];
       const categoriesRuntime = runtimeCatalog?.categories || [];
-      if (!items.length) return commandsMarkup({ groupIds: [] });
+      if (!items.length || !categoriesRuntime.length) return catalogContractError("itens");
       const unarmed = runtimeCatalog?.unarmedAttack
         ? `<section class="equipment-group"><h3 class="equipment-group-title"><span aria-hidden="true">👊</span>Sem arma equipada</h3><div class="guide-equipment-grid"><article class="equipment-card"><div class="equipment-card-head"><div><small>Ataque desarmado</small><h4>${escapeHtml(runtimeCatalog.unarmedAttack.name)}</h4></div></div>${abilityMarkup(runtimeCatalog.unarmedAttack, "/atacar alvo")}</article></div></section>`
         : "";
-      return unarmed + categoriesRuntime.map((category) => {
+      const groups = categoriesRuntime.map((category) => {
         const categoryItems = items.filter((item) => item.category === category.id);
         if (!categoryItems.length) return "";
-        return `<section class="equipment-group">
+        return `<section class="equipment-group" data-entry-group>
           <h3 class="equipment-group-title"><span aria-hidden="true">${escapeHtml(category.icon)}</span>${escapeHtml(category.label)}</h3>
           <div class="guide-equipment-grid">${categoryItems.map((item) => {
-            const isEquippable = item.actions.some((action) => action.id === "EQUIP");
-            const basicCommand = isEquippable ? "/atacar alvo" : `/usar ${item.id}`;
-            return `<article class="equipment-card">
-              <div class="equipment-card-head"><div><small>${escapeHtml(category.label)}</small><h4>${escapeHtml(item.name)}</h4></div><div class="equipment-actions">${item.actions.map((action) => `<span>${escapeHtml(action.label)}</span>`).join("")}</div></div>
-              <p class="equipment-description">${escapeHtml(item.description)}</p>
-              ${item.specialRule ? `<p class="equipment-special">${escapeHtml(item.specialRule)}</p>` : ""}
-              ${abilityMarkup(item.basicAbility, basicCommand)}
-              ${abilityMarkup(item.throwAbility, `/arremessar ${item.id} alvo`)}
-            </article>`;
+            const searchValue = normalize(`${category.label} ${collectText(item).join(" ")}`);
+            return `<details class="equipment-card item-card" id="item-${escapeHtml(item.id)}" data-entry data-entry-id="${escapeHtml(item.id)}" data-filter-value="${escapeHtml(item.category)}" data-search-value="${escapeHtml(searchValue)}">
+              <summary class="item-card-summary">
+                <span class="item-card-icon" aria-hidden="true">${escapeHtml(item.icon)}</span>
+                <span class="item-card-heading"><small>${escapeHtml(category.label)}</small><strong>${escapeHtml(item.name)}</strong><span class="equipment-actions">${(item.actions || []).map((action) => `<span>${escapeHtml(action.label)}</span>`).join("")}</span></span>
+                <span class="compendium-chevron" aria-hidden="true">⌄</span>
+              </summary>
+              ${itemDetailMarkup(item)}
+            </details>`;
           }).join("")}</div>
         </section>`;
       }).join("");
+      return `${unarmed}<div class="compendium item-compendium" data-compendium="items">
+        <div class="compendium-toolbar">
+          <label class="compendium-search"><span class="sr-only">Pesquisar itens</span><input type="search" placeholder="Pesquisar item, área, receita ou loja..." data-compendium-search></label>
+          <div class="compendium-filters" aria-label="Filtrar por tipo de item">
+            <button class="active" type="button" data-filter="all" aria-pressed="true">Todos</button>
+            ${categoriesRuntime.map((category) => `<button type="button" data-filter="${escapeHtml(category.id)}" aria-pressed="false">${escapeHtml(category.label)}</button>`).join("")}
+          </div>
+        </div>
+        <p class="compendium-status" role="status" aria-live="polite"></p>
+        ${groups}
+      </div>`;
     }
 
     function effectsMarkup() {
@@ -368,6 +458,71 @@
         <h3 class="effect-group-title">${escapeHtml(group.title)}</h3>
         <div class="effect-grid">${group.effects.map((effect) => `<article class="effect-card"><strong>${escapeHtml(effect.label)}</strong><p>${escapeHtml(effect.description)}</p></article>`).join("")}</div>
       </section>`).join("");
+    }
+
+    function cardsMarkup(block) {
+      return `<div class="guide-info-grid">${(block.items || []).map((item) => `<article class="guide-info-card">
+        ${item.meta ? `<small>${escapeHtml(item.meta)}</small>` : ""}
+        <h3>${escapeHtml(item.title)}</h3>
+        <p>${inline(item.text)}</p>
+      </article>`).join("")}</div>`;
+    }
+
+    function flowMarkup(block) {
+      return `<div class="guide-flow" aria-label="${escapeHtml(block.label || "Progressão")}">${(block.items || []).map((item, index) => `<div class="guide-flow-step"><span>${index + 1}</span><strong>${escapeHtml(item.title || item)}</strong>${item.text ? `<small>${inline(item.text)}</small>` : ""}</div>`).join('<span class="guide-flow-arrow" aria-hidden="true">→</span>')}</div>`;
+    }
+
+    function linksMarkup(block) {
+      return `<div class="guide-link-grid">${(block.items || []).map((item) => `<a class="guide-link-card" href="${guideHref(item.slug, item.section)}"><span><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.text || "Abrir guia")}</small></span><span aria-hidden="true">→</span></a>`).join("")}</div>`;
+    }
+
+    function traitsMarkup() {
+      const traits = runtimeCatalog?.traits || [];
+      if (!traits.length) return catalogContractError("Traits");
+      const rarities = [...new Map(traits.map((trait) => [trait.rarity, trait.rarityLabel])).entries()];
+      return `<div class="compendium" data-compendium="traits">
+        <div class="compendium-toolbar">
+          <label class="compendium-search"><span class="sr-only">Pesquisar Traits</span><input type="search" placeholder="Pesquisar Trait..." data-compendium-search></label>
+          <div class="compendium-filters" aria-label="Filtrar por raridade">
+            <button class="active" type="button" data-filter="all" aria-pressed="true">Todas</button>
+            ${rarities.map(([id, label]) => `<button type="button" data-filter="${escapeHtml(id)}" aria-pressed="false">${escapeHtml(label)}</button>`).join("")}
+          </div>
+        </div>
+        <p class="compendium-status" role="status" aria-live="polite"></p>
+        <div class="trait-grid">${traits.map((trait) => `<details class="trait-card" id="trait-${escapeHtml(trait.id)}" data-entry data-entry-id="${escapeHtml(trait.id)}" data-filter-value="${escapeHtml(trait.rarity)}" data-search-value="${escapeHtml(normalize(`${trait.name} ${trait.rarityLabel} ${trait.description}`))}">
+          <summary><img src="${escapeHtml(trait.icon)}" alt="Ícone da Trait ${escapeHtml(trait.name)}" loading="lazy"><span class="compendium-card-heading"><span class="rarity-badge rarity-${escapeHtml(trait.rarity.toLowerCase())}">${escapeHtml(trait.rarityLabel)}</span><strong>${escapeHtml(trait.name)}</strong><small>Abrir efeito</small></span><span class="compendium-chevron" aria-hidden="true">⌄</span></summary>
+          <div class="compendium-card-details"><strong>Efeito</strong><p>${escapeHtml(trait.description)}</p></div>
+        </details>`).join("")}</div>
+      </div>`;
+    }
+
+    function clansMarkup() {
+      const groups = runtimeCatalog?.clanGroups || [];
+      const clans = groups.flatMap((group) => group.clans || []);
+      if (!clans.length) return catalogContractError("Clãs");
+      return `<div class="compendium" data-compendium="clans">
+        <div class="compendium-toolbar">
+          <label class="compendium-search"><span class="sr-only">Pesquisar Clãs</span><input type="search" placeholder="Pesquisar Clã..." data-compendium-search></label>
+          <div class="compendium-filters" aria-label="Filtrar por Vila">
+            <button class="active" type="button" data-filter="all" aria-pressed="true">Todas</button>
+            ${groups.map((group) => `<button type="button" data-filter="${escapeHtml(group.id)}" aria-pressed="false">${escapeHtml(group.name)}</button>`).join("")}
+          </div>
+        </div>
+        <p class="compendium-status" role="status" aria-live="polite"></p>
+        <div class="clan-grid">${clans.map((clan) => {
+          const elements = clan.guaranteedProgressionElements || [];
+          const progression = clan.progression;
+          const searchValue = normalize(collectText(clan).join(" "));
+          return `<details class="clan-card" id="clan-${escapeHtml(clan.id)}" data-entry data-entry-id="${escapeHtml(clan.id)}" data-filter-value="${escapeHtml(clan.villageId)}" data-search-value="${escapeHtml(searchValue)}">
+            <summary><img src="${escapeHtml(clan.icon)}" alt="Símbolo do Clã ${escapeHtml(clan.name)}" loading="lazy"><span class="compendium-card-heading"><small>${escapeHtml(clan.villageName)}</small><strong>${escapeHtml(clan.name)}</strong><small>Abrir detalhes</small></span><span class="compendium-chevron" aria-hidden="true">⌄</span></summary>
+            <div class="compendium-card-details">
+              <strong>Identidade do Clã</strong><p>${escapeHtml(clan.description)}</p>
+              ${elements.length ? `<div class="compendium-detail-row"><strong>Afinidades garantidas na progressão</strong><span>${elements.map((element) => `<span class="detail-chip">${escapeHtml(element)}</span>`).join("")}</span></div>` : ""}
+              ${progression ? `<div class="compendium-detail-row"><strong>Árvore associada</strong><p>${progression.total} habilidades, incluindo ${progression.techniques.length} técnicas e ${progression.passives} passivas.</p></div>${itemInfoBlock("Técnicas da árvore", progression.techniques)}` : ""}
+            </div>
+          </details>`;
+        }).join("")}</div>
+      </div>`;
     }
 
     function blockMarkup(block) {
@@ -384,6 +539,16 @@
           return commandsMarkup(block);
         case "equipment":
           return block.mode === "effects" ? effectsMarkup() : itemsMarkup();
+        case "cards":
+          return cardsMarkup(block);
+        case "flow":
+          return flowMarkup(block);
+        case "links":
+          return linksMarkup(block);
+        case "traits":
+          return traitsMarkup();
+        case "clans":
+          return clansMarkup();
         case "faq":
           return `<div class="guide-faq">${(block.items || []).map((item) => `<details><summary>${escapeHtml(item.question)}</summary><div>${inline(item.answer)}</div></details>`).join("")}</div>`;
         default:
@@ -404,7 +569,7 @@
           ${categories.map((category) => {
             const entries = guides.filter((entry) => entry.category === category.id);
             if (!entries.length) return "";
-            return `<section><strong class="guides-sidebar-category"><span aria-hidden="true">${escapeHtml(category.icon)}</span>${escapeHtml(category.title)}</strong>${entries.map((entry) => `<a class="sidebar-link${entry.slug === guide.slug ? " active" : ""}" href="${guideHref(entry.slug)}"${entry.slug === guide.slug ? ' aria-current="page"' : ""}>${escapeHtml(entry.title)}${completed.has(entry.slug) ? '<span aria-label="Concluído">✓</span>' : ""}</a>`).join("")}</section>`;
+            return `<section><strong class="guides-sidebar-category"><span class="sidebar-category-icon">${guideIcon(category.icon)}</span>${escapeHtml(category.title)}</strong>${entries.map((entry) => `<a class="sidebar-link${entry.slug === guide.slug ? " active" : ""}" href="${guideHref(entry.slug)}"${entry.slug === guide.slug ? ' aria-current="page"' : ""}>${escapeHtml(entry.title)}${completed.has(entry.slug) ? '<span aria-label="Concluído">✓</span>' : ""}</a>`).join("")}</section>`;
           }).join("")}
         </nav>
       </aside>`;
@@ -434,7 +599,7 @@
         <article class="guide-article" id="guideArticle">
           <nav class="guide-breadcrumb" aria-label="Navegação estrutural"><ol><li><a href="#/guias">Guias</a></li><li><span aria-hidden="true">/</span>${escapeHtml(category.title)}</li><li><span aria-hidden="true">/</span><span aria-current="page">${escapeHtml(guide.title)}</span></li></ol></nav>
           <header class="guide-header">
-            <div class="guide-header-icon" aria-hidden="true">${escapeHtml(guide.icon)}</div>
+            <div class="guide-header-icon">${guideIcon(guide.icon)}</div>
             <div>
               <div class="guide-header-meta"><span class="guide-type">${guide.type === "reference" ? "Referência" : "Guia"}</span><span class="guide-reading-time">${escapeHtml(readingLabel(guide))}</span></div>
               <h1 tabindex="-1">${escapeHtml(guide.title)}</h1>
@@ -443,7 +608,7 @@
             </div>
           </header>
           ${tocMarkup(guide, true)}
-          <div class="guide-content">${guide.sections.map((section) => `<section class="guide-section" id="guide-section-${escapeHtml(section.id)}"><h2>${escapeHtml(section.title)}</h2>${(section.blocks || []).map(blockMarkup).join("")}</section>`).join("")}</div>
+          <div class="guide-content">${guide.sections.map((section) => `<section class="guide-section" id="guide-section-${escapeHtml(section.id)}"><h2 tabindex="-1">${escapeHtml(section.title)}</h2>${(section.blocks || []).map(blockMarkup).join("")}</section>`).join("")}</div>
           ${relatedMarkup(guide)}
           ${paginationMarkup(guide)}
         </article>
@@ -478,6 +643,47 @@
         if (button) button.textContent = isComplete ? "✓ Guia concluído" : "Marcar como concluído";
       });
 
+      root.querySelectorAll("[data-compendium]").forEach((compendium) => {
+        let filter = "all";
+        let term = "";
+        const entries = [...compendium.querySelectorAll("[data-entry]")];
+        const status = compendium.querySelector(".compendium-status");
+        const update = () => {
+          let visible = 0;
+          for (const entry of entries) {
+            const show = matchesCompendiumEntry(
+              entry.dataset.filterValue,
+              entry.dataset.searchValue,
+              filter,
+              term,
+            );
+            entry.classList.toggle("hidden", !show);
+            if (!show && entry.matches("details")) entry.open = false;
+            if (show) visible += 1;
+          }
+          compendium.querySelectorAll("[data-entry-group]").forEach((group) => {
+            const hasVisibleEntry = [...group.querySelectorAll("[data-entry]")]
+              .some((entry) => !entry.classList.contains("hidden"));
+            group.classList.toggle("hidden", !hasVisibleEntry);
+          });
+          if (status) status.textContent = `${visible} ${visible === 1 ? "resultado" : "resultados"}`;
+        };
+        compendium.querySelectorAll("[data-filter]").forEach((button) => button.addEventListener("click", () => {
+          filter = button.dataset.filter;
+          compendium.querySelectorAll("[data-filter]").forEach((entry) => {
+            const active = entry === button;
+            entry.classList.toggle("active", active);
+            entry.setAttribute("aria-pressed", String(active));
+          });
+          update();
+        }));
+        compendium.querySelector("[data-compendium-search]")?.addEventListener("input", (event) => {
+          term = event.target.value;
+          update();
+        });
+        update();
+      });
+
       if ("IntersectionObserver" in window) {
         sectionObserver = new IntersectionObserver((entries) => {
           const visible = entries.filter((entry) => entry.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
@@ -493,7 +699,7 @@
       sectionObserver = null;
     }
 
-    function showGuide(slug) {
+    function showGuide(slug, sectionId) {
       const guide = guideBySlug.get(slug);
       if (!guide) {
         showNotFound();
@@ -507,7 +713,20 @@
       root.innerHTML = articleMarkup(guide);
       bindArticle(guide);
       document.title = `${guide.title} — Guias`;
-      requestAnimationFrame(() => root.querySelector("h1")?.focus({ preventScroll: true }));
+      requestAnimationFrame(() => {
+        if (sectionId) {
+          const section = root.querySelector(`#guide-section-${escapedSelector(sectionId)}`);
+          if (section) {
+            section.scrollIntoView({ block: "start" });
+            section.querySelector("h2")?.focus({ preventScroll: true });
+            setActiveToc(sectionId);
+          } else {
+            root.querySelector("h1")?.focus({ preventScroll: true });
+          }
+        } else {
+          root.querySelector("h1")?.focus({ preventScroll: true });
+        }
+      });
       return true;
     }
 
@@ -515,7 +734,7 @@
       activeSlug = null;
       disconnectArticleObservers();
       progress?.classList.add("hidden");
-      root.innerHTML = `<div class="guides-shell"><section class="empty-results standalone"><span aria-hidden="true">404</span><h1 tabindex="-1">Guia não encontrado</h1><p>Este endereço pode ter mudado ou o conteúdo ainda não está disponível.</p><a class="btn-primary" href="#/guias">Voltar à Central de Guias</a></section></div>`;
+      root.innerHTML = `<div class="guides-shell"><section class="empty-results standalone"><span aria-hidden="true">404</span><h1 tabindex="-1">Guia não encontrado</h1><p>Este endereço não corresponde a um guia publicado.</p><a class="btn-primary" href="#/guias">Voltar à Central de Guias</a></section></div>`;
       document.title = "Guia não encontrado — Arquivo Shinobi";
       requestAnimationFrame(() => root.querySelector("h1")?.focus({ preventScroll: true }));
     }
@@ -532,7 +751,14 @@
     return {
       showHome,
       showGuide,
-      setRuntime(nextRuntime) { runtimeCatalog = nextRuntime; },
+      setRuntime(nextRuntime) {
+        const changed = runtimeCatalog !== nextRuntime;
+        runtimeCatalog = nextRuntime;
+        if (changed) {
+          if (activeSlug) showGuide(activeSlug);
+          else showHome();
+        }
+      },
       hasGuide(slug) { return guideBySlug.has(slug); },
       destroy() {
         disconnectArticleObservers();
@@ -541,5 +767,5 @@
     };
   }
 
-  window.GuideCenter = { create: createGuideCenter };
+  window.GuideCenter = { create: createGuideCenter, matchesCompendiumEntry };
 })();

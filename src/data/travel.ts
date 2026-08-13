@@ -1,3 +1,5 @@
+import { VILLAGE_NAMES } from "./villages.js";
+
 // Mapa do sistema de viagem. Os tempos representam ritmo de jogo, nao minutos
 // literais do anime: a geografia canonica serve para ordenar o que e' perto ou
 // longe, e o intervalo final fica entre 5 e 20 minutos.
@@ -59,7 +61,7 @@ export const TRAVEL_PATHS: Record<TravelPathId, TravelPath> = {
 export const TRAVEL_LOCATIONS: Record<TravelLocationId, TravelLocation> = {
   KONOHA: {
     id: "KONOHA",
-    label: "Konoha",
+    label: VILLAGE_NAMES.KONOHA,
     emoji: "🍃",
     kind: "VILLAGE",
     roleId: "1537474891014607009",
@@ -68,7 +70,7 @@ export const TRAVEL_LOCATIONS: Record<TravelLocationId, TravelLocation> = {
   },
   SUNA: {
     id: "SUNA",
-    label: "Sunagakure",
+    label: VILLAGE_NAMES.SUNA,
     emoji: "🏜️",
     kind: "VILLAGE",
     roleId: "1537474970739941376",
@@ -77,7 +79,7 @@ export const TRAVEL_LOCATIONS: Record<TravelLocationId, TravelLocation> = {
   },
   KIRI: {
     id: "KIRI",
-    label: "Kirigakure",
+    label: VILLAGE_NAMES.KIRI,
     emoji: "🌫️",
     kind: "VILLAGE",
     roleId: "1537475041955029142",
@@ -86,7 +88,7 @@ export const TRAVEL_LOCATIONS: Record<TravelLocationId, TravelLocation> = {
   },
   KUMO: {
     id: "KUMO",
-    label: "Kumogakure",
+    label: VILLAGE_NAMES.KUMO,
     emoji: "☁️",
     kind: "VILLAGE",
     roleId: "1537475145424306176",
@@ -95,7 +97,7 @@ export const TRAVEL_LOCATIONS: Record<TravelLocationId, TravelLocation> = {
   },
   IWA: {
     id: "IWA",
-    label: "Iwagakure",
+    label: VILLAGE_NAMES.IWA,
     emoji: "🪨",
     kind: "VILLAGE",
     roleId: "1537475259442401301",

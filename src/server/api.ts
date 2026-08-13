@@ -1,5 +1,5 @@
-// API do site. Toda rota exige sessão (getSessionDiscordId). A compra é
-// validada no servidor (skill-tree.buyNode) — o cliente só manda o nodeId.
+// API do site. O catálogo de Guias é público e independente da ficha; estado
+// e compras exigem sessão. A compra é revalidada no servidor.
 import type { FastifyInstance } from "fastify";
 import { ENV } from "../config/env.js";
 import { ATTRIBUTE_LABELS, TRAIT_RARITY_LABELS, type Attribute, type Element } from "../config/enums.js";
@@ -12,9 +12,14 @@ import { loadSnapshot, viewTree, viewFundamentosTree, viewClanTree, viewBukijuts
 import { villageForDiscordUser } from "../services/village-service.js";
 import { buildMechanicsSummary, buildVisualDescription } from "../services/characters/skill-description.js";
 import { MANGEKYO_VARIANT_LABEL } from "../services/characters/mangekyo.js";
-import { buildEquipmentCatalog } from "../services/characters/equipment-catalog.js";
+import { buildGuideCatalog } from "../services/characters/equipment-catalog.js";
 
 export function registerApi(app: FastifyInstance): void {
+  app.get("/api/guides/catalog", async (_req, reply) => {
+    reply.header("Cache-Control", "no-store");
+    return reply.send(buildGuideCatalog());
+  });
+
   // Estado completo: personagem + as árvores com o status de cada nó.
   app.get("/api/state", async (req, reply) => {
     const discordId = getSessionDiscordId(req);
@@ -22,11 +27,7 @@ export function registerApi(app: FastifyInstance): void {
 
     const villageId = await villageForDiscordUser(ENV.DISCORD_GUILD_ID, discordId);
     const snap = await loadSnapshot(discordId, ENV.DISCORD_GUILD_ID, villageId);
-    if (!snap) return reply.send({
-      authenticated: true,
-      hasChar: false,
-      equipment: buildEquipmentCatalog(),
-    });
+    if (!snap) return reply.send({ authenticated: true, hasChar: false });
 
     const trees: Record<string, unknown> = {
       FUNDAMENTOS: viewFundamentosTree(snap),
@@ -97,7 +98,6 @@ export function registerApi(app: FastifyInstance): void {
             }];
           })
         : [],
-      equipment: buildEquipmentCatalog(),
       trees,
     });
   });
