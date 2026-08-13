@@ -212,6 +212,7 @@ model Village {
   constructions VillageConstruction[]
   upgrades      VillageUpgrade[]
   center        VillageCenter?
+  marketOffers  GeneralMarketOffer[]
 }
 
 model VillageStock {
@@ -588,9 +589,57 @@ model VillageShop {
   updatedAt DateTime @updatedAt
 
   stock VillageShopStock[]
+  purchaseOffers VillageShopPurchaseOffer[]
 
   @@unique([villageId, shopType])
   @@index([status])
+}
+
+// Cota de compra de matéria-prima do NPC municipal. A cada dia, cada loja
+// aceita apenas uma seleção rotativa dos seus insumos e compra uma quantidade
+// finita, compartilhada por todos os jogadores da vila. O estado persistido
+// impede rerrolagem em reinício e o decremento condicional impede ultrapassar
+// a cota em duas vendas simultâneas.
+model VillageShopPurchaseOffer {
+  id           String      @id @default(cuid())
+  shop         VillageShop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  shopId       String
+  dayKey       String
+  itemId       String
+  initialQty   Int
+  remainingQty Int
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@unique([shopId, dayKey, itemId])
+  @@index([shopId, dayKey])
+}
+
+// Caravana do Mercado Geral (secao 7.2.1). O NPC NAO tem estoque infinito: a
+// cada dia local a vila recebe quatro ofertas sorteadas, com quantidade
+// compartilhada congelada na criacao.
+//
+// A unicidade (vila, dia, item) e' o que impede rerrolagem: o job das 00:05 e a
+// recuperacao preguicosa em `/loja` tentam criar as mesmas linhas, e a segunda
+// tentativa simplesmente nao insere. Por isso o estado do dia vive AQUI e nao
+// num `setTimeout` — reinicio atrasa, nunca sorteia de novo.
+model GeneralMarketOffer {
+  id           String   @id @default(cuid())
+  village      Village  @relation(fields: [villageId], references: [id], onDelete: Cascade)
+  villageId    String
+  dayKey       String // dia local America/Sao_Paulo (dayKeyFor em economy/week.ts)
+  itemId       String
+  // Congelada quando a oferta nasce: limitar(10, 60, teto(2 x ativos_14d)).
+  initialQty   Int
+  // Compartilhada pela vila inteira. Toda compra decrementa por UPDATE
+  // condicional (`remainingQty >= qty`), entao duas compras simultaneas nunca
+  // vendem a mesma unidade duas vezes.
+  remainingQty Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([villageId, dayKey, itemId])
+  @@index([villageId, dayKey])
 }
 
 // Estoque da loja. Separado de VillageStock (estoque central) de proposito: a

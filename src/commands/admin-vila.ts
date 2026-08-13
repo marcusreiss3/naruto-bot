@@ -1,8 +1,14 @@
+import { SlashCommandBuilder, type ChatInputCommandInteraction } from "discord.js";
 import {
-  EmbedBuilder,
-  SlashCommandBuilder,
-  type ChatInputCommandInteraction,
-} from "discord.js";
+  divider,
+  economyContainer,
+  factsBlock,
+  itemLabel,
+  listBlock,
+  text,
+  titleBlock,
+  v2Edit,
+} from "../ui/economy-components-v2.js";
 import type { Command } from "./types.js";
 import { isAdmin } from "../utils/permissions.js";
 import { NINJA_RANKS, NINJA_RANK_LABELS, type NinjaRank } from "../config/enums.js";
@@ -633,49 +639,37 @@ async function handleVer(interaction: ChatInputCommandInteraction): Promise<void
     return;
   }
 
-  const stock = village.stock.length
-    ? village.stock
-        .map((row) => `• ${getItem(row.itemId)?.name ?? row.name} ×${row.qty}`)
-        .join("\n")
-        .slice(0, 1024)
-    : "_Vazio._";
-
   const kage = village.kageDiscordId ? `<@${village.kageDiscordId}>` : "_Nenhum (NPC/staff)_";
   const pop = await activePopulation(villageId);
-
-  const embed = new EmbedBuilder()
-    .setTitle(`🏯 ${village.name}`)
-    .setColor(0x2f3136)
-    .addFields(
-      { name: "Cofre", value: `💰 ${formatRyo(village.treasuryRyo)}`, inline: true },
-      {
-        name: "Reservado / livre",
-        value: `${village.reservedRyo} / ${Math.max(0, village.treasuryRyo - village.reservedRyo)} Ryō`,
-        inline: true,
-      },
-      { name: "Taxa", value: `${(village.taxRate * 100).toFixed(1).replace(".", ",")}%`, inline: true },
-      { name: "Kage", value: kage, inline: true },
-      {
-        name: "Administração",
-        value: village.managedByStaff ? "Staff" : "Kage jogador",
-        inline: true,
-      },
-      {
-        name: "Saques",
-        value: village.withdrawalsLocked ? "🔒 Bloqueados" : "Liberados",
-        inline: true,
-      },
-      {
-        name: "Ninjas ativos (14 dias)",
-        value:
-          village.populationOverride !== null
-            ? `${village.populationOverride} _(override)_`
-            : `${pop.ativos} • fator ${pop.factor.toFixed(2)}`,
-        inline: true,
-      },
-      { name: "Mansão", value: `<#${VILLAGE_MANSIONS[villageId]}>`, inline: true },
-      { name: "Estoque central", value: stock },
-    );
-
-  await interaction.editReply({ embeds: [embed] });
+  await interaction.editReply(
+    v2Edit([
+      economyContainer("vila", [
+        titleBlock("vila", `Administração — ${village.name}`),
+        factsBlock([
+          { label: "Cofre", value: formatRyo(village.treasuryRyo) },
+          { label: "Livre", value: `${Math.max(0, village.treasuryRyo - village.reservedRyo)} Ryō` },
+          { label: "Taxa", value: `${(village.taxRate * 100).toFixed(1).replace(".", ",")}%` },
+        ]),
+        factsBlock([
+          { label: "Kage", value: kage },
+          { label: "Gestão", value: village.managedByStaff ? "Staff / NPC" : "Kage jogador" },
+          { label: "Saques", value: village.withdrawalsLocked ? "bloqueados" : "liberados" },
+        ]),
+        text(
+          `**Ninjas ativos (14 dias):** ${
+            village.populationOverride !== null
+              ? `${village.populationOverride} _(override)_`
+              : `${pop.ativos} • fator ${pop.factor.toFixed(2)}`
+          } • **Mansão:** <#${VILLAGE_MANSIONS[villageId]}>`,
+        ),
+        divider(),
+        listBlock(
+          "Estoque central",
+          village.stock.slice(0, 20).map((row) => itemLabel(row.itemId, getItem(row.itemId)?.name ?? row.name, row.qty)),
+          "Vazio.",
+        ),
+        village.stock.length > 20 ? text(`-# …e mais ${village.stock.length - 20} tipo(s) de item.`) : text("-# Consulta administrativa; não altera nenhum dado."),
+      ]),
+    ]),
+  );
 }

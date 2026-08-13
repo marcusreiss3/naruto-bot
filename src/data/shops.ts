@@ -9,7 +9,7 @@
 // produto tem preco de VENDA. Nao existe item que a loja compre e revenda pelo
 // mesmo balcao — isso viraria conversao gratuita de material em Ryo.
 
-import type { RecipeStation } from "./recipes.js";
+import { villageShopRecipes, type RecipeStation } from "./recipes.js";
 
 export const SHOP_TYPES = [
   "MERCADO_GERAL",
@@ -176,6 +176,15 @@ export interface ProductDef {
   shop: ShopType;
 }
 
+// Tabela da secao 7.3.1: TODA loja municipal e' balcao de varejo, nao so' as
+// que fabricam. A Marcenaria e o Emporio vendem materia-prima do proprio
+// estoque, e por isso `Comprar` nunca mais fica desativado "porque a loja nao
+// produz" — fica desativado so' quando nao ha estoque fisico.
+//
+// A margem (retailBase > shopBuyBase do mesmo item) e' a conveniencia de
+// mercado. Ela e' segura porque o item precisa EXISTIR em VillageShopStock
+// para ser vendido: comprar da loja e revender para ela sempre perde Ryo, e
+// transferir central -> loja nao cria produto nenhum (secao 7.3).
 export const SHOP_PRODUCTS: ProductDef[] = [
   // Fundição Ninja — armas e ferramentas ja existentes. Nenhuma arma nova.
   { itemId: "kunai", retailBase: 35, shop: "FUNDICAO" },
@@ -187,10 +196,30 @@ export const SHOP_PRODUCTS: ProductDef[] = [
   { itemId: "fios_aco_ninja", retailBase: 45, shop: "FUNDICAO" },
   { itemId: "katana", retailBase: 450, shop: "FUNDICAO" },
   { itemId: "lamina_chakra", retailBase: 2400, shop: "FUNDICAO" },
+  // ...e o balcao de materia mineral e metal processado (secao 7.3.1).
+  { itemId: "minerio_ferro", retailBase: 18, shop: "FUNDICAO" },
+  { itemId: "pedra", retailBase: 5, shop: "FUNDICAO" },
+  { itemId: "carvao", retailBase: 9, shop: "FUNDICAO" },
+  { itemId: "argila", retailBase: 8, shop: "FUNDICAO" },
+  { itemId: "lingote_ferro", retailBase: 30, shop: "FUNDICAO" },
+  { itemId: "aco", retailBase: 55, shop: "FUNDICAO" },
+  { itemId: "polvora", retailBase: 25, shop: "FUNDICAO" },
 
   // Empório de Alimentos — basico do dia a dia.
   { itemId: "fruta", retailBase: 10, shop: "EMPORIO" },
+  { itemId: "carne_crua", retailBase: 12, shop: "EMPORIO" },
+  { itemId: "peixe_cru", retailBase: 11, shop: "EMPORIO" },
+  { itemId: "grao", retailBase: 8, shop: "EMPORIO" },
+  { itemId: "farinha", retailBase: 14, shop: "EMPORIO" },
+  { itemId: "agua_limpa", retailBase: 5, shop: "EMPORIO" },
+  { itemId: "erva_medicinal", retailBase: 11, shop: "EMPORIO" },
   { itemId: "pao", retailBase: 14, shop: "EMPORIO" },
+
+  // Marcenaria — deixou de ser so' compradora.
+  { itemId: "madeira", retailBase: 8, shop: "MARCENARIA" },
+  { itemId: "fibra_vegetal", retailBase: 7, shop: "MARCENARIA" },
+  { itemId: "papel", retailBase: 10, shop: "MARCENARIA" },
+  { itemId: "lenha", retailBase: 6, shop: "MARCENARIA" },
 
   // Ichiraku — comida preparada.
   { itemId: "carne_cozida", retailBase: 18, shop: "ICHIRAKU" },
@@ -201,43 +230,105 @@ export const SHOP_PRODUCTS: ProductDef[] = [
 
   // Oficina de Selos — `ryoValue` do item continua 300, para a restauracao do
   // pergaminho gasto seguir custando 150 (secao 7.4).
+  { itemId: "papel", retailBase: 10, shop: "OFICINA_SELOS" },
+  { itemId: "tinta_de_selo", retailBase: 24, shop: "OFICINA_SELOS" },
   { itemId: "pergaminho_arsenal", retailBase: 300, shop: "OFICINA_SELOS" },
 ];
 
-const PRODUCT_MAP = new Map(SHOP_PRODUCTS.map((row) => [row.itemId, row]));
+// Chaveado por LOJA+ITEM: desde a 7.3.1 o mesmo item aparece em balcoes
+// diferentes (Papel na Marcenaria e na Oficina), entao um mapa por itemId
+// perderia silenciosamente uma das linhas.
+const PRODUCT_MAP = new Map(SHOP_PRODUCTS.map((row) => [`${row.shop}:${row.itemId}`, row]));
+
+// Base de varejo do item, independente de balcao. E' o "valor de referencia"
+// global da secao 3.1 — usado pela recompra do NPC e pelo contrato de atacado.
+// Um item so' pode ter UMA base, mesmo vendido em duas lojas; o teste
+// "retailBase e' unico por item" trava isso.
+const RETAIL_BY_ITEM = new Map(SHOP_PRODUCTS.map((row) => [row.itemId, row.retailBase]));
 
 export function retailBase(itemId: string): number | undefined {
-  return PRODUCT_MAP.get(itemId)?.retailBase;
+  return RETAIL_BY_ITEM.get(itemId);
 }
 
 export function productsSoldBy(shopType: ShopType): ProductDef[] {
   return SHOP_PRODUCTS.filter((row) => row.shop === shopType);
 }
 
+export function shopSellsItem(shopType: ShopType, itemId: string): boolean {
+  return PRODUCT_MAP.has(`${shopType}:${itemId}`);
+}
+
 // ---------------- Mercado Geral (NPC externo) ----------------
 
-// "Oferece materias basicas e faz recompra de emergencia" (secao 7.2). Nao tem
-// estoque municipal, nao move cofre e nao produz nada.
+// "Barracas de fora da vila", com selecao diaria pequena, cara e variavel
+// (secao 7.2.1). Nao tem estoque municipal, nao move cofre e nao produz nada.
 //
-// So' materia BRUTA: os processados (farinha, papel, caldo, tempero, tinta)
-// ficam de fora para nao curto-circuitarem o craft e as lojas da vila.
-export const GENERAL_MARKET_MATERIALS = [
-  "madeira",
-  "pedra",
-  "minerio_ferro",
-  "carvao",
-  "argila",
-  "fibra_vegetal",
-  "erva_medicinal",
-  "grao",
-  "agua_limpa",
-  "couro",
-] as const;
+// Este e' o universo ELEGIVEL, com o peso do sorteio. O que esta a venda hoje
+// sao as quatro ofertas persistidas em `GeneralMarketOffer` — ser elegivel nao
+// basta para comprar.
+//
+// So' materia BRUTA: os processados (farinha, papel, caldo, tempero, tinta) e
+// os raros ficam de fora para nao curto-circuitarem o craft e as lojas da vila.
+export interface MarketOfferDef {
+  itemId: string;
+  weight: number;
+}
+
+export const GENERAL_MARKET_POOL: MarketOfferDef[] = [
+  // Comum
+  { itemId: "madeira", weight: 100 },
+  { itemId: "pedra", weight: 100 },
+  { itemId: "fibra_vegetal", weight: 100 },
+  { itemId: "agua_limpa", weight: 100 },
+  // Menos comum
+  { itemId: "minerio_ferro", weight: 55 },
+  { itemId: "carvao", weight: 55 },
+  { itemId: "argila", weight: 55 },
+  { itemId: "grao", weight: 55 },
+  { itemId: "couro", weight: 55 },
+  // Difícil
+  { itemId: "erva_medicinal", weight: 20 },
+];
+
+// Quem PODE ser sorteado. Continua sendo o gate de preco do NPC: item fora
+// desta lista nao tem preco de balcao nem com customId forjado.
+export const GENERAL_MARKET_MATERIALS = GENERAL_MARKET_POOL.map((row) => row.itemId);
+
+export function isGeneralMarketMaterial(itemId: string): boolean {
+  return GENERAL_MARKET_MATERIALS.includes(itemId);
+}
 
 // Valor de referencia do item para a recompra de emergencia do Mercado Geral.
 // Produto usa o varejo; materia-prima usa a base de compra das lojas.
 export function referenceValue(itemId: string): number | undefined {
   return retailBase(itemId) ?? shopBuyBase(itemId);
+}
+
+// ---------------- O que o Kage pode abastecer ----------------
+
+// Secao 7.3.1, ultimo paragrafo: o catalogo de `Abastecer` so' permite insumo
+// de receita DAQUELA loja e item vendavel nela. Sem esse gate da' para empurrar
+// kunai para a Marcenaria — estoque que ninguem consegue usar nem comprar, e
+// que so' sai pela retirada administrativa.
+//
+// Insumo de receita entra mesmo sem varejo: a Madeira Reforcada da Oficina e o
+// sal do Ichiraku nao sao vendidos a ninguem, mas precisam chegar la'.
+export function restockableItems(shopType: ShopType): string[] {
+  const permitidos = new Set(productsSoldBy(shopType).map((row) => row.itemId));
+  const station = getShop(shopType)?.station;
+  if (station) {
+    for (const recipe of villageShopRecipes(station)) {
+      for (const ingredient of recipe.ingredients) {
+        if (ingredient.itemId) permitidos.add(ingredient.itemId);
+        for (const alternativa of ingredient.anyOf ?? []) permitidos.add(alternativa);
+      }
+    }
+  }
+  return [...permitidos];
+}
+
+export function canRestockItem(shopType: ShopType, itemId: string): boolean {
+  return restockableItems(shopType).includes(itemId);
 }
 
 // ---------------- Contrato de Empreendedor NPC ----------------

@@ -14,6 +14,8 @@
 4. [04 — Administração, cofre e estoque central](04-administracao-cofre-estoque.md)
 5. [05 — Lojas e interface Discord](05-lojas-interface-discord.md)
 6. [06 — Evoluções, produção e manutenção](06-evolucoes-producao-manutencao.md)
+7. [07 — Hotfix: Mercado Geral e varejo](07-hotfix-mercado-geral-e-varejo.md) — aplicar após a etapa 05 se ela já estiver implementada.
+8. [08 — Redesign com Components V2](08-redesign-components-v2.md) — aplicar após a economia estar funcional e o hotfix 07 validado.
 
 ## Regras de execução
 

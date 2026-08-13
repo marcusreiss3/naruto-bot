@@ -410,9 +410,9 @@ O usuário pode comprar e vender apenas no mercado da sua própria vila. Um futu
 
 ### 7.2 Tipos de loja e disponibilidade
 
-Cada vila recebe o **Mercado Geral** gratuitamente. Ele é um NPC público que oferece matérias básicas e faz recompra de emergência, porém não produz equipamento e não gera receita para o cofre; a compra normal é um sumidouro de Ryō, como definido na seção 3.
+Cada vila recebe o **Mercado Geral** gratuitamente. Ele é um NPC externo para emergências: tem uma seleção diária pequena, cara e variável de matérias-primas, além de recompra de emergência. Não produz equipamento, não usa estoque municipal e não gera receita para o cofre; a compra normal é um sumidouro de Ryō, como definido na seção 3.
 
-Cada vila já começa com **Empório de Alimentos**, **Marcenaria**, **Fundição Ninja** e **Oficina de Selos** no nível 1 e estado `ATIVA`, com estoque vazio. São instalações históricas da vila: não têm custo/tempo de construção, não ocupam vaga do Centro e, nesta primeira versão, não cobram manutenção semanal. O Kage pode administrá-las desde o início.
+Cada vila já começa com **Empório de Alimentos**, **Marcenaria**, **Fundição Ninja** e **Oficina de Selos** ativas, com estoque vazio. São instalações históricas da vila: não têm custo/tempo de construção, não ocupam vaga do Centro e, nesta primeira versão, não cobram manutenção semanal. O Kage pode administrá-las desde o início.
 
 Somente o **Ichiraku — Casa de Lámen** é construível. Ele começa `BLOQUEADO`; sua obra usa cofre e estoque da vila, ocupa uma vaga global do Centro e fica `CONSTRUINDO` por 5 dias. Antes de ficar `ATIVA`, não recebe, vende nem produz itens. Aplicar o mesmo fator de população das obras da vila aos custos do Ichiraku e congelá-lo no início.
 
@@ -427,6 +427,30 @@ Somente o **Ichiraku — Casa de Lámen** é construível. Ele começa `BLOQUEAD
 Não há loja de armas nova: a Fundição comercializa e produz somente `kunai`, `shuriken`, `fuma_shuriken`, `senbon`, `papel_bomba`, `bomba_fumaca`, `fios_aco_ninja`, `katana`, `lamina_chakra` e combinações já especificadas. A loja é um prédio econômico; ela não cria uma arma além da lista do bot.
 
 Cada loja possui capacidade fixa de estoque de 500 unidades totais. Não implementar nível, evolução de loja, melhoria de capacidade ou limite diário adicional nesta economia.
+
+### 7.2.1 Mercado Geral: emergência, rotação e escassez
+
+O Mercado Geral **não possui estoque infinito** e não pode ser a fonte normal de recursos. Às 00:05 de cada dia em `America/Sao_Paulo`, gerar e persistir para cada vila exatamente **quatro ofertas diferentes**, válidas até a próxima virada. O bot não pode rerrolar a seleção em reinício: se já existe oferta para `vila + dayKey`, ele a reutiliza.
+
+Cada oferta nasce com quantidade compartilhada proporcional à população ativa de 14 dias da vila, congelada quando a oferta diária é criada:
+
+```text
+quantidade inicial por oferta = limitar entre 10 e 60(teto(2 × ativos_14d))
+```
+
+Portanto, vila com 6 ativos recebe 12 unidades por oferta; com 20 ativos, 40; com 30 ou mais, 60. Isso mantém o Mercado Geral limitado, mas não deixa Konoha e uma vila pequena disputarem o mesmo estoque absoluto. Ao chegar a zero, aparece como esgotada e não pode ser comprada até o próximo dia. O jogador vê no embed `restante/quantidade inicial`, a hora do próximo reabastecimento e que é um NPC de emergência. Compra simultânea deve reduzir o estoque com atualização condicional/transação, sem vender a mesma unidade duas vezes.
+
+Sortear sem repetição, com peso:
+
+| Grupo | Itens elegíveis | Peso por item |
+|---|---|---:|
+| Comum | Madeira, Pedra, Fibra Vegetal, Água Limpa | 100 |
+| Menos comum | Minério de Ferro, Carvão, Argila, Grão, Couro | 55 |
+| Difícil | Erva Medicinal | 20 |
+
+Nunca oferecer Minério Raro, Madeira Reforçada, equipamentos, comida preparada, Pergaminho de Arsenal ou materiais processados (Lingote, Aço, Papel, Pólvora, Farinha, Lenha, Caldo, Tempero e Tinta). Assim, um item difícil pode aparecer, mas aparece muito menos vezes que madeira ou pedra.
+
+O preço do Mercado Geral é sempre `teto(shopBuyBase × 2,0 × (1 + imposto atual))`. Portanto é intencionalmente mais caro que o preço de varejo da loja municipal da mesma vila. O Mercado Geral continua recomprando recursos comuns por 30% do valor de referência, sem imposto e sem tocar o cofre, mas não compra raros.
 
 A Oficina de Selos tem uma regra adicional de escassez: pode produzir no máximo **3 Pergaminhos de Arsenal por vila e por competência semanal**. A contagem reseta junto da abertura da competência semanal de domingo às 22:00, é persistida no banco e não pode ser contornada por reinício, troca de Kage ou construção de segunda oficina (há somente uma Oficina por vila). Cada produção consome a receita completa e uma Madeira Reforçada; não há produção passiva, compra de Minério Raro ou atalho administrativo sem lançamento explícito.
 
@@ -448,6 +472,22 @@ O valor de itens não pode ser criado ao simplesmente transferi-los entre os doi
 - A loja municipal gera entrada para o cofre apenas quando o Kage aceita um **Contrato de Empreendedor NPC**: um comprador atacadista leva um lote de itens prontos do estoque da loja e paga o valor atacadista diretamente ao cofre. O contrato é uma ação administrativa auditada, tem limite diário e nunca é disparado por uma compra normal de jogador.
 
 Assim, recursos têm valor de compra, produtos têm valor de venda e não há conversão gratuita de madeira/carne em Ryō. O painel sempre deve mostrar “valor estimado do estoque” apenas como informação; esse valor não é saldo sacável.
+
+### 7.3.1 Varejo obrigatório das lojas municipais
+
+Toda loja municipal deve realmente vender ao jogador os itens abaixo **quando houver estoque físico nela**. Kage/staff abastece pelo botão `Abastecer`, movendo os itens do estoque central para a loja; o jogador compra por `/loja` → `Comprar`. Não deixar o botão `Comprar` desativado só porque a loja não fabrica o item: Marcenaria e Empório também são balcões de varejo.
+
+| Loja | Itens que pode vender | `retailBase` por unidade antes do imposto |
+|---|---|---|
+| Empório | Fruta, Carne Crua, Peixe Cru, Grão, Farinha, Água Limpa, Erva Medicinal, Pão | 10, 12, 11, 8, 14, 5, 11, 14 |
+| Marcenaria | Madeira, Fibra Vegetal, Papel, Lenha | 8, 7, 10, 6 |
+| Fundição Ninja | Minério de Ferro, Pedra, Carvão, Argila, Lingote de Ferro, Aço, Pólvora; e os equipamentos já definidos | 18, 5, 9, 8, 30, 55, 25; equipamentos usam os valores da seção 3 |
+| Ichiraku | Carne Cozida, Peixe Cozido, Dango, Ensopado, Lámen | 18, 16, 30, 35, 48 |
+| Oficina de Selos | Papel, Tinta de Selo, Pergaminho de Arsenal | 10, 24, 300 |
+
+O preço final continua sendo `teto(retailBase × (1 + imposto atual))`. A loja pode comprar uma matéria-prima do jogador por `shopBuyBase` menor e revendê-la mais cara **somente se ela estiver no seu estoque real**; essa margem é a conveniência de mercado e o Ryō da venda normal continua sendo sumidouro, não receita do cofre. Não criar produto ou Ryō ao transferir central → loja.
+
+O catálogo de `Comprar` deve listar apenas itens permitidos para aquela loja com `quantidade > 0`; se não houver nenhum, mostrar “sem estoque para venda” e manter o botão desativado. O catálogo de `Abastecer` do Kage só permite ingredientes de receitas daquela loja e itens vendáveis nela, evitando estoque que não pode ser usado nem vendido.
 
 ### 7.4 Preços de compra e margem das lojas
 
@@ -485,6 +525,8 @@ Tabela inicial sugerida, por unidade:
 Não adicionar `ovo` nem `macarrao`: eles pertenciam a uma receita descartada. Farinha, Caldo e Tempero já são derivados das receitas de alimento desta especificação. Materiais raros não são comprados por loja: só entram por doação/transferência administrativa e obras/receitas especiais. Portanto, Madeira Reforçada destinada à Oficina de Selos precisa ser doada ao estoque central e abastecida pelo Kage; ela nunca é comprada automaticamente pela oficina.
 
 Para impedir que uma vila de cofre baixo compre infinitamente recursos, cada loja tem orçamento diário de aquisição igual a `500 × fator de população` Ryō, e não pode pagar além do Ryō livre no cofre. A interface deve mostrar o orçamento restante. A venda do jogador falha de maneira clara se o orçamento, a capacidade ou o cofre forem insuficientes.
+
+Além do orçamento, o NPC de cada loja municipal compra apenas uma **seleção diária rotativa** de matérias-primas: entre 2 e 4 tipos, conforme os ninjas ativos da vila, e cada tipo tem uma cota compartilhada de `limitar(12, 80, teto(3 × ativos))` unidades. A seleção e a cota são congeladas por vila, loja e dia; reiniciar o bot não rerrola, e duas vendas simultâneas não ultrapassam o restante. O painel `/loja` mostra `cota restante/inicial` e não deixa selecionar material fora da seleção do dia ou já esgotado.
 
 Preço de varejo é o `retailBase` global da seção 3 aplicado à taxa. Para produtos de loja sem preço anterior, usar inicialmente: carne cozida 18, peixe cozido 16, pão 14, dango 30, ensopado 35 e lámen 48 Ryō. Com imposto de 5%, um Lámen custa 51 Ryō. O custo exibido no painel deve ser calculado dinamicamente a partir dos ingredientes e do preço de compra atual, nunca um número fixo escrito no embed.
 
@@ -624,6 +666,7 @@ Além das entidades da seção 9, acrescentar:
 
 - `VillageShop`: vila, `shopType`, status (`LOCKED | CONSTRUCTING | AWAITING_CHANNEL | ACTIVE | SUSPENDED`), capacidade fixa, orçamento diário, data de reset, `discordChannelId` opcional e timestamps; único por vila + tipo. Não adicionar nível. No seed, criar Empório/Marcenaria/Fundição/Oficina como `ACTIVE` e Ichiraku como `LOCKED`.
 - `VillageShopStock`: loja + item, quantidade; separado de `VillageStock`.
+- `GeneralMarketOffer`: vila, `dayKey`, item, quantidade inicial/restante e timestamps; único por vila + competência diária + item. É estoque externo rotativo do Mercado Geral, não `VillageStock` nem patrimônio do cofre.
 - `VillageConstruction`: modelo único para Centro, setor e Ichiraku; tipo/chave do prédio, nível-alvo quando aplicável, custo/fator congelados, início, conclusão, status e executor. A capacidade da fila deve consultar todas as construções `CONSTRUINDO` deste modelo.
 - `VillageShopLedger`: ou subtipo de `VillageLedger`, com `SHOP_BUY_FROM_PLAYER`, `SHOP_SALE_TO_PLAYER` (sem delta no cofre), `SHOP_WHOLESALE_CONTRACT` (entrada no cofre), `SHOP_RESTOCK`, `SHOP_CRAFT`, `SHOP_WITHDRAWAL` e `SHOP_DAILY_RESET`.
 - `DiscordUiSession`: dono Discord, guild, canal, vila, loja/tela atual, expira em, dados mínimos. Pode ser uma tabela curta, limpa por job, ou estado assinado em memória + validação integral no banco; para reinícios, tabela é preferível.
@@ -740,7 +783,7 @@ Também há uma diferença de terminologia importante: `CharacterResourceState` 
 
 ## 11. Ordem de implementação e testes de aceite
 
-Implementar em etapas para não quebrar combate e missões. A sequência operacional obrigatória e as instruções de handoff estão em [`docs/economia/README.md`](economia/README.md): fundação → imposto/relógio → coleta/craft/fome → administração/cofre → lojas/UI → evoluções/manutenção. Não tentar implementar a lista inteira em um único pedido ao Claude.
+Implementar em etapas para não quebrar combate e missões. A sequência operacional obrigatória e as instruções de handoff estão em [`docs/economia/README.md`](economia/README.md): fundação → imposto/relógio → coleta/craft/fome → administração/cofre → lojas/UI → evoluções/manutenção → hotfix de mercado/varejo → redesign Components V2. Não tentar implementar a lista inteira em um único pedido ao Claude.
 
 Critérios de aceite essenciais:
 

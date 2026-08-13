@@ -1,5 +1,4 @@
 import {
-  EmbedBuilder,
   SlashCommandBuilder,
   MessageFlags,
   type ChatInputCommandInteraction,
@@ -12,9 +11,22 @@ import {
   type GatherAction,
 } from "../data/gathering.js";
 import { getOrCreateCharacter } from "../services/characters/character-service.js";
-import { describeLoot, performGathering } from "../services/economy/gathering.js";
+import { performGathering } from "../services/economy/gathering.js";
 import { villageFromMemberStrict } from "../services/economy/village-sync.js";
 import type { GuildMember } from "discord.js";
+import {
+  divider,
+  economyContainer,
+  itemLabel,
+  listBlock,
+  ryo,
+  text,
+  titleBlock,
+  v2Edit,
+  type AccentName,
+} from "../ui/economy-components-v2.js";
+import type { EmojiKey } from "../ui/economy-emojis.js";
+import { getItem } from "../data/items.js";
 
 // Frase de abertura por acao. E' RP, nao mecanica: o embed serve para o jogador
 // citar no canal. Nao revela chance, cooldown restante nem "quase ganhou".
@@ -26,13 +38,24 @@ const NARRATIVA: Record<GatherAction, string> = {
   COLETAR_AGUA: "Você enche os cantis com água limpa, filtrando o que desce da nascente.",
 };
 
-const CORES: Record<GatherAction, number> = {
-  MINERAR: 0x8d8d8d,
-  COLETAR: 0x4f9d3a,
-  CACAR: 0x9d5b2f,
-  PESCAR: 0x2f7f9d,
-  COLETAR_AGUA: 0x3aa0c8,
-};
+// Coleta e' recurso natural: tudo cai no marrom de estoque da paleta da etapa
+// 08. As cores proprias por acao sairam de proposito — a etapa exige paleta
+// pequena e consistente, e cinco tons novos so' para /acao brigavam com ela.
+const ACAO_ACCENT = {
+  MINERAR: "estoque",
+  COLETAR: "estoque",
+  CACAR: "estoque",
+  PESCAR: "estoque",
+  COLETAR_AGUA: "estoque",
+} as const satisfies Record<GatherAction, AccentName>;
+
+const ACAO_EMOJI = {
+  MINERAR: "minerio_ferro",
+  COLETAR: "madeira",
+  CACAR: "carne_crua",
+  PESCAR: "peixe_cru",
+  COLETAR_AGUA: "agua_limpa",
+} as const satisfies Record<GatherAction, EmojiKey>;
 
 function canaisPermitidos(action: GatherAction): string {
   return areasForAction(action)
@@ -73,14 +96,40 @@ export const acao: Command = {
       return;
     }
 
-    const { area, loot } = outcome.result;
-    const embed = new EmbedBuilder()
-      .setColor(CORES[action])
-      .setTitle(`${GATHER_ACTION_LABELS[action]} — ${area.name}`)
-      .setDescription(`*${NARRATIVA[action]}*`)
-      .addFields({ name: "Você obteve", value: describeLoot(loot) })
-      .setFooter({ text: `${char.displayName?.trim() || char.name} • ${area.name}` });
+    const { area, loot, delivery } = outcome.result;
+    const nome = char.displayName?.trim() || char.name;
 
-    await interaction.editReply({ embeds: [embed] });
+    // Cartao publico e compacto: narrativa, loot e rodape. Nada de chance rara,
+    // cooldown restante ou informacao de outro jogador (secao 4.2).
+    const bloco = [
+      titleBlock(ACAO_EMOJI[action], `${GATHER_ACTION_LABELS[action]} — ${area.name}`),
+      text(`*${NARRATIVA[action]}*`),
+      divider(),
+      listBlock(
+        "Você obteve",
+        loot.map((entry) => itemLabel(entry.itemId, nomeDoItem(entry.itemId), entry.qty)),
+        "Nada desta vez.",
+      ),
+    ];
+
+    // Ordem de coleta ativa desviou o recurso-alvo para a vila: o jogador
+    // precisa ver para onde foi e quanto rendeu.
+    if (delivery) {
+      bloco.push(
+        text(
+          `-# ${itemLabel(delivery.itemId, nomeDoItem(delivery.itemId), delivery.entregue)} ` +
+            `foi direto ao estoque da vila pela ordem de coleta — ${ryo(`${delivery.pago} Ryō`)} pagos.`,
+        ),
+      );
+    }
+
+    bloco.push(text(`-# ${nome} • ${area.name}`));
+
+    // Publico: sem a flag Ephemeral, mas ainda V2 (nada de embeds/content).
+    await interaction.editReply(v2Edit([economyContainer(ACAO_ACCENT[action], bloco)]));
   },
 };
+
+function nomeDoItem(itemId: string): string {
+  return getItem(itemId)?.name ?? itemId;
+}

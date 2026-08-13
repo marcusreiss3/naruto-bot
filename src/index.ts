@@ -187,6 +187,16 @@ client.on(Events.InteractionCreate, async (interaction) => {
     const name = interaction.customId.split(":")[0]!;
     const cmd = commandMap.get(name);
     try {
+      // Componentes também movimentam economia (aceitar ordem, comprar,
+      // doar). Sem esta sincronização, alguém que acabou de trocar de cargo
+      // ficava com a vila antiga no personagem até usar outro slash command.
+      if (interaction.guildId) {
+        await syncCharacterVillage(
+          interaction.user.id,
+          interaction.guildId,
+          interaction.member as GuildMember | null,
+        ).catch((err) => log.error("Falha ao sincronizar vila no componente:", err));
+      }
       if (interaction.isButton() && cmd?.handleButton) await cmd.handleButton(interaction);
       else if (interaction.isModalSubmit() && cmd?.handleModal) await cmd.handleModal(interaction);
       else if (interaction.isAnySelectMenu() && cmd?.handleSelect) await cmd.handleSelect(interaction);

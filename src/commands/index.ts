@@ -20,6 +20,7 @@ import { inventario } from "./inventario.js";
 import { acao } from "./acao.js";
 import { craft } from "./craft.js";
 import { comer } from "./comer.js";
+import { sincronizarVila } from "./sincronizar-vila.js";
 import { arremessar, atacar, darItem, desequipar, equipar, largarItem, restaurarPergaminho, usarItem } from "./itens.js";
 
 export const commands: Command[] = [
@@ -29,6 +30,7 @@ export const commands: Command[] = [
   acao,
   craft,
   comer,
+  sincronizarVila,
   vila,
   loja,
   equipar,

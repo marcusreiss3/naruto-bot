@@ -1,9 +1,5 @@
 import {
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
   ComponentType,
-  EmbedBuilder,
   type ButtonInteraction,
   type ChatInputCommandInteraction,
   type Message,
@@ -25,7 +21,19 @@ import { NpcAiService } from "../npc-ai/npc-ai-service.js";
 import { getPersona } from "../npc-ai/personas.js";
 import { partyMemberIds } from "../party/party-service.js";
 import { normalizeVillageId, VILLAGE_MANSIONS, VILLAGE_NAMES, type VillageId } from "../village-service.js";
+import { v2Edit, v2Public } from "../../ui/economy-components-v2.js";
+import { investigationPanel, type InvestigationMemoryView } from "../../ui/mission-investigation-v2.js";
 import { cacheAttrs, gatherPartyPlayers, type StarterChar } from "./combat-party.js";
+import {
+  canUncoverClue,
+  createMemorySequence,
+  evaluateMemoryChoice,
+  MEMORY_MAX_ATTEMPTS,
+  MEMORY_PREPARE_SECONDS,
+  MEMORY_WORD_DISPLAY_MS,
+  rankBInvestigationMembers,
+  RANK_B_PARTY_MAX,
+} from "./investigation-party.js";
 import {
   completeMission,
   buildMissionCompleteEmbed,
@@ -39,8 +47,7 @@ import {
 type YukiStage = "BRIEFING" | "INVESTIGATE" | "FINAL_TALK" | "FIGHT" | "RETURN" | "DONE";
 type ClueId = "suna_market" | "kiri_market" | "suna_plaza" | "konoha_market";
 
-const YUKI_MAX_MISTAKES = 3;
-const INVESTIGATION_EMOJI = "<:investigation:1523544296379383949>";
+const YUKI_MAX_MISTAKES = 2;
 
 interface RegionalNpc {
   key: string;
@@ -62,7 +69,7 @@ interface ClueDef {
 
 interface InvestigationDef {
   intro: string;
-  requiredEvidence: number;
+  memoryWords: [string, string, string, string, string];
   actions: EvidenceAction[];
   conclusionQuestion: string;
   deductions: DeductionOption[];
@@ -83,8 +90,11 @@ interface DeductionOption {
 
 interface InvestigationProgress {
   evidence?: string[];
+  lostEvidence?: string[];
   contributors?: Record<string, string>;
   evidenceUsers?: Record<string, string>;
+  attemptUsers?: Record<string, string>;
+  failedAttempts?: Record<string, number>;
   investigators?: Record<string, string>;
   votes?: Record<string, string>;
   voters?: Record<string, string>;
@@ -142,23 +152,23 @@ const CLUES: Record<ClueId, ClueDef> = {
     },
     investigation: {
       intro:
-        "A barraca est� coberta por gelo, mas a areia sob a camada congelada virou vidro. Frio comum n�o vitrifica areia: descubram se o calor veio antes do Hyoton ou se a cena foi montada para incriminar Hakuo.",
-      requiredEvidence: 3,
+        "A barraca está coberta por gelo, mas a areia sob a camada congelada virou vidro. Frio comum não vitrifica areia: descubram se o calor veio antes do Hyoton ou se a cena foi montada para incriminar Hakuo.",
+      memoryWords: ["Calor", "Areia", "Vidro", "Cinza", "Gelo"],
       actions: [
-        { id: "thermal_edge", label: "Medir o calor residual", detail: "O centro da barraca ainda guarda calor sob o gelo. Se tudo tivesse sido congelado de uma vez, essa camada quente n�o existiria." },
-        { id: "glass_cut", label: "Analisar o vidro", detail: "Bolhas de ar ficaram presas sob a geada. A ordem � clara: a areia foi aquecida primeiro e congelada depois." },
-        { id: "ash_layer", label: "Peneirar as cinzas", detail: "A cinza n�o parece de inc�ndio comum. H� tra�os de combust�vel de forja port�til, usado para preparar a cena em segredo." },
-        { id: "seller_memory", label: "Ouvir Rasae", detail: "Rasae viu um carregador sem bandana deixando uma caixa antes do gelo aparecer. A descri��o n�o combina com Hakuo." },
+        { id: "thermal_edge", label: "Medir o calor residual", detail: "O centro da barraca ainda guarda calor sob o gelo. Se tudo tivesse sido congelado de uma vez, essa camada quente não existiria." },
+        { id: "glass_cut", label: "Analisar o vidro", detail: "Bolhas de ar ficaram presas sob a geada. A ordem é clara: a areia foi aquecida primeiro e congelada depois." },
+        { id: "ash_layer", label: "Peneirar as cinzas", detail: "A cinza não parece de incêndio comum. Há traços de combustível de forja portátil, usado para preparar a cena em segredo." },
+        { id: "seller_memory", label: "Ouvir Rasae", detail: "Rasae viu um carregador sem bandana deixando uma caixa antes do gelo aparecer. A descrição não combina com Hakuo." },
       ],
       conclusionQuestion: "Qual tese explica melhor a cena?",
       deductions: [
         { id: "ice_first", label: "O Hyoton vitrificou a areia sozinho" },
         { id: "heat_before_ice", label: "A areia foi aquecida antes do gelo" },
         { id: "forge_accident", label: "A forja causou um acidente comum" },
-        { id: "sand_trap", label: "Suna forjou a pr�pria cena" },
+        { id: "sand_trap", label: "Suna forjou a própria cena" },
       ],
       correct: "heat_before_ice",
-      success: "A equipe conclui que o calor veio antes do Hyoton. Hakuo pode ter passado pelo local, mas algu�m preparou a cena para associar o ataque a ele.",
+      success: "A equipe conclui que o calor veio antes do Hyoton. Hakuo pode ter passado pelo local, mas alguém preparou a cena para associar o ataque a ele.",
     },
   },
   kiri_market: {
@@ -176,23 +186,23 @@ const CLUES: Record<ClueId, ClueDef> = {
     },
     investigation: {
       intro:
-        "A vitrine congelada parece riscada ao acaso, mas o reflexo reorganiza as letras em uma frase. Descubram se a mensagem � amea�a, confiss�o, pedido de testemunho ou parte de uma armadilha maior.",
-      requiredEvidence: 3,
+        "A vitrine congelada parece riscada ao acaso, mas o reflexo reorganiza as letras em uma frase. Descubram se a mensagem é ameaça, confissão, pedido de testemunho ou parte de uma armadilha maior.",
+      memoryWords: ["Reflexo", "Ângulo", "Vapor", "Mensagem", "Espelho"],
       actions: [
-        { id: "left_angle", label: "Ler pelo �ngulo esquerdo", detail: "O reflexo forma as palavras 'n�o enterrem'. A frase est� presa dentro do gelo, feita para surgir apenas sob an�lise cuidadosa." },
-        { id: "right_angle", label: "Ler pelo �ngulo direito", detail: "O segundo trecho diz 'outro cl�'. Os riscos tremem, mais pr�ximos de desespero do que de declara��o de guerra." },
-        { id: "breath_test", label: "Revelar com vapor", detail: "O vapor quente revela 'em sil�ncio'. A mensagem completa fica: 'n�o enterrem outro cl� em sil�ncio'." },
-        { id: "shop_log", label: "Conferir o livro da loja", detail: "Genzo vendeu placas de espelho a um intermedi�rio sem bandana. O comprador pediu cortes parecidos com espelhos de gelo e pagou com moedas de v�rias vilas." },
+        { id: "left_angle", label: "Ler pelo ângulo esquerdo", detail: "O reflexo forma as palavras 'não enterrem'. A frase está presa dentro do gelo, feita para surgir apenas sob análise cuidadosa." },
+        { id: "right_angle", label: "Ler pelo ângulo direito", detail: "O segundo trecho diz 'outro clã'. Os riscos tremem, mais próximos de desespero do que de declaração de guerra." },
+        { id: "breath_test", label: "Revelar com vapor", detail: "O vapor quente revela 'em silêncio'. A mensagem completa fica: 'não enterrem outro clã em silêncio'." },
+        { id: "shop_log", label: "Conferir o livro da loja", detail: "Genzo vendeu placas de espelho a um intermediário sem bandana. O comprador pediu cortes parecidos com espelhos de gelo e pagou com moedas de várias vilas." },
       ],
       conclusionQuestion: "O que essa mensagem quer provocar?",
       deductions: [
         { id: "revenge_order", label: "Ordenar um ataque contra Kiri" },
-        { id: "public_witness", label: "For�ar as vilas a testemunhar" },
-        { id: "kiri_confession", label: "Arrancar confiss�o imediata de Kiri" },
-        { id: "merchant_threat", label: "Amea�ar vendedores de espelho" },
+        { id: "public_witness", label: "Forçar as vilas a testemunhar" },
+        { id: "kiri_confession", label: "Arrancar confissão imediata de Kiri" },
+        { id: "merchant_threat", label: "Ameaçar vendedores de espelho" },
       ],
       correct: "public_witness",
-      success: "A equipe entende que a mensagem n�o ordena mortes. Ela tenta obrigar as vilas a encarar o apagamento do Cl� Yuki diante de testemunhas.",
+      success: "A equipe entende que a mensagem não ordena mortes. Ela tenta obrigar as vilas a encarar o apagamento do Clã Yuki diante de testemunhas.",
     },
   },
   suna_plaza: {
@@ -203,30 +213,30 @@ const CLUES: Record<ClueId, ClueDef> = {
     marker: { cell: "C5", label: "REF", color: "#00cec9", kind: "MARKER", name: "Fonte congelada" },
     witness: {
       key: "yuki_suna_plaza_guard",
-      name: "Settei, guarda da pra�a",
+      name: "Settei, guarda da praça",
       persona: "yuki_suna_plaza_guard",
       imageFile: "npcs/mission-clerk.png",
       cell: "D5",
     },
     investigation: {
       intro:
-        "A fonte congelou em l�minas de gelo que funcionam como pequenos espelhos. Cada �ngulo aponta para uma vila diferente, como se algu�m quisesse fabricar suspeitas cruzadas.",
-      requiredEvidence: 3,
+        "A fonte congelou em lâminas de gelo que funcionam como pequenos espelhos. Cada ângulo aponta para uma vila diferente, como se alguém quisesse fabricar suspeitas cruzadas.",
+      memoryWords: ["Norte", "Oeste", "Sombra", "Ronda", "Fonte"],
       actions: [
-        { id: "north_marker", label: "Examinar o norte", detail: "Desse ponto aparece um selo de Kiri invertido. Ele parece colocado para ser encontrado, n�o para indicar uma rota real." },
-        { id: "west_marker", label: "Examinar o oeste", detail: "O reflexo mostra um carimbo de Konoha, mas n�o � oficial. � uma imita��o boa o bastante para gerar suspeita." },
-        { id: "shadow_clock", label: "Marcar a sombra", detail: "Ao meio-dia, a sombra aponta para a pr�pria Suna. O desenho inclui Suna entre os suspeitos, como se ningu�m fosse inocente." },
-        { id: "guard_route", label: "Checar a ronda", detail: "A guarda foi desviada por um bilhete an�nimo minutos antes do congelamento. Algu�m preparou a pra�a sem ser visto." },
+        { id: "north_marker", label: "Examinar o norte", detail: "Desse ponto aparece um selo de Kiri invertido. Ele parece colocado para ser encontrado, não para indicar uma rota real." },
+        { id: "west_marker", label: "Examinar o oeste", detail: "O reflexo mostra um carimbo de Konoha, mas não é oficial. É uma imitação boa o bastante para gerar suspeita." },
+        { id: "shadow_clock", label: "Marcar a sombra", detail: "Ao meio-dia, a sombra aponta para a própria Suna. O desenho inclui Suna entre os suspeitos, como se ninguém fosse inocente." },
+        { id: "guard_route", label: "Checar a ronda", detail: "A guarda foi desviada por um bilhete anônimo minutos antes do congelamento. Alguém preparou a praça sem ser visto." },
       ],
-      conclusionQuestion: "Qual � o objetivo desse desenho de reflexos?",
+      conclusionQuestion: "Qual é o objetivo desse desenho de reflexos?",
       deductions: [
         { id: "escape_route", label: "Mostrar uma rota de fuga" },
         { id: "weather_fault", label: "Registrar efeito natural do vento" },
-        { id: "political_frame", label: "Fazer vilas acusarem umas �s outras" },
-        { id: "yuki_signature", label: "Assinar um crime do Cl� Yuki" },
+        { id: "political_frame", label: "Fazer vilas acusarem umas às outras" },
+        { id: "yuki_signature", label: "Assinar um crime do Clã Yuki" },
       ],
       correct: "political_frame",
-      success: "A equipe percebe o padr�o: os reflexos foram desenhados para criar acusa��es cruzadas entre vilas.",
+      success: "A equipe percebe o padrão: os reflexos foram desenhados para criar acusações cruzadas entre vilas.",
     },
   },
   konoha_market: {
@@ -244,15 +254,15 @@ const CLUES: Record<ClueId, ClueDef> = {
     },
     investigation: {
       intro:
-        "A caixa de espelhos em Konoha veio com documentos perfeitos demais. Se a rota foi fabricada, ela pode revelar quem est� usando Hakuo como rosto p�blico da crise.",
-      requiredEvidence: 3,
+        "A caixa de espelhos em Konoha veio com documentos perfeitos demais. Se a rota foi fabricada, ela pode revelar quem está usando Hakuo como rosto público da crise.",
+      memoryWords: ["Lacre", "Peso", "Rota", "Tinta", "Carga"],
       actions: [
-        { id: "seal_check", label: "Comparar lacres", detail: "Os lacres imitam tr�s vilas, mas nenhum possui c�digo interno verdadeiro. S�o c�pias feitas para passar numa inspe��o r�pida." },
-        { id: "weight_check", label: "Pesar a caixa", detail: "A caixa pesa mais que espelhos comuns. Havia placas finas de gelo selado dentro dela, pr�prias para deixar marcas de Hyoton depois." },
-        { id: "route_check", label: "Tra�ar a rota", detail: "A rota sai de Kiri, passa por Suna e termina em Konoha sem justificativa comercial. O caminho parece constru�do para espalhar culpa." },
-        { id: "ink_check", label: "Testar a tinta", detail: "Os recibos parecem antigos, mas a tinta � recente. Algu�m envelheceu os pap�is para fingir que a carga era leg�tima." },
+        { id: "seal_check", label: "Comparar lacres", detail: "Os lacres imitam três vilas, mas nenhum possui código interno verdadeiro. São cópias feitas para passar numa inspeção rápida." },
+        { id: "weight_check", label: "Pesar a caixa", detail: "A caixa pesa mais que espelhos comuns. Havia placas finas de gelo selado dentro dela, próprias para deixar marcas de Hyoton depois." },
+        { id: "route_check", label: "Traçar a rota", detail: "A rota sai de Kiri, passa por Suna e termina em Konoha sem justificativa comercial. O caminho parece construído para espalhar culpa." },
+        { id: "ink_check", label: "Testar a tinta", detail: "Os recibos parecem antigos, mas a tinta é recente. Alguém envelheceu os papéis para fingir que a carga era legítima." },
       ],
-      conclusionQuestion: "Para qual conclus�o a rota falsa aponta?",
+      conclusionQuestion: "Para qual conclusão a rota falsa aponta?",
       deductions: [
         { id: "konoha_order", label: "Konoha comprou a carga" },
         { id: "suna_smuggling", label: "Suna contrabandeou gelo" },
@@ -260,7 +270,7 @@ const CLUES: Record<ClueId, ClueDef> = {
         { id: "kiri_tax", label: "Kiri falsificou imposto" },
       ],
       correct: "third_party_frame",
-      success: "A equipe conclui que a carga foi plantada por algu�m sem vila aparente. Hakuo est� sendo usado como rosto p�blico da crise.",
+      success: "A equipe conclui que a carga foi plantada por alguém sem vila aparente. Hakuo está sendo usado como rosto público da crise.",
     },
   },
 };
@@ -347,7 +357,7 @@ export function availableYukiHeirNpcs(
   };
   if (channelId === originChannel(current)) {
     if (current.stage === "BRIEFING") return [{ key: clerkNpc.key, name: clerkNpc.name }];
-    if (current.stage === "RETURN") return [{ key: clerkNpc.key, name: `${clerkNpc.name} (relat�rio)` }];
+    if (current.stage === "RETURN") return [{ key: clerkNpc.key, name: `${clerkNpc.name} (relatório)` }];
   }
   if (current.stage === "INVESTIGATE") {
     const clue = clueByChannel(channelId);
@@ -370,8 +380,8 @@ export async function yukiHeirMapHandle(
     if (state.stage === "BRIEFING" || state.stage === "RETURN") {
       entities.push(npcEntity(clerkNpc));
       return state.stage === "BRIEFING"
-        ? `\nMiss�o ativa: **${ctx.def.name}** - fale com o oficial usando \`/interagir npc\`. Origem: **${VILLAGE_NAMES[ctx.villageId]}**.`
-        : `\nMiss�o ativa: **${ctx.def.name}** - entregue o relat�rio final usando \`/interagir npc\`.`;
+        ? `\nMissão ativa: **${ctx.def.name}** - fale com o oficial usando \`/interagir npc\`. Origem: **${VILLAGE_NAMES[ctx.villageId]}**.`
+        : `\nMissão ativa: **${ctx.def.name}** - entregue o relatório final usando \`/interagir npc\`.`;
     }
     return nextNote(state, ctx.def.name);
   }
@@ -381,13 +391,13 @@ export async function yukiHeirMapHandle(
     if (!clue) return null;
     if (state.clues?.[clue.id]) {
       entities.push({ ...clue.marker, name: `${clue.marker.name} (analisado)`, color: "#2ecc71" });
-      return `\nMiss�o ativa: **${ctx.def.name}** - pista j� analisada: **${clue.title}**.`;
+      return `\nMissão ativa: **${ctx.def.name}** - pista já analisada: **${clue.title}**.`;
     }
     entities.push(clue.marker, npcEntity(clue.witness));
     state.runningClue = clue.id;
     await setState(ctx.inst.id, state);
     void startCluePuzzle(interaction.channel, interaction.guildId ?? "global", ctx.inst.id, clue).catch(() => undefined);
-    return `\nMiss�o ativa: **${ctx.def.name}** - um painel atualizado de investiga��o foi enviado no canal.`;
+    return `\nMissão ativa: **${ctx.def.name}** - um painel atualizado de investigação foi enviado no canal.`;
   }
 
   if (interaction.channelId !== CENTRO_COMERCIAL_KIRI_CHANNEL_ID) return nextNote(state, ctx.def.name);
@@ -406,26 +416,26 @@ export async function yukiHeirMapHandle(
     if (!state.hakuoSeen) {
       state.hakuoSeen = true;
       await setState(ctx.inst.id, state);
-      await speak(interaction.channel, hakuoNpc, "(o time encontra os espelhos de gelo)", "Apresente Hakuo cercado por espelhos e ref�ns vivos, acusando as vilas de apagarem o Cl� Yuki.", 0);
+      await speak(interaction.channel, hakuoNpc, "(o time encontra os espelhos de gelo)", "Apresente Hakuo cercado por espelhos e reféns vivos, acusando as vilas de apagarem o Clã Yuki.", 0);
     }
-    return `\nMiss�o ativa: **${ctx.def.name}** - confronte Hakuo Yuki usando \`/interagir npc\`.`;
+    return `\nMissão ativa: **${ctx.def.name}** - confronte Hakuo Yuki usando \`/interagir npc\`.`;
   }
   if (state.stage === "FIGHT") {
     if (!(await getActiveSession(interaction.channelId))) await startYukiCombat(interaction, ctx);
-    return `\nMiss�o ativa: **${ctx.def.name}** - derrote Hakuo e os clones para libertar os ref�ns.`;
+    return `\nMissão ativa: **${ctx.def.name}** - derrote Hakuo e os clones para libertar os reféns.`;
   }
   return nextNote(state, ctx.def.name);
 }
 
 function nextNote(state: YukiHeirState, missionName: string): string | null {
   if (state.stage === "INVESTIGATE") {
-    return `\nMiss�o ativa: **${missionName}** - investigue as pistas em <#${CENTRO_COMERCIAL_SUNA_CHANNEL_ID}>, <#${CENTRO_COMERCIAL_KIRI_CHANNEL_ID}>, <#${PRACA_SUNA_CHANNEL_ID}> e <#${CENTRO_COMERCIAL_CHANNEL_ID}>.`;
+    return `\nMissão ativa: **${missionName}** - investigue as pistas em <#${CENTRO_COMERCIAL_SUNA_CHANNEL_ID}>, <#${CENTRO_COMERCIAL_KIRI_CHANNEL_ID}>, <#${PRACA_SUNA_CHANNEL_ID}> e <#${CENTRO_COMERCIAL_CHANNEL_ID}>.`;
   }
   if (state.stage === "FINAL_TALK" || state.stage === "FIGHT") {
-    return `\nMiss�o ativa: **${missionName}** - siga para o Centro Comercial de Kirigakure: <#${CENTRO_COMERCIAL_KIRI_CHANNEL_ID}>.`;
+    return `\nMissão ativa: **${missionName}** - siga para o Centro Comercial de Kirigakure: <#${CENTRO_COMERCIAL_KIRI_CHANNEL_ID}>.`;
   }
   if (state.stage === "RETURN") {
-    return `\nMiss�o ativa: **${missionName}** - volte para a mans�o da sua vila: <#${originChannel(state)}>.`;
+    return `\nMissão ativa: **${missionName}** - volte para a mansão da sua vila: <#${originChannel(state)}>.`;
   }
   return null;
 }
@@ -457,21 +467,21 @@ export async function interactYukiHeir(interaction: ChatInputCommandInteraction,
   const guildId = interaction.guildId ?? "global";
   const ctx = await resolveYukiHeir(interaction.user.id, guildId, interaction.channelId);
   if (!ctx) {
-    await interaction.reply({ content: "Voc� (ou sua party) n�o tem essa miss�o ativa.", ephemeral: true });
+    await interaction.reply({ content: "Você (ou sua party) não tem essa missão ativa.", ephemeral: true });
     return;
   }
   const state = ensureState(ctx.inst.stateJson);
   const choice = availableYukiHeirNpcs(state, interaction.channelId).find((npc) => npc.key === npcKey);
   if (!choice) {
-    await interaction.reply({ content: "Esse NPC n�o est� dispon�vel nesta etapa.", ephemeral: true });
+    await interaction.reply({ content: "Esse NPC não está disponível nesta etapa.", ephemeral: true });
     return;
   }
 
   const clue = Object.values(CLUES).find((candidate) => candidate.witness.key === npcKey);
   if (clue) {
     await interaction.deferReply({ ephemeral: true });
-    await speak(interaction.channel, clue.witness, "(o time pede depoimento sobre o gelo)", "Entregue a pista fixa desta testemunha sem resolver a investiga��o pelos jogadores.", 0);
-    await interaction.editReply(`Voc� ouviu **${choice.name}**. Use o painel de pista no canal ou \`/mapa\` para reabrir a cena.`);
+    await speak(interaction.channel, clue.witness, "(o time pede depoimento sobre o gelo)", "Entregue a pista fixa desta testemunha sem resolver a investigação pelos jogadores.", 0);
+    await interaction.editReply(`Você ouviu **${choice.name}**. Use o painel de pista no canal ou \`/mapa\` para reabrir a cena.`);
     return;
   }
 
@@ -483,7 +493,7 @@ export async function interactYukiHeir(interaction: ChatInputCommandInteraction,
   state.activeNpc = npcKey;
   await setState(ctx.inst.id, state);
   await runDialogue(interaction.channel, interaction.channelId, guildId, ctx, npcKey, "(o time inicia a conversa)", interaction.user);
-  await interaction.editReply(`Voc� se aproxima de **${choice.name}**. Continue por mensagens normais no canal.`);
+  await interaction.editReply(`Você se aproxima de **${choice.name}**. Continue por mensagens normais no canal.`);
 }
 
 export async function continueYukiHeirMessage(message: Message): Promise<boolean> {
@@ -521,8 +531,8 @@ async function runDialogue(
       clerkNpc,
       playerMessage,
       done
-        ? "�ltima fala: mande investigar os quatro locais congelados e avise que acusar Hakuo sem provas pode causar uma crise entre vilas."
-        : `Explique que a miss�o foi retirada por ${VILLAGE_NAMES[ctx.villageId]} e que Hakuo Yuki pode ser agressor, v�tima ou isca.`,
+        ? "Última fala: mande investigar os quatro locais congelados e avise que acusar Hakuo sem provas pode causar uma crise entre vilas."
+        : `Explique que a missão foi retirada por ${VILLAGE_NAMES[ctx.villageId]} e que Hakuo Yuki pode ser agressor, vítima ou isca.`,
       done ? 2 : Math.min(turn - 1, 1),
     );
     if (done) {
@@ -547,8 +557,8 @@ async function runDialogue(
       hakuoNpc,
       playerMessage,
       fight
-        ? "�ltima fala: Hakuo percebe que foi usado, mas decide proteger os espelhos como prova. Forme clones de gelo e inicie combate."
-        : "Reaja �s pistas do time com raiva e d�vida. Mostre que Hakuo n�o queria matar ref�ns; ele queria for�ar um testemunho p�blico.",
+        ? "Última fala: Hakuo percebe que foi usado, mas decide proteger os espelhos como prova. Forme clones de gelo e inicie combate."
+        : "Reaja às pistas do time com raiva e dúvida. Mostre que Hakuo não queria matar reféns; ele queria forçar um testemunho público.",
       fight ? 2 : Math.min(turn - 1, 1),
     );
     if (fight) {
@@ -572,8 +582,8 @@ async function runDialogue(
       clerkNpc,
       playerMessage,
       done
-        ? "�ltima fala: registre que Hakuo foi contido, os ref�ns foram libertados e a manipula��o pol�tica foi descoberta. Encerre a miss�o."
-        : "Receba o relat�rio sobre as quatro pistas, Hakuo, os clones e os ref�ns presos nos espelhos.",
+        ? "Última fala: registre que Hakuo foi contido, os reféns foram libertados e a manipulação política foi descoberta. Encerre a missão."
+        : "Receba o relatório sobre as quatro pistas, Hakuo, os clones e os reféns presos nos espelhos.",
       3 + Math.min(turn - 1, 1),
     );
     if (done) {
@@ -595,8 +605,11 @@ function progressFor(state: YukiHeirState, clue: ClueDef): Required<Investigatio
   state.investigations = state.investigations ?? {};
   const progress = state.investigations[clue.id] ?? {};
   progress.evidence = progress.evidence ?? [];
+  progress.lostEvidence = progress.lostEvidence ?? [];
   progress.contributors = progress.contributors ?? {};
   progress.evidenceUsers = progress.evidenceUsers ?? {};
+  progress.attemptUsers = progress.attemptUsers ?? { ...progress.evidenceUsers };
+  progress.failedAttempts = progress.failedAttempts ?? {};
   progress.investigators = progress.investigators ?? {};
   progress.votes = progress.votes ?? {};
   progress.voters = progress.voters ?? {};
@@ -608,14 +621,8 @@ function quorumSize(allowed: Set<string>): number {
   return Math.min(2, Math.max(1, allowed.size));
 }
 
-function contributorCount(progress: Required<InvestigationProgress>): number {
-  const ids = Object.keys(progress.investigators);
-  if (ids.length > 0) return ids.length;
-  return new Set(Object.values(progress.contributors).filter(Boolean)).size;
-}
-
-function evidenceReady(clue: ClueDef, progress: Required<InvestigationProgress>, quorum: number): boolean {
-  return progress.evidence.length >= clue.investigation.requiredEvidence && contributorCount(progress) >= quorum;
+function evidenceReady(clue: ClueDef, progress: Required<InvestigationProgress>): boolean {
+  return new Set([...progress.evidence, ...progress.lostEvidence]).size >= clue.investigation.actions.length;
 }
 
 function voteCounts(progress: Required<InvestigationProgress>): Record<string, number> {
@@ -624,115 +631,54 @@ function voteCounts(progress: Required<InvestigationProgress>): Record<string, n
   return counts;
 }
 
-function voteNames(progress: Required<InvestigationProgress>, deductionId: string): string[] {
-  return Object.entries(progress.votes)
-    .filter(([, vote]) => vote === deductionId)
-    .map(([userId]) => progress.voters[userId] ?? "voto registrado");
-}
-
 function consensusPick(progress: Required<InvestigationProgress>, quorum: number): string | null {
   const counts = voteCounts(progress);
   return Object.entries(counts).find(([, count]) => count >= quorum)?.[0] ?? null;
 }
 
-function clueEmbed(state: YukiHeirState, clue: ClueDef, allowed: Set<string>, result?: string): EmbedBuilder {
-  const progress = progressFor(state, clue);
-  const quorum = quorumSize(allowed);
-  const ready = evidenceReady(clue, progress, quorum);
-  const actions = new Map(clue.investigation.actions.map((action) => [action.id, action]));
-  const deductions = new Map(clue.investigation.deductions.map((deduction) => [deduction.id, deduction]));
-  const evidenceLines = progress.evidence.map((id) => {
-    const action = actions.get(id);
-    const author = progress.contributors[id] ? ` - ${progress.contributors[id]}` : "";
-    return action ? `${INVESTIGATION_EMOJI} **${action.label}**${author}\n${action.detail}` : `${INVESTIGATION_EMOJI} ${id}`;
-  });
-  const counts = voteCounts(progress);
-  const voteLines = clue.investigation.deductions.map((deduction) => {
-    const count = counts[deduction.id] ?? 0;
-    const names = voteNames(progress, deduction.id);
-    return `${count > 0 ? `${count} voto(s)` : "sem votos"} - ${deduction.label}${names.length ? ` (${names.join(", ")})` : ""}`;
-  });
-  const consensus = consensusPick(progress, quorum);
-
-  return new EmbedBuilder()
-    .setColor(ready ? 0x0984e3 : 0x74b9ff)
-    .setTitle(`Investiga��o - ${clue.title}`)
-    .setDescription([
-      clue.investigation.intro,
-      "",
-      "A equipe precisa coletar evid�ncias e fechar uma tese por consenso.",
-      ready ? "Escolham uma tese e apertem **Enviar tese** quando houver consenso." : undefined,
-      `Pistas conclu�das: **${Object.values(state.clues ?? {}).filter(Boolean).length}/4** | Erros: **${state.mistakes ?? 0}/${YUKI_MAX_MISTAKES}**`,
-      result ?? "",
-    ].filter(Boolean).join("\n"))
-    .addFields(
-      {
-        name: "Evid�ncias coletadas",
-        value: evidenceLines.length > 0
-          ? evidenceLines.join("\n\n").slice(0, 1024)
-          : "Nenhuma evid�ncia firme ainda. Dividam as an�lises pelos bot�es abaixo.",
-      },
-      {
-        name: "Equipe",
-        value: `${contributorCount(progress)}/${quorum} participante(s) contribuindo | ${progress.evidence.length}/${clue.investigation.requiredEvidence} evid�ncias m�nimas`,
-        inline: true,
-      },
-      {
-        name: "Envio",
-        value: consensus ? `Consenso atual: **${deductions.get(consensus)?.label ?? consensus}**` : "Sem consenso ainda.",
-        inline: true,
-      },
-      {
-        name: "Tese",
-        value: ready
-          ? `${clue.investigation.conclusionQuestion}\n${voteLines.join("\n")}`.slice(0, 1024)
-          : "Bloqueada at� a equipe reunir evid�ncias suficientes e participa��o m�nima.",
-      },
-    );
-}
-
-function clueRows(
+function cluePanel(
   instanceId: string,
-  clue: ClueDef,
   state: YukiHeirState,
-  allowed: Set<string>,
+  clue: ClueDef,
+  members: string[],
+  page: number,
+  result?: string,
   disabled = false,
-): ActionRowBuilder<ButtonBuilder>[] {
+  memory?: InvestigationMemoryView,
+) {
   const progress = progressFor(state, clue);
-  const ready = evidenceReady(clue, progress, quorumSize(allowed));
-  const needsMoreInvestigators = contributorCount(progress) < quorumSize(allowed);
-  const hasConsensus = Boolean(consensusPick(progress, quorumSize(allowed)));
-  const evidenceRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    ...clue.investigation.actions.map((action) =>
-      new ButtonBuilder()
-        .setCustomId(`yuki-invest:${instanceId}:${clue.id}:evidence:${action.id}`)
-        .setLabel(action.label)
-        .setStyle(ButtonStyle.Secondary)
-        .setDisabled(disabled || (progress.evidence.includes(action.id) && !needsMoreInvestigators)),
-    ),
-  );
-  const deductionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    ...clue.investigation.deductions.map((deduction) =>
-      new ButtonBuilder()
-        .setCustomId(`yuki-invest:${instanceId}:${clue.id}:deduce:${deduction.id}`)
-        .setLabel(deduction.label)
-        .setStyle(ButtonStyle.Primary)
-        .setDisabled(disabled || !ready),
-    ),
-  );
-  const controlRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder()
-      .setCustomId(`yuki-invest:${instanceId}:${clue.id}:submit:case`)
-      .setLabel("Enviar tese")
-      .setStyle(ButtonStyle.Success)
-      .setDisabled(disabled || !ready || !hasConsensus),
-    new ButtonBuilder()
-      .setCustomId(`yuki-invest:${instanceId}:${clue.id}:clear:vote`)
-      .setLabel("Limpar meu voto")
-      .setStyle(ButtonStyle.Secondary)
-      .setDisabled(disabled || !ready),
-  );
-  return [evidenceRow, deductionRow, controlRow];
+  const quorum = quorumSize(new Set(members));
+  const ready = evidenceReady(clue, progress);
+  const consensus = consensusPick(progress, quorum);
+  return investigationPanel({
+    prefix: "yuki-invest",
+    instanceId,
+    clueId: clue.id,
+    title: clue.title,
+    intro: clue.investigation.intro,
+    actions: clue.investigation.actions,
+    deductions: clue.investigation.deductions,
+    question: clue.investigation.conclusionQuestion,
+    evidence: progress.evidence,
+    lostEvidence: progress.lostEvidence,
+    evidenceUsers: progress.evidenceUsers,
+    attemptUsers: progress.attemptUsers,
+    failedAttempts: progress.failedAttempts,
+    contributors: progress.contributors,
+    votes: progress.votes,
+    voters: progress.voters,
+    members,
+    completedCases: Object.values(state.clues ?? {}).filter(Boolean).length,
+    totalCases: Object.keys(CLUES).length,
+    mistakes: state.mistakes ?? 0,
+    maxMistakes: YUKI_MAX_MISTAKES,
+    ready,
+    consensus,
+    page,
+    memory,
+    result,
+    disabled,
+  });
 }
 
 async function allowedDiscordIds(instanceId: string, guildId: string): Promise<Set<string>> {
@@ -740,7 +686,7 @@ async function allowedDiscordIds(instanceId: string, guildId: string): Promise<S
   if (!inst) return new Set();
   const owner = await prisma.userCharacter.findUnique({ where: { id: inst.charId }, select: { discordId: true } });
   if (!owner) return new Set();
-  return new Set(await partyMemberIds(guildId, owner.discordId));
+  return new Set(rankBInvestigationMembers(await partyMemberIds(guildId, owner.discordId)));
 }
 
 async function startCluePuzzle(channel: TextBasedChannel | null, guildId: string, instanceId: string, clue: ClueDef): Promise<void> {
@@ -751,8 +697,11 @@ async function startCluePuzzle(channel: TextBasedChannel | null, guildId: string
   if (!def || def.type !== "YUKI_HEIR") return;
   let state = ensureState(inst.stateJson);
   const allowed = await allowedDiscordIds(instanceId, guildId);
+  const members = [...allowed];
+  let page = 0;
+  let memory: InvestigationMemoryView | undefined;
   progressFor(state, clue);
-  const msg = await channel.send({ embeds: [clueEmbed(state, clue, allowed)], components: clueRows(instanceId, clue, state, allowed) });
+  const msg = await channel.send(v2Public(cluePanel(instanceId, state, clue, members, page)));
   const deadline = Date.now() + 300_000;
   try {
     while (Date.now() < deadline) {
@@ -764,65 +713,138 @@ async function startCluePuzzle(channel: TextBasedChannel | null, guildId: string
       })) as ButtonInteraction;
       const [, , , actionKind, pick] = btn.customId.split(":");
       if (!actionKind || !pick) {
-          await btn.reply({ content: "A��o de investiga��o inv�lida.", ephemeral: true });
+          await btn.reply({ content: "Ação de investigação inválida.", ephemeral: true });
         continue;
       }
       state = ensureState((await getInstance(instanceId))?.stateJson ?? "{}");
       const progress = progressFor(state, clue);
       let result: string | undefined;
 
-      if (actionKind === "evidence") {
-        const action = clue.investigation.actions.find((candidate) => candidate.id === pick);
-        if (!action) {
-          await btn.reply({ content: "Essa evid�ncia n�o existe nesta cena.", ephemeral: true });
+      if (actionKind === "memory") {
+        if (!memory || memory.phase !== "repeat") {
+          await btn.reply({ content: "Não há um desafio aguardando resposta.", ephemeral: true });
           continue;
         }
-        if (progress.evidence.includes(pick)) {
-          const sameKnownUser = progress.evidenceUsers[pick] === btn.user.id;
-          const sameLegacyUser = !progress.evidenceUsers[pick] && progress.contributors[pick] === btn.user.username;
-          if (sameKnownUser || sameLegacyUser || progress.investigators[btn.user.id]) {
-            await btn.reply({ content: "Essa evid�ncia j� foi registrada. Deixe outro membro validar outra parte do quadro.", ephemeral: true });
-            continue;
+        if (btn.user.id !== memory.ownerId) {
+          await btn.reply({ content: `Este desafio pertence a <@${memory.ownerId}>.`, ephemeral: true });
+          continue;
+        }
+        const selected = Number(pick);
+        if (!Number.isInteger(selected) || selected < 0 || selected >= memory.words.length) {
+          await btn.reply({ content: "Palavra inválida.", ephemeral: true });
+          continue;
+        }
+        const actionId = memory.actionId;
+        const actionNumber = clue.investigation.actions.findIndex((candidate) => candidate.id === actionId) + 1;
+        const memoryResult = evaluateMemoryChoice(memory.sequence, memory.position, selected);
+        if (memoryResult === "wrong") {
+          const failures = (progress.failedAttempts[actionId] ?? 0) + 1;
+          progress.failedAttempts[actionId] = failures;
+          memory = undefined;
+          if (failures >= MEMORY_MAX_ATTEMPTS) {
+            progress.lostEvidence.push(actionId);
+            progress.attemptUsers[actionId] = btn.user.id;
+            progress.contributors[actionId] = btn.user.username;
+            progress.investigators[btn.user.id] = btn.user.username;
+            progress.votes = {};
+            progress.voters = {};
+            result = `❌ **${btn.user.username}** errou pela segunda vez. A pista ${actionNumber} foi perdida.`;
+            if (evidenceReady(clue, progress)) page = clue.investigation.actions.length;
+          } else {
+            result = `⚠️ **${btn.user.username}** errou a sequência da pista ${actionNumber}. Ainda resta uma tentativa.`;
           }
-          progress.investigators[btn.user.id] = btn.user.username;
-          result = `**${btn.user.username}** validou uma evid�ncia j� encontrada. A participa��o da equipe foi atualizada.`;
           await setState(instanceId, state);
-          await btn.update({ embeds: [clueEmbed(state, clue, allowed, result)], components: clueRows(instanceId, clue, state, allowed) });
+          await btn.update(v2Edit(cluePanel(instanceId, state, clue, members, page, result)));
           continue;
         }
-        if (allowed.size > 1 && contributorCount(progress) < quorumSize(allowed) && progress.investigators[btn.user.id]) {
-          await btn.reply({ content: "Voc� j� contribuiu nesta investiga��o. Deixe outro membro da party assumir uma evid�ncia para liberar a tese.", ephemeral: true });
+        memory.position += 1;
+        if (memoryResult === "next") {
+          await btn.update(v2Edit(cluePanel(instanceId, state, clue, members, page, undefined, false, memory)));
           continue;
         }
-        if (progress.evidence.includes(pick)) {
-          await btn.reply({ content: "Essa evid�ncia j� foi registrada no quadro.", ephemeral: true });
-          continue;
-        }
-        progress.evidence.push(pick);
-        progress.contributors[pick] = btn.user.username;
-        progress.evidenceUsers[pick] = btn.user.id;
+        progress.evidence.push(actionId);
+        progress.evidenceUsers[actionId] = btn.user.id;
+        progress.attemptUsers[actionId] = btn.user.id;
+        progress.contributors[actionId] = btn.user.username;
         progress.investigators[btn.user.id] = btn.user.username;
         progress.votes = {};
         progress.voters = {};
-        result = `**${btn.user.username}** adicionou uma evid�ncia ao quadro. A vota��o de tese foi reiniciada para considerar o novo dado.`;
+        memory = undefined;
+        result = `**${btn.user.username}** repetiu a sequência e desvendou a pista ${actionNumber}.`;
+        if (evidenceReady(clue, progress)) page = clue.investigation.actions.length;
         await setState(instanceId, state);
-        await btn.update({ embeds: [clueEmbed(state, clue, allowed, result)], components: clueRows(instanceId, clue, state, allowed) });
+        await btn.update(v2Edit(cluePanel(instanceId, state, clue, members, page, result)));
+        continue;
+      }
+
+      if (actionKind === "page") {
+        const requestedPage = Number(pick);
+        if (!Number.isInteger(requestedPage) || requestedPage < 0 || requestedPage > clue.investigation.actions.length) {
+          await btn.reply({ content: "Página de investigação inválida.", ephemeral: true });
+          continue;
+        }
+        page = requestedPage;
+        await btn.update(v2Edit(cluePanel(instanceId, state, clue, members, page)));
+        continue;
+      }
+
+      if (actionKind === "evidence") {
+        const action = clue.investigation.actions.find((candidate) => candidate.id === pick);
+        if (!action) {
+          await btn.reply({ content: "Essa evidência não existe nesta cena.", ephemeral: true });
+          continue;
+        }
+        if (progress.evidence.includes(pick) || progress.lostEvidence.includes(pick)) {
+          await btn.reply({ content: "Essa pista já foi concluída. Escolha outra página.", ephemeral: true });
+          continue;
+        }
+        const permission = canUncoverClue(btn.user.id, members, progress.attemptUsers, clue.investigation.actions.length);
+        if (!permission.ok) {
+          await btn.reply({ content: permission.reason, ephemeral: true });
+          continue;
+        }
+        const challenge: InvestigationMemoryView = {
+          ownerId: btn.user.id,
+          actionId: pick,
+          phase: "prepare",
+          words: [...clue.investigation.memoryWords],
+          sequence: createMemorySequence(clue.investigation.memoryWords.length),
+          position: 0,
+          countdown: MEMORY_PREPARE_SECONDS,
+          displayPosition: 0,
+        };
+        memory = challenge;
+        await btn.update(v2Edit(cluePanel(instanceId, state, clue, members, page, undefined, false, challenge)));
+        for (let count = MEMORY_PREPARE_SECONDS - 1; count >= 1; count -= 1) {
+          await new Promise<void>((resolve) => setTimeout(resolve, 1_000));
+          challenge.countdown = count;
+          await msg.edit(v2Edit(cluePanel(instanceId, state, clue, members, page, undefined, false, challenge)));
+        }
+        await new Promise<void>((resolve) => setTimeout(resolve, 1_000));
+        challenge.phase = "memorize";
+        for (let position = 0; position < challenge.sequence.length; position += 1) {
+          challenge.displayPosition = position;
+          await msg.edit(v2Edit(cluePanel(instanceId, state, clue, members, page, undefined, false, challenge)));
+          await new Promise<void>((resolve) => setTimeout(resolve, MEMORY_WORD_DISPLAY_MS));
+        }
+        challenge.phase = "repeat";
+        await msg.edit(v2Edit(cluePanel(instanceId, state, clue, members, page, undefined, false, challenge)));
         continue;
       }
 
       if (actionKind === "clear") {
         delete progress.votes[btn.user.id];
         delete progress.voters[btn.user.id];
-        result = `**${btn.user.username}** limpou o pr�prio voto.`;
+        result = `**${btn.user.username}** limpou o próprio voto.`;
         await setState(instanceId, state);
-        await btn.update({ embeds: [clueEmbed(state, clue, allowed, result)], components: clueRows(instanceId, clue, state, allowed) });
+        await btn.update(v2Edit(cluePanel(instanceId, state, clue, members, page, result)));
         continue;
       }
 
       if (actionKind === "submit") {
         const consensus = consensusPick(progress, quorumSize(allowed));
         if (!consensus) {
-          await btn.reply({ content: "Ainda n�o h� consenso. Em party com 2+ pessoas, pelo menos dois membros precisam votar na mesma tese.", ephemeral: true });
+          await btn.reply({ content: "Ainda não há consenso. Em party com 2+ pessoas, pelo menos dois membros precisam votar na mesma tese.", ephemeral: true });
           continue;
         }
         if (consensus === clue.investigation.correct) {
@@ -833,54 +855,51 @@ async function startCluePuzzle(channel: TextBasedChannel | null, guildId: string
           if (allCluesDone(state)) {
             state.stage = "FINAL_TALK";
             await markObjective(instanceId, "decifrar_padrao_yuki");
-            result += `\n\nAs quatro pistas apontam para uma armadilha pol�tica. Confronte Hakuo no Centro Comercial de Kirigakure: <#${CENTRO_COMERCIAL_KIRI_CHANNEL_ID}>.`;
+            result += `\n\nAs quatro pistas apontam para uma armadilha política. Confronte Hakuo no Centro Comercial de Kirigakure: <#${CENTRO_COMERCIAL_KIRI_CHANNEL_ID}>.`;
           }
           await setState(instanceId, state);
-          await btn.update({ embeds: [clueEmbed(state, clue, allowed, result)], components: [] });
+          await btn.update(v2Edit(cluePanel(instanceId, state, clue, members, page, result, true)));
           return;
         }
 
         state.mistakes = (state.mistakes ?? 0) + 1;
         progress.votes = {};
         progress.voters = {};
-        result = "**Tese enviada, mas rejeitada pelos fatos.** A conclus�o n�o fecha com o quadro; revisem os votos antes de enviar de novo.";
+        result = "**Tese enviada, mas rejeitada pelos fatos.** A conclusão não fecha com o quadro; revisem os votos antes de enviar de novo.";
         if ((state.mistakes ?? 0) >= YUKI_MAX_MISTAKES) {
           state.runningClue = null;
           await prisma.missionInstance.update({ where: { id: instanceId }, data: { status: "FAILED", stateJson: JSON.stringify(state) } });
-          await btn.update({
-            embeds: [new EmbedBuilder().setColor(0xc0392b).setTitle("Caso perdido").setDescription("Erros demais destru�ram as pistas e a fac��o por tr�s de Hakuo sumiu.")],
-            components: [],
-          });
+          await btn.update(v2Edit(cluePanel(instanceId, state, clue, members, page, "❌ Caso perdido: erros demais destruíram as pistas e a facção por trás de Hakuo sumiu.", true)));
           return;
         }
         await setState(instanceId, state);
-        await btn.update({ embeds: [clueEmbed(state, clue, allowed, result)], components: clueRows(instanceId, clue, state, allowed) });
+        await btn.update(v2Edit(cluePanel(instanceId, state, clue, members, page, result)));
         continue;
       }
 
       if (actionKind !== "deduce") {
-        await btn.reply({ content: "A��o de investiga��o inv�lida.", ephemeral: true });
+        await btn.reply({ content: "Ação de investigação inválida.", ephemeral: true });
         continue;
       }
-      const progressReady = evidenceReady(clue, progress, quorumSize(allowed));
+      const progressReady = evidenceReady(clue, progress);
       if (!progressReady) {
-        await btn.reply({ content: "Ainda faltam evid�ncias ou participa��o da equipe para fechar uma tese.", ephemeral: true });
+        await btn.reply({ content: "Ainda faltam evidências ou participação da equipe para fechar uma tese.", ephemeral: true });
         continue;
       }
       progress.votes[btn.user.id] = pick;
       progress.voters[btn.user.id] = btn.user.username;
       const consensus = consensusPick(progress, quorumSize(allowed));
       result = consensus
-        ? `**${btn.user.username}** votou. H� consenso; use **Enviar tese** para registrar a resposta final.`
+        ? `**${btn.user.username}** votou. Há consenso; use **Enviar tese** para registrar a resposta final.`
         : `**${btn.user.username}** votou. A equipe ainda precisa chegar ao mesmo entendimento.`;
       await setState(instanceId, state);
-      await btn.update({ embeds: [clueEmbed(state, clue, allowed, result)], components: clueRows(instanceId, clue, state, allowed) });
+      await btn.update(v2Edit(cluePanel(instanceId, state, clue, members, page, result)));
     }
   } catch {
     state.runningClue = null;
     await setState(instanceId, state);
-    await msg.edit({ embeds: [clueEmbed(state, clue, allowed, "A cena esfriou, mas o quadro foi preservado.")], components: clueRows(instanceId, clue, state, allowed, true) }).catch(() => undefined);
-    await channel.send("A pista esfriou. Use `/mapa` neste canal para retomar a an�lise.");
+    await msg.edit(v2Edit(cluePanel(instanceId, state, clue, members, page, "A cena esfriou, mas o quadro foi preservado.", true))).catch(() => undefined);
+    await channel.send("A pista esfriou. Use `/mapa` neste canal para retomar a análise.");
   }
 }
 
@@ -908,7 +927,8 @@ async function startYukiCombatFromActor(
 ): Promise<void> {
   if (await getActiveSession(channelId)) return;
   const char = await getOrCreateCharacter(actor.id, guildId, actor.username);
-  const { players, attrsById } = await gatherPartyPlayers(channel, guildId, starterFrom(char));
+  const party = await gatherPartyPlayers(channel, guildId, starterFrom(char));
+  const players = party.players.slice(0, RANK_B_PARTY_MAX);
   const session = await startCombat({
     channelId,
     guildId,
@@ -920,9 +940,9 @@ async function startYukiCombatFromActor(
     ],
     missionInstanceId: instanceId,
   });
-  await cacheAttrs(session, attrsById);
+  await cacheAttrs(session, party.attrsById);
   if (channel && "send" in channel) {
-    await channel.send(`Hakuo ergue espelhos de gelo e dois clones surgem na n�voa. ${players.length} ninja(s) entram no combate. Use \`/mapa\`.`);
+    await channel.send(`Hakuo ergue espelhos de gelo e dois clones surgem na névoa. ${players.length} ninja(s) entram no combate. Use \`/mapa\`.`);
   }
 }
 
@@ -949,6 +969,6 @@ export async function onYukiHeirCombatWon(interaction: ChatInputCommandInteracti
   await markObjective(inst.id, "derrotar_herdeiro_yuki");
   await markObjective(inst.id, "libertar_refens_espelhos");
   await setState(inst.id, state);
-  await interaction.followUp(`Hakuo foi contido e os ref�ns foram libertados dos espelhos. Volte para a mans�o da sua vila: <#${originChannel(state)}>.`);
+  await interaction.followUp(`Hakuo foi contido e os reféns foram libertados dos espelhos. Volte para a mansão da sua vila: <#${originChannel(state)}>.`);
 }
 

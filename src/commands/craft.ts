@@ -1,5 +1,4 @@
 import {
-  EmbedBuilder,
   SlashCommandBuilder,
   type AutocompleteInteraction,
   type ChatInputCommandInteraction,
@@ -9,6 +8,16 @@ import { getItem } from "../data/items.js";
 import { PERSONAL_RECIPES } from "../data/recipes.js";
 import { getOrCreateCharacter } from "../services/characters/character-service.js";
 import { craftPersonal, describeRecipe } from "../services/economy/crafting.js";
+import {
+  divider,
+  economyContainer,
+  itemLabel,
+  listBlock,
+  receiptBlock,
+  text,
+  titleBlock,
+  v2Edit,
+} from "../ui/economy-components-v2.js";
 
 export const craft: Command = {
   data: new SlashCommandBuilder()
@@ -44,14 +53,19 @@ export const craft: Command = {
     await interaction.deferReply({ ephemeral: true });
 
     if (interaction.options.getSubcommand() === "listar") {
-      const embed = new EmbedBuilder()
-        .setColor(0x8b5a2b)
-        .setTitle("🛠️ Fabricação pessoal")
-        .setDescription(PERSONAL_RECIPES.map(describeRecipe).join("\n"))
-        .setFooter({
-          text: "Aço, pólvora, tinta, armas avançadas e comida preparada saem das estruturas da vila, não daqui.",
-        });
-      await interaction.editReply({ embeds: [embed] });
+      await interaction.editReply(
+        v2Edit([
+          economyContainer("estoque", [
+            titleBlock("manutencao", "Fabricação pessoal", "Consome a sua mochila e entrega na hora"),
+            divider(),
+            listBlock(null, PERSONAL_RECIPES.map(describeRecipe), "Nenhuma receita disponível."),
+            divider(),
+            text(
+              "-# Aço, pólvora, tinta, armas avançadas e comida preparada saem das estruturas da vila, não daqui.",
+            ),
+          ]),
+        ]),
+      );
       return;
     }
 
@@ -66,17 +80,22 @@ export const craft: Command = {
 
     const { recipe, consumido, produzido } = outcome.result;
     const saida = getItem(recipe.outputItemId)?.name ?? recipe.outputItemId;
-    const gasto = consumido
-      .map((item) => `• ${getItem(item.itemId)?.name ?? item.itemId} ×${item.qty}`)
-      .join("\n");
 
-    await interaction.editReply({
-      embeds: [
-        new EmbedBuilder()
-          .setColor(0x8b5a2b)
-          .setTitle(`🛠️ ${saida} ×${produzido}`)
-          .addFields({ name: "Materiais usados", value: gasto }),
-      ],
-    });
+    await interaction.editReply(
+      v2Edit([
+        economyContainer("cofre", [
+          titleBlock("manutencao", "Fabricação concluída"),
+          receiptBlock(`Você fabricou ${itemLabel(recipe.outputItemId, saida, produzido)}.`),
+          divider(),
+          listBlock(
+            "Materiais usados",
+            consumido.map((item) =>
+              itemLabel(item.itemId, getItem(item.itemId)?.name ?? item.itemId, item.qty),
+            ),
+            "Nenhum.",
+          ),
+        ]),
+      ]),
+    );
   },
 };

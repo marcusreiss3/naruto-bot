@@ -514,6 +514,16 @@ export const ECONOMY = {
   // Orcamento diario de compra de ingrediente: 500 x fator de populacao, por
   // loja. Impede que uma vila de cofre baixo compre coleta infinitamente.
   shopDailyBudgetBase: 500,
+  // Compra de matéria-prima também tem cota física: por dia, cada loja
+  // municipal aceita só parte dos insumos do catálogo. A seleção é congelada
+  // no banco e muda por vila/dia; não é possível farmar todos os recursos no
+  // mesmo balcão. A quantidade de cada oferta cresce com os ativos de 14 dias.
+  shopPurchaseOffersMin: 2,
+  shopPurchaseOffersMax: 4,
+  shopPurchaseOffersPerActive: 0.15,
+  shopPurchaseQtyPerActive: 3,
+  shopPurchaseQtyMin: 12,
+  shopPurchaseQtyMax: 80,
   // Recompra de emergencia do Mercado Geral: 30% do valor de referencia
   // (secao 3.1). E' de proposito pior que vender a loja municipal — a saida de
   // emergencia existe, mas craft e doacao continuam valendo mais.
@@ -522,6 +532,19 @@ export const ECONOMY = {
   // ser > 1 / (1 - taxa maxima): se o NPC vendesse madeira mais barato do que a
   // Marcenaria paga por ela, o par de lojas viraria uma impressora de Ryo.
   generalMarketMarkup: 2,
+  // ---- Caravana do Mercado Geral (secao 7.2.1) ----
+  // O NPC nao tem estoque infinito: cada vila recebe QUATRO ofertas sorteadas
+  // por dia local, e nada alem delas esta a venda ali.
+  generalMarketOffersPerDay: 4,
+  // Quantidade compartilhada de cada oferta, congelada na criacao:
+  // limitar(min, max, teto(porAtivo x ativos_14d)). Com 6 ativos da' 12; com
+  // 20, 40; de 30 para cima bate o teto de 60.
+  generalMarketQtyPerActive: 2,
+  generalMarketQtyMin: 10,
+  generalMarketQtyMax: 60,
+  // Virada da caravana: 00:05 no fuso da competencia, junto da producao diaria.
+  generalMarketHour: 0,
+  generalMarketMinute: 5,
   // Valor do contrato de atacado = piso(lote x referencia x esta taxa).
   // 10 Lámen x 48 x 0,875 = 420 Ryo, o exemplo da secao 7.6.
   wholesaleRate: 0.875,

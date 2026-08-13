@@ -4,9 +4,8 @@
 
 import { ECONOMY } from "../../config/balance.js";
 import {
-  GENERAL_MARKET_MATERIALS,
-  productsSoldBy,
-  referenceValue,
+  isGeneralMarketMaterial,
+  shopSellsItem,
   retailBase,
   shopBuyBase,
   type ShopType,
@@ -72,8 +71,7 @@ export function productPrice(
   taxRate: number,
 ): number | undefined {
   if (shopType === "MERCADO_GERAL") return generalMarketItemPrice(itemId, taxRate);
-  const vendeAqui = productsSoldBy(shopType).some((row) => row.itemId === itemId);
-  if (!vendeAqui) return undefined;
+  if (!shopSellsItem(shopType, itemId)) return undefined;
   const base = retailBase(itemId);
   if (base === undefined) return undefined;
   return retailPrice(base, taxRate);
@@ -81,8 +79,12 @@ export function productPrice(
 
 // Mercado Geral: materia bruta com markup. Produto de loja municipal nao e'
 // vendido aqui — o NPC nao produz equipamento nem comida preparada.
+//
+// Isto e' so' a ELEGIBILIDADE de preco. Estar aqui nao quer dizer que ha' o que
+// comprar: o que esta a venda hoje sao as quatro ofertas do dia, e quem checa
+// isso e' `buyFromGeneralMarket` contra `GeneralMarketOffer`.
 export function generalMarketItemPrice(itemId: string, taxRate: number): number | undefined {
-  if (!(GENERAL_MARKET_MATERIALS as readonly string[]).includes(itemId)) return undefined;
+  if (!isGeneralMarketMaterial(itemId)) return undefined;
   const base = shopBuyBase(itemId);
   if (base === undefined) return undefined;
   return generalMarketPrice(base, taxRate);

@@ -2,7 +2,6 @@ import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
-  EmbedBuilder,
   MessageFlags,
   ModalBuilder,
   SlashCommandBuilder,
@@ -17,6 +16,27 @@ import {
   type ModalSubmitInteraction,
   type RepliableInteraction,
 } from "discord.js";
+import {
+  button,
+  buttonRow,
+  divider,
+  economyContainer,
+  factsBlock,
+  feedbackBlock,
+  itemLabel,
+  listBlock,
+  noticeBlock,
+  primaryActionSection,
+  ryo,
+  selectRow,
+  text,
+  titleBlock,
+  v2Edit,
+  v2Payload,
+  type ContainerChild,
+  type TopLevel,
+} from "../ui/economy-components-v2.js";
+import { emoji, type EmojiKey } from "../ui/economy-emojis.js";
 import type { Command } from "./types.js";
 import { ECONOMY } from "../config/balance.js";
 import { getItem } from "../data/items.js";
@@ -70,6 +90,12 @@ import { pendingMaintenance } from "../services/economy/maintenance.js";
 // imposto nem controle de Kage — o gate esta em `podeKage`, checado tanto na
 // montagem do embed quanto no handler de cada botao.
 
+// Painel V2: árvore de componentes de topo, sem embeds nem content.
+export type Painel = TopLevel[];
+
+// Quantos itens do estoque central aparecem antes do resumo "…e mais N".
+const ESTOQUE_VISIVEL = 12;
+
 interface Viewer {
   villageId: VillageId;
   charId: string;
@@ -102,40 +128,43 @@ async function loadViewer(interaction: RepliableInteraction): Promise<Viewer> {
 
 type Aba = "geral" | "cofre" | "estoque" | "impostos" | "relatorios" | "obras" | "comercio";
 
-const ABAS_KAGE: { id: Aba; label: string; emoji: string }[] = [
-  { id: "geral", label: "Visão Geral", emoji: "🏯" },
-  { id: "cofre", label: "Cofre", emoji: "💰" },
-  { id: "estoque", label: "Estoque", emoji: "📦" },
-  { id: "impostos", label: "Impostos", emoji: "🧾" },
-  { id: "relatorios", label: "Relatórios", emoji: "📊" },
-  { id: "obras", label: "Obras", emoji: "🏗️" },
-  { id: "comercio", label: "Comércio", emoji: "🏪" },
+const ABAS_KAGE: { id: Aba; label: string; emojiKey: EmojiKey }[] = [
+  { id: "geral", label: "Visão Geral", emojiKey: "vila" },
+  { id: "cofre", label: "Cofre", emojiKey: "cofre" },
+  { id: "estoque", label: "Estoque", emojiKey: "estoque" },
+  { id: "impostos", label: "Impostos", emojiKey: "impostos" },
+  { id: "relatorios", label: "Relatórios", emojiKey: "relatorio" },
+  { id: "obras", label: "Obras", emojiKey: "obras" },
+  { id: "comercio", label: "Comércio", emojiKey: "shop_MERCADO_GERAL" },
 ];
 
-function abasFor(viewer: Viewer): { id: Aba; label: string; emoji: string }[] {
+function abasFor(viewer: Viewer): { id: Aba; label: string; emojiKey: EmojiKey }[] {
   if (!viewer.podeKage) {
     return [
-      { id: "geral", label: "Visão Geral", emoji: "🏯" },
-      { id: "estoque", label: "Estoque", emoji: "📦" },
-      { id: "relatorios", label: "Meus recibos", emoji: "🧾" },
+      { id: "geral", label: "Visão Geral", emojiKey: "vila" },
+      { id: "estoque", label: "Estoque", emojiKey: "estoque" },
+      { id: "relatorios", label: "Meus recibos", emojiKey: "impostos" },
     ];
   }
   return ABAS_KAGE;
 }
 
-function navRow(viewer: Viewer, atual: Aba): ActionRowBuilder<ButtonBuilder>[] {
+// Navegacao entre abas. Continua em ActionRow (a etapa 08 pede acao secundaria
+// abaixo do cartao) e mantem os mesmos `vila:aba:*` de antes.
+export function navRow(viewer: Viewer, atual: Aba): ContainerChild[] {
   const abas = abasFor(viewer);
-  const rows: ActionRowBuilder<ButtonBuilder>[] = [];
+  const rows: ContainerChild[] = [];
   for (let i = 0; i < abas.length; i += 5) {
     rows.push(
-      new ActionRowBuilder<ButtonBuilder>().addComponents(
-        abas.slice(i, i + 5).map((aba) =>
-          new ButtonBuilder()
-            .setCustomId(`vila:aba:${aba.id}`)
-            .setLabel(aba.label)
-            .setEmoji(aba.emoji)
-            .setStyle(aba.id === atual ? ButtonStyle.Primary : ButtonStyle.Secondary)
-            .setDisabled(aba.id === atual),
+      buttonRow(
+        ...abas.slice(i, i + 5).map((aba) =>
+          button({
+            id: `vila:aba:${aba.id}`,
+            label: aba.label,
+            emojiKey: aba.emojiKey,
+            style: aba.id === atual ? ButtonStyle.Primary : ButtonStyle.Secondary,
+            disabled: aba.id === atual,
+          }),
         ),
       ),
     );
@@ -145,23 +174,9 @@ function navRow(viewer: Viewer, atual: Aba): ActionRowBuilder<ButtonBuilder>[] {
 
 // ---------------- Montagem de cada aba ----------------
 
-async function renderGeral(viewer: Viewer) {
+async function renderGeral(viewer: Viewer): Promise<Painel> {
   const village = await prisma.village.findUniqueOrThrow({ where: { id: viewer.villageId } });
   const pop = await activePopulation(viewer.villageId);
-  const embed = new EmbedBuilder()
-    .setColor(0x2f7f4f)
-    .setTitle(`🏯 ${village.name}`)
-    .addFields(
-      { name: "Kage", value: village.kageDiscordId ? `<@${village.kageDiscordId}>` : "_Administração da staff_", inline: true },
-      { name: "Taxa de mercado", value: `${(village.taxRate * 100).toFixed(0)}%`, inline: true },
-      {
-        name: "Ninjas ativos (14 dias)",
-        value:
-          `${pop.ativos} (fator ${pop.factor.toFixed(2)})` + (pop.override ? " • _fixado pela staff_" : ""),
-        inline: true,
-      },
-    )
-    .setFooter({ text: `${viewer.charName} • ${formatRyo(viewer.ryo)}` });
 
   // Obras e alertas de reforma sao publicos: o estado da vila e' do jogador
   // tambem. O que fica so' para o Kage e' o cofre (secao 8).
@@ -171,116 +186,177 @@ async function renderGeral(viewer: Viewer) {
     pendingMaintenance(viewer.villageId),
   ]);
 
-  embed.addFields({
-    name: `🏗️ Obras (${capacidade.usadas}/${capacidade.total})`,
-    value: fila.length
-      ? fila
-          .map(
-            (obra) =>
-              `• ${buildingName(obra.buildingType, obra.buildingKey)}` +
-              (obra.targetLevel ? ` nível ${obra.targetLevel}` : "") +
-              ` — <t:${Math.floor(obra.finishesAt.getTime() / 1000)}:R>`,
-          )
-          .join("\n")
-          .slice(0, 1024)
-      : `_Nenhuma obra em andamento._ ${CENTER.name} nível ${capacidade.centerLevel}.`,
-  });
+  const filhos: ContainerChild[] = [
+    titleBlock("vila", village.name, `${viewer.charName} • ${formatRyo(viewer.ryo)}`),
+    factsBlock([
+      {
+        label: "Kage",
+        value: village.kageDiscordId ? `<@${village.kageDiscordId}>` : "administração da staff",
+      },
+      { label: "Imposto de mercado", value: `${(village.taxRate * 100).toFixed(0)}%` },
+      {
+        label: "Ninjas ativos",
+        value:
+          `${emoji("populacao")} ${pop.ativos} (fator ${pop.factor.toFixed(2)})` +
+          (pop.override ? " • fixado pela staff" : ""),
+      },
+    ]),
+    divider(),
+    listBlock(
+      `${emoji("obras")} Obras (${capacidade.usadas}/${capacidade.total} vagas)`,
+      fila.map(
+        (obra) =>
+          `${buildingName(obra.buildingType, obra.buildingKey)}` +
+          (obra.targetLevel ? ` → nível ${obra.targetLevel}` : "") +
+          ` — <t:${Math.floor(obra.finishesAt.getTime() / 1000)}:R>`,
+      ),
+      `Nenhuma obra em andamento. ${CENTER.name} nível ${capacidade.centerLevel}.`,
+    ),
+  ];
 
+  // Reforma pendente é estado da vila, não detalhe de gestão: aparece para
+  // todo mundo, com texto explícito além da cor.
   if (reformas.length) {
     const atrasadas = reformas.filter((r) => r.status === "OVERDUE");
-    embed.addFields({
-      name: atrasadas.length ? "⚠️ Reformas atrasadas" : "🔧 Reformas a pagar",
-      value: reformas
-        .map(
+    filhos.push(
+      listBlock(
+        atrasadas.length
+          ? `${emoji("aviso")} Reformas atrasadas`
+          : `${emoji("manutencao")} Reformas a pagar`,
+        reformas.map(
           (r) =>
-            `• **${r.name}** — ${r.ryoDue} Ryō` +
+            `**${r.name}** — ${ryo(`${r.ryoDue} Ryō`)}` +
             (r.status === "OVERDUE"
               ? " • **suspenso até pagar**"
               : ` • vence <t:${Math.floor(r.dueAt.getTime() / 1000)}:R>`),
-        )
-        .join("\n")
-        .slice(0, 1024),
-    });
+        ),
+        "—",
+      ),
+    );
+  } else {
+    filhos.push(text(`${emoji("manutencao")} **Reforma pendente:** nenhuma`));
   }
 
+  // Cofre SÓ para o Kage na mansão. É o gate da seção 8: jogador comum nunca vê
+  // saldo, reserva nem saque.
   if (viewer.podeKage) {
     const cofre = await treasuryView(viewer.villageId);
-    embed.addFields({
-      name: "Cofre",
-      value: `💰 ${cofre.treasuryRyo} Ryō — disponível ${cofre.available} (reservado ${cofre.reservedRyo})`,
-    });
+    filhos.push(
+      divider(),
+      factsBlock([
+        { label: "Cofre", value: ryo(`${cofre.treasuryRyo} Ryō`) },
+        { label: "Disponível", value: `${cofre.available} Ryō` },
+        { label: "Reservado", value: `${cofre.reservedRyo} Ryō` },
+      ]),
+    );
   }
 
-  const componentes: ActionRowBuilder<ButtonBuilder>[] = navRow(viewer, "geral");
-  componentes.push(
-    new ActionRowBuilder<ButtonBuilder>().addComponents(
-      new ButtonBuilder().setCustomId("vila:doar:menu").setLabel("Doar").setEmoji("🎁").setStyle(ButtonStyle.Success),
+  filhos.push(
+    divider(),
+    ...navRow(viewer, "geral"),
+    buttonRow(
+      button({
+        id: "vila:doar:menu",
+        label: "Doar recursos",
+        style: ButtonStyle.Success,
+        emojiKey: "estoque",
+      }),
     ),
   );
-  return { embeds: [embed], components: componentes };
+
+  return [economyContainer("vila", filhos)];
 }
 
-async function renderEstoque(viewer: Viewer) {
+async function renderEstoque(viewer: Viewer): Promise<Painel> {
   const stock = await prisma.villageStock.findMany({
     where: { villageId: viewer.villageId, qty: { gt: 0 } },
-    orderBy: { itemId: "asc" },
+    orderBy: { qty: "desc" },
   });
-  const linhas = stock.length
-    ? stock.map((row) => `• ${getItem(row.itemId)?.name ?? row.name} ×${row.qty}`).join("\n").slice(0, 3900)
-    : "_O estoque central está vazio._";
 
-  const embed = new EmbedBuilder()
-    .setColor(0x8b5a2b)
-    .setTitle(`📦 Estoque central — ${VILLAGE_NAMES[viewer.villageId]}`)
-    .setDescription(linhas);
+  // Mostra os mais relevantes e resume o resto: a etapa 08 proíbe mural gigante.
+  const destaque = stock.slice(0, ESTOQUE_VISIVEL);
+  const resto = stock.length - destaque.length;
 
-  const componentes: ActionRowBuilder<ButtonBuilder>[] = navRow(viewer, "estoque");
+  const filhos: ContainerChild[] = [
+    titleBlock("estoque", `Estoque central — ${VILLAGE_NAMES[viewer.villageId]}`),
+    factsBlock([
+      { label: "Tipos de item", value: `${stock.length}` },
+      { label: "Unidades", value: `${stock.reduce((s, r) => s + r.qty, 0)}` },
+    ]),
+    divider(),
+    listBlock(
+      null,
+      destaque.map((row) => itemLabel(row.itemId, getItem(row.itemId)?.name ?? row.name, row.qty)),
+      "O estoque central está vazio.",
+    ),
+  ];
+  if (resto > 0) filhos.push(text(`-# …e mais ${resto} tipo(s) de item com quantidade menor.`));
+
+  filhos.push(divider(), ...navRow(viewer, "estoque"));
+
   if (viewer.podeKage) {
     const ordens = await prisma.collectionOrder.count({
       where: { villageId: viewer.villageId, status: "ACTIVE" },
     });
-    componentes.push(
-      new ActionRowBuilder<ButtonBuilder>().addComponents(
-        new ButtonBuilder().setCustomId("vila:estoque:retirar").setLabel("Retirar para ninja").setEmoji("📤").setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder().setCustomId("vila:ordens:listar").setLabel(`Ordens de coleta (${ordens})`).setEmoji("📋").setStyle(ButtonStyle.Primary),
+    filhos.push(
+      buttonRow(
+        button({
+          id: "vila:ordens:listar",
+          label: `Criar ordem de coleta (${ordens} ativa(s))`,
+          style: ButtonStyle.Primary,
+          emojiKey: "ordem",
+        }),
+        button({ id: "vila:estoque:retirar", label: "Retirar para ninja" }),
       ),
     );
   }
-  return { embeds: [embed], components: componentes };
+  return [economyContainer("estoque", filhos)];
 }
 
-async function renderCofre(viewer: Viewer) {
+async function renderCofre(viewer: Viewer): Promise<Painel> {
   const cofre = await treasuryView(viewer.villageId);
-  const embed = new EmbedBuilder()
-    .setColor(0xc9a227)
-    .setTitle(`💰 Cofre — ${VILLAGE_NAMES[viewer.villageId]}`)
-    .addFields(
-      { name: "Saldo", value: `${cofre.treasuryRyo} Ryō`, inline: true },
-      { name: "Reservado", value: `${cofre.reservedRyo} Ryō`, inline: true },
-      { name: "Disponível", value: `${cofre.available} Ryō`, inline: true },
-      {
-        name: "Saque desta semana",
-        value: cofre.withdrawalsLocked
-          ? "🔒 Bloqueado pela staff"
-          : `Já sacou ${cofre.withdrawnThisWeek} Ryō • pode sacar até **${cofre.allowance} Ryō**\n` +
-            `_Limite: ${ECONOMY.kageWeeklyWithdrawalRate * 100}% do disponível por semana, teto de ${ECONOMY.kageWithdrawalCap} por saque._`,
-      },
-    )
-    .setFooter({ text: `Competência ${cofre.weekKey} • seu saldo: ${formatRyo(viewer.ryo)}` });
 
-  const componentes: ActionRowBuilder<ButtonBuilder>[] = navRow(viewer, "cofre");
-  componentes.push(
-    new ActionRowBuilder<ButtonBuilder>().addComponents(
-      new ButtonBuilder().setCustomId("vila:cofre:depositar").setLabel("Depositar").setEmoji("📥").setStyle(ButtonStyle.Success),
-      new ButtonBuilder()
-        .setCustomId("vila:cofre:sacar")
-        .setLabel("Sacar")
-        .setEmoji("📤")
-        .setStyle(ButtonStyle.Danger)
-        .setDisabled(cofre.withdrawalsLocked || cofre.allowance <= 0),
+  const filhos: ContainerChild[] = [
+    titleBlock("cofre", `Cofre de ${VILLAGE_NAMES[viewer.villageId]}`, `Competência ${cofre.weekKey}`),
+    factsBlock([
+      { label: "Disponível", value: ryo(`${cofre.available} Ryō`) },
+      { label: "Reservado", value: `${cofre.reservedRyo} Ryō` },
+      { label: "Saldo total", value: `${cofre.treasuryRyo} Ryō` },
+    ]),
+    cofre.withdrawalsLocked
+      ? noticeBlock("bloqueio", "Saque bloqueado pela staff.")
+      : text(
+          `**Limite de saque esta semana:** ${cofre.withdrawnThisWeek}/${cofre.allowance + cofre.withdrawnThisWeek} Ryō ` +
+            `-# (${ECONOMY.kageWeeklyWithdrawalRate * 100}% do disponível por semana, teto de ${ECONOMY.kageWithdrawalCap} por saque)`,
+        ),
+    divider(),
+    // Ação principal ao lado do texto que a explica — o "botão dentro do card".
+    primaryActionSection(
+      "Deposite Ryō pessoal para financiar a vila.",
+      button({ id: "vila:cofre:depositar", label: "Depositar", style: ButtonStyle.Success }),
     ),
+    primaryActionSection(
+      "Saques exigem motivo e ficam públicos no livro-caixa.",
+      button({
+        id: "vila:cofre:sacar",
+        label: "Sacar",
+        style: ButtonStyle.Danger,
+        disabled: cofre.withdrawalsLocked || cofre.allowance <= 0,
+      }),
+    ),
+  ];
+
+  if (!cofre.withdrawalsLocked && cofre.allowance <= 0) {
+    filhos.push(noticeBlock("aviso", "Sem margem de saque nesta competência."));
+  }
+
+  filhos.push(
+    divider(),
+    ...navRow(viewer, "cofre"),
+    text(`-# Seu saldo pessoal: ${ryo(formatRyo(viewer.ryo))}`),
   );
-  return { embeds: [embed], components: componentes };
+
+  return [economyContainer("cofre", filhos)];
 }
 
 async function renderImpostos(viewer: Viewer) {
@@ -294,23 +370,26 @@ async function renderImpostos(viewer: Viewer) {
     _sum: { ryoDelta: true },
   });
 
-  const embed = new EmbedBuilder()
-    .setColor(0x6a5acd)
-    .setTitle(`🧾 Impostos — ${VILLAGE_NAMES[viewer.villageId]}`)
-    .addFields(
-      { name: "Taxa atual", value: `${(village.taxRate * 100).toFixed(0)}%`, inline: true },
-      {
-        name: `Congelada (${weekKey})`,
-        value: periodo ? `${(periodo.taxRateFrozen * 100).toFixed(0)}%` : "_sem competência aberta_",
-        inline: true,
-      },
-      { name: "Arrecadado (total)", value: `${arrecadado._sum.ryoDelta ?? 0} Ryō`, inline: true },
-    )
-    .setFooter({
-      text: "Mudar a taxa afeta o mercado na hora, mas o imposto pessoal só na competência seguinte. A taxa é definida pela staff em /admin-vila.",
-    });
-
-  return { embeds: [embed], components: navRow(viewer, "impostos") };
+  return [
+    economyContainer("vila", [
+      titleBlock("impostos", `Impostos — ${VILLAGE_NAMES[viewer.villageId]}`),
+      factsBlock([
+        { label: "Taxa atual", value: `${(village.taxRate * 100).toFixed(0)}%` },
+        {
+          label: `Congelada (${weekKey})`,
+          value: periodo ? `${(periodo.taxRateFrozen * 100).toFixed(0)}%` : "sem competência aberta",
+        },
+        { label: "Arrecadado (total)", value: ryo(`${arrecadado._sum.ryoDelta ?? 0} Ryō`) },
+      ]),
+      divider(),
+      text(
+        "Mudar a taxa afeta o preço de mercado na hora, mas o imposto pessoal só na competência seguinte.",
+      ),
+      noticeBlock("aviso", "A taxa é definida pela staff em `/admin-vila`."),
+      divider(),
+      ...navRow(viewer, "impostos"),
+    ]),
+  ];
 }
 
 async function renderRelatorios(viewer: Viewer) {
@@ -321,20 +400,22 @@ async function renderRelatorios(viewer: Viewer) {
       orderBy: { chargedAt: "desc" },
       take: 10,
     });
-    const linhas = recibos.length
-      ? recibos
-          .map(
+    return [
+      economyContainer("vila", [
+        titleBlock("impostos", "Seus recibos de imposto", "Últimas 10 competências"),
+        divider(),
+        listBlock(
+          null,
+          recibos.map(
             (r) =>
-              `• **${r.weekKey}** — ${r.taxRyo} Ryō (${(r.taxRate * 100).toFixed(0)}% de ${r.taxableBase}) • saldo ${r.balanceBefore} → ${r.balanceAfter}`,
-          )
-          .join("\n")
-      : "_Você ainda não teve cobrança de imposto._";
-    return {
-      embeds: [
-        new EmbedBuilder().setColor(0x6a5acd).setTitle("🧾 Seus recibos de imposto").setDescription(linhas),
-      ],
-      components: navRow(viewer, "relatorios"),
-    };
+              `**${r.weekKey}** — ${ryo(`${r.taxRyo} Ryō`)} (${(r.taxRate * 100).toFixed(0)}% de ${r.taxableBase}) • saldo ${r.balanceBefore} → ${r.balanceAfter}`,
+          ),
+          "Você ainda não teve cobrança de imposto.",
+        ),
+        divider(),
+        ...navRow(viewer, "relatorios"),
+      ]),
+    ];
   }
 
   const lancamentos = await prisma.villageLedger.findMany({
@@ -342,42 +423,33 @@ async function renderRelatorios(viewer: Viewer) {
     orderBy: { createdAt: "desc" },
     take: 15,
   });
-  const linhas = lancamentos.length
-    ? lancamentos
-        .map((l) => {
+  return [
+    economyContainer("vila", [
+      titleBlock(
+        "relatorio",
+        `Livro-caixa — ${VILLAGE_NAMES[viewer.villageId]}`,
+        `${lancamentos.length} lançamento(s) mais recentes`,
+      ),
+      divider(),
+      listBlock(
+        null,
+        lancamentos.map((l) => {
           const valor = l.ryoDelta !== 0 ? ` ${l.ryoDelta > 0 ? "+" : ""}${l.ryoDelta} Ryō` : "";
-          const item = l.itemId ? ` ${getItem(l.itemId)?.name ?? l.itemId} ×${l.itemQty}` : "";
-          return `• \`${l.type}\`${valor}${item} — ${l.reason || "_sem motivo_"}`;
-        })
-        .join("\n")
-        .slice(0, 3900)
-    : "_Sem movimento no livro-caixa._";
-
-  return {
-    embeds: [
-      new EmbedBuilder()
-        .setColor(0x6a5acd)
-        .setTitle(`📊 Livro-caixa — ${VILLAGE_NAMES[viewer.villageId]}`)
-        .setDescription(linhas)
-        .setFooter({ text: "Lançamentos mais recentes. O livro é append-only: correção é lançamento novo." }),
-    ],
-    components: navRow(viewer, "relatorios"),
-  };
+          const item = l.itemId
+            ? ` ${itemLabel(l.itemId, getItem(l.itemId)?.name ?? l.itemId, l.itemQty ?? 0)}`
+            : "";
+          return `\`${l.type}\`${valor}${item} — ${l.reason || "sem motivo"}`;
+        }),
+        "Sem movimento no livro-caixa.",
+      ),
+      divider(),
+      ...navRow(viewer, "relatorios"),
+      text("-# O livro é append-only: correção é lançamento novo, nunca edição."),
+    ]),
+  ];
 }
 
-function renderEmBreve(viewer: Viewer, aba: Aba, titulo: string, etapa: string) {
-  return {
-    embeds: [
-      new EmbedBuilder()
-        .setColor(0x555555)
-        .setTitle(titulo)
-        .setDescription(`_Em breve — ${etapa}._`),
-    ],
-    components: navRow(viewer, aba),
-  };
-}
-
-async function renderAba(viewer: Viewer, aba: Aba) {
+async function renderAba(viewer: Viewer, aba: Aba): Promise<Painel> {
   // Aba de Kage pedida por quem nao e' Kage cai na visao geral.
   const permitidas = new Set(abasFor(viewer).map((a) => a.id));
   const alvo = permitidas.has(aba) ? aba : "geral";
@@ -417,14 +489,23 @@ export const vila: Command = {
     try {
       const viewer = await loadViewer(interaction);
       await closeFinishedOrders();
-      const payload = await renderAba(viewer, "geral");
+      const painel = await renderAba(viewer, "geral");
 
+      // Kage fora da mansão: lê tudo, administra nada. O aviso vira um cartão
+      // próprio porque V2 não tem rodapé de embed para sobrescrever.
       if (viewer.isKage && !viewer.inMansion) {
-        payload.embeds[0]?.setFooter({
-          text: `Você é o Kage. Para administrar, use /vila em <#${VILLAGE_MANSIONS[viewer.villageId]}>.`,
-        });
+        painel.push(
+          economyContainer("aviso", [
+            noticeBlock(
+              "aviso",
+              `Você é o Kage. Para administrar, use \`/vila\` em <#${VILLAGE_MANSIONS[viewer.villageId]}>.`,
+            ),
+          ]),
+        );
       }
-      await interaction.editReply(payload);
+      // Primeira aplicação da flag V2: o defer abriu a mensagem efêmera e é
+      // este editReply que a converte, com a árvore inteira de uma vez.
+      await interaction.editReply(v2Edit(painel));
     } catch (err) {
       await responderErro(interaction, err);
     }
@@ -457,8 +538,9 @@ export const vila: Command = {
 
 async function responderErro(interaction: RepliableInteraction, err: unknown): Promise<void> {
   const msg = err instanceof EconomyError ? `❌ ${err.message}` : "❌ Não consegui completar isso.";
-  if (interaction.deferred || interaction.replied) await interaction.editReply({ content: msg, embeds: [], components: [] });
-  else await interaction.reply({ content: msg, flags: MessageFlags.Ephemeral });
+  const painel = [economyContainer("erro", [noticeBlock("erro", msg.replace(/^❌\s*/u, ""))])];
+  if (interaction.deferred || interaction.replied) await interaction.editReply(v2Edit(painel));
+  else await interaction.reply(v2Payload(painel));
   if (!(err instanceof EconomyError)) throw err;
 }
 
@@ -477,7 +559,7 @@ async function roteador(interaction: ButtonInteraction): Promise<void> {
 
   if (grupo === "aba") {
     await interaction.deferUpdate();
-    await interaction.editReply(await renderAba(viewer, (acao ?? "geral") as Aba));
+    await interaction.editReply(v2Edit(await renderAba(viewer, (acao ?? "geral") as Aba)));
     return;
   }
 
@@ -537,11 +619,15 @@ async function abrirMenuDoacao(interaction: ButtonInteraction, viewer: Viewer): 
       })),
     );
 
-  await interaction.reply({
-    content: `🎁 Doar para **${VILLAGE_NAMES[viewer.villageId]}**`,
-    components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select)],
-    flags: MessageFlags.Ephemeral,
-  });
+  await interaction.reply(
+    v2Payload([
+      economyContainer("estoque", [
+        titleBlock("estoque", `Doar para ${VILLAGE_NAMES[viewer.villageId]}`),
+        text("Escolha Ryō ou um item do seu inventário; a quantidade será confirmada em seguida."),
+        selectRow(select),
+      ]),
+    ]),
+  );
 }
 
 // Redesenho da aba Comércio, passado aos handlers do modulo de comercio para
@@ -706,14 +792,15 @@ async function roteadorModal(interaction: ModalSubmitInteraction): Promise<void>
     await anunciar(
       interaction,
       viewer.villageId,
-      new EmbedBuilder()
-        .setColor(0xc94f4f)
-        .setTitle(`📤 Saque do cofre — ${VILLAGE_NAMES[viewer.villageId]}`)
-        .setDescription(`<@${interaction.user.id}> sacou **${r.amount} Ryō**.`)
-        .addFields(
-          { name: "Cofre", value: `${r.cofreAntes} → ${r.cofreDepois} Ryō`, inline: true },
-          { name: "Motivo", value: r.motivo },
-        ),
+      [
+        economyContainer("erro", [
+          titleBlock("cofre", `Saque do cofre — ${VILLAGE_NAMES[viewer.villageId]}`),
+          text(`<@${interaction.user.id}> sacou **${r.amount} Ryō**.`),
+          divider(),
+          factsBlock([{ label: "Cofre", value: `${r.cofreAntes} → ${r.cofreDepois} Ryō` }]),
+          text(`**Motivo:** ${r.motivo}`),
+        ]),
+      ],
     );
     return;
   }
@@ -807,21 +894,23 @@ async function abrirSelectRetirada(interaction: ButtonInteraction, viewer: Viewe
     await interaction.reply({ content: "O estoque está vazio.", flags: MessageFlags.Ephemeral });
     return;
   }
-  await interaction.reply({
-    content: "📤 Escolha o item a retirar:",
-    components: [
-      new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
-        new StringSelectMenuBuilder().setCustomId("vila:estoque:item").addOptions(
-          stock.map((row) => ({
-            label: (getItem(row.itemId)?.name ?? row.name).slice(0, 100),
-            value: row.itemId,
-            description: `Em estoque: ${row.qty}`,
-          })),
+  await interaction.reply(
+    v2Payload([
+      economyContainer("estoque", [
+        titleBlock("estoque", "Retirar do estoque central"),
+        text("Escolha o item. No próximo passo, informe a quantidade e o ninja da vila que o receberá."),
+        selectRow(
+          new StringSelectMenuBuilder().setCustomId("vila:estoque:item").addOptions(
+            stock.map((row) => ({
+              label: (getItem(row.itemId)?.name ?? row.name).slice(0, 100),
+              value: row.itemId,
+              description: `Em estoque: ${row.qty}`,
+            })),
+          ),
         ),
-      ),
-    ],
-    flags: MessageFlags.Ephemeral,
-  });
+      ]),
+    ]),
+  );
 }
 
 // ---------------- Ordens de coleta ----------------
@@ -833,42 +922,33 @@ async function listarOrdens(interaction: ButtonInteraction, viewer: Viewer): Pro
     take: 5,
   });
 
-  const embed = new EmbedBuilder()
-    .setColor(0x4f7fc9)
-    .setTitle("📋 Ordens de coleta ativas")
-    .setDescription(
-      ordens.length
-        ? ordens
-            .map(
-              (o) =>
-                `**${getItem(o.itemId)?.name ?? o.itemId}** — ${o.deliveredQty}/${o.targetQty}\n` +
-                `${o.rewardPerUnit} Ryō/unidade • resta ${remainingBudget(o.budgetMax, o.budgetSpent)} de ${o.budgetMax} • prazo <t:${Math.floor(o.deadline.getTime() / 1000)}:R>`,
-            )
-            .join("\n\n")
-        : "_Nenhuma ordem ativa._",
-    );
-
-  const linhas: ActionRowBuilder<ButtonBuilder>[] = [
-    new ActionRowBuilder<ButtonBuilder>().addComponents(
-      new ButtonBuilder().setCustomId("vila:ordens:criar").setLabel("Criar ordem").setEmoji("➕").setStyle(ButtonStyle.Success),
+  const filhos: ContainerChild[] = [
+    titleBlock("ordem", "Ordens de coleta ativas"),
+    listBlock(
+      null,
+      ordens.map(
+        (o) =>
+          `**${itemLabel(o.itemId, getItem(o.itemId)?.name ?? o.itemId)}** — ${o.deliveredQty}/${o.targetQty}\n` +
+          `-# ${ryo(`${o.rewardPerUnit} Ryō`)} por unidade • reserva ${remainingBudget(o.budgetMax, o.budgetSpent)}/${o.budgetMax} • prazo <t:${Math.floor(o.deadline.getTime() / 1000)}:R>`,
+      ),
+      "Nenhuma ordem ativa.",
     ),
+    divider(),
+    buttonRow(button({ id: "vila:ordens:criar", label: "Criar ordem", style: ButtonStyle.Success, emojiKey: "ordem" })),
   ];
   for (const o of ordens.slice(0, 4)) {
-    linhas.push(
-      new ActionRowBuilder<ButtonBuilder>().addComponents(
-        new ButtonBuilder()
-          .setCustomId(`vila:ordens:convidar:${o.id}`)
-          .setLabel(`Convidar — ${getItem(o.itemId)?.name ?? o.itemId}`.slice(0, 80))
-          .setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder()
-          .setCustomId(`vila:ordens:cancelar:${o.id}`)
-          .setLabel("Cancelar")
-          .setStyle(ButtonStyle.Danger),
+    filhos.push(
+      buttonRow(
+        button({
+          id: `vila:ordens:convidar:${o.id}`,
+          label: `Convidar — ${getItem(o.itemId)?.name ?? o.itemId}`.slice(0, 80),
+        }),
+        button({ id: `vila:ordens:cancelar:${o.id}`, label: "Cancelar", style: ButtonStyle.Danger }),
       ),
     );
   }
 
-  await interaction.reply({ embeds: [embed], components: linhas, flags: MessageFlags.Ephemeral });
+  await interaction.reply(v2Payload([economyContainer("vila", filhos)]));
 }
 
 async function abrirModalOrdem(interaction: ButtonInteraction, _viewer: Viewer): Promise<void> {
@@ -927,40 +1007,36 @@ async function criarOrdemDoModal(interaction: ModalSubmitInteraction, viewer: Vi
   );
 
   // Anuncio publico com botao de aceite. Sem ping em massa.
-  const anuncio = new EmbedBuilder()
-    .setColor(0x4f7fc9)
-    .setTitle(`📋 Ordem de coleta — ${VILLAGE_NAMES[viewer.villageId]}`)
-    .setDescription(`A vila precisa de **${meta}x ${nome}**.`)
-    .addFields(
-      { name: "Recompensa", value: `${recompensa} Ryō por unidade`, inline: true },
-      { name: "Prazo", value: `<t:${Math.floor(r.order.deadline.getTime() / 1000)}:R>`, inline: true },
-    )
-    .setFooter({ text: "Ao aceitar, o recurso coletado vai direto ao estoque e você recebe na hora." });
-
   await anunciar(
     interaction,
     viewer.villageId,
-    anuncio,
-    new ActionRowBuilder<ButtonBuilder>().addComponents(
-      new ButtonBuilder()
-        .setCustomId(`vila:ordem:aceitar:${r.order.id}`)
-        .setLabel("Aceitar ordem")
-        .setEmoji("✅")
-        .setStyle(ButtonStyle.Success),
-    ),
+    [
+      economyContainer("vila", [
+        titleBlock("ordem", `Ordem de coleta — ${VILLAGE_NAMES[viewer.villageId]}`),
+        text(`A vila precisa de **${meta}x ${nome}**.`),
+        factsBlock([
+          { label: "Recompensa", value: ryo(`${recompensa} Ryō por unidade`) },
+          { label: "Prazo", value: `<t:${Math.floor(r.order.deadline.getTime() / 1000)}:R>` },
+        ]),
+        text("-# Ao aceitar, o recurso coletado vai direto ao estoque e você recebe na hora."),
+        buttonRow(button({ id: `vila:ordem:aceitar:${r.order.id}`, label: "Aceitar ordem", style: ButtonStyle.Success, emojiKey: "sucesso" })),
+      ]),
+    ],
   );
 }
 
 async function abrirConviteOrdem(interaction: ButtonInteraction, orderId: string): Promise<void> {
-  await interaction.reply({
-    content: "Escolha o ninja a convidar (precisa ter personagem da sua vila):",
-    components: [
-      new ActionRowBuilder<UserSelectMenuBuilder>().addComponents(
-        new UserSelectMenuBuilder().setCustomId(`vila:ordens:convidar:${orderId}`).setMaxValues(1),
-      ),
-    ],
-    flags: MessageFlags.Ephemeral,
-  });
+  await interaction.reply(
+    v2Payload([
+      economyContainer("vila", [
+        titleBlock("ordem", "Convidar ninja"),
+        text("Escolha um ninja da vila para receber o convite por DM."),
+        new ActionRowBuilder<UserSelectMenuBuilder>().addComponents(
+          new UserSelectMenuBuilder().setCustomId(`vila:ordens:convidar:${orderId}`).setMaxValues(1),
+        ),
+      ]),
+    ]),
+  );
 }
 
 async function convidarNinja(interaction: AnySelectMenuInteraction, viewer: Viewer): Promise<void> {
@@ -984,19 +1060,21 @@ async function convidarNinja(interaction: AnySelectMenuInteraction, viewer: View
   await inviteToOrder(orderId, alvo.id);
 
   const nome = getItem(order.itemId)?.name ?? order.itemId;
-  const embed = new EmbedBuilder()
-    .setColor(0x4f7fc9)
-    .setTitle(`📋 Convite de coleta — ${VILLAGE_NAMES[viewer.villageId]}`)
-    .setDescription(`O Kage pediu **${order.targetQty}x ${nome}**.`)
-    .addFields({ name: "Recompensa", value: `${order.rewardPerUnit} Ryō por unidade`, inline: true })
-    .setFooter({ text: "Você não é obrigado a aceitar." });
-  const botoes = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder().setCustomId(`vila:ordem:aceitar:${orderId}`).setLabel("Aceitar").setStyle(ButtonStyle.Success),
-    new ButtonBuilder().setCustomId(`vila:ordem:recusar:${orderId}`).setLabel("Recusar").setStyle(ButtonStyle.Secondary),
-  );
+  const convite = [
+    economyContainer("vila", [
+      titleBlock("ordem", `Convite de coleta — ${VILLAGE_NAMES[viewer.villageId]}`),
+      text(`O Kage pediu **${order.targetQty}x ${nome}**.`),
+      factsBlock([{ label: "Recompensa", value: ryo(`${order.rewardPerUnit} Ryō por unidade`) }]),
+      text("-# Você não é obrigado a aceitar."),
+      buttonRow(
+        button({ id: `vila:ordem:aceitar:${orderId}`, label: "Aceitar", style: ButtonStyle.Success }),
+        button({ id: `vila:ordem:recusar:${orderId}`, label: "Recusar" }),
+      ),
+    ]),
+  ];
 
   const user = await interaction.client.users.fetch(alvoId).catch(() => null);
-  const dm = user ? await user.send({ embeds: [embed], components: [botoes] }).catch(() => null) : null;
+  const dm = user ? await user.send(v2Payload(convite, false)).catch(() => null) : null;
 
   await interaction.editReply(
     dm
@@ -1010,8 +1088,14 @@ async function responderOrdem(
   acao: "aceitar" | "recusar",
   orderId: string,
 ): Promise<void> {
-  const guildId = interaction.guildId ?? "global";
-  const char = await getOrCreateCharacter(interaction.user.id, guildId, interaction.user.username);
+  // No servidor, o personagem é identificado pela guild da interação. Em DM
+  // não existe guildId: usar "global" criava outro personagem sem vila e a
+  // ordem de Konoha era recusada mesmo para quem tinha o cargo certo. Como o
+  // bot opera em um único servidor, a ordem já informa a vila suficiente para
+  // recuperar o personagem real daquele jogador.
+  const char = interaction.guildId
+    ? await getOrCreateCharacter(interaction.user.id, interaction.guildId, interaction.user.username)
+    : await personagemDaOrdemEmDm(interaction.user.id, orderId);
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   if (acao === "recusar") {
@@ -1029,6 +1113,23 @@ async function responderOrdem(
       `A partir de agora, todo **${nome}** que você coletar vai direto ao estoque da vila e você recebe ` +
       `**${r.order.rewardPerUnit} Ryō por unidade** na hora. Recursos raros e outros materiais continuam seus.`,
   );
+}
+
+async function personagemDaOrdemEmDm(discordId: string, orderId: string) {
+  const order = await prisma.collectionOrder.findUnique({
+    where: { id: orderId },
+    select: { villageId: true },
+  });
+  const char = order
+    ? await prisma.userCharacter.findFirst({
+        where: { discordId, villageId: order.villageId },
+        orderBy: { updatedAt: "desc" },
+      })
+    : null;
+  if (!char) {
+    throw new EconomyError("Não localizei seu personagem nesta vila. Use /vila no servidor e tente novamente.");
+  }
+  return char;
 }
 
 async function cancelarOrdem(
@@ -1050,14 +1151,11 @@ async function cancelarOrdem(
 async function anunciar(
   interaction: RepliableInteraction,
   villageId: VillageId,
-  embed: EmbedBuilder,
-  components?: ActionRowBuilder<ButtonBuilder>,
+  components: TopLevel[],
 ): Promise<void> {
   const canal = await interaction.client.channels
     .fetch(VILLAGE_ANNOUNCE_CHANNELS[villageId])
     .catch(() => null);
   if (!canal?.isTextBased() || !("send" in canal)) return;
-  await canal
-    .send({ embeds: [embed], components: components ? [components] : [] })
-    .catch(() => null);
+  await canal.send({ components, flags: MessageFlags.IsComponentsV2 }).catch(() => null);
 }

@@ -8,6 +8,15 @@ import { ECONOMY } from "../config/balance.js";
 import { getItem } from "../data/items.js";
 import { getOrCreateCharacter } from "../services/characters/character-service.js";
 import { eatFood } from "../services/economy/eating.js";
+import {
+  divider,
+  economyContainer,
+  factsBlock,
+  itemLabel,
+  receiptBlock,
+  titleBlock,
+  v2Edit,
+} from "../ui/economy-components-v2.js";
 
 export const comer: Command = {
   data: new SlashCommandBuilder()
@@ -55,9 +64,20 @@ export const comer: Command = {
     }
 
     const { itemName, ganho, satiety } = outcome.result;
+    const nome = char.displayName?.trim() || char.name;
+
     await interaction.editReply(
-      `🍙 **${char.displayName?.trim() || char.name}** comeu ${quantidade}x **${itemName}**.\n` +
-        `Saciedade: **${satiety}/${ECONOMY.satietyMax}** (+${ganho})`,
+      v2Edit([
+        economyContainer("cofre", [
+          titleBlock("saciedade", "Refeição"),
+          receiptBlock(`**${nome}** comeu ${itemLabel(itemId, itemName, quantidade)}.`),
+          divider(),
+          factsBlock([
+            { label: "Saciedade", value: `${satiety}/${ECONOMY.satietyMax}` },
+            { label: "Recuperado", value: `+${ganho}` },
+          ]),
+        ]),
+      ]),
     );
   },
 };

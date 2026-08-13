@@ -1,9 +1,5 @@
 import {
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
   ComponentType,
-  EmbedBuilder,
   type ButtonInteraction,
   type ChatInputCommandInteraction,
   type Message,
@@ -23,7 +19,19 @@ import type { RenderEntity } from "../maps/renderer.js";
 import { NpcAiService } from "../npc-ai/npc-ai-service.js";
 import { getPersona } from "../npc-ai/personas.js";
 import { partyMemberIds } from "../party/party-service.js";
+import { v2Edit, v2Public } from "../../ui/economy-components-v2.js";
+import { investigationPanel, type InvestigationMemoryView } from "../../ui/mission-investigation-v2.js";
 import { cacheAttrs, gatherPartyPlayers, type StarterChar } from "./combat-party.js";
+import {
+  canUncoverClue,
+  createMemorySequence,
+  evaluateMemoryChoice,
+  MEMORY_MAX_ATTEMPTS,
+  MEMORY_PREPARE_SECONDS,
+  MEMORY_WORD_DISPLAY_MS,
+  rankBInvestigationMembers,
+  RANK_B_PARTY_MAX,
+} from "./investigation-party.js";
 import {
   completeMission,
   buildMissionCompleteEmbed,
@@ -37,8 +45,7 @@ import {
 type CorpseStage = "BRIEFING" | "INVESTIGATE" | "CONFRONT" | "FIGHT" | "RETURN" | "DONE";
 type ClueId = "hospital" | "market" | "alley";
 
-const MAX_MISTAKES = 3;
-const INVESTIGATION_EMOJI = "<:investigation:1523544296379383949>";
+const MAX_MISTAKES = 2;
 
 interface RegionalNpc {
   key: string;
@@ -56,7 +63,7 @@ interface ClueDef {
   marker: RenderEntity;
   witness: RegionalNpc;
   intro: string;
-  requiredEvidence: number;
+  memoryWords: [string, string, string, string, string];
   actions: { id: string; label: string; detail: string }[];
   question: string;
   deductions: { id: string; label: string }[];
@@ -66,7 +73,10 @@ interface ClueDef {
 
 interface InvestigationProgress {
   evidence?: string[];
+  lostEvidence?: string[];
   evidenceUsers?: Record<string, string>;
+  attemptUsers?: Record<string, string>;
+  failedAttempts?: Record<string, number>;
   contributors?: Record<string, string>;
   investigators?: Record<string, string>;
   votes?: Record<string, string>;
@@ -112,34 +122,34 @@ const CLUES: Record<ClueId, ClueDef> = {
     id: "hospital",
     channelId: HOSPITAL_KONOHA_CHANNEL_ID,
     objectiveId: "investigar_corpo_suspenso",
-    title: "Pulso no cad�ver",
+    title: "Pulso no cadáver",
     marker: { cell: "D4", label: "MED", color: "#74b9ff", kind: "MARKER", name: "Maca selada" },
     witness: medicNpc,
     intro:
-      "O corpo foi declarado morto, mas o monitor ainda registra um pulso fraco e regular demais. Descubram se est�o diante de um cad�ver reanimado, de um clone inst�vel ou de uma v�tima mantida artificialmente entre a vida e a morte.",
-    requiredEvidence: 3,
+      "O corpo foi declarado morto, mas o monitor ainda registra um pulso fraco e regular demais. Descubram se estão diante de um cadáver reanimado, de um clone instável ou de uma vítima mantida artificialmente entre a vida e a morte.",
+    memoryWords: ["Pulso", "Selo", "Sangue", "Chakra", "Veia"],
     actions: [
-      { id: "pulse", label: "Medir o pulso", detail: "O pulso existe, mas bate em intervalos iguais demais. Parece regulado por selo, n�o por reflexo natural do corpo." },
-      { id: "seal", label: "Procurar selos", detail: "H� micro-selos pr�ximos �s veias do pesco�o. Eles seguram o corpo em coma profundo, simulando morte aparente." },
-      { id: "toxin", label: "Testar o sangue", detail: "O sangue cont�m um anest�sico raro que reduz respira��o e tremores, enganando exames m�dicos r�pidos." },
-      { id: "chakra", label: "Ler o chakra", detail: "O chakra n�o nasce do corpo: ele entra por pontos finos, como se algu�m alimentasse a v�tima de fora." },
+      { id: "pulse", label: "Medir o pulso", detail: "O pulso existe, mas bate em intervalos iguais demais. Parece regulado por selo, não por reflexo natural do corpo." },
+      { id: "seal", label: "Procurar selos", detail: "Há micro-selos próximos às veias do pescoço. Eles seguram o corpo em coma profundo, simulando morte aparente." },
+      { id: "toxin", label: "Testar o sangue", detail: "O sangue contém um anestésico raro que reduz respiração e tremores, enganando exames médicos rápidos." },
+      { id: "chakra", label: "Ler o chakra", detail: "O chakra não nasce do corpo: ele entra por pontos finos, como se alguém alimentasse a vítima de fora." },
     ],
-    question: "Qual � o estado real do corpo?",
+    question: "Qual é o estado real do corpo?",
     deductions: [
-      { id: "dead_puppet", label: "Cad�ver reanimado por jutsu" },
-      { id: "suspended_victim", label: "V�tima viva em suspens�o" },
-      { id: "shadow_clone", label: "Clone inst�vel prestes a sumir" },
+      { id: "dead_puppet", label: "Cadáver reanimado por jutsu" },
+      { id: "suspended_victim", label: "Vítima viva em suspensão" },
+      { id: "shadow_clone", label: "Clone instável prestes a sumir" },
       { id: "poison_sleep", label: "Sono causado por veneno comum" },
     ],
     correct: "suspended_victim",
-    success: "O time conclui que a v�tima ainda est� viva. O caso n�o � necromancia: algu�m est� usando medicina e selos para fingir morte.",
+    success: "O time conclui que a vítima ainda está viva. O caso não é necromancia: alguém está usando medicina e selos para fingir morte.",
   },
   market: {
     id: "market",
     channelId: CENTRO_COMERCIAL_CHANNEL_ID,
     objectiveId: "investigar_compra_suspeita",
     title: "A compra do morto",
-    marker: { cell: "E5", label: "ERV", color: "#2ecc71", kind: "MARKER", name: "Balc�o de ervas" },
+    marker: { cell: "E5", label: "ERV", color: "#2ecc71", kind: "MARKER", name: "Balcão de ervas" },
     witness: {
       key: "corpse_market_herbalist",
       name: "Mina, herborista",
@@ -148,23 +158,23 @@ const CLUES: Record<ClueId, ClueDef> = {
       cell: "E4",
     },
     intro:
-      "A v�tima apareceu no mercado depois de ter sido declarada morta. A compra parece banal, mas os detalhes podem revelar se algu�m estava usando o rosto dela como disfarce vivo.",
-    requiredEvidence: 3,
+      "A vítima apareceu no mercado depois de ter sido declarada morta. A compra parece banal, mas os detalhes podem revelar se alguém estava usando o rosto dela como disfarce vivo.",
+    memoryWords: ["Ervas", "Recibo", "Moeda", "Testemunha", "Compra"],
     actions: [
-      { id: "herb", label: "Examinar as ervas", detail: "As ervas compradas reduzem batimento e tremor. Elas servem para manter algu�m parecendo morto por mais tempo." },
-      { id: "receipt", label: "Checar o recibo", detail: "A assinatura copia o nome da v�tima, mas a press�o da caneta � fraca e guiada, como m�o sem for�a pr�pria." },
+      { id: "herb", label: "Examinar as ervas", detail: "As ervas compradas reduzem batimento e tremor. Elas servem para manter alguém parecendo morto por mais tempo." },
+      { id: "receipt", label: "Checar o recibo", detail: "A assinatura copia o nome da vítima, mas a pressão da caneta é fraca e guiada, como mão sem força própria." },
       { id: "coin", label: "Examinar a moeda", detail: "A moeda cheira a conservante hospitalar. Ela veio do mesmo ambiente onde o corpo estava guardado." },
-      { id: "witness", label: "Ouvir Mina", detail: "Mina diz que o comprador n�o piscava e movia a cabe�a com atraso, como se obedecesse a um comando distante." },
+      { id: "witness", label: "Ouvir Mina", detail: "Mina diz que o comprador não piscava e movia a cabeça com atraso, como se obedecesse a um comando distante." },
     ],
     question: "O que a compra prova?",
     deductions: [
-      { id: "victim_shopped", label: "A v�tima acordou sozinha" },
-      { id: "identity_control", label: "Algu�m usou a v�tima como disfarce vivo" },
-      { id: "merchant_lied", label: "Mina inventou a hist�ria" },
+      { id: "victim_shopped", label: "A vítima acordou sozinha" },
+      { id: "identity_control", label: "Alguém usou a vítima como disfarce vivo" },
+      { id: "merchant_lied", label: "Mina inventou a história" },
       { id: "simple_poison", label: "Era apenas compra de veneno" },
     ],
     correct: "identity_control",
-    success: "A compra prova que o rosto da v�tima foi usado como disfarce vivo. O respons�vel queria criar apari��es imposs�veis para confundir as testemunhas.",
+    success: "A compra prova que o rosto da vítima foi usado como disfarce vivo. O responsável queria criar aparições impossíveis para confundir as testemunhas.",
   },
   alley: {
     id: "alley",
@@ -180,23 +190,23 @@ const CLUES: Record<ClueId, ClueDef> = {
       cell: "C4",
     },
     intro:
-      "No beco, a v�tima foi vista andando sem apoiar o peso no ch�o. O caminho n�o parece uma fuga: parece o trajeto de um corpo controlado � dist�ncia.",
-    requiredEvidence: 3,
+      "No beco, a vítima foi vista andando sem apoiar o peso no chão. O caminho não parece uma fuga: parece o trajeto de um corpo controlado à distância.",
+    memoryWords: ["Pegadas", "Telhado", "Agulha", "Fios", "Marionete"],
     actions: [
-      { id: "footprints", label: "Examinar o ch�o", detail: "Quase n�o h� pegadas completas. O corpo foi parcialmente suspenso e puxado por cima, sem caminhar de verdade." },
-      { id: "roof", label: "Olhar os telhados", detail: "H� cortes finos nos beirais. Fios de chakra passaram por ali e queimaram a madeira." },
-      { id: "needle", label: "Procurar agulhas", detail: "Uma agulha quebrada tem selo m�dico de condu��o. Ela serve para prender fios de chakra em pontos nervosos." },
-      { id: "witness", label: "Ouvir Riku", detail: "Riku viu a cabe�a virar antes do resto do corpo, como uma marionete recebendo comando atrasado." },
+      { id: "footprints", label: "Examinar o chão", detail: "Quase não há pegadas completas. O corpo foi parcialmente suspenso e puxado por cima, sem caminhar de verdade." },
+      { id: "roof", label: "Olhar os telhados", detail: "Há cortes finos nos beirais. Fios de chakra passaram por ali e queimaram a madeira." },
+      { id: "needle", label: "Procurar agulhas", detail: "Uma agulha quebrada tem selo médico de condução. Ela serve para prender fios de chakra em pontos nervosos." },
+      { id: "witness", label: "Ouvir Riku", detail: "Riku viu a cabeça virar antes do resto do corpo, como uma marionete recebendo comando atrasado." },
     ],
-    question: "Como a v�tima se movia?",
+    question: "Como a vítima se movia?",
     deductions: [
-      { id: "free_escape", label: "Ela fugia por conta pr�pria" },
+      { id: "free_escape", label: "Ela fugia por conta própria" },
       { id: "remote_control", label: "Era controlada por fios e selos" },
       { id: "wall_walk", label: "Usava andar em parede" },
       { id: "genjutsu_only", label: "Foi apenas genjutsu nas testemunhas" },
     ],
     correct: "remote_control",
-    success: "Os rastros mostram controle remoto por fios de chakra e selos m�dicos. O respons�vel deve estar perto o bastante para comandar os corpos.",
+    success: "Os rastros mostram controle remoto por fios de chakra e selos médicos. O responsável deve estar perto o bastante para comandar os corpos.",
   },
 };
 function ensureState(raw: string): CorpsePulseState {
@@ -265,7 +275,7 @@ export function availableCorpsePulseNpcs(
   const current = ensureState(JSON.stringify(state));
   if (channelId === HOSPITAL_KONOHA_CHANNEL_ID) {
     if (current.stage === "BRIEFING") return [{ key: medicNpc.key, name: medicNpc.name }];
-    if (current.stage === "RETURN") return [{ key: medicNpc.key, name: `${medicNpc.name} (relat�rio)` }];
+    if (current.stage === "RETURN") return [{ key: medicNpc.key, name: `${medicNpc.name} (relatório)` }];
   }
   if (current.stage === "INVESTIGATE") {
     const clue = clueByChannel(channelId);
@@ -286,8 +296,8 @@ export async function corpsePulseMapHandle(
   if (interaction.channelId === HOSPITAL_KONOHA_CHANNEL_ID && (state.stage === "BRIEFING" || state.stage === "RETURN")) {
     entities.push(npcEntity(medicNpc));
     return state.stage === "BRIEFING"
-      ? `\nMiss�o ativa: **${ctx.def.name}** - fale com a Dra. Shiori usando \`/interagir npc\`.`
-      : `\nMiss�o ativa: **${ctx.def.name}** - entregue o relat�rio final para a Dra. Shiori.`;
+      ? `\nMissão ativa: **${ctx.def.name}** - fale com a Dra. Shiori usando \`/interagir npc\`.`
+      : `\nMissão ativa: **${ctx.def.name}** - entregue o relatório final para a Dra. Shiori.`;
   }
 
   if (state.stage === "INVESTIGATE") {
@@ -295,13 +305,13 @@ export async function corpsePulseMapHandle(
     if (!clue) return nextNote(state, ctx.def.name);
     if (state.clues?.[clue.id]) {
       entities.push({ ...clue.marker, name: `${clue.marker.name} (analisado)`, color: "#2ecc71" });
-      return `\nMiss�o ativa: **${ctx.def.name}** - pista j� analisada: **${clue.title}**.`;
+      return `\nMissão ativa: **${ctx.def.name}** - pista já analisada: **${clue.title}**.`;
     }
     entities.push(clue.marker, npcEntity(clue.witness));
     state.runningClue = clue.id;
     await setState(ctx.inst.id, state);
     void startCluePanel(interaction.channel, interaction.guildId ?? "global", ctx.inst.id, clue).catch(() => undefined);
-    return `\nMiss�o ativa: **${ctx.def.name}** - um quadro de investiga��o foi enviado neste canal.`;
+    return `\nMissão ativa: **${ctx.def.name}** - um quadro de investigação foi enviado neste canal.`;
   }
 
   if (interaction.channelId === BECO_KONOHA_CHANNEL_ID && state.stage === "CONFRONT") {
@@ -317,12 +327,12 @@ export async function corpsePulseMapHandle(
       await setState(ctx.inst.id, state);
       await speak(interaction.channel, bossNpc, "(o time chega ao beco com as provas)", "Apresente Metsu entre fios de chakra e corpos quase vivos.", 0);
     }
-    return `\nMiss�o ativa: **${ctx.def.name}** - confronte Metsu usando \`/interagir npc\`.`;
+    return `\nMissão ativa: **${ctx.def.name}** - confronte Metsu usando \`/interagir npc\`.`;
   }
 
   if (interaction.channelId === BECO_KONOHA_CHANNEL_ID && state.stage === "FIGHT") {
     if (!(await getActiveSession(interaction.channelId))) await startCorpseCombat(interaction, ctx);
-    return `\nMiss�o ativa: **${ctx.def.name}** - derrote Metsu e os corpos controlados.`;
+    return `\nMissão ativa: **${ctx.def.name}** - derrote Metsu e os corpos controlados.`;
   }
 
   return nextNote(state, ctx.def.name);
@@ -330,13 +340,13 @@ export async function corpsePulseMapHandle(
 
 function nextNote(state: CorpsePulseState, missionName: string): string | null {
   if (state.stage === "INVESTIGATE") {
-    return `\nMiss�o ativa: **${missionName}** - investigue <#${HOSPITAL_KONOHA_CHANNEL_ID}>, <#${CENTRO_COMERCIAL_CHANNEL_ID}> e <#${BECO_KONOHA_CHANNEL_ID}>.`;
+    return `\nMissão ativa: **${missionName}** - investigue <#${HOSPITAL_KONOHA_CHANNEL_ID}>, <#${CENTRO_COMERCIAL_CHANNEL_ID}> e <#${BECO_KONOHA_CHANNEL_ID}>.`;
   }
   if (state.stage === "CONFRONT" || state.stage === "FIGHT") {
-    return `\nMiss�o ativa: **${missionName}** - siga para o Beco de Konoha: <#${BECO_KONOHA_CHANNEL_ID}>.`;
+    return `\nMissão ativa: **${missionName}** - siga para o Beco de Konoha: <#${BECO_KONOHA_CHANNEL_ID}>.`;
   }
   if (state.stage === "RETURN") {
-    return `\nMiss�o ativa: **${missionName}** - volte ao Hospital de Konoha: <#${HOSPITAL_KONOHA_CHANNEL_ID}>.`;
+    return `\nMissão ativa: **${missionName}** - volte ao Hospital de Konoha: <#${HOSPITAL_KONOHA_CHANNEL_ID}>.`;
   }
   return null;
 }
@@ -368,20 +378,20 @@ export async function interactCorpsePulse(interaction: ChatInputCommandInteracti
   const guildId = interaction.guildId ?? "global";
   const ctx = await resolveCorpsePulse(interaction.user.id, guildId, interaction.channelId);
   if (!ctx) {
-    await interaction.reply({ content: "Voc� (ou sua party) n�o tem essa miss�o ativa.", ephemeral: true });
+    await interaction.reply({ content: "Você (ou sua party) não tem essa missão ativa.", ephemeral: true });
     return;
   }
   const state = ensureState(ctx.inst.stateJson);
   const choice = availableCorpsePulseNpcs(state, interaction.channelId).find((npc) => npc.key === npcKey);
   if (!choice) {
-    await interaction.reply({ content: "Esse NPC n�o est� dispon�vel nesta etapa.", ephemeral: true });
+    await interaction.reply({ content: "Esse NPC não está disponível nesta etapa.", ephemeral: true });
     return;
   }
   const clue = Object.values(CLUES).find((candidate) => candidate.witness.key === npcKey);
   if (clue && state.stage === "INVESTIGATE") {
     await interaction.deferReply({ ephemeral: true });
-    await speak(interaction.channel, clue.witness, "(o time pede depoimento)", "Entregue uma pista fixa sem resolver a dedu��o pelo time.", 0);
-    await interaction.editReply(`Voc� ouviu **${choice.name}**. Use o quadro enviado pelo /mapa para fechar a tese.`);
+    await speak(interaction.channel, clue.witness, "(o time pede depoimento)", "Entregue uma pista fixa sem resolver a dedução pelo time.", 0);
+    await interaction.editReply(`Você ouviu **${choice.name}**. Use o quadro enviado pelo /mapa para fechar a tese.`);
     return;
   }
   if (state.activeNpc && state.activeNpc !== npcKey) {
@@ -392,7 +402,7 @@ export async function interactCorpsePulse(interaction: ChatInputCommandInteracti
   state.activeNpc = npcKey;
   await setState(ctx.inst.id, state);
   await runDialogue(interaction.channel, interaction.channelId, guildId, ctx, npcKey, "(o time inicia a conversa)", interaction.user);
-  await interaction.editReply(`Voc� se aproxima de **${choice.name}**. Continue por mensagens normais no canal.`);
+  await interaction.editReply(`Você se aproxima de **${choice.name}**. Continue por mensagens normais no canal.`);
 }
 
 export async function continueCorpsePulseMessage(message: Message): Promise<boolean> {
@@ -430,8 +440,8 @@ async function runDialogue(
       medicNpc,
       playerMessage,
       done
-        ? "�ltima fala: mande investigar Hospital, Centro Comercial e Beco antes que o corpo pare de respirar de vez."
-        : "Explique o corpo com pulso imposs�vel e as apari��es depois da morte.",
+        ? "Última fala: mande investigar Hospital, Centro Comercial e Beco antes que o corpo pare de respirar de vez."
+        : "Explique o corpo com pulso impossível e as aparições depois da morte.",
       done ? 2 : 0,
     );
     if (done) {
@@ -441,7 +451,7 @@ async function runDialogue(
       await markObjective(inst.id, "receber_caso_cadaver");
       await setState(inst.id, state);
       if (channel && "send" in channel) {
-        await channel.send(`Investiguem as tr�s frentes: <#${HOSPITAL_KONOHA_CHANNEL_ID}>, <#${CENTRO_COMERCIAL_CHANNEL_ID}> e <#${BECO_KONOHA_CHANNEL_ID}>.`);
+        await channel.send(`Investiguem as três frentes: <#${HOSPITAL_KONOHA_CHANNEL_ID}>, <#${CENTRO_COMERCIAL_CHANNEL_ID}> e <#${BECO_KONOHA_CHANNEL_ID}>.`);
       }
       return;
     }
@@ -456,8 +466,8 @@ async function runDialogue(
       bossNpc,
       playerMessage,
       fight
-        ? "�ltima fala: Metsu rejeita a pris�o, puxa os fios dos corpos controlados e inicia combate."
-        : "Reaja �s provas do time com frieza cl�nica, justificando a t�cnica como aproveitamento de feridos abandonados.",
+        ? "Última fala: Metsu rejeita a prisão, puxa os fios dos corpos controlados e inicia combate."
+        : "Reaja às provas do time com frieza clínica, justificando a técnica como aproveitamento de feridos abandonados.",
       fight ? 2 : 0,
     );
     if (fight) {
@@ -481,8 +491,8 @@ async function runDialogue(
       medicNpc,
       playerMessage,
       done
-        ? "�ltima fala: confirme que a v�tima foi estabilizada, os selos foram removidos e a miss�o est� encerrada."
-        : "Receba o relat�rio sobre o corpo em suspens�o, a compra falsa e os fios no beco.",
+        ? "Última fala: confirme que a vítima foi estabilizada, os selos foram removidos e a missão está encerrada."
+        : "Receba o relatório sobre o corpo em suspensão, a compra falsa e os fios no beco.",
       3 + Math.min(turn - 1, 1),
     );
     if (done) {
@@ -504,7 +514,10 @@ function progressFor(state: CorpsePulseState, clue: ClueDef): Required<Investiga
   state.investigations = state.investigations ?? {};
   const progress = state.investigations[clue.id] ?? {};
   progress.evidence = progress.evidence ?? [];
+  progress.lostEvidence = progress.lostEvidence ?? [];
   progress.evidenceUsers = progress.evidenceUsers ?? {};
+  progress.attemptUsers = progress.attemptUsers ?? { ...progress.evidenceUsers };
+  progress.failedAttempts = progress.failedAttempts ?? {};
   progress.contributors = progress.contributors ?? {};
   progress.investigators = progress.investigators ?? {};
   progress.votes = progress.votes ?? {};
@@ -517,14 +530,8 @@ function quorumSize(allowed: Set<string>): number {
   return Math.min(2, Math.max(1, allowed.size));
 }
 
-function contributorCount(progress: Required<InvestigationProgress>): number {
-  const ids = Object.keys(progress.investigators);
-  if (ids.length > 0) return ids.length;
-  return new Set(Object.values(progress.contributors).filter(Boolean)).size;
-}
-
-function evidenceReady(clue: ClueDef, progress: Required<InvestigationProgress>, quorum: number): boolean {
-  return progress.evidence.length >= clue.requiredEvidence && contributorCount(progress) >= quorum;
+function evidenceReady(clue: ClueDef, progress: Required<InvestigationProgress>): boolean {
+  return new Set([...progress.evidence, ...progress.lostEvidence]).size >= clue.actions.length;
 }
 
 function voteCounts(progress: Required<InvestigationProgress>): Record<string, number> {
@@ -533,111 +540,54 @@ function voteCounts(progress: Required<InvestigationProgress>): Record<string, n
   return counts;
 }
 
-function voteNames(progress: Required<InvestigationProgress>, deductionId: string): string[] {
-  return Object.entries(progress.votes)
-    .filter(([, vote]) => vote === deductionId)
-    .map(([userId]) => progress.voters[userId] ?? "voto registrado");
-}
-
 function consensusPick(progress: Required<InvestigationProgress>, quorum: number): string | null {
   const counts = voteCounts(progress);
   return Object.entries(counts).find(([, count]) => count >= quorum)?.[0] ?? null;
 }
 
-function panelEmbed(state: CorpsePulseState, clue: ClueDef, allowed: Set<string>, result?: string): EmbedBuilder {
-  const progress = progressFor(state, clue);
-  const quorum = quorumSize(allowed);
-  const ready = evidenceReady(clue, progress, quorum);
-  const actions = new Map(clue.actions.map((action) => [action.id, action]));
-  const deductions = new Map(clue.deductions.map((deduction) => [deduction.id, deduction]));
-  const evidenceLines = progress.evidence.map((id) => {
-    const action = actions.get(id);
-    const author = progress.contributors[id] ? ` - ${progress.contributors[id]}` : "";
-    return action ? `${INVESTIGATION_EMOJI} **${action.label}**${author}\n${action.detail}` : `${INVESTIGATION_EMOJI} ${id}`;
-  });
-  const counts = voteCounts(progress);
-  const voteLines = clue.deductions.map((deduction) => {
-    const count = counts[deduction.id] ?? 0;
-    const names = voteNames(progress, deduction.id);
-    return `${count > 0 ? `${count} voto(s)` : "sem votos"} - ${deduction.label}${names.length ? ` (${names.join(", ")})` : ""}`;
-  });
-  const consensus = consensusPick(progress, quorum);
-
-  return new EmbedBuilder()
-    .setColor(ready ? 0x9b59b6 : 0x74b9ff)
-    .setTitle(`Investiga��o - ${clue.title}`)
-    .setDescription([
-      clue.intro,
-      "",
-      "Coletem evid�ncias, votem numa tese e usem **Enviar tese** quando houver consenso.",
-      `Pistas conclu�das: **${Object.values(state.clues ?? {}).filter(Boolean).length}/3** | Erros: **${state.mistakes ?? 0}/${MAX_MISTAKES}**`,
-      result ?? "",
-    ].filter(Boolean).join("\n"))
-    .addFields(
-      {
-        name: "Evid�ncias coletadas",
-        value: evidenceLines.length > 0 ? evidenceLines.join("\n\n").slice(0, 1024) : "Nenhuma evid�ncia firme ainda.",
-      },
-      {
-        name: "Equipe",
-        value: `${contributorCount(progress)}/${quorum} participante(s) contribuindo | ${progress.evidence.length}/${clue.requiredEvidence} evid�ncias m�nimas`,
-        inline: true,
-      },
-      {
-        name: "Envio",
-        value: consensus ? `Consenso atual: **${deductions.get(consensus)?.label ?? consensus}**` : "Sem consenso ainda.",
-        inline: true,
-      },
-      {
-        name: "Tese",
-        value: ready ? `${clue.question}\n${voteLines.join("\n")}`.slice(0, 1024) : "Bloqueada at� a equipe reunir evid�ncias suficientes.",
-      },
-    );
-}
-
-function panelRows(
+function cluePanel(
   instanceId: string,
-  clue: ClueDef,
   state: CorpsePulseState,
-  allowed: Set<string>,
+  clue: ClueDef,
+  members: string[],
+  page: number,
+  result?: string,
   disabled = false,
-): ActionRowBuilder<ButtonBuilder>[] {
+  memory?: InvestigationMemoryView,
+) {
   const progress = progressFor(state, clue);
-  const quorum = quorumSize(allowed);
-  const ready = evidenceReady(clue, progress, quorum);
-  const needsMoreInvestigators = contributorCount(progress) < quorum;
-  const hasConsensus = Boolean(consensusPick(progress, quorum));
-  const evidenceRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    ...clue.actions.map((action) =>
-      new ButtonBuilder()
-        .setCustomId(`corpse-invest:${instanceId}:${clue.id}:evidence:${action.id}`)
-        .setLabel(action.label)
-        .setStyle(ButtonStyle.Secondary)
-        .setDisabled(disabled || (progress.evidence.includes(action.id) && !needsMoreInvestigators)),
-    ),
-  );
-  const deductionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    ...clue.deductions.map((deduction) =>
-      new ButtonBuilder()
-        .setCustomId(`corpse-invest:${instanceId}:${clue.id}:deduce:${deduction.id}`)
-        .setLabel(deduction.label)
-        .setStyle(ButtonStyle.Primary)
-        .setDisabled(disabled || !ready),
-    ),
-  );
-  const controlRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder()
-      .setCustomId(`corpse-invest:${instanceId}:${clue.id}:submit:case`)
-      .setLabel("Enviar tese")
-      .setStyle(ButtonStyle.Success)
-      .setDisabled(disabled || !ready || !hasConsensus),
-    new ButtonBuilder()
-      .setCustomId(`corpse-invest:${instanceId}:${clue.id}:clear:vote`)
-      .setLabel("Limpar meu voto")
-      .setStyle(ButtonStyle.Secondary)
-      .setDisabled(disabled || !ready),
-  );
-  return [evidenceRow, deductionRow, controlRow];
+  const quorum = quorumSize(new Set(members));
+  const ready = evidenceReady(clue, progress);
+  const consensus = consensusPick(progress, quorum);
+  return investigationPanel({
+    prefix: "corpse-invest",
+    instanceId,
+    clueId: clue.id,
+    title: clue.title,
+    intro: clue.intro,
+    actions: clue.actions,
+    deductions: clue.deductions,
+    question: clue.question,
+    evidence: progress.evidence,
+    lostEvidence: progress.lostEvidence,
+    evidenceUsers: progress.evidenceUsers,
+    attemptUsers: progress.attemptUsers,
+    failedAttempts: progress.failedAttempts,
+    contributors: progress.contributors,
+    votes: progress.votes,
+    voters: progress.voters,
+    members,
+    completedCases: Object.values(state.clues ?? {}).filter(Boolean).length,
+    totalCases: Object.keys(CLUES).length,
+    mistakes: state.mistakes ?? 0,
+    maxMistakes: MAX_MISTAKES,
+    ready,
+    consensus,
+    page,
+    memory,
+    result,
+    disabled,
+  });
 }
 
 async function allowedDiscordIds(instanceId: string, guildId: string): Promise<Set<string>> {
@@ -645,7 +595,7 @@ async function allowedDiscordIds(instanceId: string, guildId: string): Promise<S
   if (!inst) return new Set();
   const owner = await prisma.userCharacter.findUnique({ where: { id: inst.charId }, select: { discordId: true } });
   if (!owner) return new Set();
-  return new Set(await partyMemberIds(guildId, owner.discordId));
+  return new Set(rankBInvestigationMembers(await partyMemberIds(guildId, owner.discordId)));
 }
 
 async function startCluePanel(channel: TextBasedChannel | null, guildId: string, instanceId: string, clue: ClueDef): Promise<void> {
@@ -656,8 +606,11 @@ async function startCluePanel(channel: TextBasedChannel | null, guildId: string,
   if (!def || def.type !== "CORPSE_PULSE") return;
   let state = ensureState(inst.stateJson);
   const allowed = await allowedDiscordIds(instanceId, guildId);
+  const members = [...allowed];
+  let page = 0;
+  let memory: InvestigationMemoryView | undefined;
   progressFor(state, clue);
-  const msg = await channel.send({ embeds: [panelEmbed(state, clue, allowed)], components: panelRows(instanceId, clue, state, allowed) });
+  const msg = await channel.send(v2Public(cluePanel(instanceId, state, clue, members, page)));
   const deadline = Date.now() + 300_000;
   try {
     while (Date.now() < deadline) {
@@ -669,59 +622,138 @@ async function startCluePanel(channel: TextBasedChannel | null, guildId: string,
       })) as ButtonInteraction;
       const [, , , actionKind, pick] = btn.customId.split(":");
       if (!actionKind || !pick) {
-          await btn.reply({ content: "A��o de investiga��o inv�lida.", ephemeral: true });
+          await btn.reply({ content: "Ação de investigação inválida.", ephemeral: true });
         continue;
       }
       state = ensureState((await getInstance(instanceId))?.stateJson ?? "{}");
       const progress = progressFor(state, clue);
       let result: string | undefined;
 
-      if (actionKind === "evidence") {
-        const action = clue.actions.find((candidate) => candidate.id === pick);
-        if (!action) {
-          await btn.reply({ content: "Essa evid�ncia n�o existe nesta cena.", ephemeral: true });
+      if (actionKind === "memory") {
+        if (!memory || memory.phase !== "repeat") {
+          await btn.reply({ content: "Não há um desafio aguardando resposta.", ephemeral: true });
           continue;
         }
-        if (progress.evidence.includes(pick)) {
-          if (progress.evidenceUsers[pick] === btn.user.id || progress.investigators[btn.user.id]) {
-            await btn.reply({ content: "Essa evid�ncia j� foi registrada. Deixe outro membro validar outra parte.", ephemeral: true });
-            continue;
+        if (btn.user.id !== memory.ownerId) {
+          await btn.reply({ content: `Este desafio pertence a <@${memory.ownerId}>.`, ephemeral: true });
+          continue;
+        }
+        const selected = Number(pick);
+        if (!Number.isInteger(selected) || selected < 0 || selected >= memory.words.length) {
+          await btn.reply({ content: "Palavra inválida.", ephemeral: true });
+          continue;
+        }
+        const actionId = memory.actionId;
+        const actionNumber = clue.actions.findIndex((candidate) => candidate.id === actionId) + 1;
+        const memoryResult = evaluateMemoryChoice(memory.sequence, memory.position, selected);
+        if (memoryResult === "wrong") {
+          const failures = (progress.failedAttempts[actionId] ?? 0) + 1;
+          progress.failedAttempts[actionId] = failures;
+          memory = undefined;
+          if (failures >= MEMORY_MAX_ATTEMPTS) {
+            progress.lostEvidence.push(actionId);
+            progress.attemptUsers[actionId] = btn.user.id;
+            progress.contributors[actionId] = btn.user.username;
+            progress.investigators[btn.user.id] = btn.user.username;
+            progress.votes = {};
+            progress.voters = {};
+            result = `❌ **${btn.user.username}** errou pela segunda vez. A pista ${actionNumber} foi perdida.`;
+            if (evidenceReady(clue, progress)) page = clue.actions.length;
+          } else {
+            result = `⚠️ **${btn.user.username}** errou a sequência da pista ${actionNumber}. Ainda resta uma tentativa.`;
           }
-          progress.investigators[btn.user.id] = btn.user.username;
-          result = `**${btn.user.username}** validou uma evid�ncia j� encontrada.`;
           await setState(instanceId, state);
-          await btn.update({ embeds: [panelEmbed(state, clue, allowed, result)], components: panelRows(instanceId, clue, state, allowed) });
+          await btn.update(v2Edit(cluePanel(instanceId, state, clue, members, page, result)));
           continue;
         }
-        if (allowed.size > 1 && contributorCount(progress) < quorumSize(allowed) && progress.investigators[btn.user.id]) {
-          await btn.reply({ content: "Voc� j� contribuiu nesta investiga��o. Deixe outro membro da party assumir uma evid�ncia.", ephemeral: true });
+        memory.position += 1;
+        if (memoryResult === "next") {
+          await btn.update(v2Edit(cluePanel(instanceId, state, clue, members, page, undefined, false, memory)));
           continue;
         }
-        progress.evidence.push(pick);
-        progress.contributors[pick] = btn.user.username;
-        progress.evidenceUsers[pick] = btn.user.id;
+        progress.evidence.push(actionId);
+        progress.evidenceUsers[actionId] = btn.user.id;
+        progress.attemptUsers[actionId] = btn.user.id;
+        progress.contributors[actionId] = btn.user.username;
         progress.investigators[btn.user.id] = btn.user.username;
         progress.votes = {};
         progress.voters = {};
-        result = `**${btn.user.username}** adicionou uma evid�ncia ao quadro.`;
+        memory = undefined;
+        result = `**${btn.user.username}** repetiu a sequência e desvendou a pista ${actionNumber}.`;
+        if (evidenceReady(clue, progress)) page = clue.actions.length;
         await setState(instanceId, state);
-        await btn.update({ embeds: [panelEmbed(state, clue, allowed, result)], components: panelRows(instanceId, clue, state, allowed) });
+        await btn.update(v2Edit(cluePanel(instanceId, state, clue, members, page, result)));
+        continue;
+      }
+
+      if (actionKind === "page") {
+        const requestedPage = Number(pick);
+        if (!Number.isInteger(requestedPage) || requestedPage < 0 || requestedPage > clue.actions.length) {
+          await btn.reply({ content: "Página de investigação inválida.", ephemeral: true });
+          continue;
+        }
+        page = requestedPage;
+        await btn.update(v2Edit(cluePanel(instanceId, state, clue, members, page)));
+        continue;
+      }
+
+      if (actionKind === "evidence") {
+        const action = clue.actions.find((candidate) => candidate.id === pick);
+        if (!action) {
+          await btn.reply({ content: "Essa evidência não existe nesta cena.", ephemeral: true });
+          continue;
+        }
+        if (progress.evidence.includes(pick) || progress.lostEvidence.includes(pick)) {
+          await btn.reply({ content: "Essa pista já foi concluída. Escolha outra página.", ephemeral: true });
+          continue;
+        }
+        const permission = canUncoverClue(btn.user.id, members, progress.attemptUsers, clue.actions.length);
+        if (!permission.ok) {
+          await btn.reply({ content: permission.reason, ephemeral: true });
+          continue;
+        }
+        const challenge: InvestigationMemoryView = {
+          ownerId: btn.user.id,
+          actionId: pick,
+          phase: "prepare",
+          words: [...clue.memoryWords],
+          sequence: createMemorySequence(clue.memoryWords.length),
+          position: 0,
+          countdown: MEMORY_PREPARE_SECONDS,
+          displayPosition: 0,
+        };
+        memory = challenge;
+        await btn.update(v2Edit(cluePanel(instanceId, state, clue, members, page, undefined, false, challenge)));
+        for (let count = MEMORY_PREPARE_SECONDS - 1; count >= 1; count -= 1) {
+          await new Promise<void>((resolve) => setTimeout(resolve, 1_000));
+          challenge.countdown = count;
+          await msg.edit(v2Edit(cluePanel(instanceId, state, clue, members, page, undefined, false, challenge)));
+        }
+        await new Promise<void>((resolve) => setTimeout(resolve, 1_000));
+        challenge.phase = "memorize";
+        for (let position = 0; position < challenge.sequence.length; position += 1) {
+          challenge.displayPosition = position;
+          await msg.edit(v2Edit(cluePanel(instanceId, state, clue, members, page, undefined, false, challenge)));
+          await new Promise<void>((resolve) => setTimeout(resolve, MEMORY_WORD_DISPLAY_MS));
+        }
+        challenge.phase = "repeat";
+        await msg.edit(v2Edit(cluePanel(instanceId, state, clue, members, page, undefined, false, challenge)));
         continue;
       }
 
       if (actionKind === "clear") {
         delete progress.votes[btn.user.id];
         delete progress.voters[btn.user.id];
-        result = `**${btn.user.username}** limpou o pr�prio voto.`;
+        result = `**${btn.user.username}** limpou o próprio voto.`;
         await setState(instanceId, state);
-        await btn.update({ embeds: [panelEmbed(state, clue, allowed, result)], components: panelRows(instanceId, clue, state, allowed) });
+        await btn.update(v2Edit(cluePanel(instanceId, state, clue, members, page, result)));
         continue;
       }
 
       if (actionKind === "submit") {
         const consensus = consensusPick(progress, quorumSize(allowed));
         if (!consensus) {
-          await btn.reply({ content: "Ainda n�o h� consenso.", ephemeral: true });
+          await btn.reply({ content: "Ainda não há consenso.", ephemeral: true });
           continue;
         }
         if (consensus === clue.correct) {
@@ -732,52 +764,49 @@ async function startCluePanel(channel: TextBasedChannel | null, guildId: string,
           if (allCluesDone(state)) {
             state.stage = "CONFRONT";
             await markObjective(instanceId, "ligar_pistas_cadaver");
-            result += `\n\nAs tr�s frentes apontam para Metsu, um m�dico renegado operando no Beco de Konoha: <#${BECO_KONOHA_CHANNEL_ID}>.`;
+            result += `\n\nAs três frentes apontam para Metsu, um médico renegado operando no Beco de Konoha: <#${BECO_KONOHA_CHANNEL_ID}>.`;
           }
           await setState(instanceId, state);
-          await btn.update({ embeds: [panelEmbed(state, clue, allowed, result)], components: [] });
+          await btn.update(v2Edit(cluePanel(instanceId, state, clue, members, page, result, true)));
           return;
         }
         state.mistakes = (state.mistakes ?? 0) + 1;
         progress.votes = {};
         progress.voters = {};
-        result = "**Tese enviada, mas rejeitada pelos fatos.** Revisem as evid�ncias antes de enviar de novo.";
+        result = "**Tese enviada, mas rejeitada pelos fatos.** Revisem as evidências antes de enviar de novo.";
         if ((state.mistakes ?? 0) >= MAX_MISTAKES) {
           state.runningClue = null;
           await prisma.missionInstance.update({ where: { id: instanceId }, data: { status: "FAILED", stateJson: JSON.stringify(state) } });
-          await btn.update({
-            embeds: [new EmbedBuilder().setColor(0xc0392b).setTitle("Caso perdido").setDescription("Erros demais deram tempo para Metsu remover a prova viva.")],
-            components: [],
-          });
+          await btn.update(v2Edit(cluePanel(instanceId, state, clue, members, page, "❌ Caso perdido: erros demais deram tempo para Metsu remover a prova viva.", true)));
           return;
         }
         await setState(instanceId, state);
-        await btn.update({ embeds: [panelEmbed(state, clue, allowed, result)], components: panelRows(instanceId, clue, state, allowed) });
+        await btn.update(v2Edit(cluePanel(instanceId, state, clue, members, page, result)));
         continue;
       }
 
       if (actionKind !== "deduce") {
-        await btn.reply({ content: "A��o de investiga��o inv�lida.", ephemeral: true });
+        await btn.reply({ content: "Ação de investigação inválida.", ephemeral: true });
         continue;
       }
-      if (!evidenceReady(clue, progress, quorumSize(allowed))) {
-        await btn.reply({ content: "Ainda faltam evid�ncias ou participa��o da equipe para fechar uma tese.", ephemeral: true });
+      if (!evidenceReady(clue, progress)) {
+        await btn.reply({ content: "Ainda faltam evidências ou participação da equipe para fechar uma tese.", ephemeral: true });
         continue;
       }
       progress.votes[btn.user.id] = pick;
       progress.voters[btn.user.id] = btn.user.username;
       const consensus = consensusPick(progress, quorumSize(allowed));
       result = consensus
-        ? `**${btn.user.username}** votou. H� consenso; use **Enviar tese**.`
+        ? `**${btn.user.username}** votou. Há consenso; use **Enviar tese**.`
         : `**${btn.user.username}** votou. A equipe ainda precisa concordar.`;
       await setState(instanceId, state);
-      await btn.update({ embeds: [panelEmbed(state, clue, allowed, result)], components: panelRows(instanceId, clue, state, allowed) });
+      await btn.update(v2Edit(cluePanel(instanceId, state, clue, members, page, result)));
     }
   } catch {
     state.runningClue = null;
     await setState(instanceId, state);
-    await msg.edit({ embeds: [panelEmbed(state, clue, allowed, "A cena esfriou, mas o quadro foi preservado.")], components: panelRows(instanceId, clue, state, allowed, true) }).catch(() => undefined);
-    await channel.send("A pista esfriou. Use `/mapa` neste canal para retomar a an�lise.");
+    await msg.edit(v2Edit(cluePanel(instanceId, state, clue, members, page, "A cena esfriou, mas o quadro foi preservado.", true))).catch(() => undefined);
+    await channel.send("A pista esfriou. Use `/mapa` neste canal para retomar a análise.");
   }
 }
 
@@ -805,7 +834,8 @@ async function startCorpseCombatFromActor(
 ): Promise<void> {
   if (await getActiveSession(channelId)) return;
   const char = await getOrCreateCharacter(actor.id, guildId, actor.username);
-  const { players, attrsById } = await gatherPartyPlayers(channel, guildId, starterFrom(char));
+  const party = await gatherPartyPlayers(channel, guildId, starterFrom(char));
+  const players = party.players.slice(0, RANK_B_PARTY_MAX);
   const session = await startCombat({
     channelId,
     guildId,
@@ -817,7 +847,7 @@ async function startCorpseCombatFromActor(
     ],
     missionInstanceId: instanceId,
   });
-  await cacheAttrs(session, attrsById);
+  await cacheAttrs(session, party.attrsById);
   if (channel && "send" in channel) {
     await channel.send(`Metsu puxa fios de chakra e os corpos controlados se erguem. ${players.length} ninja(s) entram no combate. Use \`/mapa\`.`);
   }
@@ -846,6 +876,6 @@ export async function onCorpsePulseCombatWon(interaction: ChatInputCommandIntera
   await markObjective(inst.id, "derrotar_medico_renegado");
   await markObjective(inst.id, "estabilizar_vitima_cadaver");
   await setState(inst.id, state);
-  await interaction.followUp(`Metsu foi contido e a v�tima ainda respira. Volte ao Hospital de Konoha: <#${HOSPITAL_KONOHA_CHANNEL_ID}>.`);
+  await interaction.followUp(`Metsu foi contido e a vítima ainda respira. Volte ao Hospital de Konoha: <#${HOSPITAL_KONOHA_CHANNEL_ID}>.`);
 }
 

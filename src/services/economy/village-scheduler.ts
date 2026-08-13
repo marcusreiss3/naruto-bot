@@ -6,6 +6,7 @@
 //   obras     — `VillageConstruction.status` + UPDATE condicional
 //   produção  — unicidade (vila, prédio, dia) em `VillageProductionRun`
 //   reforma   — unicidade (vila, prédio, ciclo) em `VillageMaintenanceCharge`
+//   caravana  — unicidade (vila, dia, item) em `GeneralMarketOffer`
 //
 // Consequencia: o boot roda uma passada de cada um e recupera tudo que venceu
 // offline, exatamente uma vez. Perder o timer atrasa, nunca duplica nem pula.
@@ -19,6 +20,8 @@ import {
   completeFinishedConstructions,
   nextConstructionDeadline,
 } from "./constructions.js";
+import { runGeneralMarketPass } from "./general-market.js";
+import { runShopPurchaseOfferPass } from "./shop-purchase-offers.js";
 import { syncPendingIchirakuChannels, type ChannelSyncResult } from "./ichiraku-channel.js";
 import { runMaintenancePass } from "./maintenance.js";
 import { runPendingProduction } from "./production.js";
@@ -29,12 +32,16 @@ export type ConstructionAnnouncer = (result: ChannelSyncResult) => Promise<void>
 let obrasTimer: NodeJS.Timeout | null = null;
 let diarioTimer: NodeJS.Timeout | null = null;
 let reformaTimer: NodeJS.Timeout | null = null;
+let caravanaTimer: NodeJS.Timeout | null = null;
 
 export function stopVillageSchedulers(): void {
-  for (const timer of [obrasTimer, diarioTimer, reformaTimer]) if (timer) clearTimeout(timer);
+  for (const timer of [obrasTimer, diarioTimer, reformaTimer, caravanaTimer]) {
+    if (timer) clearTimeout(timer);
+  }
   obrasTimer = null;
   diarioTimer = null;
   reformaTimer = null;
+  caravanaTimer = null;
 }
 
 // Mantido com o nome da etapa 05 para nao quebrar quem ja chamava.
@@ -168,6 +175,28 @@ function agendarProducao(client: Client): void {
   });
 }
 
+// Caravana do Mercado Geral: 00:05 local, junto da producao diaria mas com
+// timer proprio, porque a recuperacao delas e' independente — perder a virada
+// da caravana nao pode depender de a producao ter rodado.
+function agendarCaravana(): void {
+  if (caravanaTimer) clearTimeout(caravanaTimer);
+  const alvo = nextDailyAt(new Date(), ECONOMY.generalMarketHour, ECONOMY.generalMarketMinute);
+  log.info(`Mercado Geral: próxima caravana em ${alvo.toISOString()}.`);
+  caravanaTimer = armar(alvo, 24 * 3_600_000 + 60_000, () => {
+    void (async () => {
+      try {
+        const [viradas, cotas] = await Promise.all([runGeneralMarketPass(), runShopPurchaseOfferPass()]);
+        if (viradas) log.info(`Mercado Geral: ${viradas} vila(s) receberam ofertas novas.`);
+        if (cotas) log.info(`Lojas municipais: ${cotas} balcão(ões) receberam cotas de compra.`);
+      } catch (err) {
+        log.error("Falha na virada do Mercado Geral:", err);
+      } finally {
+        agendarCaravana();
+      }
+    })();
+  });
+}
+
 function agendarReforma(client: Client): void {
   if (reformaTimer) clearTimeout(reformaTimer);
   const alvo = nextMaintenanceCycle(
@@ -211,9 +240,12 @@ export async function startVillageSchedulers(
   await runConstructionPass(client, announce, defaultBuildAnnouncer(client));
   await runPendingProduction().catch((err) => log.error("Falha na produção pendente:", err));
   await runMaintenancePass().catch((err) => log.error("Falha na reforma pendente:", err));
+  await runGeneralMarketPass().catch((err) => log.error("Falha na caravana pendente:", err));
+  await runShopPurchaseOfferPass().catch((err) => log.error("Falha nas cotas de compra pendentes:", err));
   await agendarObras(client, announce);
   agendarProducao(client);
   agendarReforma(client);
+  agendarCaravana();
 }
 
 // Nome da etapa 05, mantido para os chamadores existentes.

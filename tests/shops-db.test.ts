@@ -11,6 +11,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { PrismaClient } from "@prisma/client";
 import type { Client } from "discord.js";
 import { ICHIRAKU_CATEGORY_BY_VILLAGE, ICHIRAKU_CHANNEL_NAME } from "../src/data/villages.js";
+import { GENERAL_MARKET_MATERIALS } from "../src/data/shops.js";
 
 const dir = mkdtempSync(join(tmpdir(), "naruto-loja-"));
 const dbPath = join(dir, "loja.db");
@@ -18,6 +19,7 @@ process.env.DATABASE_URL = `file:${dbPath}`;
 
 let prisma: PrismaClient;
 let shops: typeof import("../src/services/economy/shop-service.js");
+let mercado: typeof import("../src/services/economy/general-market.js");
 let constructions: typeof import("../src/services/economy/constructions.js");
 let canal: typeof import("../src/services/economy/ichiraku-channel.js");
 let villageEconomy: typeof import("../src/services/economy/village-economy.js");
@@ -102,6 +104,7 @@ beforeAll(async () => {
   pushSchema();
   prisma = (await import("../src/db/client.js")).prisma;
   shops = await import("../src/services/economy/shop-service.js");
+  mercado = await import("../src/services/economy/general-market.js");
   constructions = await import("../src/services/economy/constructions.js");
   canal = await import("../src/services/economy/ichiraku-channel.js");
   villageEconomy = await import("../src/services/economy/village-economy.js");
@@ -119,6 +122,7 @@ beforeEach(async () => {
   // consultas nestas tabelas, então sobras vazam de um teste para outro.
   await prisma.villageShopStock.deleteMany();
   await prisma.villageShop.deleteMany();
+  await prisma.generalMarketOffer.deleteMany();
   await prisma.villageConstruction.deleteMany();
   await prisma.villageStock.deleteMany();
   await prisma.villageLedger.deleteMany();
@@ -324,7 +328,9 @@ describe("venda de ingrediente à loja", () => {
     const comum = await shops.sellToGeneralMarket(char.id, "carne_crua", 4);
 
     expect(raro.ok).toBe(false); // raro nunca é comprado por loja
-    expect(comum.ok && comum.precoUnitario).toBe(2); // piso(9 × 0,30)
+    // Desde a 7.3.1 a Carne Crua tem varejo no Empório (12), então a referência
+    // dela é o varejo, não mais a base de compra: piso(12 × 0,30) = 3.
+    expect(comum.ok && comum.precoUnitario).toBe(3);
     expect((await cofreDe()).treasuryRyo).toBe(1000);
   });
 });
@@ -877,6 +883,385 @@ describe("roteamento do painel", () => {
   it("a aba Comércio de /vila responde pelo mesmo comando /vila", async () => {
     const { commandMap } = await import("../src/commands/index.js");
     expect(commandMap.get("vila:com:abastecer:EMPORIO".split(":")[0]!)).toBeDefined();
+  });
+});
+
+// ---------------- Caravana do Mercado Geral (seção 7.2.1) ----------------
+
+describe("rotação diária do Mercado Geral", () => {
+  const dia1 = new Date("2026-08-12T15:00:00Z"); // 12/08 local
+  const dia2 = new Date("2026-08-13T15:00:00Z"); // 13/08 local
+
+  it("cria exatamente quatro ofertas diferentes por vila e por dia", async () => {
+    const ofertas = await mercado.ensureGeneralMarketOffers("KONOHA", dia1);
+
+    expect(ofertas).toHaveLength(4);
+    expect(new Set(ofertas.map((o) => o.itemId)).size).toBe(4);
+    for (const oferta of ofertas) {
+      expect(GENERAL_MARKET_MATERIALS).toContain(oferta.itemId);
+      expect(oferta.remainingQty).toBe(oferta.initialQty);
+    }
+    const linhas = await prisma.generalMarketOffer.findMany({ where: { villageId: "KONOHA" } });
+    expect(linhas.every((l) => l.dayKey === "2026-08-12")).toBe(true);
+  });
+
+  it("reinício não rerrola: a segunda chamada devolve as MESMAS ofertas", async () => {
+    const primeira = await mercado.ensureGeneralMarketOffers("KONOHA", dia1);
+    // Segunda passada com gerador diferente de propósito: se ela sorteasse de
+    // novo, o conjunto mudaria.
+    const segunda = await mercado.ensureGeneralMarketOffers("KONOHA", dia1, () => 0.999);
+
+    expect(segunda.map((o) => o.itemId)).toEqual(primeira.map((o) => o.itemId));
+    expect(await prisma.generalMarketOffer.count({ where: { villageId: "KONOHA" } })).toBe(4);
+  });
+
+  it("job repetido no mesmo dia não duplica linha", async () => {
+    await mercado.runGeneralMarketPass(dia1);
+    await mercado.runGeneralMarketPass(dia1);
+    await mercado.runGeneralMarketPass(dia1);
+
+    // Cinco vilas × quatro ofertas, uma única vez.
+    expect(await prisma.generalMarketOffer.count()).toBe(20);
+    expect(await mercado.runGeneralMarketPass(dia1)).toBe(0);
+  });
+
+  it("duas chamadas concorrentes na virada convergem para quatro, não sete", async () => {
+    // O job das 00:05 e a abertura de /loja podem cair no mesmo instante, os
+    // dois vendo zero oferta. Como o sorteio é semeado por (vila, dia), ambos
+    // calculam o mesmo conjunto e os upserts colidem na unicidade. Sem a
+    // semente, cada um sortearia 4 itens diferentes e sobrariam até 8 linhas.
+    const [a, b] = await Promise.all([
+      mercado.ensureGeneralMarketOffers("KONOHA", dia1),
+      mercado.ensureGeneralMarketOffers("KONOHA", dia1),
+    ]);
+
+    expect(await prisma.generalMarketOffer.count({ where: { villageId: "KONOHA" } })).toBe(4);
+    expect(a.map((o) => o.itemId)).toEqual(b.map((o) => o.itemId));
+  });
+
+  it("o sorteio do dia é estável: apagar e refazer dá o mesmo conjunto", async () => {
+    const primeira = await mercado.ensureGeneralMarketOffers("KONOHA", dia1);
+    await prisma.generalMarketOffer.deleteMany({ where: { villageId: "KONOHA" } });
+    const refeita = await mercado.ensureGeneralMarketOffers("KONOHA", dia1);
+
+    expect(refeita.map((o) => o.itemId)).toEqual(primeira.map((o) => o.itemId));
+    // Mas o dia seguinte e a vila vizinha têm sementes próprias.
+    const outroDia = await mercado.ensureGeneralMarketOffers("KONOHA", dia2);
+    const outraVila = await mercado.ensureGeneralMarketOffers("SUNA", dia1);
+    expect(outroDia.map((o) => o.itemId)).not.toEqual(primeira.map((o) => o.itemId));
+    expect(outraVila.map((o) => o.itemId)).not.toEqual(primeira.map((o) => o.itemId));
+  });
+
+  it("o dia seguinte ganha ofertas próprias e não mexe nas de ontem", async () => {
+    const ontem = await mercado.ensureGeneralMarketOffers("KONOHA", dia1);
+    const hoje = await mercado.ensureGeneralMarketOffers("KONOHA", dia2);
+
+    expect(hoje).toHaveLength(4);
+    const linhas = await prisma.generalMarketOffer.findMany({ where: { villageId: "KONOHA" } });
+    expect(linhas).toHaveLength(8);
+    expect(new Set(linhas.map((l) => l.dayKey))).toEqual(new Set(["2026-08-12", "2026-08-13"]));
+    // As de ontem continuam intactas.
+    const antigas = linhas.filter((l) => l.dayKey === "2026-08-12");
+    expect(antigas.map((l) => l.itemId).sort()).toEqual(ontem.map((o) => o.itemId).sort());
+  });
+
+  it("cada vila sorteia por conta própria", async () => {
+    await mercado.runGeneralMarketPass(dia1);
+
+    for (const villageId of ["KONOHA", "SUNA", "KIRI", "KUMO", "IWA"]) {
+      const linhas = await prisma.generalMarketOffer.findMany({
+        where: { villageId, dayKey: "2026-08-12" },
+      });
+      expect(linhas, villageId).toHaveLength(4);
+    }
+  });
+
+  it("a quantidade sai da população ativa de 14 dias e fica congelada", async () => {
+    // Override da staff é a mesma fonte de "ativos" que as obras usam.
+    await prisma.village.update({
+      where: { id: "KONOHA" },
+      data: { populationOverride: 20 },
+    });
+
+    const ofertas = await mercado.ensureGeneralMarketOffers("KONOHA", dia1);
+    expect(ofertas.every((o) => o.initialQty === 40)).toBe(true); // teto(2 × 20)
+
+    // A vila crescer depois NÃO mexe na oferta já criada.
+    await prisma.village.update({
+      where: { id: "KONOHA" },
+      data: { populationOverride: 30 },
+    });
+    const relidas = await mercado.ensureGeneralMarketOffers("KONOHA", dia1);
+    expect(relidas.every((o) => o.initialQty === 40)).toBe(true);
+  });
+
+  it("vila sem ninguém ativo recebe o piso de 10", async () => {
+    const ofertas = await mercado.ensureGeneralMarketOffers("SUNA", dia1);
+    expect(ofertas.every((o) => o.initialQty === 10)).toBe(true);
+  });
+
+  it("shopView do Mercado Geral mostra só as quatro, sem infinito", async () => {
+    const view = await shops.shopView("KONOHA", "MERCADO_GERAL", dia1);
+
+    expect(view.produtos).toHaveLength(4);
+    for (const linha of view.produtos) {
+      expect(Number.isFinite(linha.estoque), linha.itemId).toBe(true);
+      expect(linha.inicial).toBeGreaterThan(0);
+      expect(linha.price).toBeGreaterThan(0);
+    }
+    expect(view.proximaCaravana?.toISOString()).toBe("2026-08-13T03:05:00.000Z");
+  });
+});
+
+describe("estoque esgotável e concorrência no Mercado Geral", () => {
+  const agora = new Date("2026-08-12T15:00:00Z");
+
+  // Fixa uma oferta conhecida para o teste não depender do sorteio.
+  async function ofertar(itemId: string, qty: number, villageId = "KONOHA") {
+    await prisma.generalMarketOffer.deleteMany({ where: { villageId } });
+    await prisma.generalMarketOffer.create({
+      data: { villageId, dayKey: "2026-08-12", itemId, initialQty: qty, remainingQty: qty },
+    });
+  }
+  async function restante(itemId: string, villageId = "KONOHA") {
+    const row = await prisma.generalMarketOffer.findUnique({
+      where: { villageId_dayKey_itemId: { villageId, dayKey: "2026-08-12", itemId } },
+    });
+    return row?.remainingQty ?? null;
+  }
+
+  it("comprar reduz a quantidade compartilhada e não toca o cofre", async () => {
+    const char = await novoNinja({ ryo: 1000 });
+    await ofertar("madeira", 12);
+    await prisma.village.update({ where: { id: "KONOHA" }, data: { treasuryRyo: 5000 } });
+
+    const r = await shops.buyFromShop(char.id, "KONOHA", "MERCADO_GERAL", "madeira", 3, "u1", agora);
+
+    // teto(5 × 2 × 1,05) = 11 por unidade.
+    expect(r.ok && r.precoUnitario).toBe(11);
+    expect(r.ok && r.total).toBe(33);
+    expect(await restante("madeira")).toBe(9);
+    expect(await qtd(char.id, "madeira")).toBe(3);
+    expect((await prisma.userCharacter.findUniqueOrThrow({ where: { id: char.id } })).ryo).toBe(967);
+    expect((await cofreDe()).treasuryRyo).toBe(5000);
+  });
+
+  it("não vende além da quantidade congelada", async () => {
+    const char = await novoNinja({ ryo: 100_000 });
+    await ofertar("madeira", 10);
+
+    const dentro = await shops.buyFromShop(char.id, "KONOHA", "MERCADO_GERAL", "madeira", 10, "u1", agora);
+    const alem = await shops.buyFromShop(char.id, "KONOHA", "MERCADO_GERAL", "madeira", 1, "u1", agora);
+
+    expect(dentro.ok).toBe(true);
+    expect(alem.ok).toBe(false);
+    expect(await restante("madeira")).toBe(0);
+    expect(await qtd(char.id, "madeira")).toBe(10);
+  });
+
+  it("pedido maior que o restante é recusado inteiro, sem venda parcial", async () => {
+    const char = await novoNinja({ ryo: 100_000 });
+    await ofertar("madeira", 4);
+
+    const r = await shops.buyFromShop(char.id, "KONOHA", "MERCADO_GERAL", "madeira", 5, "u1", agora);
+
+    expect(r.ok).toBe(false);
+    expect(await restante("madeira")).toBe(4);
+    expect(await qtd(char.id, "madeira")).toBe(0);
+  });
+
+  it("dois ninjas disputando a última unidade: só um leva", async () => {
+    const a = await novoNinja({ ryo: 1000 });
+    const b = await novoNinja({ ryo: 1000 });
+    await ofertar("madeira", 1);
+
+    const [ra, rb] = await Promise.all([
+      shops.buyFromShop(a.id, "KONOHA", "MERCADO_GERAL", "madeira", 1, "u1", agora),
+      shops.buyFromShop(b.id, "KONOHA", "MERCADO_GERAL", "madeira", 1, "u2", agora),
+    ]);
+
+    expect([ra.ok, rb.ok].filter(Boolean)).toHaveLength(1);
+    expect(await restante("madeira")).toBe(0);
+    expect((await qtd(a.id, "madeira")) + (await qtd(b.id, "madeira"))).toBe(1);
+  });
+
+  it("compras simultâneas acima do restante não vendem além do congelado", async () => {
+    const char = await novoNinja({ ryo: 100_000 });
+    await ofertar("madeira", 2);
+
+    // Quatro cliques disputando duas unidades. O que interessa é o fechamento
+    // de caixa: o SQLite pode recusar uma transação por lock, e recusar é
+    // vender zero — nunca vender a mais nem cobrar por unidade não entregue.
+    const resultados = await Promise.all(
+      Array.from({ length: 4 }, () =>
+        shops
+          .buyFromShop(char.id, "KONOHA", "MERCADO_GERAL", "madeira", 1, "u1", agora)
+          .catch(() => ({ ok: false as const })),
+      ),
+    );
+
+    const vendidas = resultados.filter((r) => r.ok).length;
+    expect(vendidas).toBeGreaterThan(0);
+    expect(vendidas).toBeLessThanOrEqual(2);
+    expect(await restante("madeira")).toBe(2 - vendidas);
+    expect(await qtd(char.id, "madeira")).toBe(vendidas);
+    expect((await prisma.userCharacter.findUniqueOrThrow({ where: { id: char.id } })).ryo).toBe(
+      100_000 - vendidas * 11,
+    );
+  });
+
+  it("saldo insuficiente não consome a oferta", async () => {
+    const char = await novoNinja({ ryo: 10 });
+    await ofertar("madeira", 12);
+
+    const r = await shops.buyFromShop(char.id, "KONOHA", "MERCADO_GERAL", "madeira", 2, "u1", agora);
+
+    expect(r.ok).toBe(false);
+    expect(await restante("madeira")).toBe(12);
+    expect(await qtd(char.id, "madeira")).toBe(0);
+  });
+
+  it("item fora da caravana de hoje não é vendido, mesmo sendo elegível", async () => {
+    const char = await novoNinja({ ryo: 1000 });
+    await ofertar("madeira", 12);
+
+    const r = await shops.buyFromShop(char.id, "KONOHA", "MERCADO_GERAL", "pedra", 1, "u1", agora);
+
+    expect(r.ok).toBe(false);
+    expect(await qtd(char.id, "pedra")).toBe(0);
+  });
+
+  it("o NPC continua sem vender arma, raro nem comida preparada", async () => {
+    const char = await novoNinja({ ryo: 100_000 });
+    await ofertar("madeira", 12);
+
+    for (const itemId of ["kunai", "lamen", "minerio_raro", "aco"]) {
+      const r = await shops.buyFromShop(char.id, "KONOHA", "MERCADO_GERAL", itemId, 1, "u1", agora);
+      expect(r.ok, itemId).toBe(false);
+    }
+  });
+
+  it("a caravana de uma vila não gasta a da outra", async () => {
+    const char = await novoNinja({ ryo: 1000 });
+    await ofertar("madeira", 5, "KONOHA");
+    await ofertar("madeira", 5, "SUNA");
+
+    await shops.buyFromShop(char.id, "KONOHA", "MERCADO_GERAL", "madeira", 5, "u1", agora);
+
+    expect(await restante("madeira", "KONOHA")).toBe(0);
+    expect(await restante("madeira", "SUNA")).toBe(5);
+  });
+});
+
+// ---------------- Varejo real das lojas municipais (seção 7.3.1) ----------------
+
+describe("varejo da Marcenaria", () => {
+  it("com 500 Madeira em estoque o jogador compra 1 e sobram 499", async () => {
+    const char = await novoNinja({ ryo: 1000 });
+    await semear("MARCENARIA", "madeira", 500);
+
+    const view = await shops.shopView("KONOHA", "MARCENARIA");
+    const linha = view.produtos.find((row) => row.itemId === "madeira");
+
+    // Aparece em `Comprar` com preço teto(8 × 1,05) = 9 e estoque real.
+    expect(linha?.price).toBe(9);
+    expect(linha?.estoque).toBe(500);
+
+    const r = await shops.buyFromShop(char.id, "KONOHA", "MARCENARIA", "madeira", 1, "u1");
+
+    expect(r.ok && r.total).toBe(9);
+    expect(await estoqueLoja("MARCENARIA", "madeira")).toBe(499);
+    expect(await qtd(char.id, "madeira")).toBe(1);
+    expect((await prisma.userCharacter.findUniqueOrThrow({ where: { id: char.id } })).ryo).toBe(991);
+    // Venda comum continua sumidouro: o cofre não recebe nada.
+    expect((await cofreDe()).treasuryRyo).toBe(0);
+  });
+
+  it("sem estoque, nada fica comprável — é o que desativa o botão", async () => {
+    const char = await novoNinja({ ryo: 1000 });
+
+    const view = await shops.shopView("KONOHA", "MARCENARIA");
+
+    // O catálogo existe (a loja É balcão de varejo), mas nada tem quantidade.
+    expect(view.produtos.length).toBeGreaterThan(0);
+    expect(view.produtos.every((row) => row.estoque === 0)).toBe(true);
+    expect(view.produtos.filter((row) => row.price > 0 && row.estoque > 0)).toEqual([]);
+
+    const r = await shops.buyFromShop(char.id, "KONOHA", "MARCENARIA", "madeira", 1, "u1");
+    expect(r.ok).toBe(false);
+  });
+
+  it("a Marcenaria continua comprando madeira do ninja", async () => {
+    const char = await novoNinja();
+    await dar(char.id, "madeira", 3);
+    await prisma.village.update({ where: { id: "KONOHA" }, data: { treasuryRyo: 1000 } });
+
+    const r = await shops.sellToShop(char.id, "KONOHA", "MARCENARIA", "madeira", 3, "u1");
+
+    // Compra por piso(5 × 0,95) = 4 e revende por 9: a margem é a conveniência.
+    expect(r.ok && r.precoUnitario).toBe(4);
+    expect(await estoqueLoja("MARCENARIA", "madeira")).toBe(3);
+  });
+
+  it("comprar da loja e revender para ela sempre perde Ryō", async () => {
+    const char = await novoNinja({ ryo: 1000 });
+    await semear("MARCENARIA", "madeira", 10);
+    await prisma.village.update({ where: { id: "KONOHA" }, data: { treasuryRyo: 10_000 } });
+
+    await shops.buyFromShop(char.id, "KONOHA", "MARCENARIA", "madeira", 5, "u1");
+    await shops.sellToShop(char.id, "KONOHA", "MARCENARIA", "madeira", 5, "u1");
+
+    // 5 × 9 pagos, 5 × 4 recebidos: −25 no bolso. Nunca uma impressora de Ryō.
+    expect((await prisma.userCharacter.findUniqueOrThrow({ where: { id: char.id } })).ryo).toBe(975);
+  });
+
+  it("o Empório vende o básico do dia a dia quando abastecido", async () => {
+    const char = await novoNinja({ ryo: 1000 });
+    await semear("EMPORIO", "carne_crua", 4);
+
+    const r = await shops.buyFromShop(char.id, "KONOHA", "EMPORIO", "carne_crua", 2, "u1");
+
+    expect(r.ok && r.precoUnitario).toBe(13); // teto(12 × 1,05)
+    expect(await estoqueLoja("EMPORIO", "carne_crua")).toBe(2);
+  });
+
+  it("balcão errado continua recusando, mesmo com o item em estoque", async () => {
+    const char = await novoNinja({ ryo: 1000 });
+    // A Marcenaria vende Papel; o Empório não, mesmo abastecido.
+    await semear("EMPORIO", "papel", 10);
+
+    const r = await shops.buyFromShop(char.id, "KONOHA", "EMPORIO", "papel", 1, "u1");
+
+    expect(r.ok).toBe(false);
+    expect(await estoqueLoja("EMPORIO", "papel")).toBe(10);
+  });
+});
+
+describe("Abastecer só aceita o que a loja usa ou vende", () => {
+  it("recusa kunai na Marcenaria e não move o estoque central", async () => {
+    await centralPor("kunai", 10);
+
+    const r = await shops.restockShop("KONOHA", "MARCENARIA", "kunai", 5, "kage1");
+
+    expect(r.ok).toBe(false);
+    expect(
+      (await prisma.villageStock.findUniqueOrThrow({
+        where: { villageId_itemId: { villageId: "KONOHA", itemId: "kunai" } },
+      })).qty,
+    ).toBe(10);
+    expect(await estoqueLoja("MARCENARIA", "kunai")).toBe(0);
+  });
+
+  it("aceita item vendável e insumo de receita", async () => {
+    await centralPor("madeira", 50);
+    await centralPor("madeira_reforcada", 5);
+
+    const vendavel = await shops.restockShop("KONOHA", "MARCENARIA", "madeira", 10, "kage1");
+    const insumo = await shops.restockShop("KONOHA", "OFICINA_SELOS", "madeira_reforcada", 2, "kage1");
+
+    expect(vendavel.ok).toBe(true);
+    expect(insumo.ok).toBe(true);
+    expect(await estoqueLoja("OFICINA_SELOS", "madeira_reforcada")).toBe(2);
   });
 });
 

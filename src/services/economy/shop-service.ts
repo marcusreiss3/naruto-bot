@@ -21,15 +21,16 @@ import { ECONOMY } from "../../config/balance.js";
 import { getItem } from "../../data/items.js";
 import { getRecipe, villageShopRecipes, type RecipeDef } from "../../data/recipes.js";
 import {
-  GENERAL_MARKET_MATERIALS,
   MUNICIPAL_SHOPS,
   SHOPS,
+  canRestockItem,
   contractsFor,
   getContract,
   getShop,
   ingredientsBoughtBy,
   productsSoldBy,
   referenceValue,
+  restockableItems,
   shopBuysItem,
   type ShopStatus,
   type ShopType,
@@ -40,6 +41,12 @@ import { grantCharacterRyo, spendCharacterRyo } from "./character-economy.js";
 import { EconomyError, runEconomy } from "./errors.js";
 import { recordLedger, type Tx } from "./ledger.js";
 import { activePopulation } from "./population.js";
+import { ensureShopPurchaseOffers } from "./shop-purchase-offers.js";
+import {
+  buyFromGeneralMarket,
+  ensureGeneralMarketOffers,
+  nextCaravanAt,
+} from "./general-market.js";
 import {
   dailyPurchaseBudget,
   generalMarketItemPrice,
@@ -224,12 +231,17 @@ export interface ShopProductLine {
   name: string;
   price: number;
   estoque: number;
+  // So' no Mercado Geral: quantidade com que a oferta do dia nasceu, para o
+  // painel poder mostrar `restante/inicial` (secao 7.2.1).
+  inicial?: number;
 }
 
 export interface ShopIngredientLine {
   itemId: string;
   name: string;
   price: number;
+  initialQty: number;
+  remainingQty: number;
 }
 
 export interface ShopView {
@@ -247,6 +259,8 @@ export interface ShopView {
   produtos: ShopProductLine[];
   ingredientes: ShopIngredientLine[];
   discordChannelId: string | null;
+  // So' no Mercado Geral: quando a proxima caravana troca as ofertas.
+  proximaCaravana: Date | null;
 }
 
 export async function shopView(
@@ -261,7 +275,10 @@ export async function shopView(
   const taxRate = village.taxRate;
 
   // Mercado Geral e' NPC: sem estoque municipal, sem orcamento, sem cofre.
+  // O que ele tem sao as quatro ofertas do dia (secao 7.2.1) — abrir o painel
+  // tambem recupera uma virada que aconteceu com o bot desligado.
   if (!def.municipal) {
+    const ofertas = await ensureGeneralMarketOffers(villageId, now);
     return {
       villageId,
       shopType,
@@ -274,24 +291,29 @@ export async function shopView(
       capacity: 0,
       stockUnits: 0,
       budget: null,
-      produtos: GENERAL_MARKET_MATERIALS.map((itemId) => ({
-        itemId,
-        name: getItem(itemId)?.name ?? itemId,
-        price: generalMarketItemPrice(itemId, taxRate) ?? 0,
-        // Estoque de NPC e' ilimitado; o painel mostra "—".
-        estoque: Number.POSITIVE_INFINITY,
+      produtos: ofertas.map((oferta) => ({
+        itemId: oferta.itemId,
+        name: oferta.name,
+        price: generalMarketItemPrice(oferta.itemId, taxRate) ?? 0,
+        estoque: oferta.remainingQty,
+        inicial: oferta.initialQty,
       })),
       ingredientes: [],
       discordChannelId: null,
+      proximaCaravana: nextCaravanAt(now),
     };
   }
 
   if (!shop) throw new EconomyError("Esta loja ainda não existe nesta vila.");
 
-  const estoques = await prisma.villageShopStock.findMany({
+  const [estoques, ofertasCompra] = await Promise.all([
+    prisma.villageShopStock.findMany({
     where: { shopId: shop.id, qty: { gt: 0 } },
-  });
+    }),
+    ensureShopPurchaseOffers(villageId, shopType, now),
+  ]);
   const porItem = new Map(estoques.map((row) => [row.itemId, row.qty]));
+  const ofertaPorItem = new Map(ofertasCompra.map((row) => [row.itemId, row]));
 
   return {
     villageId,
@@ -312,15 +334,21 @@ export async function shopView(
       estoque: porItem.get(row.itemId) ?? 0,
     })),
     ingredientes: ingredientsBoughtBy(shopType)
-      .map((row) => ({
+      .map((row) => {
+        const oferta = ofertaPorItem.get(row.itemId);
+        return {
         itemId: row.itemId,
         name: getItem(row.itemId)?.name ?? row.itemId,
         price: ingredientPrice(row.itemId, taxRate) ?? 0,
-      }))
+        initialQty: oferta?.initialQty ?? 0,
+        remainingQty: oferta?.remainingQty ?? 0,
+      };
+      })
       // Secao 7.4: preco 0 significa "a loja nao oferece compra", nunca
       // "pagamos 0 Ryo". Some da lista.
-      .filter((row) => row.price > 0),
+      .filter((row) => row.price > 0 && row.initialQty > 0),
     discordChannelId: shop.discordChannelId,
+    proximaCaravana: null,
   };
 }
 
@@ -356,12 +384,22 @@ export async function buyFromShop(
   itemId: string,
   qty: number,
   actorDiscordId: string,
+  now = new Date(),
 ) {
   if (!Number.isInteger(qty) || qty <= 0) {
     return { ok: false as const, error: "Informe uma quantidade inteira e positiva." };
   }
   const item = getItem(itemId);
   if (!item) return { ok: false as const, error: "Item desconhecido." };
+
+  // Mercado Geral tem regra propria: oferta do dia com quantidade finita e
+  // compartilhada, em vez de estoque municipal. Vive em general-market.ts.
+  if (shopType === "MERCADO_GERAL") {
+    const resultado = await buyFromGeneralMarket(charId, villageId, itemId, qty, now);
+    return resultado.ok
+      ? { ...resultado, estoqueRestante: resultado.restante }
+      : resultado;
+  }
 
   return runEconomy(
     async (): Promise<BuyOutcome> =>
@@ -375,28 +413,6 @@ export async function buyFromShop(
         }
         const total = precoUnitario * qty;
         const def = getShop(shopType);
-
-        // Mercado Geral: NPC externo, estoque ilimitado, sem cofre e sem loja.
-        if (def && !def.municipal) {
-          const saldo = await spendCharacterRyo(tx, {
-            charId,
-            amount: total,
-            type: "NPC_SALE",
-            reason: `Compra de ${qty}x ${item.name} no Mercado Geral`,
-            errorMessage: `Você precisa de ${total} Ryō para comprar ${qty}x ${item.name}.`,
-            meta: { shopType, itemId, qty, precoUnitario },
-          });
-          await addInventoryItem(tx, charId, itemId, qty);
-          return {
-            itemId,
-            name: item.name,
-            qty,
-            precoUnitario,
-            total,
-            saldo,
-            estoqueRestante: null,
-          };
-        }
 
         const shop = await requireShop(tx, villageId, shopType);
         assertShopOpen(shop);
@@ -461,6 +477,10 @@ export async function sellToShop(
   const pop = await activePopulation(villageId, now);
   const orcamentoTotal = dailyPurchaseBudget(pop.factor);
   const dayKey = dayKeyFor(now);
+  // Recupera a seleção do dia antes da transação. Dentro dela a cota é
+  // relida/decrementada condicionalmente, portanto este passo só cria estado;
+  // ele nunca autoriza uma venda sozinho.
+  await ensureShopPurchaseOffers(villageId, shopType, now);
 
   return runEconomy(
     async (): Promise<SellOutcome> =>
@@ -477,6 +497,23 @@ export async function sellToShop(
         const shop = await requireShop(tx, villageId, shopType);
         assertShopOpen(shop);
         await rolloverDailyBudget(tx, shop, dayKey);
+
+        const oferta = await tx.villageShopPurchaseOffer.findUnique({
+          where: { shopId_dayKey_itemId: { shopId: shop.id, dayKey, itemId } },
+        });
+        if (!oferta) {
+          throw new EconomyError(`${getShop(shopType)?.name ?? shopType} não está comprando ${item.name} hoje.`);
+        }
+        if (oferta.remainingQty <= 0) {
+          throw new EconomyError(`A cota de ${item.name} desta loja já foi preenchida hoje.`);
+        }
+        const cota = await tx.villageShopPurchaseOffer.updateMany({
+          where: { id: oferta.id, remainingQty: { gte: qty } },
+          data: { remainingQty: { decrement: qty } },
+        });
+        if (cota.count === 0) {
+          throw new EconomyError(`A loja só compra mais ${oferta.remainingQty}x ${item.name} hoje.`);
+        }
 
         // Orcamento diario: a condicao vai no WHERE, entao duas vendas
         // simultaneas nao estouram o teto do dia.
@@ -579,6 +616,15 @@ export async function restockShop(
   }
   const item = getItem(itemId);
   if (!item) return { ok: false as const, error: "Item desconhecido." };
+  // Secao 7.3.1: so' insumo de receita da loja ou item que ela vende. Sem esta
+  // trava da' para trancar kunai na Marcenaria — estoque que nao vira produto
+  // nem venda, e que so' sai pela retirada administrativa.
+  if (!canRestockItem(shopType, itemId)) {
+    return {
+      ok: false as const,
+      error: `${getShop(shopType)?.name ?? shopType} não usa nem vende ${item.name}.`,
+    };
+  }
 
   return runEconomy(async () => {
     const resultado = await prisma.$transaction(async (tx) => {
@@ -959,3 +1005,7 @@ export async function shopHistory(villageId: VillageId, shopType: ShopType, take
 }
 
 export const MUNICIPAL_SHOP_TYPES = MUNICIPAL_SHOPS.map((shop) => shop.type);
+
+// Reexportado para o painel do Kage filtrar o select de `Abastecer` pela MESMA
+// regra que o servico aplica — sem lista duplicada no handler.
+export { restockableItems };

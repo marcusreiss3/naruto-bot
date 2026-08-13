@@ -1,8 +1,6 @@
 import {
   ActionRowBuilder,
-  ButtonBuilder,
   ButtonStyle,
-  EmbedBuilder,
   ModalBuilder,
   StringSelectMenuBuilder,
   TextInputBuilder,
@@ -11,6 +9,26 @@ import {
   type ButtonInteraction,
   type ModalSubmitInteraction,
 } from "discord.js";
+import {
+  button,
+  buttonRow,
+  divider,
+  economyContainer,
+  factsBlock,
+  feedbackBlock,
+  itemLabel,
+  listBlock,
+  noticeBlock,
+  ryo,
+  selectRow,
+  text,
+  titleBlock,
+  v2Edit,
+  v2Public,
+  type ContainerChild,
+  type TopLevel,
+} from "../ui/economy-components-v2.js";
+import { emoji, shopEmoji } from "../ui/economy-emojis.js";
 import { ECONOMY } from "../config/balance.js";
 import { prisma } from "../db/client.js";
 import { getItem } from "../data/items.js";
@@ -25,6 +43,7 @@ import {
   findShop,
   recipesForShop,
   restockShop,
+  restockableItems,
   sealScrollsLeft,
   shopCraft,
   shopHistory,
@@ -54,10 +73,8 @@ export interface ComercioViewer {
   podeKage: boolean;
 }
 
-export interface ComercioPainel {
-  embeds: EmbedBuilder[];
-  components: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[];
-}
+// Painel V2: árvore de componentes de topo, sem embeds nem content.
+export type ComercioPainel = TopLevel[];
 
 const cid = (...partes: (string | undefined)[]) => ["vila", "com", ...partes.filter(Boolean)].join(":");
 
@@ -78,7 +95,7 @@ function requireShopType(valor: string | undefined): ShopType {
 
 export async function renderComercio(
   viewer: ComercioViewer,
-  navegacao: ActionRowBuilder<ButtonBuilder>[],
+  navegacao: ContainerChild[],
   aviso?: string,
 ): Promise<ComercioPainel> {
   const [menu, preview] = await Promise.all([
@@ -86,28 +103,35 @@ export async function renderComercio(
     ichirakuPreview(viewer.villageId),
   ]);
 
-  const embed = new EmbedBuilder()
-    .setColor(0xc9a227)
-    .setTitle(`🏪 Comércio — ${VILLAGE_NAMES[viewer.villageId]}`)
-    .setDescription(
-      menu
-        .map((linha) => {
-          const canal = linha.discordChannelId ? ` <#${linha.discordChannelId}>` : "";
-          return `${linha.def.emoji} **${linha.def.name}** — \`${linha.status}\`${canal}`;
-        })
-        .join("\n"),
-    )
-    .setFooter({
-      text: `Obras: ${preview.vagasUsadas}/${preview.vagasTotais} • população ${preview.ativos} (fator ${preview.factor.toFixed(2)})`,
-    });
+  const filhos: ContainerChild[] = [
+    titleBlock("shop_MERCADO_GERAL", `Comércio de ${VILLAGE_NAMES[viewer.villageId]}`),
+  ];
+  if (aviso) filhos.push(feedbackBlock(aviso));
 
-  if (aviso) embed.addFields({ name: "Aviso", value: aviso });
-
-  const componentes: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] = [...navegacao];
+  filhos.push(
+    factsBlock([
+      { label: "Obras", value: `${preview.vagasUsadas}/${preview.vagasTotais} vagas` },
+      {
+        label: "População",
+        value: `${preview.ativos} ativos (fator ${preview.factor.toFixed(2)})`,
+      },
+    ]),
+    divider(),
+    listBlock(
+      "Estabelecimentos",
+      menu.map((linha) => {
+        const canal = linha.discordChannelId ? ` <#${linha.discordChannelId}>` : "";
+        return `${shopEmoji(linha.def.type)} **${linha.def.name}** — \`${linha.status}\`${canal}`;
+      }),
+      "Nenhuma loja configurada.",
+    ),
+    divider(),
+    ...navegacao,
+  );
 
   if (viewer.podeKage) {
-    componentes.push(
-      new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
+    filhos.push(
+      selectRow(
         new StringSelectMenuBuilder()
           .setCustomId(cid("pick"))
           .setPlaceholder("Administrar uma loja")
@@ -115,7 +139,7 @@ export async function renderComercio(
             MUNICIPAL_SHOPS.map((def) => ({
               label: def.name.slice(0, 100),
               value: def.type,
-              emoji: def.emoji,
+              emoji: shopEmoji(def.type),
               description:
                 menu.find((linha) => linha.def.type === def.type)?.status.toLowerCase() ?? "",
             })),
@@ -126,19 +150,20 @@ export async function renderComercio(
     // Construir Ichiraku so' aparece enquanto ele estiver bloqueado. Empório,
     // Marcenaria, Fundição e Oficina nunca entram nessa tela: ja existem.
     if (preview.status === "LOCKED") {
-      componentes.push(
-        new ActionRowBuilder<ButtonBuilder>().addComponents(
-          new ButtonBuilder()
-            .setCustomId(cid("obra"))
-            .setLabel("Construir Ichiraku")
-            .setEmoji("🏗️")
-            .setStyle(ButtonStyle.Primary),
+      filhos.push(
+        buttonRow(
+          button({
+            id: cid("obra"),
+            label: "Construir Ichiraku",
+            style: ButtonStyle.Primary,
+            emojiKey: "obras",
+          }),
         ),
       );
     }
   }
 
-  return { embeds: [embed], components: componentes };
+  return [economyContainer("mercado", filhos)];
 }
 
 // ---------------- Tela de uma loja ----------------
@@ -160,16 +185,6 @@ async function renderLoja(
     Promise.resolve(recipesForShop(shopType)),
   ]);
 
-  const embed = new EmbedBuilder()
-    .setColor(0x8b5a2b)
-    .setTitle(`⚙️ Administração — ${def.name}`)
-    .setDescription(
-      `Estoque da loja: **${view.stockUnits}/${view.capacity}** • situação \`${view.status}\`\n` +
-        `Orçamento de compra hoje: **${view.budget?.restante ?? 0}/${view.budget?.total ?? 0} Ryō** • imposto ${(view.taxRate * 100).toFixed(0)}%`,
-    );
-
-  if (recibo) embed.addFields({ name: "Recibo", value: recibo.slice(0, 1024) });
-
   const estoqueLoja = view.shopId
     ? await prisma.villageShopStock.findMany({
         where: { shopId: view.shopId, qty: { gt: 0 } },
@@ -177,87 +192,98 @@ async function renderLoja(
         take: 25,
       })
     : [];
-  embed.addFields({
-    name: "📦 Estoque da loja",
-    value: estoqueLoja.length
-      ? estoqueLoja.map((row) => `${getItem(row.itemId)?.name ?? row.name} ×${row.qty}`).join(" • ").slice(0, 1024)
-      : "_Vazio._",
-  });
-  embed.addFields({
-    name: "🏛️ Estoque central",
-    value: central.length
-      ? central.map((row) => `${getItem(row.itemId)?.name ?? row.name} ×${row.qty}`).join(" • ").slice(0, 1024)
-      : "_Vazio._",
-  });
+
+  const filhos: ContainerChild[] = [
+    titleBlock("producao", `Administração — ${def.name}`, `situação \`${view.status}\``),
+  ];
+  if (recibo) filhos.push(feedbackBlock(recibo));
+
+  filhos.push(
+    factsBlock([
+      { label: "Estoque da loja", value: `${view.stockUnits}/${view.capacity}` },
+      {
+        label: "Orçamento de compra hoje",
+        value: `${view.budget?.restante ?? 0}/${view.budget?.total ?? 0} Ryō`,
+      },
+      { label: "Imposto", value: `${(view.taxRate * 100).toFixed(0)}%` },
+    ]),
+    divider(),
+    listBlock(
+      `${emoji("estoque")} Varejo desta loja`,
+      estoqueLoja.map((row) =>
+        itemLabel(row.itemId, getItem(row.itemId)?.name ?? row.name, row.qty),
+      ),
+      "Vazio — nada à venda para o jogador.",
+    ),
+    listBlock(
+      `${emoji("vila")} Central disponível`,
+      central.map((row) => itemLabel(row.itemId, getItem(row.itemId)?.name ?? row.name, row.qty)),
+      "Vazio.",
+    ),
+  );
 
   if (receitas.length) {
-    // O custo do embed e' CALCULADO pelo catalogo e pelo preco de compra atual;
+    // O custo do painel e' CALCULADO pelo catalogo e pelo preco de compra atual;
     // nunca um numero escrito a mao (secao 7.4).
     const linhas = receitas.slice(0, 6).map((recipe) => {
       const margem = estimateMargin(recipe, view.taxRate);
       const extra = margem
         ? ` — varejo ${margem.varejo}, custo estimado ${margem.custo}, margem ${margem.margem}`
         : "";
-      return `• ${describeRecipe(recipe)}${extra}`;
+      return `${describeRecipe(recipe)}${extra}`;
     });
     if (shopType === "OFICINA_SELOS") {
       const selos = await sealScrollsLeft(viewer.villageId);
       linhas.push(`_Pergaminho de Arsenal: ${selos.feitos}/${selos.limite} nesta competência._`);
     }
-    embed.addFields({ name: "🔧 Produção", value: linhas.join("\n").slice(0, 1024) });
+    filhos.push(divider(), listBlock(`${emoji("producao")} Produção`, linhas, "—"));
   }
 
   if (contratos.length) {
-    embed.addFields({
-      name: "🤝 Contratos de empreendedor",
-      value: contratos
-        .map(
+    filhos.push(
+      divider(),
+      listBlock(
+        "🤝 Contratos de empreendedor",
+        contratos.map(
           (c) =>
-            `**${c.lotQty}x ${c.name}** → ${c.valor} Ryō _(em estoque: ${c.emEstoque})_`,
-        )
-        .join("\n")
-        .slice(0, 1024),
-    });
+            `**${c.lotQty}x ${c.name}** → ${ryo(`${c.valor} Ryō`)} _(em estoque: ${c.emEstoque})_`,
+        ),
+        "—",
+      ),
+    );
   }
 
-  const linha1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder()
-      .setCustomId(cid("abastecer", shopType))
-      .setLabel("Abastecer")
-      .setEmoji("📥")
-      .setStyle(ButtonStyle.Success),
-    new ButtonBuilder()
-      .setCustomId(cid("produzir", shopType))
-      .setLabel("Produzir")
-      .setEmoji("🔧")
-      .setStyle(ButtonStyle.Primary)
-      .setDisabled(receitas.length === 0),
-    new ButtonBuilder()
-      .setCustomId(cid("contrato", shopType))
-      .setLabel("Contrato empreendedor")
-      .setEmoji("🤝")
-      .setStyle(ButtonStyle.Primary)
-      .setDisabled(contratos.length === 0),
-    new ButtonBuilder()
-      .setCustomId(cid("retirar", shopType))
-      .setLabel("Retirar produto")
-      .setEmoji("📤")
-      .setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder()
-      .setCustomId(cid("hist", shopType))
-      .setLabel("Histórico")
-      .setEmoji("📊")
-      .setStyle(ButtonStyle.Secondary),
-  );
-  const linha2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder()
-      .setCustomId(cid("menu"))
-      .setLabel("Voltar ao comércio")
-      .setEmoji("↩️")
-      .setStyle(ButtonStyle.Secondary),
+  // A etapa 08 proíbe botão desabilitado sem explicação: quando `Produzir` ou
+  // `Contrato` não existem para esta loja, o motivo vai em texto e o botão some.
+  const acoes = [
+    button({ id: cid("abastecer", shopType), label: "Abastecer", style: ButtonStyle.Success }),
+  ];
+  if (receitas.length) {
+    acoes.push(button({ id: cid("produzir", shopType), label: "Produzir", style: ButtonStyle.Primary }));
+  }
+  if (contratos.length) {
+    acoes.push(
+      button({ id: cid("contrato", shopType), label: "Fechar contrato", style: ButtonStyle.Primary }),
+    );
+  }
+  acoes.push(
+    button({ id: cid("retirar", shopType), label: "Retirar produto" }),
+    button({ id: cid("hist", shopType), label: "Ver histórico" }),
   );
 
-  return { embeds: [embed], components: [linha1, linha2] };
+  filhos.push(divider());
+  if (!receitas.length) {
+    filhos.push(text(`-# ${def.name} não tem estação de produção: ela só compra, vende e estoca.`));
+  }
+  if (!contratos.length) {
+    filhos.push(text("-# Sem contrato de atacado disponível para esta loja."));
+  }
+  filhos.push(
+    buttonRow(...acoes),
+    buttonRow(button({ id: cid("menu"), label: "Voltar ao comércio" })),
+  );
+
+  return [economyContainer("estoque", filhos)];
 }
 
 // ---------------- Botões ----------------
@@ -276,13 +302,13 @@ export async function handleComercioButton(
 
   if (acao === "menu") {
     await interaction.deferUpdate();
-    await interaction.editReply(await renderAba());
+    await interaction.editReply(v2Edit(await renderAba()));
     return true;
   }
 
   if (acao === "obra") {
     await interaction.deferUpdate();
-    await interaction.editReply(await renderObra(viewer));
+    await interaction.editReply(v2Edit(await renderObra(viewer)));
     return true;
   }
 
@@ -296,13 +322,13 @@ export async function handleComercioButton(
       await anunciarObra(interaction, viewer.villageId, r.obra.finishesAt, r.custo.ryo);
     }
     await interaction.editReply(
-      await renderAba(
+      v2Edit(await renderAba(
         r.ok
           ? `🏗️ Obra do Ichiraku iniciada. Custou **${r.custo.ryo} Ryō** e ` +
             `${r.custo.itens.map((i) => `${i.qty} ${i.name}`).join(", ")}. ` +
             `Conclusão <t:${Math.floor(r.obra.finishesAt.getTime() / 1000)}:R>.`
           : `❌ ${r.error}`,
-      ),
+      )),
     );
     return true;
   }
@@ -323,26 +349,26 @@ export async function handleComercioButton(
   }
   if (acao === "contrato") {
     await interaction.deferUpdate();
-    await interaction.editReply(await renderContratos(viewer, shopType));
+    await interaction.editReply(v2Edit(await renderContratos(viewer, shopType)));
     return true;
   }
   if (acao === "contratoOk") {
     await interaction.deferUpdate();
     const r = await acceptWholesaleContract(viewer.villageId, partes[4] ?? "", interaction.user.id);
     await interaction.editReply(
-      await renderLoja(
+      v2Edit(await renderLoja(
         viewer,
         shopType,
         r.ok
           ? `🤝 Vendeu **${r.lotQty}x ${r.name}** ao empreendedor por **${r.valor} Ryō**. Cofre: ${r.cofre}.`
           : `❌ ${r.error}`,
-      ),
+      )),
     );
     return true;
   }
   if (acao === "hist") {
     await interaction.deferUpdate();
-    await interaction.editReply(await renderHistorico(viewer, shopType));
+    await interaction.editReply(v2Edit(await renderHistorico(viewer, shopType)));
     return true;
   }
   // Origem da producao: estoque da loja ou estoque central (secao 7.6, passo 4).
@@ -357,7 +383,7 @@ export async function handleComercioButton(
   }
 
   await interaction.deferUpdate();
-  await interaction.editReply(await renderLoja(viewer, shopType));
+  await interaction.editReply(v2Edit(await renderLoja(viewer, shopType)));
   return true;
 }
 
@@ -373,22 +399,26 @@ async function anunciarObra(
     .fetch(VILLAGE_ANNOUNCE_CHANNELS[villageId])
     .catch(() => null);
   if (!canal?.isTextBased() || !("send" in canal)) return;
+  // Anúncio PÚBLICO de auditoria: continua público (a etapa 08 proíbe trocá-lo
+  // por painel efêmero), só muda a apresentação. Sem flag Ephemeral.
   await canal
-    .send({
-      embeds: [
-        new EmbedBuilder()
-          .setColor(0x4f7fc9)
-          .setTitle(`🏗️ Obra iniciada — ${VILLAGE_NAMES[villageId]}`)
-          .setDescription(
-            `O Ichiraku de ${VILLAGE_NAMES[villageId]} começou a ser construído.\n` +
-              `Investimento da vila: **${custoRyo} Ryō** e materiais do estoque central.`,
-          )
-          .addFields({
-            name: "Conclusão prevista",
-            value: `<t:${Math.floor(conclusao.getTime() / 1000)}:f> (<t:${Math.floor(conclusao.getTime() / 1000)}:R>)`,
-          }),
-      ],
-    })
+    .send(
+      v2Public([
+        economyContainer("obras", [
+          titleBlock("obras", `Obra iniciada — ${VILLAGE_NAMES[villageId]}`),
+          text(`O Ichiraku de ${VILLAGE_NAMES[villageId]} começou a ser construído.`),
+          divider(),
+          factsBlock([
+            { label: "Investimento da vila", value: ryo(`${custoRyo} Ryō`) },
+            {
+              label: "Conclusão prevista",
+              value: `<t:${Math.floor(conclusao.getTime() / 1000)}:f> (<t:${Math.floor(conclusao.getTime() / 1000)}:R>)`,
+            },
+          ]),
+          text("-# Materiais saíram do estoque central."),
+        ]),
+      ]),
+    )
     .catch(() => null);
 }
 
@@ -398,124 +428,110 @@ async function renderObra(viewer: ComercioViewer): Promise<ComercioPainel> {
   const cofreOk = preview.cofreDisponivel >= preview.custo.ryo;
   const vagaOk = preview.vagasUsadas < preview.vagasTotais;
 
-  const embed = new EmbedBuilder()
-    .setColor(0x4f7fc9)
-    .setTitle("🏗️ Confirmar construção do Ichiraku?")
-    .setDescription(
-      `Custo: **${preview.custo.ryo} Ryō**, ` +
-        preview.custo.itens.map((i) => `${i.qty} ${i.name}`).join(", ") +
-        `\nFator de população congelado: **${preview.factor.toFixed(2)}** (${preview.ativos} ativos)` +
-        `\nConclusão: <t:${Math.floor(preview.conclusaoPrevista.getTime() / 1000)}:f>`,
-    )
-    .addFields(
-      {
-        name: "Cofre disponível",
-        value: `${preview.cofreDisponivel} Ryō ${cofreOk ? "✅" : "❌"}`,
-        inline: true,
-      },
-      {
-        name: "Vagas de obra",
-        value: `${preview.vagasUsadas}/${preview.vagasTotais} ${vagaOk ? "✅" : "❌"}`,
-        inline: true,
-      },
-      {
-        name: "Estoque central",
-        value: preview.estoque
-          .map((row) => `${row.name}: ${row.tem}/${row.precisa} ${row.tem >= row.precisa ? "✅" : "❌"}`)
-          .join("\n"),
-      },
-    )
-    .setFooter({ text: "O custo e o fator são congelados no instante da confirmação." });
+  const ok = (cumpre: boolean) => (cumpre ? emoji("sucesso") : emoji("erro"));
+  const bloqueado = !cofreOk || !vagaOk || faltando.length > 0 || preview.status !== "LOCKED";
 
-  return {
-    embeds: [embed],
-    components: [
-      new ActionRowBuilder<ButtonBuilder>().addComponents(
-        new ButtonBuilder()
-          .setCustomId(cid("obraOk"))
-          .setLabel("Confirmar obra")
-          .setEmoji("✅")
-          .setStyle(ButtonStyle.Success)
-          .setDisabled(!cofreOk || !vagaOk || faltando.length > 0 || preview.status !== "LOCKED"),
-        new ButtonBuilder()
-          .setCustomId(cid("menu"))
-          .setLabel("Cancelar")
-          .setStyle(ButtonStyle.Secondary),
+  return [
+    economyContainer(bloqueado ? "aviso" : "obras", [
+      titleBlock("shop_ICHIRAKU", "Confirmar construção do Ichiraku?"),
+      factsBlock([
+        { label: "Custo", value: ryo(`${preview.custo.ryo} Ryō`) },
+        {
+          label: "Fator congelado",
+          value: `${preview.factor.toFixed(2)} (${preview.ativos} ativos)`,
+        },
+      ]),
+      text(
+        `**Materiais:** ${preview.custo.itens.map((i) => `${i.qty} ${i.name}`).join(", ")}\n` +
+          `**Conclusão:** <t:${Math.floor(preview.conclusaoPrevista.getTime() / 1000)}:f>`,
       ),
-    ],
-  };
+      divider(),
+      listBlock(
+        "Requisitos",
+        [
+          `${ok(cofreOk)} Cofre disponível: ${preview.cofreDisponivel}/${preview.custo.ryo} Ryō`,
+          `${ok(vagaOk)} Vagas de obra: ${preview.vagasUsadas}/${preview.vagasTotais}`,
+          ...preview.estoque.map(
+            (row) => `${ok(row.tem >= row.precisa)} ${row.name}: ${row.tem}/${row.precisa}`,
+          ),
+        ],
+        "—",
+      ),
+      divider(),
+      buttonRow(
+        button({
+          id: cid("obraOk"),
+          label: "Confirmar obra",
+          style: ButtonStyle.Success,
+          disabled: bloqueado,
+        }),
+        button({ id: cid("menu"), label: "Cancelar" }),
+      ),
+      text("-# O custo e o fator são congelados no instante da confirmação."),
+    ]),
+  ];
 }
 
 async function renderContratos(viewer: ComercioViewer, shopType: ShopType): Promise<ComercioPainel> {
   const ofertas = await contractOffers(viewer.villageId, shopType);
-  const embed = new EmbedBuilder()
-    .setColor(0x2f7f4f)
-    .setTitle(`🤝 Contratos de empreendedor — ${getShop(shopType)?.name ?? shopType}`)
-    .setDescription(
-      ofertas.length
-        ? ofertas
-            .map(
-              (c) =>
-                `**${c.lotQty}x ${c.name}** → **${c.valor} Ryō** para o cofre\n` +
-                `Em estoque: ${c.emEstoque}${c.emEstoque >= c.lotQty ? " ✅" : " ❌ lote incompleto"}`,
-            )
-            .join("\n\n")
-        : "_Esta loja não tem contrato disponível._",
-    )
-    .setFooter({
-      text: `Máximo de ${ECONOMY.wholesaleContractsPerDay} contrato por loja por dia. É a única venda que credita o cofre.`,
-    });
 
-  const botoes = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    ...ofertas.slice(0, 4).map((c) =>
-      new ButtonBuilder()
-        .setCustomId(cid("contratoOk", shopType, c.id))
-        .setLabel(`Vender ${c.lotQty}x ${c.name}`.slice(0, 80))
-        .setStyle(ButtonStyle.Success)
-        .setDisabled(c.emEstoque < c.lotQty),
-    ),
-    new ButtonBuilder()
-      .setCustomId(cid("menu"))
-      .setLabel("Voltar")
-      .setStyle(ButtonStyle.Secondary),
-  );
-
-  return { embeds: [embed], components: [botoes] };
+  return [
+    economyContainer("cofre", [
+      titleBlock("cofre", `Contratos de empreendedor — ${getShop(shopType)?.name ?? shopType}`),
+      divider(),
+      listBlock(
+        null,
+        ofertas.map(
+          (c) =>
+            `**${c.lotQty}x ${c.name}** → ${ryo(`${c.valor} Ryō`)} para o cofre\n` +
+            `-# Em estoque: ${c.emEstoque}${c.emEstoque >= c.lotQty ? "" : " • lote incompleto"}`,
+        ),
+        "Esta loja não tem contrato disponível.",
+      ),
+      divider(),
+      buttonRow(
+        ...ofertas
+          .slice(0, 4)
+          .map((c) =>
+            button({
+              id: cid("contratoOk", shopType, c.id),
+              label: `Vender ${c.lotQty}x ${c.name}`.slice(0, 80),
+              style: ButtonStyle.Success,
+              disabled: c.emEstoque < c.lotQty,
+            }),
+          ),
+        button({ id: cid("menu"), label: "Voltar" }),
+      ),
+      text(
+        `-# Máximo de ${ECONOMY.wholesaleContractsPerDay} contrato por loja por dia. É a única venda que credita o cofre.`,
+      ),
+    ]),
+  ];
 }
 
 async function renderHistorico(viewer: ComercioViewer, shopType: ShopType): Promise<ComercioPainel> {
   const linhas = await shopHistory(viewer.villageId, shopType, 10);
-  const embed = new EmbedBuilder()
-    .setColor(0x6a5acd)
-    .setTitle(`📊 Histórico — ${getShop(shopType)?.name ?? shopType}`)
-    .setDescription(
-      linhas.length
-        ? linhas
-            .map((linha) => {
-              const ryo = linha.ryoDelta !== 0 ? ` ${linha.ryoDelta > 0 ? "+" : ""}${linha.ryoDelta} Ryō` : "";
-              const item = linha.itemId
-                ? ` ${getItem(linha.itemId)?.name ?? linha.itemId} ×${linha.itemQty}`
-                : "";
-              const quem = linha.actorDiscordId ? ` — <@${linha.actorDiscordId}>` : "";
-              return `• \`${linha.type}\`${ryo}${item}${quem}\n  ${linha.reason || "_sem motivo_"}`;
-            })
-            .join("\n")
-            .slice(0, 3900)
-        : "_Sem movimento nesta loja._",
-    )
-    .setFooter({ text: "Últimos 10 lançamentos. O livro-caixa é append-only." });
-
-  return {
-    embeds: [embed],
-    components: [
-      new ActionRowBuilder<ButtonBuilder>().addComponents(
-        new ButtonBuilder()
-          .setCustomId(cid("menu"))
-          .setLabel("Voltar")
-          .setStyle(ButtonStyle.Secondary),
+  return [
+    economyContainer("mercado", [
+      titleBlock("relatorio", `Histórico — ${getShop(shopType)?.name ?? shopType}`),
+      divider(),
+      listBlock(
+        null,
+        linhas.map((linha) => {
+          const delta = linha.ryoDelta !== 0 ? ` ${linha.ryoDelta > 0 ? "+" : ""}${linha.ryoDelta} Ryō` : "";
+          const item = linha.itemId
+            ? ` ${itemLabel(linha.itemId, getItem(linha.itemId)?.name ?? linha.itemId, linha.itemQty ?? undefined)}`
+            : "";
+          const quem = linha.actorDiscordId ? ` — <@${linha.actorDiscordId}>` : "";
+          return `\`${linha.type}\`${delta}${item}${quem}\n-# ${linha.reason || "sem motivo"}`;
+        }),
+        "Sem movimento nesta loja.",
       ),
-    ],
-  };
+      divider(),
+      buttonRow(button({ id: cid("menu"), label: "Voltar" })),
+      text("-# Últimos 10 lançamentos. O livro-caixa é append-only."),
+    ]),
+  ];
 }
 
 // ---------------- Selects ----------------
@@ -525,35 +541,48 @@ async function abrirSelectAbastecer(
   viewer: ComercioViewer,
   shopType: ShopType,
 ): Promise<void> {
-  const central = await prisma.villageStock.findMany({
-    where: { villageId: viewer.villageId, qty: { gt: 0 } },
-    orderBy: { itemId: "asc" },
-    take: 25,
-  });
+  // Mesmo filtro que `restockShop` aplica no serviço: insumo de receita desta
+  // loja ou item que ela vende (seção 7.3.1). Sem isso o Kage consegue trancar
+  // um item que a loja nunca vai usar nem vender.
+  const permitidos = new Set(restockableItems(shopType));
+  const central = (
+    await prisma.villageStock.findMany({
+      where: { villageId: viewer.villageId, qty: { gt: 0 } },
+      orderBy: { itemId: "asc" },
+    })
+  )
+    .filter((row) => permitidos.has(row.itemId))
+    .slice(0, 25);
   await interaction.deferUpdate();
   if (!central.length) {
-    await interaction.editReply(await renderLoja(viewer, shopType, "O estoque central está vazio."));
+    await interaction.editReply(
+      v2Edit(await renderLoja(
+        viewer,
+        shopType,
+        "O estoque central não tem nada que esta loja use ou venda.",
+      )),
+    );
     return;
   }
   const painel = await renderLoja(viewer, shopType);
-  painel.components = [
-    new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
-      new StringSelectMenuBuilder()
-        .setCustomId(cid("abastecerItem", shopType))
-        .setPlaceholder("O que enviar do estoque central?")
-        .addOptions(
-          central.map((row) => ({
+  painel.push(
+    economyContainer("estoque", [
+      titleBlock("estoque", "Abastecer a loja"),
+      text("Escolha o recurso que sairá do estoque central."),
+      selectRow(
+        new StringSelectMenuBuilder()
+          .setCustomId(cid("abastecerItem", shopType))
+          .setPlaceholder("O que enviar do estoque central?")
+          .addOptions(central.map((row) => ({
             label: (getItem(row.itemId)?.name ?? row.name).slice(0, 100),
             value: row.itemId,
             description: `No central: ${row.qty}`,
-          })),
-        ),
-    ),
-    new ActionRowBuilder<ButtonBuilder>().addComponents(
-      new ButtonBuilder().setCustomId(cid("menu")).setLabel("Voltar").setStyle(ButtonStyle.Secondary),
-    ),
-  ];
-  await interaction.editReply(painel);
+          }))),
+      ),
+      buttonRow(button({ id: cid("menu"), label: "Voltar" })),
+    ]),
+  );
+  await interaction.editReply(v2Edit(painel));
 }
 
 async function abrirSelectRetirada(
@@ -571,28 +600,28 @@ async function abrirSelectRetirada(
     : [];
   await interaction.deferUpdate();
   if (!estoque.length) {
-    await interaction.editReply(await renderLoja(viewer, shopType, "A loja está sem estoque."));
+    await interaction.editReply(v2Edit(await renderLoja(viewer, shopType, "A loja está sem estoque.")));
     return;
   }
   const painel = await renderLoja(viewer, shopType);
-  painel.components = [
-    new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
-      new StringSelectMenuBuilder()
-        .setCustomId(cid("retirarItem", shopType))
-        .setPlaceholder("O que devolver ao estoque central?")
-        .addOptions(
-          estoque.map((row) => ({
+  painel.push(
+    economyContainer("estoque", [
+      titleBlock("estoque", "Retirar produto"),
+      text("Escolha o produto que voltará ao estoque central. Será preciso registrar um motivo."),
+      selectRow(
+        new StringSelectMenuBuilder()
+          .setCustomId(cid("retirarItem", shopType))
+          .setPlaceholder("O que devolver ao estoque central?")
+          .addOptions(estoque.map((row) => ({
             label: (getItem(row.itemId)?.name ?? row.name).slice(0, 100),
             value: row.itemId,
             description: `Na loja: ${row.qty}`,
-          })),
-        ),
-    ),
-    new ActionRowBuilder<ButtonBuilder>().addComponents(
-      new ButtonBuilder().setCustomId(cid("menu")).setLabel("Voltar").setStyle(ButtonStyle.Secondary),
-    ),
-  ];
-  await interaction.editReply(painel);
+          }))),
+      ),
+      buttonRow(button({ id: cid("menu"), label: "Voltar" })),
+    ]),
+  );
+  await interaction.editReply(v2Edit(painel));
 }
 
 async function abrirSelectProducao(
@@ -603,41 +632,38 @@ async function abrirSelectProducao(
   const receitas = recipesForShop(shopType);
   await interaction.deferUpdate();
   if (!receitas.length) {
-    await interaction.editReply(await renderLoja(viewer, shopType, "Esta loja não produz nada."));
+    await interaction.editReply(v2Edit(await renderLoja(viewer, shopType, "Esta loja não produz nada.")));
     return;
   }
   const view = await shopView(viewer.villageId, shopType);
   const selos = shopType === "OFICINA_SELOS" ? await sealScrollsLeft(viewer.villageId) : null;
 
   const painel = await renderLoja(viewer, shopType);
-  painel.components = [
-    new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
-      new StringSelectMenuBuilder()
-        .setCustomId(cid("produzirItem", shopType))
-        .setPlaceholder("O que produzir?")
-        .addOptions(
-          receitas.slice(0, 25).map((recipe) => {
+  painel.push(
+    economyContainer("obras", [
+      titleBlock("producao", "Escolher produção"),
+      text("Escolha a receita. Depois você decide de qual estoque vêm os insumos."),
+      selectRow(
+        new StringSelectMenuBuilder()
+          .setCustomId(cid("produzirItem", shopType))
+          .setPlaceholder("O que produzir?")
+          .addOptions(receitas.slice(0, 25).map((recipe) => {
             const margem = estimateMargin(recipe, view.taxRate);
-            const sufixo =
-              selos && recipe.outputItemId === "pergaminho_arsenal"
-                ? ` (${selos.feitos}/${selos.limite} nesta semana)`
-                : "";
+            const sufixo = selos && recipe.outputItemId === "pergaminho_arsenal"
+              ? ` (${selos.feitos}/${selos.limite} nesta semana)` : "";
             return {
               label: `${recipe.name}${sufixo}`.slice(0, 100),
               value: recipe.id,
               description: (margem
                 ? `varejo ${margem.varejo} • custo estimado ${margem.custo}`
-                : recipe.ingredients.length + " insumo(s)"
-              ).slice(0, 100),
+                : recipe.ingredients.length + " insumo(s)").slice(0, 100),
             };
-          }),
-        ),
-    ),
-    new ActionRowBuilder<ButtonBuilder>().addComponents(
-      new ButtonBuilder().setCustomId(cid("menu")).setLabel("Voltar").setStyle(ButtonStyle.Secondary),
-    ),
-  ];
-  await interaction.editReply(painel);
+          })),
+      ),
+      buttonRow(button({ id: cid("menu"), label: "Voltar" })),
+    ]),
+  );
+  await interaction.editReply(v2Edit(painel));
 }
 
 export async function handleComercioSelect(
@@ -653,7 +679,7 @@ export async function handleComercioSelect(
 
   if (acao === "pick") {
     await interaction.deferUpdate();
-    await interaction.editReply(await renderLoja(viewer, requireShopType(escolha)));
+    await interaction.editReply(v2Edit(await renderLoja(viewer, requireShopType(escolha))));
     return true;
   }
 
@@ -695,12 +721,12 @@ export async function handleComercioSelect(
 
   if (acao === "produzirItem") {
     await interaction.deferUpdate();
-    await interaction.editReply(await renderEscolhaOrigem(viewer, shopType, escolha));
+    await interaction.editReply(v2Edit(await renderEscolhaOrigem(viewer, shopType, escolha)));
     return true;
   }
 
   await interaction.deferUpdate();
-  await interaction.editReply(await renderAba());
+  await interaction.editReply(v2Edit(await renderAba()));
   return true;
 }
 
@@ -714,51 +740,31 @@ async function renderEscolhaOrigem(
   const view = await shopView(viewer.villageId, shopType);
   const margem = estimateMargin(recipe, view.taxRate);
 
-  const embed = new EmbedBuilder()
-    .setColor(0x8b5a2b)
-    .setTitle(`🔧 Produzir ${recipe.name}`)
-    .setDescription(describeRecipe(recipe))
-    .setFooter({ text: "De onde saem os insumos? O produto pronto entra sempre no estoque da loja." });
-
+  const filhos: ContainerChild[] = [
+    titleBlock("producao", `Produzir ${recipe.name}`),
+    text(describeRecipe(recipe)),
+    text("-# O produto pronto entra sempre no estoque da loja."),
+  ];
   if (margem) {
-    embed.addFields({
-      name: "Estimativa",
-      value:
-        `Varejo atual: **${margem.varejo} Ryō** • custo estimado dos insumos: **${margem.custo} Ryō** • margem **${margem.margem}**` +
-        (margem.semPreco.length
-          ? `\n_Sem preço de compra: ${margem.semPreco.map((id) => getItem(id)?.name ?? id).join(", ")} — o custo real é maior._`
-          : ""),
-    });
+    filhos.push(divider(), factsBlock([
+      { label: "Varejo atual", value: ryo(`${margem.varejo} Ryō`) },
+      { label: "Custo estimado", value: ryo(`${margem.custo} Ryō`) },
+      { label: "Margem", value: ryo(`${margem.margem} Ryō`) },
+    ]));
+    if (margem.semPreco.length) {
+      filhos.push(noticeBlock("aviso", `Custo real maior: sem preço de compra para ${margem.semPreco.map((id) => getItem(id)?.name ?? id).join(", ")}.`));
+    }
   }
   if (recipe.outputItemId === "pergaminho_arsenal") {
     const selos = await sealScrollsLeft(viewer.villageId);
-    embed.addFields({
-      name: "Escassez semanal",
-      value: `Pergaminho de Arsenal: **${selos.feitos}/${selos.limite}** nesta competência. O contador reseta no corte de domingo 22:00.`,
-    });
+    filhos.push(noticeBlock("aviso", `Pergaminho de Arsenal: ${selos.feitos}/${selos.limite} nesta competência; reseta domingo às 22:00.`));
   }
-
-  return {
-    embeds: [embed],
-    components: [
-      new ActionRowBuilder<ButtonBuilder>().addComponents(
-        new ButtonBuilder()
-          .setCustomId(cid("prodLoja", shopType, recipeId))
-          .setLabel("Usar estoque da loja")
-          .setEmoji("🏪")
-          .setStyle(ButtonStyle.Primary),
-        new ButtonBuilder()
-          .setCustomId(cid("prodCentral", shopType, recipeId))
-          .setLabel("Usar estoque central")
-          .setEmoji("🏛️")
-          .setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder()
-          .setCustomId(cid("menu"))
-          .setLabel("Cancelar")
-          .setStyle(ButtonStyle.Secondary),
-      ),
-    ],
-  };
+  filhos.push(divider(), buttonRow(
+    button({ id: cid("prodLoja", shopType, recipeId), label: "Usar estoque da loja", style: ButtonStyle.Primary, emojiKey: "shop_MERCADO_GERAL" }),
+    button({ id: cid("prodCentral", shopType, recipeId), label: "Usar estoque central", emojiKey: "estoque" }),
+    button({ id: cid("menu"), label: "Cancelar" }),
+  ));
+  return [economyContainer("obras", filhos)];
 }
 
 async function abrirModalProducao(
@@ -825,7 +831,7 @@ export async function handleComercioModal(
   const qtd = inteiroPositivo(interaction.fields.getTextInputValue("quantidade"));
   if (qtd === null) {
     await interaction.editReply(
-      await renderLoja(viewer, shopType, "❌ Quantidade inválida. Use só número inteiro positivo."),
+      v2Edit(await renderLoja(viewer, shopType, "❌ Quantidade inválida. Use só número inteiro positivo.")),
     );
     return true;
   }
@@ -833,13 +839,13 @@ export async function handleComercioModal(
   if (acao === "abastecerQtd") {
     const r = await restockShop(viewer.villageId, shopType, alvo, qtd, interaction.user.id);
     await interaction.editReply(
-      await renderLoja(
+      v2Edit(await renderLoja(
         viewer,
         shopType,
         r.ok
           ? `📥 Enviou **${r.qty}x ${r.name}**. Central: ${r.central} • loja: ${r.loja}.`
           : `❌ ${r.error}`,
-      ),
+      )),
     );
     return true;
   }
@@ -855,13 +861,13 @@ export async function handleComercioModal(
       interaction.user.id,
     );
     await interaction.editReply(
-      await renderLoja(
+      v2Edit(await renderLoja(
         viewer,
         shopType,
         r.ok
           ? `📤 Devolveu **${r.qty}x ${r.name}** ao estoque central. Loja: ${r.loja} • central: ${r.central}.`
           : `❌ ${r.error}`,
-      ),
+      )),
     );
     return true;
   }
@@ -884,7 +890,7 @@ export async function handleComercioModal(
       preferido,
     });
     await interaction.editReply(
-      await renderLoja(
+      v2Edit(await renderLoja(
         viewer,
         shopType,
         r.ok
@@ -892,11 +898,11 @@ export async function handleComercioModal(
             `Consumiu: ${r.consumido.map((i) => `${i.qty}x ${getItem(i.itemId)?.name ?? i.itemId}`).join(", ")}.` +
             (r.restanteNaSemana !== null ? `\nRestam ${r.restanteNaSemana} nesta competência.` : "")
           : `❌ ${r.error}`,
-      ),
+      )),
     );
     return true;
   }
 
-  await interaction.editReply(await renderLoja(viewer, shopType));
+  await interaction.editReply(v2Edit(await renderLoja(viewer, shopType)));
   return true;
 }
