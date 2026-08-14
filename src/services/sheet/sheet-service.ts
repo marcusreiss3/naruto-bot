@@ -21,6 +21,7 @@ import {
   type ModalSubmitInteraction,
   type TextChannel,
 } from "discord.js";
+import { existsSync } from "node:fs";
 import { prisma } from "../../db/client.js";
 import { CLANS } from "../../data/clans/index.js";
 import {
@@ -33,9 +34,11 @@ import {
   SHEET_VILLAGE_ROLES,
   UNREGISTERED_ROLE_ID,
   clanIconPath,
+  clanIconUrl,
   rollClanVillageOptions,
   rollTrait,
   traitIconPath,
+  traitIconUrl,
   type ClanVillageRoll,
 } from "../../data/sheet-creation.js";
 import { getTrait } from "../../data/traits.js";
@@ -68,6 +71,7 @@ import {
   type MemberPresenceCheck,
 } from "../appearance/appearance-service.js";
 import { standardizeTypedName } from "../appearance/vision.js";
+import { blobAssetUrl } from "../blob/asset-manifest.js";
 
 type Stage =
   | "CLAN_CHOICE"
@@ -144,6 +148,21 @@ function thumbnailSection(markdown: string, url: string, description: string) {
 
 function media(url: string, description: string) {
   return new MediaGalleryBuilder().addItems({ media: { url }, description });
+}
+
+function attachmentOrBlob(
+  localPath: string,
+  webPath: string,
+  filename: string,
+  files: AttachmentBuilder[],
+): string {
+  if (existsSync(localPath)) {
+    files.push(new AttachmentBuilder(localPath, { name: filename }));
+    return `attachment://${filename}`;
+  }
+  const cdnUrl = blobAssetUrl(webPath);
+  if (cdnUrl) return cdnUrl;
+  throw new Error(`Asset ausente localmente e no manifesto Blob: ${webPath}`);
 }
 
 function wait(ms: number) {
@@ -357,10 +376,10 @@ async function runClanAnimation(
   for (const [index, option] of options.entries()) {
     const clan = CLAN_INDEX.get(option.clanId)!;
     const filename = `cla-${index + 1}.${clanIconPath(clan.id).split(".").pop()}`;
-    files.push(new AttachmentBuilder(clanIconPath(clan.id), { name: filename }));
+    const iconUrl = attachmentOrBlob(clanIconPath(clan.id), clanIconUrl(clan.id), filename, files);
     sections.push(thumbnailSection(
       `**Opção ${index + 1}: ${VILLAGE_NAMES[option.villageId]} — Clã ${clan.name}**\n${clan.description}`,
-      `attachment://${filename}`,
+      iconUrl,
       `Símbolo do Clã ${clan.name}`,
     ));
   }
@@ -415,10 +434,10 @@ async function runTraitAnimation(channel: TextChannel, sessionId: string, data: 
   const sections: SectionBuilder[] = [];
   for (const [index, trait] of result.options.entries()) {
     const filename = `traco-${index + 1}.png`;
-    files.push(new AttachmentBuilder(traitIconPath(trait), { name: filename }));
+    const iconUrl = attachmentOrBlob(traitIconPath(trait), traitIconUrl(trait), filename, files);
     sections.push(thumbnailSection(
       `**${trait.name}**\nFaixa: **${RARITY_LABEL[trait.rarity]}**\n${trait.description}`,
-      `attachment://${filename}`,
+      iconUrl,
       `Imagem do traço ${trait.name}`,
     ));
   }
@@ -450,10 +469,10 @@ async function showSavedTraitChoice(channel: TextChannel, sessionId: string, dat
   const sections: SectionBuilder[] = [];
   for (const [index, trait] of traits.entries()) {
     const filename = `traco-retomado-${index + 1}.png`;
-    files.push(new AttachmentBuilder(traitIconPath(trait), { name: filename }));
+    const iconUrl = attachmentOrBlob(traitIconPath(trait), traitIconUrl(trait), filename, files);
     sections.push(thumbnailSection(
       `**${trait.name}**\nFaixa: **${RARITY_LABEL[trait.rarity]}**\n${trait.description}`,
-      `attachment://${filename}`,
+      iconUrl,
       `Imagem do traço ${trait.name}`,
     ));
   }
