@@ -453,10 +453,9 @@ async function runTraitAnimation(channel: TextChannel, sessionId: string, data: 
       text("A faixa mítica permite escolher um dos três traços."),
       buttons(...result.options.map((_, index) => button(`ficha:v1:trait:${sessionId}:${index}`, `Escolher traço ${index + 1}`))),
     );
-  } else {
-    children.push(divider(), ageInstruction(data));
   }
   await message.edit({ ...v2Edit(card(children, result.rarity === "MITICA" ? "cofre" : "vila")), files });
+  if (result.rarity !== "MITICA") await promptAge(channel, data);
 }
 
 async function showSavedTraitChoice(channel: TextChannel, sessionId: string, data: SheetData) {
@@ -987,8 +986,8 @@ export async function handleSheetButton(interaction: ButtonInteraction): Promise
       const modal = new ModalBuilder().setCustomId(`ficha:appearance:${session.id}`).setTitle("Corrigir personagem");
       const input = new TextInputBuilder()
         .setCustomId("nome")
-        .setLabel("Personagem ou OC (OC = personagem original)")
-        .setPlaceholder("Ex.: Luffy (One Piece) ou OC")
+        .setLabel("Nome do personagem ou OC")
+        .setPlaceholder("Digite o nome (ex.: Goku (Dragon Ball)) ou, se for original, digite OC.")
         .setStyle(TextInputStyle.Short)
         .setRequired(true)
         .setMaxLength(100);
