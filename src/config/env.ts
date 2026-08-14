@@ -29,7 +29,10 @@ export const ENV = {
   // Sem estes, o servidor web nao sobe e o bot roda normal.
   DISCORD_CLIENT_SECRET: opt("DISCORD_CLIENT_SECRET"),
   // URL publica do site (usada no redirect do OAuth). Ex.: https://app.squareweb.app
-  WEB_BASE_URL: opt("WEB_BASE_URL"),
+  // Barra final e' removida: o redirect_uri e' montado com `${WEB_BASE_URL}/auth/callback`
+  // e o Discord compara a URI como texto exato — "...app//auth/callback" nunca bate
+  // com o que esta cadastrado no portal. Ja quebrou o login em producao.
+  WEB_BASE_URL: opt("WEB_BASE_URL").replace(/\/+$/, ""),
   // segredo p/ assinar o cookie de sessao
   SESSION_SECRET: opt("SESSION_SECRET"),
   // porta do servidor HTTP (Square injeta PORT)
