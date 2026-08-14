@@ -8,13 +8,13 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "start": "node dist/src/index.js",
-    "start:prod": "node scripts/with-pg-tls.mjs npx prisma db push --skip-generate && npx prisma generate && npx tsc -p tsconfig.json && node dist/src/index.js",
+    "start:prod": "node scripts/with-pg-tls.mjs prisma db push --skip-generate && prisma generate && tsc -p tsconfig.json && node dist/src/index.js",
     "postinstall": "prisma generate",
     "dev": "tsx watch src/index.ts",
     "register": "tsx src/register-commands.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:push": "node scripts/with-pg-tls.mjs npx prisma db push",
+    "prisma:push": "node scripts/with-pg-tls.mjs prisma db push",
     "seed": "tsx prisma/seed.ts",
     "migrate:inventory-dedup": "tsx scripts/migrate-inventory-dedup.ts",
     "icons": "tsx scripts/resize-icons.mjs",
@@ -29,13 +29,13 @@
     "discord.js": "^14.16.3",
     "dotenv": "^16.4.5",
     "fastify": "^5.10.0",
-    "sharp": "^0.33.5"
+    "prisma": "^5.22.0",
+    "sharp": "^0.33.5",
+    "typescript": "^5.6.3"
   },
   "devDependencies": {
     "@types/node": "^22.9.0",
-    "prisma": "^5.22.0",
     "tsx": "^4.19.2",
-    "typescript": "^5.6.3",
     "vitest": "^2.1.4"
   }
 }
