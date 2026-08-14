@@ -10,6 +10,11 @@
 // host/user/senha/db/sslmode=require); esses tres parametros sao anexados
 // aqui, depois de escrever os arquivos. Sem PG_SSL_IDENTITY_B64 configurada,
 // nao mexe em nada — serve pra Postgres sem mTLS (dev local antigo, outro provedor).
+// Carrega o .env ANTES de ler PG_SSL_*: quem importa este modulo pode ser um
+// script que nunca tocou em config/env.ts (prisma/seed.ts, por exemplo). Sem
+// isto o bootstrap le variavel vazia e a conexao cai sem mTLS. No bot so'
+// funcionava por acaso da ordem de imports de src/index.ts.
+import "../config/load-env.js";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
