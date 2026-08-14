@@ -987,7 +987,8 @@ export async function handleSheetButton(interaction: ButtonInteraction): Promise
       const modal = new ModalBuilder().setCustomId(`ficha:appearance:${session.id}`).setTitle("Corrigir personagem");
       const input = new TextInputBuilder()
         .setCustomId("nome")
-        .setLabel("Personagem (ex.: Luffy (One Piece) ou OC)")
+        .setLabel("Personagem ou OC (OC = personagem original)")
+        .setPlaceholder("Ex.: Luffy (One Piece) ou OC")
         .setStyle(TextInputStyle.Short)
         .setRequired(true)
         .setMaxLength(100);
