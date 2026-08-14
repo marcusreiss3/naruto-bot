@@ -25,6 +25,7 @@ export function normalizeCharacterKey(raw: string): string {
 // Abaixo deste valor o personagem é tratado como OC (evita nome alucinado).
 const OC_CONFIDENCE_THRESHOLD = 0.7;
 const VISION_API_TIMEOUT_MS = 30_000;
+const GROQ_VISION_FALLBACK_MODEL = "qwen/qwen3.6-27b";
 
 const PROMPT = [
   "Você é um identificador RIGOROSO de personagens de anime/mangá/games/quadrinhos.",
@@ -164,10 +165,13 @@ export async function identifyCharacter(imageUrl: string): Promise<Identificatio
   }
 
   if (HAS_GROQ) {
-    const g = await callGroq(imageUrl);
-    if (g) {
-      logId(HAS_GEMINI ? "Groq(fallback)" : "Groq", g);
-      return g;
+    const models = [...new Set([ENV.GROQ_VISION_MODEL, GROQ_VISION_FALLBACK_MODEL])];
+    for (const model of models) {
+      const g = await callGroq(imageUrl, model);
+      if (g) {
+        logId(HAS_GEMINI ? "Groq(fallback)" : "Groq", g);
+        return g;
+      }
     }
   }
 
@@ -231,7 +235,7 @@ async function callGemini(imageUrl: string): Promise<Identification | null> {
 
 // ---------------- Groq (fallback) ----------------
 
-async function callGroq(imageUrl: string): Promise<Identification | null> {
+async function callGroq(imageUrl: string, model: string): Promise<Identification | null> {
   let res: Response;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), VISION_API_TIMEOUT_MS);
@@ -244,7 +248,7 @@ async function callGroq(imageUrl: string): Promise<Identification | null> {
       },
       signal: controller.signal,
       body: JSON.stringify({
-        model: ENV.GROQ_VISION_MODEL,
+        model,
         max_tokens: 150,
         temperature: 0,
         response_format: { type: "json_object" },
@@ -267,7 +271,7 @@ async function callGroq(imageUrl: string): Promise<Identification | null> {
   }
 
   if (!res.ok) {
-    log.warn(`Groq vision HTTP ${res.status}: ${await res.text().catch(() => "")}`);
+    log.warn(`Groq vision HTTP ${res.status} (${model}): ${await res.text().catch(() => "")}`);
     return null;
   }
 
