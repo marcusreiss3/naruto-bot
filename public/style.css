@@ -4916,14 +4916,12 @@ details.guide-faq > div {
 }
 
 .item-card-icon {
-  display: grid;
   width: 48px;
   height: 48px;
-  place-items: center;
+  object-fit: contain;
   border: 1px solid var(--border);
   border-radius: 10px;
   background: var(--surface-inset);
-  font-size: 25px;
 }
 
 .item-card-heading {

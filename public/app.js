@@ -187,9 +187,20 @@ const NODE_IMAGE_FALLBACKS = {
 
 const ICON_ASSET_VERSION = "20260813-simbolos-cla";
 
+// Ícones e fundos moram no CDN do Square Blob. O mapa caminho -> URL vem de
+// public/asset-manifest.js (gerado por `npm run blob:upload`), carregado antes
+// deste arquivo. Caminho sem entrada no manifesto cai de volta pro arquivo
+// local: é assim que os SVG e o login.webp continuam sendo servidos pelo site,
+// e é o que segura a página de pé se o manifesto ainda não existir.
+function assetUrl(path) {
+  const map = window.__BLOB_ASSETS;
+  return (map && map[path]) || path;
+}
+
 function versionedIcon(path) {
   if (!path || !path.startsWith("/assets/icons/")) return path;
-  return `${path}${path.includes("?") ? "&" : "?"}v=${ICON_ASSET_VERSION}`;
+  const url = assetUrl(path);
+  return `${url}${url.includes("?") ? "&" : "?"}v=${ICON_ASSET_VERSION}`;
 }
 
 function nodeImage(node) {
@@ -277,7 +288,7 @@ const ELEMENT_BG = {
   EXPLOSAO: `url('/assets/bg/explosao.webp?v=${BG_ASSET_VERSION}')`,
   POEIRA: `url('/assets/bg/poeira.webp?v=${BG_ASSET_VERSION}')`,
 };
-const CLAN_BG = `url('/assets/bg/clas-v2.webp?v=${BG_ASSET_VERSION}')`;
+const CLAN_BG = `url('${assetUrl("/assets/bg/clas-v2.webp")}?v=${BG_ASSET_VERSION}')`;
 const CLAN_BACKGROUNDS = {
   UCHIHA: `url('/assets/bg/uchiha.webp?v=${BG_ASSET_VERSION}')`,
   NARA: `url('/assets/bg/nara.webp?v=${BG_ASSET_VERSION}')`,
@@ -303,6 +314,12 @@ const CLAN_BACKGROUNDS = {
   ONOKI: `url('/assets/bg/onoki.webp?v=${BG_ASSET_VERSION}')`,
   BAKUREI: `url('/assets/bg/bakurei.webp?v=${BG_ASSET_VERSION}')`,
 };
+// Troca os caminhos locais acima pelas URLs do CDN de uma vez só, em vez de
+// embrulhar as ~48 entradas uma a uma. Quem não estiver no manifesto continua
+// apontando pro arquivo local (ver assetUrl).
+for (const key of Object.keys(ELEMENT_BG)) {
+  ELEMENT_BG[key] = ELEMENT_BG[key].replace(/\/assets\/[^?')]+/, assetUrl);
+}
 // Glossário de efeitos: destaca o termo na descrição e explica no hover.
 // A descrição vem do servidor como texto puro; o realce é feito aqui por regex,
 // então basta escrever o nome do efeito na desc que ele vira link explicativo.
@@ -595,7 +612,7 @@ function updateDossier(elId) {
       const chip = document.createElement("span");
       chip.className = "nature-chip";
       chip.style.setProperty("--ec", m.color);
-      const face = m.img ? `<img src="${m.img}" alt="">` : `<span class="nc-emoji">${m.icon}</span>`;
+      const face = m.img ? `<img src="${versionedIcon(m.img)}" alt="">` : `<span class="nc-emoji">${m.icon}</span>`;
       chip.innerHTML = `${face}<span>${m.name}</span>`;
       nat.appendChild(chip);
     }

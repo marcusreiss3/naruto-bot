@@ -19,6 +19,8 @@
     "migrate:inventory-dedup": "tsx scripts/migrate-inventory-dedup.ts",
     "icons": "tsx scripts/resize-icons.mjs",
     "bg": "tsx scripts/optimize-bg.mjs",
+    "blob:upload": "tsx scripts/blob-upload-assets.ts",
+    "blob:stats": "tsx scripts/blob-stats.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },

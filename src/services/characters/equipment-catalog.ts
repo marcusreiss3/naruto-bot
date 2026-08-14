@@ -3,6 +3,7 @@ import {
   ITEM_CATEGORY_ICONS,
   ITEM_CATEGORY_LABELS,
   ITEMS,
+  itemIconUrl,
 } from "../../data/items.js";
 import { ALL_ABILITIES, getAbility } from "../../data/index.js";
 import { CLANS } from "../../data/clans/index.js";
@@ -32,7 +33,6 @@ import {
   referenceValue,
 } from "../../data/shops.js";
 import { SECTORS, sectorProductionBase } from "../../data/sectors.js";
-import { itemEmoji } from "../../ui/economy-emojis.js";
 
 import { buildMechanicsSummary } from "./skill-description.js";
 import { buildEffectCatalog } from "./effect-catalog.js";
@@ -313,7 +313,7 @@ export function buildGuideCatalog() {
       id: item.id,
       name: item.name,
       description: item.description,
-      icon: itemEmoji(item.id),
+      icon: itemIconUrl(item.id),
       category: item.category,
       stackable: item.stackable,
       rare: item.rare ?? false,

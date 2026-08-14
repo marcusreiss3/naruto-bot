@@ -37,6 +37,22 @@ export const ITEM_CATEGORY_ICONS: Record<ItemCategory, string> = {
   OTHER: "📦",
 };
 
+// Arquivo em public/assets/icons/items/ quando o nome difere do item.id.
+// Sem entrada aqui, itemIconUrl() assume "<id>.png".
+const ITEM_ICON_FILES: Partial<Record<string, string>> = {
+  bomba_fumaca: "bomba_fumaça.png",
+  fios_aco_ninja: "fios_de_aco.png",
+  lingote_ferro: "lingote_de_ferro.png",
+  minerio_ferro: "minerio_de_ferro.png",
+  pergaminho_arsenal: "pergaminho_ninja.png",
+  pergaminho_arsenal_gasto: "pergaminho_desgastado.png",
+};
+
+/** URL do ícone do item no site (guia/compêndio). Não usar no Discord — lá o item usa itemEmoji(). */
+export function itemIconUrl(itemId: string): string {
+  return `/assets/icons/items/${ITEM_ICON_FILES[itemId] ?? `${itemId}.png`}`;
+}
+
 export interface ItemDef {
   id: string;
   name: string;

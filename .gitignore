@@ -10,7 +10,26 @@ prisma/migrations/
 .DS_Store
 coverage/
 /assets/
-assets/
-public/assets/
-public/assets/icons/_orig/
-public/assets/bg/_orig/
+
+# As artes vivem no Square Blob: sobem com `npm run blob:upload` e o site as
+# acha por public/asset-manifest.js (esse SIM vai pro git). Ficam no disco pra
+# reprocessar e subir de novo, mas fora do repo — eram 66 dos 70 MB do deploy.
+#
+# Nao da pra escrever "public/assets/" e abrir excecao depois: o git nao
+# re-inclui arquivo cujo diretorio pai esta excluido. Por isso o padrao e' "/**"
+# e cada nivel de pasta e' reaberto na mao.
+public/assets/**
+# Ficam no repo: os SVG (o Blob entrega svg como application/octet-stream, o
+# navegador baixaria em vez de desenhar) e os arquivos citados direto em
+# index.html / style.css, que nao passam por assetUrl(). Sao 0,21 MB no total.
+!public/assets/bg/
+!public/assets/bg/login.webp
+!public/assets/guides/
+!public/assets/guides/**
+!public/assets/icons/
+!public/assets/icons/brand/
+!public/assets/icons/brand/**
+!public/assets/icons/header/
+!public/assets/icons/header/**
+!public/assets/icons/ui/
+!public/assets/icons/ui/**

@@ -17,6 +17,9 @@
   const ACTION_LABELS = { COMUM: "Ação comum", BONUS: "Ação bônus", MOVIMENTO: "Movimento", REACAO: "Reação" };
   const RESOURCE_LABELS = { chakra: "Chakra", energia: "Energia" };
   const GUIDE_ICON_SPRITE = "/assets/guides/guide-icons.svg?v=1";
+  // app.js roda depois deste script (ordem em index.html), mas so' chamamos
+  // isso na hora de renderizar a pagina, ja' com os dois scripts carregados.
+  const assetUrl = (path) => (window.assetUrl ? window.assetUrl(path) : path);
 
   const escapeHtml = (value) => String(value ?? "")
     .replace(/&/g, "&amp;")
@@ -429,7 +432,7 @@
             const searchValue = normalize(`${category.label} ${collectText(item).join(" ")}`);
             return `<details class="equipment-card item-card" id="item-${escapeHtml(item.id)}" data-entry data-entry-id="${escapeHtml(item.id)}" data-filter-value="${escapeHtml(item.category)}" data-search-value="${escapeHtml(searchValue)}">
               <summary class="item-card-summary">
-                <span class="item-card-icon" aria-hidden="true">${escapeHtml(item.icon)}</span>
+                <img class="item-card-icon" src="${escapeHtml(assetUrl(item.icon))}" alt="" loading="lazy">
                 <span class="item-card-heading"><small>${escapeHtml(category.label)}</small><strong>${escapeHtml(item.name)}</strong><span class="equipment-actions">${(item.actions || []).map((action) => `<span>${escapeHtml(action.label)}</span>`).join("")}</span></span>
                 <span class="compendium-chevron" aria-hidden="true">⌄</span>
               </summary>
@@ -490,7 +493,7 @@
         </div>
         <p class="compendium-status" role="status" aria-live="polite"></p>
         <div class="trait-grid">${traits.map((trait) => `<details class="trait-card" id="trait-${escapeHtml(trait.id)}" data-entry data-entry-id="${escapeHtml(trait.id)}" data-filter-value="${escapeHtml(trait.rarity)}" data-search-value="${escapeHtml(normalize(`${trait.name} ${trait.rarityLabel} ${trait.description}`))}">
-          <summary><img src="${escapeHtml(trait.icon)}" alt="Ícone da Trait ${escapeHtml(trait.name)}" loading="lazy"><span class="compendium-card-heading"><span class="rarity-badge rarity-${escapeHtml(trait.rarity.toLowerCase())}">${escapeHtml(trait.rarityLabel)}</span><strong>${escapeHtml(trait.name)}</strong><small>Abrir efeito</small></span><span class="compendium-chevron" aria-hidden="true">⌄</span></summary>
+          <summary><img src="${escapeHtml(assetUrl(trait.icon))}" alt="Ícone da Trait ${escapeHtml(trait.name)}" loading="lazy"><span class="compendium-card-heading"><span class="rarity-badge rarity-${escapeHtml(trait.rarity.toLowerCase())}">${escapeHtml(trait.rarityLabel)}</span><strong>${escapeHtml(trait.name)}</strong><small>Abrir efeito</small></span><span class="compendium-chevron" aria-hidden="true">⌄</span></summary>
           <div class="compendium-card-details"><strong>Efeito</strong><p>${escapeHtml(trait.description)}</p></div>
         </details>`).join("")}</div>
       </div>`;
@@ -514,7 +517,7 @@
           const progression = clan.progression;
           const searchValue = normalize(collectText(clan).join(" "));
           return `<details class="clan-card" id="clan-${escapeHtml(clan.id)}" data-entry data-entry-id="${escapeHtml(clan.id)}" data-filter-value="${escapeHtml(clan.villageId)}" data-search-value="${escapeHtml(searchValue)}">
-            <summary><img src="${escapeHtml(clan.icon)}" alt="Símbolo do Clã ${escapeHtml(clan.name)}" loading="lazy"><span class="compendium-card-heading"><small>${escapeHtml(clan.villageName)}</small><strong>${escapeHtml(clan.name)}</strong><small>Abrir detalhes</small></span><span class="compendium-chevron" aria-hidden="true">⌄</span></summary>
+            <summary><img src="${escapeHtml(assetUrl(clan.icon))}" alt="Símbolo do Clã ${escapeHtml(clan.name)}" loading="lazy"><span class="compendium-card-heading"><small>${escapeHtml(clan.villageName)}</small><strong>${escapeHtml(clan.name)}</strong><small>Abrir detalhes</small></span><span class="compendium-chevron" aria-hidden="true">⌄</span></summary>
             <div class="compendium-card-details">
               <strong>Identidade do Clã</strong><p>${escapeHtml(clan.description)}</p>
               ${elements.length ? `<div class="compendium-detail-row"><strong>Afinidades garantidas na progressão</strong><span>${elements.map((element) => `<span class="detail-chip">${escapeHtml(element)}</span>`).join("")}</span></div>` : ""}
