@@ -137,8 +137,11 @@ function buildResult(parsed: RawResult): IdentifiedCharacter | null {
 }
 
 function safeParse(content: string, provider: string): RawResult | null {
+  // O fallback sem JSON mode pode envolver o objeto em markdown ou texto curto.
+  // Mantemos a validacao estrita do JSON, mas extraimos apenas o objeto retornado.
+  const candidate = content.match(/\{[\s\S]*\}/)?.[0] ?? content;
   try {
-    return JSON.parse(content) as RawResult;
+    return JSON.parse(candidate) as RawResult;
   } catch {
     log.warn(`${provider} retornou JSON inválido:`, content.slice(0, 200));
     return null;
@@ -235,7 +238,7 @@ async function callGemini(imageUrl: string): Promise<Identification | null> {
 
 // ---------------- Groq (fallback) ----------------
 
-async function callGroq(imageUrl: string, model: string): Promise<Identification | null> {
+async function callGroq(imageUrl: string, model: string, jsonMode = true): Promise<Identification | null> {
   let res: Response;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), VISION_API_TIMEOUT_MS);
@@ -249,9 +252,10 @@ async function callGroq(imageUrl: string, model: string): Promise<Identification
       signal: controller.signal,
       body: JSON.stringify({
         model,
-        max_tokens: 150,
-        temperature: 0,
-        response_format: { type: "json_object" },
+        max_completion_tokens: model === GROQ_VISION_FALLBACK_MODEL ? 512 : 150,
+        temperature: model === GROQ_VISION_FALLBACK_MODEL ? 0.7 : 0,
+        ...(model === GROQ_VISION_FALLBACK_MODEL ? { reasoning_effort: "none" } : {}),
+        ...(jsonMode ? { response_format: { type: "json_object" } } : {}),
         messages: [
           {
             role: "user",
@@ -271,7 +275,12 @@ async function callGroq(imageUrl: string, model: string): Promise<Identification
   }
 
   if (!res.ok) {
-    log.warn(`Groq vision HTTP ${res.status} (${model}): ${await res.text().catch(() => "")}`);
+    const body = await res.text().catch(() => "");
+    if (jsonMode && model === GROQ_VISION_FALLBACK_MODEL && res.status === 400 && body.includes("json_validate_failed")) {
+      log.warn("Groq recusou JSON mode; repetindo a visão Qwen sem modo estruturado.");
+      return callGroq(imageUrl, model, false);
+    }
+    log.warn(`Groq vision HTTP ${res.status} (${model}): ${body}`);
     return null;
   }
 
