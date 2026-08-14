@@ -26,6 +26,7 @@ import { assignMission, removeMission, completeMission, buildMissionCompleteEmbe
 import { getActiveSession, getSessionById, endCombat, type SessionFull } from "../services/combat/combat-engine.js";
 import { onCombatEnded } from "../services/missions/mission-runtime.js";
 import { getAppearance, releaseAppearance } from "../services/appearance/appearance-service.js";
+import { resetSheet } from "../services/sheet/sheet-reset.js";
 import { villageFromMember, VILLAGE_NAMES } from "../services/village-service.js";
 
 const attrChoices = ATTRIBUTES.map((a) => ({ name: ATTRIBUTE_LABELS[a], value: a }));
@@ -231,6 +232,21 @@ export const admin: Command = {
         .setName("aparencia-apagar")
         .setDescription("Apaga a aparência reservada de um usuário")
         .addUserOption((o) => o.setName("usuario").setDescription("Usuário").setRequired(true)),
+    )
+    .addSubcommand((s) =>
+      s
+        .setName("ficha-resetar")
+        .setDescription("APAGA o personagem e libera /ficha para uma nova criação")
+        .addUserOption((o) => o.setName("usuario").setDescription("Usuário").setRequired(true))
+        .addBooleanOption((o) =>
+          o.setName("confirmar").setDescription("Marque para confirmar: a exclusão é irreversível").setRequired(true),
+        )
+        .addBooleanOption((o) =>
+          o
+            .setName("manter-aparencia")
+            .setDescription("Mantém a aparência reservada (padrão: apaga junto)")
+            .setRequired(false),
+        ),
     )
     .addSubcommand((s) =>
       s
@@ -571,6 +587,42 @@ export const admin: Command = {
         await interaction.editReply(
           `✅ **${char.name}**: 999 em todos os atributos, todos os elementos e estilos de luta concedidos e ${nodes.length} nós desbloqueados (todas as árvores — elementos, kekkei genkai e TODOS os clãs, mesmo os que não são o seu).`,
         );
+        return;
+      }
+      case "ficha-resetar": {
+        const user = interaction.options.getUser("usuario", true);
+        if (!interaction.guild) {
+          await interaction.editReply("❌ Use este comando dentro do servidor.");
+          return;
+        }
+        if (!interaction.options.getBoolean("confirmar", true)) {
+          await interaction.editReply("❌ Reset cancelado: marque `confirmar` para apagar a ficha.");
+          return;
+        }
+        const report = await resetSheet(interaction.guild, user.id, {
+          keepAppearance: interaction.options.getBoolean("manter-aparencia") ?? false,
+        });
+        if (report.blocked === "COMBATE_ATIVO") {
+          await interaction.editReply(
+            `❌ **${report.charName}** está em combate ativo. Encerre com \`/admin combate-encerrar\` antes de resetar.`,
+          );
+          return;
+        }
+        const linhas = [
+          report.hadCharacter
+            ? `🗑️ Personagem **${report.charName}** apagado (atributos, jutsus, árvores, inventário, missões, Ryo).`
+            : "ℹ️ Nenhum personagem registrado — só a limpeza do resto foi feita.",
+          report.clearedDraft ? "• Rascunho de `/ficha` apagado." : null,
+          report.deletedChannelId ? "• Canal privado da ficha excluído." : null,
+          report.releasedAppearance ? "• Aparência reservada liberada." : null,
+          report.canceledTravel ? "• Viagem ativa cancelada." : null,
+          report.leftParty ? "• Removido da party." : null,
+          report.rolesChanged
+            ? "• Cargos: registro/vila/localização removidos, não registrado devolvido."
+            : "⚠️ Não consegui ajustar os cargos (membro fora do servidor?).",
+          `\n<@${user.id}> já pode usar \`/ficha\` para criar outra.`,
+        ].filter(Boolean);
+        await interaction.editReply(linhas.join("\n"));
         return;
       }
       case "debug-personagem": {

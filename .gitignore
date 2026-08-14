@@ -9,5 +9,7 @@ prisma/migrations/
 .DS_Store
 coverage/
 /assets/
+assets/
+public/assets/
 public/assets/icons/_orig/
 public/assets/bg/_orig/
