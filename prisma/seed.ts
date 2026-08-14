@@ -1,3 +1,4 @@
+import "../src/db/tls-bootstrap.js";
 import { PrismaClient } from "@prisma/client";
 import { MISSIONS } from "../src/data/missions/index.js";
 import { ECONOMY } from "../src/config/balance.js";

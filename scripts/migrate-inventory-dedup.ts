@@ -11,6 +11,7 @@
 // Usa SQL cru de proposito, para funcionar tanto no schema antigo quanto no
 // novo (nao depende do client regenerado).
 
+import "../src/db/tls-bootstrap.js";
 import { PrismaClient } from "@prisma/client";
 import {
   planInventoryConsolidation,

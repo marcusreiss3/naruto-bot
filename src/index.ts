@@ -51,6 +51,7 @@ import { startTaxScheduler } from "./services/economy/tax-scheduler.js";
 import { formatReceipt } from "./services/economy/weekly-tax.js";
 import { syncCharacterVillage } from "./services/economy/village-sync.js";
 import { closeFinishedOrders } from "./services/economy/collection-orders.js";
+import { ensureVillages } from "./services/economy/village-economy.js";
 import { ensureVillageShops } from "./services/economy/shop-service.js";
 import { ensureVillageBuildings } from "./services/economy/constructions.js";
 import { startVillageSchedulers } from "./services/economy/village-scheduler.js";
@@ -76,6 +77,11 @@ client.once(Events.ClientReady, async (c) => {
       await channel.send("⏱️ O Boneco de Treino desapareceu após 30 minutos.");
     }
   }).catch((err) => log.error("Falha ao restaurar temporizadores de treino:", err));
+
+  // As cinco vilas em si. Precisa vir antes de qualquer coisa que dependa
+  // delas (imposto, lojas, obras) — banco novo (primeiro deploy) nasce sem
+  // Village nenhuma, e startTaxScheduler ja abre competencia semanal abaixo.
+  await ensureVillages().catch((err) => log.error("Falha ao garantir as vilas:", err));
 
   // Relogio do imposto semanal. Processa competencia vencida (bot fora do ar
   // num domingo) e arma o proximo corte. A DM do recibo sai daqui porque so'

@@ -1,12 +1,13 @@
-// Prisma schema - SQLite para dev, troque o provider/DATABASE_URL p/ Postgres em prod.
-// SQLite nao suporta enum nativo no Prisma -> usamos String + tipos no TS (src/config/enums.ts).
+// Prisma schema - PostgreSQL (Square Cloud).
+// Nao usamos enum nativo do Postgres de proposito -> String + tipos no TS (src/config/enums.ts),
+// pra manter o schema portavel entre bancos.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
