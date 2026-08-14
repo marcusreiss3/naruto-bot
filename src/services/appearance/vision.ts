@@ -1,4 +1,4 @@
-import { ENV, HAS_GROQ, HAS_GEMINI } from "../../config/env.js";
+import { ENV, HAS_GEMINI } from "../../config/env.js";
 import { log } from "../../utils/logger.js";
 import { downloadImageBuffer } from "./image-download.js";
 
@@ -25,7 +25,6 @@ export function normalizeCharacterKey(raw: string): string {
 // Abaixo deste valor o personagem é tratado como OC (evita nome alucinado).
 const OC_CONFIDENCE_THRESHOLD = 0.7;
 const VISION_API_TIMEOUT_MS = 30_000;
-const GROQ_VISION_FALLBACK_MODEL = "qwen/qwen3.6-27b";
 
 const PROMPT = [
   "Você é um identificador RIGOROSO de personagens de anime/mangá/games/quadrinhos.",
@@ -156,29 +155,18 @@ function logId(provider: string, id: Identification): void {
   }
 }
 
-// Identifica o personagem numa imagem. Prefere Gemini; cai para Groq se Gemini estiver sem cota/fora do ar.
+// Identifica o personagem numa imagem usando Gemini.
 export async function identifyCharacter(imageUrl: string): Promise<Identification> {
-  if (HAS_GEMINI) {
-    const r = await callGemini(imageUrl);
-    if (r) {
-      logId("Gemini", r);
-      return r;
-    }
-    log.warn("[visão] Gemini não retornou resultado; tentando Groq...");
+  if (!HAS_GEMINI) {
+    log.warn("IA de visão indisponível: GEMINI_API_KEY não configurada.");
+    return { kind: "VISION_OFFLINE" };
   }
-
-  if (HAS_GROQ) {
-    const models = [...new Set([ENV.GROQ_VISION_MODEL, GROQ_VISION_FALLBACK_MODEL])];
-    for (const model of models) {
-      const g = await callGroq(imageUrl, model);
-      if (g) {
-        logId(HAS_GEMINI ? "Groq(fallback)" : "Groq", g);
-        return g;
-      }
-    }
+  const r = await callGemini(imageUrl);
+  if (r) {
+    logId("Gemini", r);
+    return r;
   }
-
-  log.warn("IA de visão indisponível: Gemini/Groq não configurados ou sem resposta.");
+  log.warn("IA de visão indisponível: Gemini não respondeu.");
   return { kind: "VISION_OFFLINE" };
 }
 
@@ -236,62 +224,6 @@ async function callGemini(imageUrl: string): Promise<Identification | null> {
   return parsed ? toIdentification(parsed) : null;
 }
 
-// ---------------- Groq (fallback) ----------------
-
-async function callGroq(imageUrl: string, model: string, jsonMode = true): Promise<Identification | null> {
-  let res: Response;
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), VISION_API_TIMEOUT_MS);
-  try {
-    res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${ENV.GROQ_API_KEY}`,
-      },
-      signal: controller.signal,
-      body: JSON.stringify({
-        model,
-        max_completion_tokens: model === GROQ_VISION_FALLBACK_MODEL ? 512 : 150,
-        temperature: model === GROQ_VISION_FALLBACK_MODEL ? 0.7 : 0,
-        ...(model === GROQ_VISION_FALLBACK_MODEL ? { reasoning_effort: "none" } : {}),
-        ...(jsonMode ? { response_format: { type: "json_object" } } : {}),
-        messages: [
-          {
-            role: "user",
-            content: [
-              { type: "text", text: PROMPT },
-              { type: "image_url", image_url: { url: imageUrl } },
-            ],
-          },
-        ],
-      }),
-    });
-  } catch (err) {
-    log.warn("Groq vision falhou (rede):", (err as Error).message);
-    return null;
-  } finally {
-    clearTimeout(timeout);
-  }
-
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    if (jsonMode && model === GROQ_VISION_FALLBACK_MODEL && res.status === 400 && body.includes("json_validate_failed")) {
-      log.warn("Groq recusou JSON mode; repetindo a visão Qwen sem modo estruturado.");
-      return callGroq(imageUrl, model, false);
-    }
-    log.warn(`Groq vision HTTP ${res.status} (${model}): ${body}`);
-    return null;
-  }
-
-  const data = (await res.json()) as { choices?: { message?: { content?: string } }[] };
-  const content = data.choices?.[0]?.message?.content?.trim();
-  if (!content) return null;
-
-  const parsed = safeParse(content, "Groq vision");
-  return parsed ? toIdentification(parsed) : null;
-}
-
 // ---------------- Padronização de nome digitado ----------------
 
 // Extrai "Nome (Obra)" de um texto livre, sem LLM.
@@ -332,7 +264,7 @@ export async function standardizeTypedName(typed: string): Promise<IdentifiedCha
   return makeIdentified(p.character, p.obra, 1);
 }
 
-// Chamada de texto genérica (sem imagem). Prefere Gemini, cai p/ Groq. JSON cru.
+// Chamada de texto genérica (sem imagem) pelo Gemini. JSON cru.
 async function llmText(prompt: string): Promise<string | null> {
   if (HAS_GEMINI) {
     try {
@@ -356,33 +288,6 @@ async function llmText(prompt: string): Promise<string | null> {
       }
     } catch (err) {
       log.warn("[padronização] Gemini falhou:", (err as Error).message);
-    }
-  }
-  if (HAS_GROQ) {
-    try {
-      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${ENV.GROQ_API_KEY}`,
-        },
-        body: JSON.stringify({
-          model: ENV.GROQ_MODEL,
-          max_tokens: 100,
-          temperature: 0,
-          response_format: { type: "json_object" },
-          messages: [{ role: "user", content: prompt }],
-        }),
-      });
-      if (res.ok) {
-        const data = (await res.json()) as { choices?: { message?: { content?: string } }[] };
-        const txt = data.choices?.[0]?.message?.content?.trim();
-        if (txt) return txt;
-      } else {
-        log.warn(`[padronização] Groq HTTP ${res.status}`);
-      }
-    } catch (err) {
-      log.warn("[padronização] Groq falhou:", (err as Error).message);
     }
   }
   return null;

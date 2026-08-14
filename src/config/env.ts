@@ -23,7 +23,7 @@ export const ENV = {
   GROQ_MODEL: opt("GROQ_MODEL", "llama-3.3-70b-versatile"),
   GROQ_VISION_MODEL: opt("GROQ_VISION_MODEL", "qwen/qwen3.6-27b"),
   GEMINI_API_KEY: opt("GEMINI_API_KEY"),
-  GEMINI_MODEL: opt("GEMINI_MODEL", "gemini-flash-latest"),
+  GEMINI_MODEL: opt("GEMINI_MODEL", "gemini-2.5-flash"),
 
   // ---- Site / árvore de habilidades (opcional) ----
   // Sem estes, o servidor web nao sobe e o bot roda normal.

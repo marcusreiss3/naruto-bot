@@ -13,7 +13,7 @@ import {
 } from "discord.js";
 import type { Command } from "./types.js";
 import { isAdmin } from "../utils/permissions.js";
-import { HAS_GROQ, HAS_GEMINI } from "../config/env.js";
+import { HAS_GEMINI } from "../config/env.js";
 import { log } from "../utils/logger.js";
 import {
   claimWithIdentified,
@@ -168,7 +168,7 @@ export const aparencia: Command = {
       });
       return;
     }
-    if (!HAS_GEMINI && !HAS_GROQ) {
+    if (!HAS_GEMINI) {
       await interaction.reply({
         content: "❌ O sistema de aparência está off por enquanto. Tente de novo mais tarde.",
         ephemeral: true,

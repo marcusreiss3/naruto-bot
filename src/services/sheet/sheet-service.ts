@@ -61,7 +61,7 @@ import { setCharacterTrait } from "../characters/trait-service.js";
 import { ENV } from "../../config/env.js";
 import { isAdminMember } from "../../utils/permissions.js";
 import { log } from "../../utils/logger.js";
-import { HAS_GEMINI, HAS_GROQ } from "../../config/env.js";
+import { HAS_GEMINI } from "../../config/env.js";
 import {
   claimWithIdentified,
   getAppearance,
@@ -764,7 +764,7 @@ export async function handleSheetMessage(message: Message): Promise<boolean> {
       await sendImageTutorialChoice(channel, session.id);
       return true;
     }
-    if (!HAS_GEMINI && !HAS_GROQ) {
+    if (!HAS_GEMINI) {
       await sendInputError(channel, "Sistema de aparência indisponível", "A verificação por IA está offline. Tente novamente mais tarde.");
       return true;
     }
