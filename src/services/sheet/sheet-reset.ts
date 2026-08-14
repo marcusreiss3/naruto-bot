@@ -15,11 +15,6 @@ import {
 } from "../../data/sheet-creation.js";
 import { ALL_TRAVEL_ROLE_IDS } from "../../data/travel.js";
 
-export type SheetResetOptions = {
-  // Mantem a aparencia reservada (o jogador refaz a ficha com o mesmo OC).
-  keepAppearance?: boolean;
-};
-
 export type SheetResetReport = {
   // Preenchido quando o reset foi recusado; nesse caso nada foi apagado.
   blocked?: "COMBATE_ATIVO";
@@ -67,7 +62,6 @@ async function resetRoles(guild: Guild, discordId: string): Promise<boolean> {
 export async function resetSheet(
   guild: Guild,
   discordId: string,
-  options: SheetResetOptions = {},
 ): Promise<SheetResetReport> {
   const guildId = guild.id;
   const char = await prisma.userCharacter.findUnique({
@@ -119,9 +113,7 @@ export async function resetSheet(
   // Party sem lider vira party fantasma: some junto (membros caem no cascade).
   await prisma.party.deleteMany({ where: { guildId, leaderId: discordId } });
 
-  const releasedAppearance = options.keepAppearance
-    ? false
-    : await releaseAppearance(discordId, guildId);
+  const releasedAppearance = await releaseAppearance(discordId, guildId);
 
   const rolesChanged = await resetRoles(guild, discordId);
 

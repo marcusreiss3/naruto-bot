@@ -241,12 +241,6 @@ export const admin: Command = {
         .addBooleanOption((o) =>
           o.setName("confirmar").setDescription("Marque para confirmar: a exclusão é irreversível").setRequired(true),
         )
-        .addBooleanOption((o) =>
-          o
-            .setName("manter-aparencia")
-            .setDescription("Mantém a aparência reservada (padrão: apaga junto)")
-            .setRequired(false),
-        ),
     )
     .addSubcommand((s) =>
       s
@@ -599,9 +593,7 @@ export const admin: Command = {
           await interaction.editReply("❌ Reset cancelado: marque `confirmar` para apagar a ficha.");
           return;
         }
-        const report = await resetSheet(interaction.guild, user.id, {
-          keepAppearance: interaction.options.getBoolean("manter-aparencia") ?? false,
-        });
+        const report = await resetSheet(interaction.guild, user.id);
         if (report.blocked === "COMBATE_ATIVO") {
           await interaction.editReply(
             `❌ **${report.charName}** está em combate ativo. Encerre com \`/admin combate-encerrar\` antes de resetar.`,

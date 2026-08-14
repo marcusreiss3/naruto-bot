@@ -60,10 +60,16 @@ import { startTravelScheduler, stopTravelScheduler } from "./services/travel/tra
 import { handleSheetMessage, startSheetScheduler, stopSheetScheduler } from "./services/sheet/sheet-service.js";
 import { SHEET_LAUNCH_CHANNEL_ID } from "./data/sheet-creation.js";
 import { isAdmin, isAdminMember } from "./utils/permissions.js";
+import {
+  releaseAppearance,
+  startAppearanceCleanupScheduler,
+  stopAppearanceCleanupScheduler,
+} from "./services/appearance/appearance-service.js";
 
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMembers,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
   ],
@@ -118,6 +124,9 @@ client.once(Events.ClientReady, async (c) => {
   );
   await startSheetScheduler(c).catch((err) =>
     log.error("Falha ao iniciar o relógio das fichas:", err),
+  );
+  await startAppearanceCleanupScheduler().catch((err) =>
+    log.error("Falha ao iniciar a limpeza de aparências:", err),
   );
 });
 
@@ -180,10 +189,13 @@ client.on(Events.MessageCreate, async (message) => {
   }
 });
 
-// Nota: a liberação de aparência de quem saiu do servidor é feita de forma
-// lazy — quando alguém tenta reivindicar o mesmo personagem, o bot verifica
-// via members.fetch se o dono atual ainda está no servidor (não exige o
-// intent privilegiado GuildMembers).
+client.on(Events.GuildMemberRemove, async (member) => {
+  try {
+    await releaseAppearance(member.id, member.guild.id);
+  } catch (error) {
+    log.error(`Falha ao liberar aparência de ${member.id} ao sair do servidor:`, error);
+  }
+});
 
 client.on(Events.InteractionCreate, async (interaction) => {
   // autocomplete
@@ -272,6 +284,7 @@ async function shutdown(): Promise<void> {
   log.info("Encerrando...");
   stopTravelScheduler();
   stopSheetScheduler();
+  stopAppearanceCleanupScheduler();
   await disconnect();
   client.destroy();
   process.exit(0);

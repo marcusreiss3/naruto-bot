@@ -1906,7 +1906,7 @@ export const CLANS: ClanDef[] = [
   {
     id: "uchiha",
     name: "Uchiha",
-    description: "Clã do Sharingan: leitura de movimentos, genjutsu e fogo.",
+    description: "Focado no Sharingan, leitura de combate e genjutsu de pressão.\nA árvore cresce com Katon e evoluções do dōjutsu para duelos decisivos.",
     passiveIds: [],
     activeIds: [
       "uchiha_sharingan_1_tomoe",
@@ -1919,7 +1919,7 @@ export const CLANS: ClanDef[] = [
   {
     id: "yamanaka",
     name: "Yamanaka",
-    description: "Clã das técnicas mentais: confusão, controle de corpo (Transferência de Mente) e controle em massa (Clones).",
+    description: "Especialistas em invadir, confundir e transferir a própria mente.\nA árvore prioriza controle de alvo, domínio mental e jogadas táticas em grupo.",
     passiveIds: [],
     // concedidas pela arvore de cla (src/data/clan-trees/index.ts), nao por
     // requisito automatico — mesmo padrao dos outros clas com arvore propria.
@@ -1934,7 +1934,7 @@ export const CLANS: ClanDef[] = [
   {
     id: "hyuuga",
     name: "Hyuuga",
-    description: "Clã do Byakugan: visão, Punho Suave e o selamento do chakra do adversário.",
+    description: "Byakugan e Punho Suave para enxergar tenketsu e interromper chakra.\nA árvore combina visão total, pressão corpo a corpo e selamento preciso.",
     passiveIds: [],
     // concedidas pela arvore de cla (src/data/clan-trees/index.ts), nao por
     // requisito automatico — mesmo padrao do Nara.
@@ -1952,7 +1952,7 @@ export const CLANS: ClanDef[] = [
   {
     id: "lee",
     name: "Lee",
-    description: "Clã de Taijutsu puro: disciplina física, velocidade e domínio do Punho Forte.",
+    description: "Taijutsu puro, treinado para velocidade, resistência e Punho Forte.\nA árvore foca em sequência física, explosão de movimento e pressão constante.",
     passiveIds: [],
     activeIds: [],
     hooks: {},
@@ -1968,7 +1968,7 @@ export const CLANS: ClanDef[] = [
   {
     id: "nara",
     name: "Nara",
-    description: "Clã das sombras de Konohagakure: estrategistas que manipulam a própria sombra para prender o inimigo.",
+    description: "Estrategistas que moldam sombras para prender, copiar e limitar inimigos.\nA árvore foca em controle de campo, armadilhas e punição de alvos imobilizados.",
     passiveIds: [],
     // concedidas pela arvore de cla (src/data/clan-trees/index.ts), nao por
     // requisito automatico — ver comentario acima das abilities "---- Nara ----".
@@ -1985,7 +1985,7 @@ export const CLANS: ClanDef[] = [
   {
     id: "senju",
     name: "Senju",
-    description: "Clã da Floresta, fundador de Konohagakure: vitalidade imensa e forte afinidade com a água.",
+    description: "Linhagem de grande vitalidade e afinidade natural com Suiton.\nA árvore reforça sobrevivência, recuperação e técnicas de água de pressão contínua.",
     passiveIds: [],
     activeIds: ["senju_ondas_cortantes"],
     hooks: {},
@@ -1999,7 +1999,7 @@ export const CLANS: ClanDef[] = [
     // 1.2 e o Bloqueio/Aparo continuam funcionando — o que faltava era o texto
     // dizer que isso e' a marca do cla, e nao coincidencia. Ver conversa de
     // 09/08/2026 em pendencias-balanceamento.
-    description: "Clã dos ninken de Konohagakure: luta ao lado de cães e faro apurado. As brocas giratórias do clã perseguem o alvo pelo cheiro — de meio caminho em diante, não dá para esquivar delas.",
+    description: "Lutam ao lado de ninken, usando faro e investidas giratórias para caçar.\nA árvore foca em parceria com cães, rastreio e ataques perseguidores difíceis de esquivar.",
     passiveIds: [],
     // concedidas pela arvore de cla (src/data/clan-trees/index.ts). Cao Ninja
     // e' a excecao: nasce com o personagem (ver autoGrantedNodeIds abaixo),
@@ -2023,7 +2023,7 @@ export const CLANS: ClanDef[] = [
   {
     id: "akimichi",
     name: "Akimichi",
-    description: "Clã da expansão de Konohagakure: converte calorias em tamanho e força bruta.",
+    description: "Converte calorias em expansão corporal, impacto e força bruta.\nA árvore cresce em tamanho, resistência e golpes de área cada vez mais pesados.",
     passiveIds: [],
     // concedidas pela arvore de cla (src/data/clan-trees/index.ts), nao por
     // requisito automatico — mesmo padrao do Nara/Hyuuga.
@@ -2043,7 +2043,7 @@ export const CLANS: ClanDef[] = [
     id: "sarutobi",
     name: "Sarutobi",
     description:
-      "Clã do Terceiro Hokage: domínio raro sobre as cinco naturezas básicas de chakra, com tradição de vento (Asuma).",
+      "Linhagem versátil, voltada ao domínio das cinco naturezas básicas de chakra.\nA árvore amplia opções elementais, com destaque para Vento e adaptação em combate.",
     passiveIds: [],
     // Sem jutsu proprio (o "Professor" nao tem tecnica assinatura no roster,
     // so' versatilidade elemental) — todo o kit mora na arvore de cla
@@ -2058,7 +2058,7 @@ export const CLANS: ClanDef[] = [
   {
     id: "uzumaki",
     name: "Uzumaki",
-    description: "Clã de Uzushiogakure: chakra vasto, longevidade e mestria em fuinjutsu.",
+    description: "Chakra vasto, longevidade e tradição de fuinjutsu de Uzushiogakure.\nA árvore foca em recuperação, selos, correntes e controle persistente do inimigo.",
     passiveIds: [],
     // concedidas pela arvore de cla (src/data/clan-trees/index.ts), nao por
     // requisito automatico — mesmo padrao dos outros clas com arvore propria.
@@ -2068,7 +2068,7 @@ export const CLANS: ClanDef[] = [
   {
     id: "aburame",
     name: "Aburame",
-    description: "Clã dos insetos de Konohagakure: hospedam kikaichu que drenam o chakra alheio.",
+    description: "Hospedam kikaichū que rastreiam, cercam e drenam o chakra adversário.\nA árvore foca em desgaste, veneno, defesa orgânica e controle por enxames.",
     passiveIds: [],
     // concedidas pela arvore de cla (src/data/clan-trees/index.ts), nao por
     // requisito automatico — mesmo padrao do Nara/Hyuuga/Akimichi.
@@ -2086,7 +2086,7 @@ export const CLANS: ClanDef[] = [
   {
     id: "hatake",
     name: "Hatake",
-    description: "Linhagem de Kakashi: gênios versáteis com forte afinidade de raio.",
+    description: "Linhagem versátil com afinidade de Raio, cães ninja e combate técnico.\nA árvore foca em velocidade, corte preciso, rastreio e pressão coordenada.",
     passiveIds: [],
     // concedidas pela arvore de cla (src/data/clan-trees/index.ts), nao por
     // requisito automatico — mesmo padrao dos outros clas com arvore propria.
@@ -2097,7 +2097,7 @@ export const CLANS: ClanDef[] = [
   {
     id: "kazekage",
     name: "Kazekage",
-    description: "Linhagem dos Kazekage de Sunagakure: controle de areia e Doton.",
+    description: "Controladores de areia e Doton, com defesa que molda o campo de batalha.\nA árvore prioriza contenção, barreiras e pressão de média distância.",
     passiveIds: [],
     activeIds: [],
     hooks: {},
@@ -2105,7 +2105,7 @@ export const CLANS: ClanDef[] = [
   {
     id: "shirogane",
     name: "Shirogane",
-    description: "Clã de marionetistas de Sunagakure.",
+    description: "Marionetistas de Sunagakure, voltados a preparo, alcance e armadilhas.\nA árvore é focada em controlar o combate por ferramentas, venenos e posicionamento.",
     passiveIds: [],
     activeIds: [],
     hooks: {},
@@ -2113,7 +2113,7 @@ export const CLANS: ClanDef[] = [
   {
     id: "kamaitachi",
     name: "Kamaitachi",
-    description: "Clã do vento de Sunagakure: golpes de foice de vento (kamaitachi).",
+    description: "Especialistas em Fūton, usando foices de vento para cortar à distância.\nA árvore foca em alcance, área e golpes que castigam vários alvos.",
     passiveIds: [],
     // concedidas pela arvore de cla (src/data/clan-trees/index.ts), nao por
     // requisito automatico — mesmo padrao dos outros clas com arvore propria.
@@ -2130,7 +2130,7 @@ export const CLANS: ClanDef[] = [
   {
     id: "hoshigaki",
     name: "Hoshigaki",
-    description: "Clã de Kirigakure: aparência de tubarão e mestria absoluta em Suiton.",
+    description: "Guerreiros de Suiton com vigor predatório e técnicas inspiradas em tubarões.\nA árvore foca em grandes massas d’água, pressão e dano contínuo.",
     passiveIds: [],
     // concedidas pela arvore de cla (src/data/clan-trees/index.ts), nao por
     // requisito automatico — mesmo padrao dos outros clas com arvore propria.
@@ -2146,7 +2146,7 @@ export const CLANS: ClanDef[] = [
   {
     id: "hozuki",
     name: "Hozuki",
-    description: "Clã de Kirigakure: hidrificação — o corpo se converte em água.",
+    description: "Usuários de hidrificação que transformam o próprio corpo em água.\nA árvore foca em mobilidade líquida, evasão e disparos de Suiton concentrado.",
     passiveIds: [],
     // concedidas pela arvore de cla (src/data/clan-trees/index.ts), nao por
     // requisito automatico — mesmo padrao dos outros clas com arvore propria.
@@ -2156,7 +2156,7 @@ export const CLANS: ClanDef[] = [
   {
     id: "kaguya",
     name: "Kaguya",
-    description: "Clã de Kirigakure: Shikotsumyaku, a manipulação dos próprios ossos.",
+    description: "Portadores do Shikotsumyaku, capazes de moldar os próprios ossos em armas.\nA árvore foca em defesa corporal, lâminas ósseas e ofensiva brutal de curta distância.",
     passiveIds: [],
     // concedidas pela arvore de cla (src/data/clan-trees/index.ts), nao por
     // requisito automatico — mesmo padrao dos outros clas com arvore propria.
@@ -2173,7 +2173,7 @@ export const CLANS: ClanDef[] = [
   {
     id: "yuki",
     name: "Yuki",
-    description: "Clã de Kirigakure: afinidade de Água, o elemento que funde no próprio kekkei genkai — o Hyoton (Gelo).",
+    description: "Linhagem de Água ligada ao Hyōton, o kekkei genkai do Gelo.\nA árvore reforça sobrevivência e sinergia com técnicas de Água e Gelo.",
     passiveIds: [],
     // O Hyoton (Gelo) virou kekkei genkai de verdade (element-trees/index.ts,
     // secao GELO) — pedido explicito do usuario, migrado pra fora do clã. O
@@ -2187,7 +2187,7 @@ export const CLANS: ClanDef[] = [
   {
     id: "yotsuki",
     name: "Yotsuki",
-    description: "Clã de Kumogakure: força física, afinidade de raio e mestria em Kenjutsu.",
+    description: "Combatentes de Raio, força física e kenjutsu de Kumogakure.\nA árvore reforça lâminas, golpes rápidos e técnicas elétricas agressivas.",
     passiveIds: [],
     // Sem jutsu proprio — mesmo padrao do Onoki/Sarutobi: a arvore inteira
     // (clan-trees/index.ts) e' passiva, reforçando tecnicas de Raio
@@ -2198,7 +2198,7 @@ export const CLANS: ClanDef[] = [
   {
     id: "chinoike",
     name: "Chinoike",
-    description: "Clã de Kumogakure: Ketsuryugan, o olho que domina o sangue.",
+    description: "Portadores do Ketsuryūgan, um dōjutsu voltado a sangue e genjutsu.\nA árvore foca em manipulação sanguínea, controle mental e pressão à distância.",
     passiveIds: [],
     // concedidas pela arvore de cla (src/data/clan-trees/index.ts), nao por
     // requisito automatico — mesmo padrao dos outros clas com arvore propria.
@@ -2214,7 +2214,7 @@ export const CLANS: ClanDef[] = [
   {
     id: "raikage",
     name: "Raikage",
-    description: "Linhagem dos Raikage de Kumogakure: armadura de raio, velocidade extrema e força bruta corpo a corpo.",
+    description: "Linhagem da Armadura de Raio: velocidade extrema e força corpo a corpo.\nA árvore foca em arrancadas, resistência elétrica e golpes de impacto devastador.",
     passiveIds: [],
     // concedidas pela arvore de cla (src/data/clan-trees/index.ts), nao por
     // requisito automatico — mesmo padrao dos outros clas com arvore propria.
@@ -2234,7 +2234,7 @@ export const CLANS: ClanDef[] = [
   {
     id: "bakurei",
     name: "Bakurei",
-    description: "Clã de Iwagakure: afinidade dupla com Doton e o kekkei genkai Bakuton (Explosão).",
+    description: "Linhagem de Doton e Bakuton, voltada a explosões e impacto de área.\nA árvore reforça técnicas de Terra, detonações e pressão ofensiva contínua.",
     passiveIds: [],
     // Sem jutsu proprio — mesmo padrao do Onoki/Yotsuki/Sarutobi: a arvore
     // inteira (clan-trees/index.ts) e' passiva, reforçando Terra E o kekkei
@@ -2245,7 +2245,7 @@ export const CLANS: ClanDef[] = [
   {
     id: "kamizuru",
     name: "Kamizuru",
-    description: "Clã das abelhas de Iwagakure, antigos rivais dos Aburame.",
+    description: "Controlam abelhas de combate para rastrear, cercar e bombardear o alvo.\nA árvore foca em enxames, veneno, dano de área e domínio territorial.",
     passiveIds: [],
     // concedidas pela arvore de cla (src/data/clan-trees/index.ts), nao por
     // requisito automatico — mesmo padrao dos outros clas com arvore propria.
@@ -2261,7 +2261,7 @@ export const CLANS: ClanDef[] = [
   {
     id: "onoki",
     name: "Onoki",
-    description: "Linhagem dos Tsuchikage de Iwagakure: Doton e o Jinton (Poeira).",
+    description: "Linhagem dos Tsuchikage, especialista em Doton e Jinton (Poeira).\nA árvore foca em controle de Terra e amplificação de técnicas de destruição precisa.",
     passiveIds: [],
     // Sem jutsu proprio — pedido explicito do usuario: o cla so' da PASSIVA
     // pra Terra e pro kekkei genkai Poeira (ver clan-trees/index.ts), mesmo

@@ -9,7 +9,6 @@ export const SHEET_LAUNCH_CHANNEL_ID = "1537492104819900427";
 export const UNREGISTERED_ROLE_ID = "1527501428401373305";
 export const REGISTERED_ROLE_ID = "1527501571943039006";
 export const SHEET_CHANNEL_TTL_MS = 60 * 60_000;
-export const CLAN_CHOICE_TTL_MS = 10 * 60_000;
 export const COMPLETED_CHANNEL_TTL_MS = 30_000;
 
 export const SHEET_VILLAGE_ROLES: Record<VillageId, string> = {
@@ -49,11 +48,6 @@ export function clanOptionFromRoll(options: readonly ClanVillageRoll[], index: n
     throw new RangeError("O índice sorteado precisa apontar para uma opção de clã existente.");
   }
   return options[index]!;
-}
-
-export function randomClanOption(options: readonly ClanVillageRoll[]): ClanVillageRoll {
-  if (!options.length) throw new Error("Não há opções de clã salvas para o sorteio automático.");
-  return clanOptionFromRoll(options, randomInt(options.length));
 }
 
 const VILLAGES = Object.keys(CLANS_BY_VILLAGE) as VillageId[];

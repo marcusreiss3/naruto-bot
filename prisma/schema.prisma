@@ -464,14 +464,21 @@ model CharacterAppearance {
   characterKey  String // normalizado p/ unicidade
   characterName String // nome de exibição identificado pela IA
   imageUrl      String
+  // Objeto no Square Blob. Mantemos o id para apagar a imagem imediatamente
+  // quando ela for trocada, liberada ou o membro sair do servidor.
+  blobObjectId  String?
   imageHash     String? // hash perceptual (dHash) p/ dedup de OCs
   confidence    Float    @default(0)
+  // A reserva do personagem tambem e temporaria: depois de seis meses ela
+  // deixa de impedir que outra pessoa use a mesma aparencia.
+  expiresAt     DateTime?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   @@unique([discordId, guildId]) // 1 aparência por usuário por servidor
   @@unique([guildId, characterKey]) // 1 dono por personagem por servidor
   @@index([guildId])
+  @@index([expiresAt])
 }
 
 // Cooldown de coleta por personagem e por tipo de acao (15 min).

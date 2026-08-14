@@ -3,10 +3,11 @@ import {
   SlashCommandBuilder,
   type ButtonInteraction,
   type ChatInputCommandInteraction,
+  type ModalSubmitInteraction,
 } from "discord.js";
 import type { Command } from "./types.js";
 import { SHEET_LAUNCH_CHANNEL_ID } from "../data/sheet-creation.js";
-import { handleSheetButton, openSheetChannel } from "../services/sheet/sheet-service.js";
+import { handleSheetButton, handleSheetModal, openSheetChannel } from "../services/sheet/sheet-service.js";
 
 export const ficha: Command = {
   data: new SlashCommandBuilder()
@@ -46,5 +47,9 @@ export const ficha: Command = {
 
   async handleButton(interaction: ButtonInteraction) {
     await handleSheetButton(interaction);
+  },
+
+  async handleModal(interaction: ModalSubmitInteraction) {
+    await handleSheetModal(interaction);
   },
 };

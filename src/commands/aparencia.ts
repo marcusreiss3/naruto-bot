@@ -69,6 +69,8 @@ function presenceChecker(interaction: { guild: ChatInputCommandInteraction["guil
 // Monta a mensagem final a partir do resultado do claim.
 function renderResult(result: ClaimResult, imageUrl: string): { content?: string; embeds?: EmbedBuilder[] } {
   switch (result.status) {
+    case "STORAGE_UNAVAILABLE":
+      return { content: "❌ Não foi possível salvar a imagem no Blob agora. Tente novamente em alguns instantes." };
     case "AI_UNAVAILABLE":
       return { content: "❌ Identificação por IA indisponível." };
     case "NOT_RECOGNIZED":

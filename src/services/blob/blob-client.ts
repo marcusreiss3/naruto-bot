@@ -65,6 +65,8 @@ export type CreateObjectOptions = {
   prefix?: string;
   /** Ex.: "image/png". A extensao da URL final sai daqui. */
   mimeType: string;
+  /** Dias ate a exclusao automatica pelo Blob (1 a 365). */
+  expire?: number;
 };
 
 export type CreateObjectResponse = {
@@ -148,7 +150,11 @@ export async function createObject(options: CreateObjectOptions): Promise<Create
 
   return request<CreateObjectResponse>("objects", {
     method: "POST",
-    params: { name: options.name, prefix: options.prefix },
+    params: {
+      name: options.name,
+      prefix: options.prefix,
+      expire: options.expire === undefined ? undefined : String(options.expire),
+    },
     body: form,
   });
 }

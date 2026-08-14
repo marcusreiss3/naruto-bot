@@ -36,7 +36,7 @@ describe("criação de ficha", () => {
     }
   });
 
-  it("escolhe automaticamente somente entre as três opções que já foram salvas", () => {
+  it("mantém as opções salvas endereçáveis até o jogador escolher", () => {
     const options = [
       { villageId: "KONOHA", clanId: "uzumaki" },
       { villageId: "SUNA", clanId: "kazekage" },
