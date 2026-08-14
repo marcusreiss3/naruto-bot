@@ -1,0 +1,11 @@
+// Build de producao: so' o que o bot precisa pra rodar.
+//
+// O tsconfig.json principal inclui tests/ (pra o typecheck local cobrir a
+// suite), mas em producao as devDependencies nao sao instaladas — sem vitest,
+// compilar tests/ quebra o deploy inteiro com TS2307. Runtime nao usa teste.
+//
+// rootDir continua "." (herdado), entao a saida segue em dist/src/index.js.
+{
+  "extends": "./tsconfig.json",
+  "include": ["src/**/*.ts"]
+}
