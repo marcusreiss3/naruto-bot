@@ -6,12 +6,44 @@
 // em os.tmpdir() e anexa sslidentity/sslpassword/sslcert na DATABASE_URL.
 // Sem PG_SSL_IDENTITY_B64 configurada, so' repassa a DATABASE_URL como esta.
 //
-// Uso: node scripts/with-pg-tls.mjs npx prisma db push --skip-generate
-import "dotenv/config";
-import { mkdirSync, writeFileSync } from "node:fs";
+// Uso: node scripts/with-pg-tls.mjs prisma db push --skip-generate
+//
+// ZERO dependencia de pacote: este script e' a primeira coisa que roda no
+// start:prod, antes de qualquer garantia sobre node_modules. Ja quebrou o
+// deploy importando "dotenv/config", entao o .env e' lido na mao aqui.
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
+
+// Parser minimo de .env: KEY=VALUE por linha, ignora comentario e linha vazia,
+// tira aspas em volta do valor. Variavel que ja existe no ambiente vence o
+// arquivo (painel da Square tem prioridade sobre .env commitado).
+function loadDotEnv() {
+  let raw;
+  try {
+    raw = readFileSync(join(process.cwd(), ".env"), "utf8");
+  } catch {
+    return; // sem .env: as vars vem do ambiente
+  }
+  for (const line of raw.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const eq = trimmed.indexOf("=");
+    if (eq === -1) continue;
+    const key = trimmed.slice(0, eq).trim();
+    let value = trimmed.slice(eq + 1).trim();
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+    if (process.env[key] === undefined) process.env[key] = value;
+  }
+}
+
+loadDotEnv();
 
 function resolveDatabaseUrl() {
   if (!process.env.PG_SSL_IDENTITY_B64 || !process.env.DATABASE_URL) return process.env.DATABASE_URL;

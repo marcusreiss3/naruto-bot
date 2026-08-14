@@ -1,4 +1,4 @@
-import "dotenv/config";
+import "./load-env.js";
 
 function req(name: string): string {
   const v = process.env[name];
