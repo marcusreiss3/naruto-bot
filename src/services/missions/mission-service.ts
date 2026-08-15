@@ -5,6 +5,7 @@ import type { MissionDef } from "../../data/types.js";
 import { addXp } from "../characters/character-service.js";
 import { grantCharacterRyo } from "../economy/character-economy.js";
 import { accumulateMissionActivity } from "../economy/weekly-tax.js";
+import { PERFORMANCE_LIMITS, warnIfSlow } from "../../utils/performance.js";
 
 const CHECK_EMOJI = "<:check:1517556025614532658>";
 const EXP_EMOJI = "<:exp:1523544859103854712>";
@@ -32,12 +33,19 @@ export async function assignMission(
     where: { charId, missionId, status: "ACTIVE" },
   });
   if (existing) return { ok: false, error: "Personagem já tem essa missão ativa." };
-  const inst = await prisma.missionInstance.create({
-    data: { charId, missionId, ...(initialState ? { stateJson: JSON.stringify(initialState) } : {}) },
+  // A instância e seus objetivos nascem juntos, em duas escritas em vez de
+  // uma escrita por objetivo. A transação também evita missão parcialmente
+  // criada se a criação de algum objetivo falhar.
+  await prisma.$transaction(async (tx) => {
+    const inst = await tx.missionInstance.create({
+      data: { charId, missionId, ...(initialState ? { stateJson: JSON.stringify(initialState) } : {}) },
+    });
+    if (def.objectives.length) {
+      await tx.missionObjectiveState.createMany({
+        data: def.objectives.map((objective) => ({ instanceId: inst.id, objectiveId: objective.id })),
+      });
+    }
   });
-  for (const o of def.objectives) {
-    await prisma.missionObjectiveState.create({ data: { instanceId: inst.id, objectiveId: o.id } });
-  }
   return { ok: true };
 }
 
@@ -87,6 +95,33 @@ export async function getActiveMissions(charId: string) {
     where: { charId, status: "ACTIVE" },
     include: { objectives: true },
   });
+}
+
+// Entrada barata para o roteador de mensagens. Antes dele, toda mensagem
+// passava por todos os continuadores de missão, e cada um procurava o
+// personagem e suas missões novamente. Aqui buscamos somente os ids das
+// missões ativas uma vez e convertemos para seus tipos estáticos.
+export async function getActiveMissionTypesForDiscord(
+  discordId: string,
+  guildId: string,
+): Promise<Set<MissionDef["type"]>> {
+  const startedAt = performance.now();
+  const instances = await prisma.missionInstance.findMany({
+    where: {
+      status: "ACTIVE",
+      character: { discordId, guildId },
+    },
+    select: { missionId: true },
+  });
+  const types = new Set<MissionDef["type"]>();
+  for (const instance of instances) {
+    const mission = getMission(instance.missionId);
+    if (mission) types.add(mission.type);
+  }
+  warnIfSlow("query.missoes_ativas", startedAt, PERFORMANCE_LIMITS.queryMs, {
+    active: instances.length,
+  });
+  return types;
 }
 
 export async function getActiveInstanceForChannel(charId: string, channelId: string) {

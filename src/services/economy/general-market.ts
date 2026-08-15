@@ -157,15 +157,15 @@ export async function ensureGeneralMarketOffers(
   // O catch cobre a corrida em que outra chamada insere entre o nosso SELECT e
   // o nosso INSERT: a unicidade rejeita, e a releitura abaixo pega o conjunto
   // vencedor. Perder a corrida e' o caminho normal, nao um erro.
-  for (const itemId of sorteados) {
-    await prisma.generalMarketOffer
-      .upsert({
+  await Promise.all(
+    sorteados.map((itemId) =>
+      prisma.generalMarketOffer.upsert({
         where: { villageId_dayKey_itemId: { villageId, dayKey, itemId } },
         create: { villageId, dayKey, itemId, initialQty: quantidade, remainingQty: quantidade },
         update: {},
-      })
-      .catch(() => null);
-  }
+      }).catch(() => null),
+    ),
+  );
 
   // Relemos em vez de devolver o que acabamos de montar: se outra chamada
   // venceu a corrida, o conjunto valido e' o dela.

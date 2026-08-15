@@ -90,15 +90,15 @@ export async function ensureShopPurchaseOffers(
   );
   const quantity = purchaseOfferQuantity(population.ativos);
 
-  for (const itemId of selected) {
-    await prisma.villageShopPurchaseOffer
-      .upsert({
+  await Promise.all(
+    selected.map((itemId) =>
+      prisma.villageShopPurchaseOffer.upsert({
         where: { shopId_dayKey_itemId: { shopId: shop.id, dayKey, itemId } },
         create: { shopId: shop.id, dayKey, itemId, initialQty: quantity, remainingQty: quantity },
         update: {},
-      })
-      .catch(() => null);
-  }
+      }).catch(() => null),
+    ),
+  );
 
   const created = await prisma.villageShopPurchaseOffer.findMany({
     where: { shopId: shop.id, dayKey },

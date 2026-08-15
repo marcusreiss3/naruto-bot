@@ -65,6 +65,14 @@ npm run typecheck
 npm test
 ```
 
+### Monitoramento de desempenho
+
+Após publicar, acompanhe os logs por linhas iniciadas em `[performance]`.
+Elas só aparecem quando uma consulta de missões ativas passa de **200 ms** ou
+quando um handler de missão passa de **750 ms**. O aviso indica a operação,
+a duração e, nos handlers, o canal afetado — sem registrar conteúdo de
+mensagens nem identificadores de usuários.
+
 ---
 
 ## 7. Criar personagem de teste

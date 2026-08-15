@@ -19,6 +19,7 @@ import {
 export type ReceiptSender = (receipt: CharacterReceipt) => Promise<boolean>;
 
 let timer: NodeJS.Timeout | null = null;
+const RECEIPT_CONCURRENCY = 4;
 
 export function stopTaxScheduler(): void {
   if (timer) clearTimeout(timer);
@@ -42,12 +43,14 @@ export async function runPendingClosures(sendReceipt?: ReceiptSender, now = new 
 // A DM fica FORA da transacao de cobranca de proposito: rede lenta nao pode
 // segurar escrita no SQLite. Se a DM falhar, a WeeklyTaxCharge continua no
 // banco e serve de recibo para consulta privada (aba Relatorios de /vila).
-async function deliverReceipts(receipts: CharacterReceipt[], send: ReceiptSender): Promise<void> {
-  for (const receipt of receipts) {
-    if (receipt.exempt || receipt.totalRyo <= 0) continue;
+export async function deliverReceipts(receipts: CharacterReceipt[], send: ReceiptSender): Promise<void> {
+  const pending = receipts.filter((receipt) => !receipt.exempt && receipt.totalRyo > 0);
+  for (let offset = 0; offset < pending.length; offset += RECEIPT_CONCURRENCY) {
+    await Promise.all(pending.slice(offset, offset + RECEIPT_CONCURRENCY).map(async (receipt) => {
     const entregue = await send(receipt).catch(() => false);
     if (entregue) await markReceiptSent(receipt.charId, receipt.weekKey).catch(() => undefined);
     else log.warn(`Recibo de ${receipt.weekKey} não entregue a ${receipt.discordId}; fica salvo no banco.`);
+    }));
   }
 }
 
