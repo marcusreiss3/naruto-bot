@@ -22,6 +22,8 @@ import {
 } from "../services/characters/character-service.js";
 import { CLANS, getAbility, ALL_ABILITIES, MISSIONS } from "../data/index.js";
 import { allNodes } from "../data/element-trees/index.js";
+import { ITEMS } from "../data/items.js";
+import { addInventoryItem } from "../services/characters/inventory.js";
 import { assignMission, removeMission, completeMission, buildMissionCompleteEmbed } from "../services/missions/mission-service.js";
 import { getActiveSession, getSessionById, endCombat, type SessionFull } from "../services/combat/combat-engine.js";
 import { onCombatEnded } from "../services/missions/mission-runtime.js";
@@ -252,6 +254,12 @@ export const admin: Command = {
       s
         .setName("desbloquear-tudo")
         .setDescription("DEBUG: 999 em todo atributo, todo elemento concedido, todo nó de toda árvore desbloqueado")
+        .addUserOption((o) => o.setName("usuario").setDescription("Usuário").setRequired(true)),
+    )
+    .addSubcommand((s) =>
+      s
+        .setName("item-dar-tudo")
+        .setDescription("DEBUG: concede 1 unidade de cada item do catálogo")
         .addUserOption((o) => o.setName("usuario").setDescription("Usuário").setRequired(true)),
     ),
   async autocomplete(interaction: AutocompleteInteraction) {
@@ -581,6 +589,12 @@ export const admin: Command = {
         await interaction.editReply(
           `✅ **${char.name}**: 999 em todos os atributos, todos os elementos e estilos de luta concedidos e ${nodes.length} nós desbloqueados (todas as árvores — elementos, kekkei genkai e TODOS os clãs, mesmo os que não são o seu).`,
         );
+        return;
+      }
+      case "item-dar-tudo": {
+        const char = await getChar();
+        for (const item of ITEMS) await addInventoryItem(prisma, char.id, item.id, 1);
+        await interaction.editReply(`✅ **${char.name}**: 1 unidade de cada um dos ${ITEMS.length} itens do catálogo.`);
         return;
       }
       case "ficha-resetar": {
