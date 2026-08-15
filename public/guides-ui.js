@@ -17,6 +17,23 @@
   const ACTION_LABELS = { COMUM: "Ação comum", BONUS: "Ação bônus", MOVIMENTO: "Movimento", REACAO: "Reação" };
   const RESOURCE_LABELS = { chakra: "Chakra", energia: "Energia" };
   const GUIDE_ICON_SPRITE = "/assets/guides/guide-icons.svg?v=1";
+  const COMMAND_GROUP_ICONS = {
+    creation: "guide-creation",
+    character: "guide-attributes",
+    combat: "guide-combat",
+    equipment: "guide-items",
+    world: "guide-travel",
+    missions: "guide-missions",
+    resources: "guide-items",
+    economy: "guide-economy",
+    village: "guide-clans",
+  };
+  const EQUIPMENT_CATEGORY_ICONS = {
+    WEAPON: "guide-combat",
+    NINJA_TOOL: "guide-items",
+    MATERIAL: "guide-items",
+    FOOD: "guide-items",
+  };
   // app.js roda depois deste script (ordem em index.html), mas so' chamamos
   // isso na hora de renderizar a pagina, ja' com os dois scripts carregados.
   const assetUrl = (path) => (window.assetUrl ? window.assetUrl(path) : path);
@@ -358,7 +375,7 @@
         : groups.filter((group) => (block.groupIds || []).includes(group.id));
       if (!selected.length) return catalogContractError("comandos");
       return `<div class="guide-command-groups">${selected.map((group) => `<section class="command-group">
-        <h3><span aria-hidden="true">${escapeHtml(group.icon)}</span>${escapeHtml(group.title)}</h3>
+        <h3><span class="command-group-icon">${guideIcon(COMMAND_GROUP_ICONS[group.id] || "guide-commands")}</span>${escapeHtml(group.title)}</h3>
         <div class="command-grid">${group.commands.map((entry) => `<article class="command-card"><code>${escapeHtml(entry.command)}</code><p>${escapeHtml(entry.description)}</p></article>`).join("")}</div>
       </section>`).join("")}</div>`;
     }
@@ -421,13 +438,13 @@
       const categoriesRuntime = runtimeCatalog?.categories || [];
       if (!items.length || !categoriesRuntime.length) return catalogContractError("itens");
       const unarmed = runtimeCatalog?.unarmedAttack
-        ? `<section class="equipment-group"><h3 class="equipment-group-title"><span aria-hidden="true">👊</span>Sem arma equipada</h3><div class="guide-equipment-grid"><article class="equipment-card"><div class="equipment-card-head"><div><small>Ataque desarmado</small><h4>${escapeHtml(runtimeCatalog.unarmedAttack.name)}</h4></div></div>${abilityMarkup(runtimeCatalog.unarmedAttack, "/atacar alvo")}</article></div></section>`
+        ? `<section class="equipment-group"><h3 class="equipment-group-title"><span class="equipment-group-icon">${guideIcon("guide-combat")}</span>Sem arma equipada</h3><div class="guide-equipment-grid"><article class="equipment-card"><div class="equipment-card-head"><div><small>Ataque desarmado</small><h4>${escapeHtml(runtimeCatalog.unarmedAttack.name)}</h4></div></div>${abilityMarkup(runtimeCatalog.unarmedAttack, "/atacar alvo")}</article></div></section>`
         : "";
       const groups = categoriesRuntime.map((category) => {
         const categoryItems = items.filter((item) => item.category === category.id);
         if (!categoryItems.length) return "";
         return `<section class="equipment-group" data-entry-group>
-          <h3 class="equipment-group-title"><span aria-hidden="true">${escapeHtml(category.icon)}</span>${escapeHtml(category.label)}</h3>
+          <h3 class="equipment-group-title"><span class="equipment-group-icon">${guideIcon(EQUIPMENT_CATEGORY_ICONS[category.id] || "guide-items")}</span>${escapeHtml(category.label)}</h3>
           <div class="guide-equipment-grid">${categoryItems.map((item) => {
             const searchValue = normalize(`${category.label} ${collectText(item).join(" ")}`);
             return `<details class="equipment-card item-card" id="item-${escapeHtml(item.id)}" data-entry data-entry-id="${escapeHtml(item.id)}" data-filter-value="${escapeHtml(item.category)}" data-search-value="${escapeHtml(searchValue)}">
