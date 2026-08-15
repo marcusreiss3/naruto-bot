@@ -132,7 +132,66 @@ export type EmojiKey = keyof typeof ECONOMY_EMOJI_PLACEHOLDERS;
 
 // PREENCHA AQUI quando os emojis customizados existirem no servidor.
 // Deixe vazio enquanto nao houver: placeholder Unicode e' o padrao.
-const CUSTOM_EMOJIS: Partial<Record<EmojiKey, string>> = {};
+const CUSTOM_EMOJIS: Partial<Record<EmojiKey, string>> = {
+  // Madeira e derivados
+  madeira: "<:madeira:1538182896613986314>",
+  fibra_vegetal: "<:fibra_vegetal:1538182874216534027>",
+  papel: "<:papel:1538182904734023792>",
+  lenha: "<:lenha:1538182892616945774>",
+
+  // Mineral
+  pedra: "<:pedra:1538182907821039626>",
+  minerio_ferro: "<:minerio_de_ferro:1538182899973496983>",
+  carvao: "<:carvao:1538182940188483706>",
+  argila: "<:argila:1538182930591912037>",
+
+  // Natural e alimento cru
+  agua_limpa: "<:agua_limpa:1538182929048539227>",
+  carne_crua: "<:carne_crua:1538182938833846272>",
+  peixe_cru: "<:peixe_cru:1538182912304746546>",
+  fruta: "<:fruta:1538182878645457016>",
+  grao: "<:grao:1538182881153654884>",
+  couro: "<:couro:1538182944596697179>",
+  erva_medicinal: "<:erva_medicinal:1538182867975143535>",
+
+  // Processados
+  lingote_ferro: "<:lingote_de_ferro:1538182894927880302>",
+  aco: "<:aco:1538182927308038205>",
+  polvora: "<:polvora:1538182917380116480>",
+  tinta_de_selo: "<:tinta_de_selo:1538182925458087936>",
+
+  // Raros
+  minerio_raro: "<:minerio_raro:1538182901735358595>",
+  madeira_reforcada: "<:madeira_reforcada:1538182898136653874>",
+
+  // Equipamento
+  kunai: "<:kunai:1538182886371627098>",
+  shuriken: "<:shuriken:1538182921515438150>",
+  senbon: "<:senbon:1538182920148230214>",
+  papel_bomba: "<:papel_bomba:1538182906151968768>",
+  katana: "<:katana:1538182882441568337>",
+  lamina_chakra: "<:lamina_chakra:1538182890850885753>",
+  pergaminho_arsenal: "<:pergaminho_ninja:1538182915379433574>",
+
+  // ---- Fora da tabela da etapa 08 ----
+  sal: "<:sal:1538182918785208321>",
+  farinha: "<:farinha:1538182872991666186>",
+  caldo: "<:caldo:1538182934538756096>",
+  tempero: "<:tempero:1538182923792941086>",
+  pao: "<:pao:1538182903375208548>",
+  carne_cozida: "<:carne_cozida:1538182936795549707>",
+  peixe_cozido: "<:peixe_cozido:1538182909742022737>",
+  ensopado: "<:ensopado:1538182865802498108>",
+  dango: "<:dango:1538182947159674901>",
+  lamen: "<:lamen:1538182889378684938>",
+  fuma_shuriken: "<:fuma_shuriken:1538182879916589077>",
+  bomba_fumaca: "<:bomba_fumaa:1538182932529811517>",
+  fios_aco_ninja: "<:fios_de_aco:1538182876741500958>",
+  kunai_explosiva: "<:kunai_explosiva:1538182887881445446>",
+  corrente_ferro: "<:corrente_ferro:1538182941744824330>",
+  esfera_explosiva: "<:esfera_explosiva:1538182869313130526>",
+  pergaminho_arsenal_gasto: "<:pergaminho_desgastado:1538182914246975508>",
+};
 
 // Override em tempo de execucao. Existe para o teste e para um futuro carregador
 // de configuracao; o caminho normal continua sendo a constante acima.
