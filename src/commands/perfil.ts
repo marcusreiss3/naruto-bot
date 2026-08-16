@@ -7,6 +7,7 @@ import { getTrait } from "../data/traits.js";
 import { moveRange } from "../services/characters/formulas.js";
 import { formatRyo } from "../services/economy/character-economy.js";
 import { prisma } from "../db/client.js";
+import { emoji } from "../ui/economy-emojis.js";
 
 export const perfil: Command = {
   data: new SlashCommandBuilder()
@@ -57,7 +58,7 @@ export const perfil: Command = {
     const trait = char.trait ? getTrait(char.trait.traitId) : undefined;
 
     const embed = new EmbedBuilder()
-      .setTitle(`📜 ${char.displayName?.trim() || char.name} — Nível ${char.level}`)
+      .setTitle(`${emoji("perfil")} ${char.displayName?.trim() || char.name} — Nível ${char.level}`)
       .setColor(0xe67e22)
       .addFields(
         {

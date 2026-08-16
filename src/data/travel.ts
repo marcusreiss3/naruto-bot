@@ -1,4 +1,5 @@
 import { VILLAGE_NAMES } from "./villages.js";
+import type { EmojiKey } from "../ui/economy-emojis.js";
 
 // Mapa do sistema de viagem. Os tempos representam ritmo de jogo, nao minutos
 // literais do anime: a geografia canonica serve para ordenar o que e' perto ou
@@ -23,7 +24,7 @@ export type TravelPathId = "FLORESTA" | "DESERTO" | "MONTANHA";
 export interface TravelLocation {
   id: TravelLocationId;
   label: string;
-  emoji: string;
+  emojiKey: EmojiKey;
   kind: TravelLocationKind;
   roleId: string;
   channelIds: readonly string[];
@@ -33,7 +34,7 @@ export interface TravelLocation {
 export interface TravelPath {
   id: TravelPathId;
   label: string;
-  emoji: string;
+  emojiKey: EmojiKey;
   roleId: string;
 }
 
@@ -41,19 +42,19 @@ export const TRAVEL_PATHS: Record<TravelPathId, TravelPath> = {
   FLORESTA: {
     id: "FLORESTA",
     label: "Caminho da Floresta",
-    emoji: "🌲",
+    emojiKey: "floresta_rio",
     roleId: "1537476916490276924",
   },
   DESERTO: {
     id: "DESERTO",
     label: "Caminho do Deserto",
-    emoji: "🏜️",
+    emojiKey: "deserto",
     roleId: "1537476956931620935",
   },
   MONTANHA: {
     id: "MONTANHA",
     label: "Caminho da Montanha",
-    emoji: "🏔️",
+    emojiKey: "montanhas_caverna",
     roleId: "1537477005346345030",
   },
 };
@@ -62,7 +63,7 @@ export const TRAVEL_LOCATIONS: Record<TravelLocationId, TravelLocation> = {
   KONOHA: {
     id: "KONOHA",
     label: VILLAGE_NAMES.KONOHA,
-    emoji: "🍃",
+    emojiKey: "konoha",
     kind: "VILLAGE",
     roleId: "1537474891014607009",
     channelIds: ["1528612609434194010"],
@@ -71,7 +72,7 @@ export const TRAVEL_LOCATIONS: Record<TravelLocationId, TravelLocation> = {
   SUNA: {
     id: "SUNA",
     label: VILLAGE_NAMES.SUNA,
-    emoji: "🏜️",
+    emojiKey: "suna",
     kind: "VILLAGE",
     roleId: "1537474970739941376",
     channelIds: ["1528612734071996586"],
@@ -80,7 +81,7 @@ export const TRAVEL_LOCATIONS: Record<TravelLocationId, TravelLocation> = {
   KIRI: {
     id: "KIRI",
     label: VILLAGE_NAMES.KIRI,
-    emoji: "🌫️",
+    emojiKey: "kiri",
     kind: "VILLAGE",
     roleId: "1537475041955029142",
     channelIds: ["1528612808932196422"],
@@ -89,7 +90,7 @@ export const TRAVEL_LOCATIONS: Record<TravelLocationId, TravelLocation> = {
   KUMO: {
     id: "KUMO",
     label: VILLAGE_NAMES.KUMO,
-    emoji: "☁️",
+    emojiKey: "kumo",
     kind: "VILLAGE",
     roleId: "1537475145424306176",
     channelIds: ["1528612950347087872"],
@@ -98,7 +99,7 @@ export const TRAVEL_LOCATIONS: Record<TravelLocationId, TravelLocation> = {
   IWA: {
     id: "IWA",
     label: VILLAGE_NAMES.IWA,
-    emoji: "🪨",
+    emojiKey: "iwagakure",
     kind: "VILLAGE",
     roleId: "1537475259442401301",
     channelIds: ["1528612907640684706"],
@@ -107,7 +108,7 @@ export const TRAVEL_LOCATIONS: Record<TravelLocationId, TravelLocation> = {
   FLORESTA: {
     id: "FLORESTA",
     label: "Floresta e Rio",
-    emoji: "🌲",
+    emojiKey: "floresta_rio",
     kind: "OPEN_WORLD",
     roleId: "1537474136505458698",
     channelIds: ["1515881109878214746", "1515881122179842113"],
@@ -116,7 +117,7 @@ export const TRAVEL_LOCATIONS: Record<TravelLocationId, TravelLocation> = {
   MONTANHAS: {
     id: "MONTANHAS",
     label: "Montanhas e Caverna",
-    emoji: "🏔️",
+    emojiKey: "montanhas_caverna",
     kind: "OPEN_WORLD",
     roleId: "1537474202259427349",
     channelIds: ["1515881137170546852", "1521879431168131132"],
@@ -125,7 +126,7 @@ export const TRAVEL_LOCATIONS: Record<TravelLocationId, TravelLocation> = {
   CAMPO_ABERTO: {
     id: "CAMPO_ABERTO",
     label: "Campo Aberto",
-    emoji: "🌄",
+    emojiKey: "campo_aberto",
     kind: "OPEN_WORLD",
     roleId: "1537474632205074543",
     channelIds: ["1522249926845923339"],
@@ -134,7 +135,7 @@ export const TRAVEL_LOCATIONS: Record<TravelLocationId, TravelLocation> = {
   DESERTO: {
     id: "DESERTO",
     label: "Deserto",
-    emoji: "🏜️",
+    emojiKey: "deserto",
     kind: "OPEN_WORLD",
     roleId: "1537474774563823686",
     channelIds: ["1516428050063954152"],

@@ -10,6 +10,7 @@ import {
   type ContainerChild,
   type TopLevel,
 } from "./economy-components-v2.js";
+import { emoji } from "./economy-emojis.js";
 
 export type MissionNoticeKind = "objetivo" | "investigacao" | "descoberta" | "pausa" | "perigo" | "falha";
 
@@ -27,7 +28,7 @@ const APPEARANCE: Record<MissionNoticeKind, { emoji: string; accent: AccentName 
   investigacao: { emoji: "🔎", accent: "vila" },
   descoberta: { emoji: "🧩", accent: "cofre" },
   pausa: { emoji: "⏳", accent: "aviso" },
-  perigo: { emoji: "⚔️", accent: "obras" },
+  perigo: { emoji: emoji("combate"), accent: "obras" },
   falha: { emoji: "❌", accent: "erro" },
 };
 

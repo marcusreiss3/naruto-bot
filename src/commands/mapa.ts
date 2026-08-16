@@ -65,6 +65,7 @@ import { resolveYukiHeir, yukiHeirMapHandle } from "../services/missions/yuki-he
 import { corpsePulseMapHandle, resolveCorpsePulse } from "../services/missions/corpse-pulse.js";
 import { eliteMaskMapHandle, resolveEliteMask } from "../services/missions/elite-mask.js";
 import { forbiddenBellMapHandle, resolveForbiddenBell } from "../services/missions/forbidden-bell.js";
+import { emoji } from "../ui/economy-emojis.js";
 
 export const mapa: Command = {
   data: new SlashCommandBuilder().setName("mapa").setDescription("Mostra o mapa do cenário deste canal"),
@@ -75,7 +76,7 @@ export const mapa: Command = {
       ? getScenarioById(session.scenarioId) ?? getScenarioByChannel(channelId)
       : getScenarioByChannel(channelId);
     if (!scenario) {
-      await interaction.reply({ content: "❌ Este canal não tem um cenário configurado.", ephemeral: true });
+      await interaction.reply({ content: `${emoji("erro")} Este canal não tem um cenário configurado.`, ephemeral: true });
       return;
     }
     await interaction.deferReply();
@@ -464,7 +465,7 @@ export const mapa: Command = {
     const statusPng = await MapRenderer.renderStatusPanel(entities);
 
     const embed = new EmbedBuilder()
-      .setTitle(`🗺️ ${renderScenario.name}`)
+      .setTitle(`${emoji("mapa")} ${renderScenario.name}`)
       .setDescription(`${renderScenario.description}${missionNote}`)
       .setColor(0x2ecc71)
       .setImage("attachment://mapa.png");

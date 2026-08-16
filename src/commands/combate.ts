@@ -12,6 +12,7 @@ import {
   type Message,
 } from "discord.js";
 import type { Command } from "./types.js";
+import { emoji } from "../ui/economy-emojis.js";
 import { prisma } from "../db/client.js";
 import { getScenarioByChannel, getScenarioById, ALL_ABILITIES } from "../data/index.js";
 import { moveRange } from "../services/characters/formulas.js";
@@ -388,7 +389,7 @@ async function iniciar(interaction: ChatInputCommandInteraction): Promise<void> 
   }
 
   await interaction.editReply(
-    `⚔️ Combate iniciado em **${scenario.name}** com ${players.length} participante(s)!\nUse \`/mapa\` para ver o grid.`,
+    `${emoji("combate")} Combate iniciado em **${scenario.name}** com ${players.length} participante(s)!\nUse \`/mapa\` para ver o grid.`,
   );
   await sendCombatView(interaction, session.id, ["O combate começou. Escolha seu deslocamento."], {
     followup: true,

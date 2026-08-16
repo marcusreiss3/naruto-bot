@@ -3,6 +3,7 @@ import type { Command } from "./types.js";
 import { getMission, MISSIONS } from "../data/index.js";
 import { getOrCreateCharacter } from "../services/characters/character-service.js";
 import { getActiveMissions } from "../services/missions/mission-service.js";
+import { emoji } from "../ui/economy-emojis.js";
 
 export const missoes: Command = {
   data: new SlashCommandBuilder()
@@ -30,7 +31,7 @@ async function minhas(interaction: ChatInputCommandInteraction): Promise<void> {
     return;
   }
 
-  const embed = new EmbedBuilder().setTitle("📋 Suas missões").setColor(0x3498db);
+  const embed = new EmbedBuilder().setTitle(`${emoji("missoes")} Suas missões`).setColor(0x3498db);
   for (const inst of insts) {
     const def = getMission(inst.missionId);
     if (!def) continue;
@@ -40,7 +41,7 @@ async function minhas(interaction: ChatInputCommandInteraction): Promise<void> {
     for (const objective of def.objectives) {
       const done = objectiveStates.get(objective.id) ?? false;
       if (done) {
-        visibleObjectives.push(`✅ ${objective.description}`);
+        visibleObjectives.push(`${emoji("sucesso")} ${objective.description}`);
         continue;
       }
       visibleObjectives.push(`⬜ ${objective.description}`);
@@ -54,7 +55,7 @@ async function minhas(interaction: ChatInputCommandInteraction): Promise<void> {
 }
 
 async function ativas(interaction: ChatInputCommandInteraction): Promise<void> {
-  const embed = new EmbedBuilder().setTitle("🗂️ Missões do jogo").setColor(0x95a5a6);
+  const embed = new EmbedBuilder().setTitle(`${emoji("missoes")} Missões do jogo`).setColor(0x95a5a6);
   for (const def of MISSIONS) {
     embed.addFields({ name: `[${def.rank}] ${def.name} (\`${def.id}\`)`, value: def.description });
   }

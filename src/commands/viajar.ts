@@ -36,6 +36,7 @@ import {
   beginTravel,
   validStoredTravel,
 } from "../services/travel/travel-service.js";
+import { emoji } from "../ui/economy-emojis.js";
 
 const PREFIX = "viajar:v1";
 const villageDestinations = TRAVEL_LOCATION_IDS.filter(
@@ -51,7 +52,7 @@ function destinationButton(origin: TravelLocationId, destination: TravelLocation
   return new ButtonBuilder()
     .setCustomId(`${PREFIX}:go:${origin}:${destination}`)
     .setLabel(current ? `${local.label} · você está aqui` : `${local.label} · ${travelMinutes(origin, destination)} min`)
-    .setEmoji(local.emoji)
+    .setEmoji(emoji(local.emojiKey))
     .setStyle(current ? ButtonStyle.Secondary : ButtonStyle.Primary)
     .setDisabled(current);
 }
@@ -65,17 +66,17 @@ function row(origin: TravelLocationId, destinations: TravelLocationId[]) {
 export function renderTravelMenu(origin: TravelLocationId): TopLevel[] {
   const local = TRAVEL_LOCATIONS[origin];
   const children: ContainerChild[] = [
-    titleBlock("🗺️", "Central de Viagem", "Escolha o próximo destino da sua jornada"),
-    factsBlock([{ label: "Local atual", value: `${local.emoji} ${local.label}` }]),
+    titleBlock("viagem", "Central de Viagem", "Escolha o próximo destino da sua jornada"),
+    factsBlock([{ label: "Local atual", value: `${emoji(local.emojiKey)} ${local.label}` }]),
     noticeBlock(
       "aviso",
       "Ao partir, seu cargo atual será trocado por um cargo de caminho até a chegada automática.",
     ),
     divider(true),
-    text("## 🏘️ Vilas Ocultas\n-# O tempo considera a posição de cada nação no mundo shinobi."),
+    text(`## ${emoji("grupo_vilas")} Vilas Ocultas\n-# O tempo considera a posição de cada nação no mundo shinobi.`),
     row(origin, villageDestinations),
     divider(true),
-    text("## 🌍 Mundo Aberto\n-# Floresta inclui o Rio; Montanhas incluem a Caverna."),
+    text(`## ${emoji("mundo_aberto")} Mundo Aberto\n-# Floresta inclui o Rio; Montanhas incluem a Caverna.`),
     row(origin, openWorldDestinations),
     text("-# Duração das rotas: de 5 a 20 minutos. A escolha é confirmada imediatamente."),
   ];
@@ -89,14 +90,14 @@ function renderStarted(result: Awaited<ReturnType<typeof beginTravel>>): TopLeve
   const unix = Math.floor(result.arriveAt.getTime() / 1_000);
   return [
     economyContainer("cofre", [
-      titleBlock("🥾", "Viagem iniciada", `${origin.label} → ${destination.label}`),
+      titleBlock("viajando", "Viagem iniciada", `${origin.label} → ${destination.label}`),
       noticeBlock("sucesso", "Sua partida foi registrada e os cargos já foram atualizados."),
       divider(),
       factsBlock([
-        { label: "Destino", value: `${destination.emoji} ${destination.label}` },
+        { label: "Destino", value: `${emoji(destination.emojiKey)} ${destination.label}` },
         { label: "Duração", value: `${result.minutes} min` },
       ]),
-      text(`**Rota atual**\n${path.emoji} ${path.label}`),
+      text(`**Rota atual**\n${emoji(path.emojiKey)} ${path.label}`),
       text(`**Chegada automática**\n<t:${unix}:F> • <t:${unix}:R>`),
       text("-# Você receberá uma mensagem quando o destino for liberado."),
     ]),
@@ -122,8 +123,8 @@ function renderActive(row: NonNullable<Awaited<ReturnType<typeof activeTravel>>>
   const unix = Math.floor(row.arriveAt.getTime() / 1_000);
   return [
     economyContainer("aviso", [
-      titleBlock("🥾", "Você já está viajando", `${path.emoji} ${path.label}`),
-      factsBlock([{ label: "Destino", value: `${destination.emoji} ${destination.label}` }]),
+      titleBlock("viajando", "Você já está viajando", `${emoji(path.emojiKey)} ${path.label}`),
+      factsBlock([{ label: "Destino", value: `${emoji(destination.emojiKey)} ${destination.label}` }]),
       divider(),
       text(`**Chegada automática**\n<t:${unix}:F> • <t:${unix}:R>`),
       noticeBlock("bloqueio", "Espere a chegada antes de iniciar outra viagem."),
@@ -150,7 +151,7 @@ async function execute(interaction: ChatInputCommandInteraction): Promise<void> 
     await interaction.editReply(
       v2Edit([
         economyContainer("erro", [
-          titleBlock("🗺️", "Viagem indisponível neste canal"),
+          titleBlock("viagem", "Viagem indisponível neste canal"),
           noticeBlock("erro", "Use /viajar em um portão de vila ou em uma área do mundo aberto."),
           divider(),
           text(`**Canais permitidos**\n${channels.map((id) => `• <#${id}>`).join("\n")}`),

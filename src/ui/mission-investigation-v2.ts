@@ -10,6 +10,7 @@ import {
   titleBlock,
   type TopLevel,
 } from "./economy-components-v2.js";
+import { emoji } from "./economy-emojis.js";
 import { clueCountsByUser, investigationClueQuota } from "../services/missions/investigation-party.js";
 
 export interface InvestigationActionView {
@@ -186,7 +187,7 @@ export function investigationPanel(input: InvestigationPanelInput): TopLevel[] {
   children.push(
     divider(),
     text([
-      `**👥 Divisão da party — máximo ${quota} pista(s) por ninja**`,
+      `**${emoji("party")} Divisão da party — máximo ${quota} pista(s) por ninja**`,
       ...(input.members.length
         ? input.members.map((id) => `<@${id}> — **${counts[id] ?? 0}/${quota}**`)
         : ["-# Nenhum participante."]),

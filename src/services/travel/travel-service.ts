@@ -19,6 +19,7 @@ import {
   titleBlock,
   v2Public,
 } from "../../ui/economy-components-v2.js";
+import { emoji } from "../../ui/economy-emojis.js";
 import { log } from "../../utils/logger.js";
 
 export class TravelError extends Error {}
@@ -113,10 +114,10 @@ function arrivalPayload(destination: TravelLocationId) {
   const local = TRAVEL_LOCATIONS[destination];
   return v2Public([
     economyContainer("cofre", [
-      titleBlock("🗺️", "Viagem concluída", `${local.emoji} Você chegou a ${local.label}`),
+      titleBlock("viagem", "Viagem concluída", `${emoji(local.emojiKey)} Você chegou a ${local.label}`),
       noticeBlock("sucesso", "Seu cargo de caminho foi removido e o destino já está liberado."),
       divider(),
-      factsBlock([{ label: "Destino", value: `${local.emoji} ${local.label}` }]),
+      factsBlock([{ label: "Destino", value: `${emoji(local.emojiKey)} ${local.label}` }]),
       text(`Continue sua jornada em <#${local.arrivalChannelId}>.`),
     ]),
   ]);
