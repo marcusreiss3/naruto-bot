@@ -106,7 +106,7 @@ function renderStarted(result: Awaited<ReturnType<typeof beginTravel>>): TopLeve
 function renderError(message: string): TopLevel[] {
   return [
     economyContainer("erro", [
-      titleBlock("❌", "Não foi possível viajar"),
+      titleBlock("erro", "Não foi possível viajar"),
       noticeBlock("erro", message),
       text("-# Use /viajar novamente depois de corrigir o problema."),
     ]),

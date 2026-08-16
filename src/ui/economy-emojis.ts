@@ -21,7 +21,7 @@
 // Emoji animado usa `<a:nome:id>`. Nao invente ID: um ID que nao existe no
 // servidor renderiza como texto cru para todo mundo.
 
-import { ITEM_CATEGORY_ICONS, getItem } from "../data/items.js";
+import { ITEM_CATEGORY_ICONS, getItem, type ItemCategory } from "../data/items.js";
 
 // ---------------- Chaves ----------------
 
@@ -124,6 +124,14 @@ export const ECONOMY_EMOJI_PLACEHOLDERS = {
   caravana: "🐫",
   tempo: "⏳",
   populacao: "🧑‍🤝‍🧑",
+  // Categorias de inventario
+  categoria_armas: "⚔️",
+  categoria_ferramentas: "🧰",
+  categoria_consumiveis: "🧪",
+  categoria_comidas: "🍙",
+  categoria_materiais: "🧱",
+  categoria_itens_importantes: "🔑",
+  categoria_outros: "📦",
 } as const;
 
 export type EmojiKey = keyof typeof ECONOMY_EMOJI_PLACEHOLDERS;
@@ -133,6 +141,45 @@ export type EmojiKey = keyof typeof ECONOMY_EMOJI_PLACEHOLDERS;
 // PREENCHA AQUI quando os emojis customizados existirem no servidor.
 // Deixe vazio enquanto nao houver: placeholder Unicode e' o padrao.
 const CUSTOM_EMOJIS: Partial<Record<EmojiKey, string>> = {
+  // Interface, estados e gestao
+  ryo: "<:ryo:1538619371767726090>",
+  cofre: "<:cofre:1538619349773066320>",
+  vila: "<:vila:1538619390243905566>",
+  kage: "<:kage:1538619358085914784>",
+  estoque: "<:estoque:1538619353027715083>",
+  obras: "<:obras:1538619362758361258>",
+  impostos: "<:impostos:1538619355326185663>",
+  relatorio: "<:relatorio:1538619370455179416>",
+  producao: "<:producao:1538619367292674059>",
+  ordem: "<:ordem:1538619364276969612>",
+  manutencao: "<:manutencao:1538619359520497776>",
+  aviso: "<:aviso:1538619323151818823>",
+  erro: "<:erro:1538619351505174598>",
+  bloqueio: "<:bloqueio:1538619331707928637>",
+  sucesso: "<:sucesso:1538619385567125615>",
+  recibo: "<:recibo:1538619368974319656>",
+  mochila: "<:mochila:1538619361051414528>",
+  saciedade: "<:saciedade:1538619373194059816>",
+  caravana: "<:caravana:1538619333431922699>",
+  tempo: "<:tempo:1538619387404091512>",
+  populacao: "<:populacao:1538619365803560970>",
+
+  // Lojas
+  shop_MERCADO_GERAL: "<:shop_mercado_geral:1538619382157279333>",
+  shop_EMPORIO: "<:shop_emporio:1538619375026831400>",
+  shop_MARCENARIA: "<:shop_marcenaria:1538619380424773735>",
+  shop_FUNDICAO: "<:shop_fundicao:1538619377023451327>",
+  shop_ICHIRAKU: "<:shop_ichiraku:1538619378512175154>",
+  shop_OFICINA_SELOS: "<:shop_oficina_selos:1538619383864234115>",
+
+  // Categorias de inventario
+  categoria_armas: "<:categoria_armas:1538619335809966201>",
+  categoria_ferramentas: "<:categoria_ferramentas:1538619340998447225>",
+  categoria_consumiveis: "<:categoria_consumiveis:1538619338662219818>",
+  categoria_comidas: "<:categoria_comidas:1538619337584279713>",
+  categoria_materiais: "<:categoria_materiais:1538619345146613841>",
+  categoria_itens_importantes: "<:categoria_itens_importantes:1538619343070429334>",
+  categoria_outros: "<:categoria_outros:1538619347260669987>",
   // Madeira e derivados
   madeira: "<:madeira:1538182896613986314>",
   fibra_vegetal: "<:fibra_vegetal:1538182874216534027>",
@@ -224,6 +271,21 @@ export function itemEmoji(itemId: string): string {
   if (isEmojiKey(itemId)) return emoji(itemId);
   const categoria = getItem(itemId)?.category;
   return categoria ? ITEM_CATEGORY_ICONS[categoria] : ECONOMY_EMOJI_PLACEHOLDERS.estoque;
+}
+
+const INVENTORY_CATEGORY_EMOJI: Record<ItemCategory, EmojiKey> = {
+  WEAPON: "categoria_armas",
+  NINJA_TOOL: "categoria_ferramentas",
+  CONSUMABLE: "categoria_consumiveis",
+  FOOD: "categoria_comidas",
+  MATERIAL: "categoria_materiais",
+  KEY_ITEM: "categoria_itens_importantes",
+  OTHER: "categoria_outros",
+};
+
+/** Emoji estrutural para os grupos do /inventario; nao usa o icone de um item. */
+export function inventoryCategoryEmoji(category: ItemCategory): string {
+  return emoji(INVENTORY_CATEGORY_EMOJI[category]);
 }
 
 export function shopEmoji(shopType: string): string {

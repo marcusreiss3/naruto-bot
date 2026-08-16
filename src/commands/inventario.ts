@@ -31,7 +31,7 @@ import {
   type ContainerChild,
   type TopLevel,
 } from "../ui/economy-components-v2.js";
-import { emoji, itemEmoji } from "../ui/economy-emojis.js";
+import { emoji, inventoryCategoryEmoji } from "../ui/economy-emojis.js";
 
 // Painel de mochila em Components V2 (etapa 08).
 //
@@ -101,7 +101,7 @@ export function renderInventario(
   const ativa = grupos.find((g) => g.category === categoriaAtiva) ?? grupos[0]!;
   filhos.push(
     listBlock(
-      `${itemEmoji(ativa.entries[0]?.itemId ?? "")} ${ITEM_CATEGORY_LABELS[ativa.category]}`,
+      `${inventoryCategoryEmoji(ativa.category)} ${ITEM_CATEGORY_LABELS[ativa.category]}`,
       ativa.entries.map((entry) => {
         const item = entry.item;
         const acoes = item?.actions.map((a) => ITEM_ACTION_LABELS[a]).join(" • ");

@@ -611,7 +611,7 @@ async function abrirMenuDoacao(interaction: ButtonInteraction, viewer: Viewer): 
     .setCustomId("vila:doar:item")
     .setPlaceholder("Escolha o que doar")
     .addOptions(
-      { label: "Ryō", value: "__ryo__", emoji: "💰", description: `Você tem ${formatRyo(viewer.ryo)}` },
+      { label: "Ryō", value: "__ryo__", emoji: emoji("ryo"), description: `Você tem ${formatRyo(viewer.ryo)}` },
       ...inventario.map((row) => ({
         label: (getItem(row.itemId)?.name ?? row.name).slice(0, 100),
         value: row.itemId,

@@ -88,7 +88,7 @@ export const acao: Command = {
       const areas = areasForAction(action);
       const recovering = outcome.error.toLocaleLowerCase("pt-BR").includes("recuperando");
       const blocks: ContainerChild[] = [
-        titleBlock(recovering ? "⏳" : "⚠️", recovering ? "Você ainda está se recuperando" : "Ação indisponível", GATHER_ACTION_LABELS[action]),
+        titleBlock(recovering ? "tempo" : "aviso", recovering ? "Você ainda está se recuperando" : "Ação indisponível", GATHER_ACTION_LABELS[action]),
         noticeBlock(recovering ? "aviso" : "erro", outcome.error),
       ];
       if (areas.length) {
