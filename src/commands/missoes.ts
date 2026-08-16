@@ -44,7 +44,7 @@ async function minhas(interaction: ChatInputCommandInteraction): Promise<void> {
         visibleObjectives.push(`${emoji("sucesso")} ${objective.description}`);
         continue;
       }
-      visibleObjectives.push(`⬜ ${objective.description}`);
+      visibleObjectives.push(`${emoji("pendente")} ${objective.description}`);
       break;
     }
     const objs = visibleObjectives.join("\n");

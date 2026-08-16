@@ -33,7 +33,7 @@ export const party: Command = {
         return;
       }
       await interaction.reply(
-        `📨 <@${alvo.id}>, você foi convidado para a party de <@${interaction.user.id}>! Use \`/party aceitar\`.`,
+        `${emoji("convite")} <@${alvo.id}>, você foi convidado para a party de <@${interaction.user.id}>! Use \`/party aceitar\`.`,
       );
       return;
     }
@@ -57,8 +57,8 @@ export const party: Command = {
       }
       await interaction.reply(
         r.disbanded
-          ? `🚪 Você era o líder — a party foi dissolvida.`
-          : `🚪 <@${interaction.user.id}> saiu da party.`,
+          ? `${emoji("sair_party")} Você era o líder — a party foi dissolvida.`
+          : `${emoji("sair_party")} <@${interaction.user.id}> saiu da party.`,
       );
       return;
     }
@@ -73,7 +73,7 @@ export const party: Command = {
       .setTitle(`${emoji("party")} Sua Party`)
       .setColor(0x1abc9c)
       .setDescription(
-        p.memberIds.map((id) => `${id === p.leaderId ? "👑" : "•"} <@${id}>`).join("\n"),
+        p.memberIds.map((id) => `${id === p.leaderId ? emoji("lider_party") : "•"} <@${id}>`).join("\n"),
       );
     await interaction.reply({ embeds: [embed] });
   },
