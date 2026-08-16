@@ -1,4 +1,4 @@
-import { EmbedBuilder, SlashCommandBuilder, type ChatInputCommandInteraction } from "discord.js";
+import { AttachmentBuilder, EmbedBuilder, SlashCommandBuilder, type ChatInputCommandInteraction } from "discord.js";
 import type { Command } from "./types.js";
 import { ATTRIBUTES, ATTRIBUTE_LABELS, TRAIT_RARITY_LABELS } from "../config/enums.js";
 import { getOrCreateCharacter, setCharacterName } from "../services/characters/character-service.js";
@@ -8,6 +8,9 @@ import { moveRange } from "../services/characters/formulas.js";
 import { formatRyo } from "../services/economy/character-economy.js";
 import { prisma } from "../db/client.js";
 import { emoji } from "../ui/economy-emojis.js";
+import { renderProfileCard } from "../ui/profile-card.js";
+import { ELEMENT_LABELS, FIGHTING_STYLE_LABELS, NINJA_RANK_LABELS, type Element, type FightingStyle, type NinjaRank } from "../config/enums.js";
+import { VILLAGE_NAMES, type VillageId } from "../data/villages.js";
 
 export const perfil: Command = {
   data: new SlashCommandBuilder()
@@ -56,6 +59,21 @@ export const perfil: Command = {
     const elements = char.elements.map((e) => e.element).join(", ") || "nenhum";
     const clan = char.clan ? getClan(char.clan.clanId)?.name ?? char.clan.clanId : "nenhum";
     const trait = char.trait ? getTrait(char.trait.traitId) : undefined;
+    const card = await renderProfileCard({
+      name: char.displayName?.trim() || char.name,
+      username: user.username,
+      level: char.level,
+      rank: NINJA_RANK_LABELS[char.ninjaRank as NinjaRank] ?? char.ninjaRank,
+      village: char.villageId ? (VILLAGE_NAMES[char.villageId as VillageId] ?? char.villageId) : "Sem vila",
+      clan,
+      trait: trait ? { name: trait.name, rarity: trait.rarity } : undefined,
+      hp: { current: char.hpCurrent, max: char.hpMax },
+      chakra: r.chakra,
+      energy: r.energia,
+      elements: char.elements.map((entry) => ELEMENT_LABELS[entry.element as Element] ?? entry.element),
+      fightingStyles: char.fightingStyles.map((entry) => FIGHTING_STYLE_LABELS[entry.style as FightingStyle] ?? entry.style),
+      appearanceUrl: char.profile?.completedAt ? char.profile.appearanceUrl : undefined,
+    });
 
     const embed = new EmbedBuilder()
       .setTitle(`${emoji("perfil")} ${char.displayName?.trim() || char.name} — Nível ${char.level}`)
@@ -105,6 +123,6 @@ export const perfil: Command = {
 
     if (char.profile?.completedAt) embed.setImage(char.profile.appearanceUrl);
 
-    await interaction.reply({ embeds: [embed] });
+    await interaction.reply({ files: [new AttachmentBuilder(card, { name: "perfil.png" })] });
   },
 };

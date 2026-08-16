@@ -32,6 +32,7 @@ export async function getFullCharacter(discordId: string, guildId: string) {
       trait: true, // trait entra no combate junto dos nos — ver trait-service
       economy: true,
       elements: true,
+      fightingStyles: true,
       jutsus: true,
       inventory: true,
       skillNodes: true, // nos da arvore comprados (passivas entram no combate por aqui)
