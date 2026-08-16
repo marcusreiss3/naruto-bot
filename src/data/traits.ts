@@ -402,6 +402,42 @@ export const TRAITS: TraitDef[] = [
 
 const TRAIT_INDEX = new Map(TRAITS.map((t) => [t.id, t]));
 
+// Identidade visual das traits. Fica junto do catalogo para que qualquer
+// painel que mostre uma trait reutilize o mesmo emoji sem repetir IDs.
+const TRAIT_EMOJIS: Record<string, string> = {
+  trait_chakra_volatil: "<:artistadeexplosao:1537200917349146706>",
+  trait_hamura: "<:ascendentedalua:1537200919668723793>",
+  trait_corpo_celestial: "<:bestaverde:1537200921031741495>",
+  trait_lobo_solitario: "<:caminhodador:1537200922503946402>",
+  trait_instinto_caca: "<:demoniodanevoaoculta:1537200923909300354>",
+  trait_determinacao: "<:determinacao:1537200925771436093>",
+  trait_ashura: "<:deusshinobi:1537200927344164955>",
+  trait_especialista_bukijutsu: "<:especialistabukijutsu:1537200928665505802>",
+  trait_especialista_fuinjutsu: "<:especialistafuinjutsu:1537200930141773914>",
+  trait_especialista_genjutsu: "<:especialistagenjutsu:1537200931693920276>",
+  trait_especialista_ninjutsu: "<:especialistaninjutsu:1537200933396549763>",
+  trait_especialista_taijutsu: "<:especialistataijutsu:1537200935288184894>",
+  trait_herdeiro_de_sangue: "<:fantasmadocla:1537200936886214848>",
+  trait_faro_para_negocios: "<:faroparanegocios:1537200938178056192>",
+  trait_genio: "<:genioninja:1537200939935596704>",
+  trait_ultimo_em_pe: "<:imortal:1537200942070636555>",
+  trait_furia_crescente: "<:monstrodanevoaoculta:1537200944247472169>",
+  trait_cacador_de_recompensas: "<:ninjaqueviveuemcincoguerras:1537200945916813343>",
+  trait_muralha: "<:omaisforteescudo:1537200947485351936>",
+  trait_espirito_celestial: "<:oprofessor:1537200948882055258>",
+  trait_lamina_sem_bainha: "<:presabranca:1537200950412968006>",
+  trait_prodigio: "<:prodigioninja:1537200952078237737>",
+  trait_corredor: "<:relampagoazul:1537200953625673879>",
+  trait_pacto_de_sangue: "<:sabiodasinvocacoes:1537200955085295637>",
+  trait_indra: "<:salvadordomundo:1537200956897366026>",
+  trait_sangue_frio: "<:sanguefrio:1537200958348726352>",
+};
+
+/** Emoji exclusivo da trait; cai no dado para entradas antigas ou desconhecidas. */
+export function traitEmoji(traitId: string): string {
+  return TRAIT_EMOJIS[traitId] ?? "🎲";
+}
+
 export function getTrait(id: string): TraitDef | undefined {
   return TRAIT_INDEX.get(id);
 }

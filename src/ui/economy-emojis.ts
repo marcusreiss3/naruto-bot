@@ -157,6 +157,10 @@ export const ECONOMY_EMOJI_PLACEHOLDERS = {
   convite: "📨",
   sair_party: "🚪",
   lider_party: "👑",
+  objetivo: "🧭",
+  investigacao: "🔎",
+  descoberta: "🧩",
+  aparencia: "🎭",
 } as const;
 
 export type EmojiKey = keyof typeof ECONOMY_EMOJI_PLACEHOLDERS;
@@ -230,6 +234,10 @@ const CUSTOM_EMOJIS: Partial<Record<EmojiKey, string>> = {
   convite: "<:convite:1538642318754848818>",
   sair_party: "<:sair_party:1538642323523641454>",
   lider_party: "<:lider_party:1538642320319062036>",
+  objetivo: "<:objetivo:1538652720721035275>",
+  investigacao: "<:investigacao:1538652718951043193>",
+  descoberta: "<:descoberta:1538652717566787684>",
+  aparencia: "<:aparencia:1538653836091072582>",
   // Madeira e derivados
   madeira: "<:madeira:1538182896613986314>",
   fibra_vegetal: "<:fibra_vegetal:1538182874216534027>",

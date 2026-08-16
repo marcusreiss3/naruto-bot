@@ -24,12 +24,12 @@ export interface MissionNoticeInput {
 }
 
 const APPEARANCE: Record<MissionNoticeKind, { emoji: string; accent: AccentName }> = {
-  objetivo: { emoji: "🧭", accent: "vila" },
-  investigacao: { emoji: "🔎", accent: "vila" },
-  descoberta: { emoji: "🧩", accent: "cofre" },
-  pausa: { emoji: "⏳", accent: "aviso" },
+  objetivo: { emoji: emoji("objetivo"), accent: "vila" },
+  investigacao: { emoji: emoji("investigacao"), accent: "vila" },
+  descoberta: { emoji: emoji("descoberta"), accent: "cofre" },
+  pausa: { emoji: emoji("tempo"), accent: "aviso" },
   perigo: { emoji: emoji("combate"), accent: "obras" },
-  falha: { emoji: "❌", accent: "erro" },
+  falha: { emoji: emoji("erro"), accent: "erro" },
 };
 
 export function missionNotice(input: MissionNoticeInput): TopLevel[] {

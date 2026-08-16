@@ -26,6 +26,7 @@ import {
 } from "../services/appearance/appearance-service.js";
 import { MAX_APPEARANCE_IMAGE_BYTES } from "../services/appearance/image-download.js";
 import { standardizeTypedName } from "../services/appearance/vision.js";
+import { emoji } from "../ui/economy-emojis.js";
 
 // Estado pendente de confirmação por usuário (guild:user -> dados).
 interface Pending {
@@ -81,7 +82,7 @@ function renderResult(result: ClaimResult, imageUrl: string): { content?: string
       };
     case "OK": {
       const embed = new EmbedBuilder()
-        .setTitle("🎭 Aparência definida!")
+        .setTitle(`${emoji("aparencia")} Aparência definida!`)
         .setDescription(
           `A aparência que você escolheu foi de **${result.characterName}**.` +
             (result.reassignedFrom ? `\n_(liberado de um membro que saiu do servidor)_` : ""),
@@ -132,7 +133,7 @@ export const aparencia: Command = {
         return;
       }
       const embed = new EmbedBuilder()
-        .setTitle(`🎭 Aparência de ${user.username}`)
+        .setTitle(`${emoji("aparencia")} Aparência de ${user.username}`)
         .setDescription(`Personagem: **${ap.characterName}**`)
         .setColor(0x9b59b6)
         .setImage(ap.imageUrl);

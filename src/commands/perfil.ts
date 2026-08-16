@@ -3,7 +3,7 @@ import type { Command } from "./types.js";
 import { ATTRIBUTES, ATTRIBUTE_LABELS, TRAIT_RARITY_LABELS } from "../config/enums.js";
 import { getOrCreateCharacter, setCharacterName } from "../services/characters/character-service.js";
 import { getClan } from "../data/index.js";
-import { getTrait } from "../data/traits.js";
+import { getTrait, traitEmoji } from "../data/traits.js";
 import { moveRange } from "../services/characters/formulas.js";
 import { formatRyo } from "../services/economy/character-economy.js";
 import { prisma } from "../db/client.js";
@@ -93,7 +93,7 @@ export const perfil: Command = {
         },
         // Descricao completa em campo proprio: no "Geral" ela estouraria a
         // linha e as traits miticas tem texto longo.
-        ...(trait ? [{ name: `🎲 ${trait.name}`, value: trait.description }] : []),
+        ...(trait ? [{ name: `${traitEmoji(trait.id)} ${trait.name}`, value: trait.description }] : []),
         ...(char.profile?.completedAt ? [{ name: "História", value: char.profile.story.slice(0, 1024) }] : []),
         {
           name: `Jutsus (${char.jutsus.length})`,

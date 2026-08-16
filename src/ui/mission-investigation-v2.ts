@@ -74,7 +74,7 @@ export function investigationPanel(input: InvestigationPanelInput): TopLevel[] {
   const pageName = thesisPage ? "Página de conclusão" : `Pista ${page + 1} de ${input.actions.length}`;
   const progressLine = `Casos ${input.completedCases}/${input.totalCases} • Analisadas ${attempted.size}/${input.actions.length} • Obtidas ${input.evidence.length} • Erros ${input.mistakes}/${input.maxMistakes}`;
   const children = [
-    titleBlock("🕵️", `Investigação — ${input.title}`, `${pageName} • ${progressLine}`),
+    titleBlock("investigacao", `Investigação — ${input.title}`, `${pageName} • ${progressLine}`),
     divider(),
     buttonRow(
       ...input.actions.map((action, index) =>

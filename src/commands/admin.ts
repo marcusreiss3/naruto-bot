@@ -4,7 +4,7 @@ import { prisma } from "../db/client.js";
 import { isAdmin } from "../utils/permissions.js";
 import { ATTRIBUTES, ATTRIBUTE_LABELS, ELEMENTS, FIGHTING_STYLES, FIGHTING_STYLE_LABELS, MASTERY_LEVELS, RESOURCES, EFFECT_IDS, effectLabel, TRAIT_RARITIES, TRAIT_RARITY_LABELS } from "../config/enums.js";
 import type { Attribute, Element, EffectId, FightingStyle } from "../config/enums.js";
-import { getTrait, traitsByRarity } from "../data/traits.js";
+import { getTrait, traitEmoji, traitsByRarity } from "../data/traits.js";
 import { getCharacterTrait, setCharacterTrait, clearCharacterTrait } from "../services/characters/trait-service.js";
 import { respec } from "../services/characters/attribute-allocator.js";
 import {
@@ -524,7 +524,7 @@ export const admin: Command = {
         const trait = await getCharacterTrait(char.id);
         await interaction.editReply(
           trait
-            ? `🎲 **${char.name}** — **${trait.name}** ` +
+            ? `${traitEmoji(trait.id)} **${char.name}** — **${trait.name}** ` +
               `[${TRAIT_RARITY_LABELS[trait.rarity]}, ${trait.pp} PP]\n${trait.description}`
             : `🎲 **${char.name}** não tem trait.`,
         );
