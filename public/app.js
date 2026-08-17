@@ -13,7 +13,7 @@ const ELEMENTS = [
   { id: "ASSASSINATO_NINJA", name: "Assassinato Silencioso", icon: "", img: "/assets/icons/footer/assassinato-ninja.png", color: "#7f9ebf" },
   { id: "TAIJUTSU_AGITACAO", name: "Taijutsu de Agitação", icon: "", img: "/assets/icons/footer/taijutsu-agitacao.png", color: "#d67e58" },
   { id: "TAIJUTSU", name: "Punho Forte", icon: "", img: "/assets/icons/footer/taijutsu.png", color: "#d8794f" },
-  { id: "KUGUTSU", name: "Kugutsu", icon: "🪆", img: "/assets/icons/kugutsu/marionete.png", color: "#a76545" },
+  { id: "KUGUTSU", name: "Kugutsu", icon: "🪆", img: "/assets/icons/kugutsu/marionete-v2.png", color: "#a76545" },
   { id: "ARHAT", name: "Punho Arhat", icon: "", img: "/assets/icons/footer/arhat.png", color: "#b8694f" },
   { id: "ADAMANTINO", name: "Punho Adamantino", icon: "", img: "/assets/icons/footer/adamantino.png", color: "#58b879" },
   { id: "FOGO", name: "Fogo", icon: "", img: "/assets/icons/footer/katon.png", color: "#e2492d" },
@@ -186,7 +186,7 @@ const NODE_IMAGE_FALLBACKS = {
   bakurei_cupula: "/assets/icons/bakurei/cupula-sufocante.png",
 };
 
-const ICON_ASSET_VERSION = "20260817-kugutsu-transparent";
+const ICON_ASSET_VERSION = "20260817-kugutsu-transparent-v2";
 
 // Ícones e fundos moram no CDN do Square Blob. O mapa caminho -> URL vem de
 // public/asset-manifest.js (gerado por `npm run blob:upload`), carregado antes
@@ -534,7 +534,7 @@ async function fetchGuideCatalog() {
   });
   if (!res.ok) throw new Error(`Catálogo de Guias indisponível (${res.status})`);
   const catalog = await res.json();
-  const valid = catalog?.schemaVersion === 9
+  const valid = catalog?.schemaVersion === 10
     && Array.isArray(catalog.traits) && catalog.traits.length > 0
     && Array.isArray(catalog.clanGroups) && catalog.clanGroups.some((group) => group.clans?.length)
     && Array.isArray(catalog.items) && catalog.items.length > 0
