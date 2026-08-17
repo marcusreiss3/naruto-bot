@@ -474,15 +474,6 @@ const NODE_INDEX: Map<string, SkillNodeDef> = new Map(
 // A subpasta de árvore de clã tem o mesmo nome do clanId (nara/, hyuuga/...),
 // igual as elementais usam o nome do elemento.
 const NODE_ICONS: Record<string, string> = {
-  // ---- Kugutsu ----
-  kugutsu_oficina_inicial: "kugutsu/marionete.png",
-  kugutsu_carapaca_ofensiva: "kugutsu/mecanismo.png",
-  kugutsu_carapaca_defensiva: "kugutsu/carapaca.png",
-  kugutsu_carapaca_efeito: "kugutsu/mecanismo.png",
-  kugutsu_alcance_fios_i: "kugutsu/fios-chakra.png",
-  kugutsu_alcance_fios_ii: "kugutsu/fios-chakra.png",
-  kugutsu_alcance_fios_iii: "kugutsu/fios-chakra.png",
-
   // ---- Bukijutsu ----
   buki_fundamentos: "bukijutsu/fundamentos-de-bukijutsu.png",
   buki_manipulacao_fios: "bukijutsu/manipulacao-de-fios.png",

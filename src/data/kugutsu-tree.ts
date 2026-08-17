@@ -45,7 +45,7 @@ export const KUGUTSU_TREE: SkillNodeDef[] = [
     "Permite manter até 2 marionetes em campo ao mesmo tempo.",
   ),
   passive(
-    "kugutsu_craft_grau_ii", "Oficina de Precisão", "Oficina", 0, 3, ["kugutsu_oficina_inicial"], 3, 10, 13,
+    "kugutsu_craft_grau_ii", "Oficina de Precisão", "Oficina", 0, 2, ["kugutsu_oficina_inicial"], 3, 10, 13,
     "Libera a construção de mecanismos Grau II.",
   ),
   passive(

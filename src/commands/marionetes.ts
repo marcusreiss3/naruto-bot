@@ -1,17 +1,18 @@
 import { ButtonStyle, SlashCommandBuilder, StringSelectMenuBuilder, type AnySelectMenuInteraction, type ButtonInteraction, type ChatInputCommandInteraction } from "discord.js";
 import type { Command } from "./types.js";
 import { getOrCreateCharacter } from "../services/characters/character-service.js";
-import { claimPuppetConstruction, listPuppetWorkshop, puppetCapabilities, uninstallPuppetUpgrade } from "../services/puppets/puppet-service.js";
-import { getPuppetUpgrade, PUPPET_SHELLS, type PuppetShell } from "../data/puppet-upgrades.js";
+import { claimPuppetConstruction, listPuppetWorkshop, puppetCapabilities, startPuppetUpgradeConstruction, uninstallPuppetUpgrade } from "../services/puppets/puppet-service.js";
+import { craftNodeForGrade, getPuppetUpgrade, PUPPET_SHELLS, PUPPET_UPGRADES, type PuppetShell } from "../data/puppet-upgrades.js";
+import { getItem } from "../data/items.js";
 import { activeParticipant, deployPuppet, getActiveSession } from "../services/combat/combat-engine.js";
 import { prisma } from "../db/client.js";
-import { button, buttonRow, divider, economyContainer, factsBlock, listBlock, noticeBlock, selectRow, text, titleBlock, v2Payload, type ContainerChild, type TopLevel } from "../ui/economy-components-v2.js";
+import { button, buttonRow, divider, economyContainer, factsBlock, itemLabel, listBlock, noticeBlock, ryo, selectRow, text, titleBlock, v2Payload, type ContainerChild, type TopLevel } from "../ui/economy-components-v2.js";
 import { emoji } from "../ui/economy-emojis.js";
 
 const PREFIX = "marionetes:v1";
 const id = (action: string, value?: string) => `${PREFIX}:${action}${value ? `:${value}` : ""}`;
-
 type Workshop = NonNullable<Awaited<ReturnType<typeof listPuppetWorkshop>>>;
+type Feedback = { kind: "erro" | "sucesso" | "aviso"; message: string };
 
 function remaining(from: Date): string {
   const ms = from.getTime() - Date.now();
@@ -21,58 +22,81 @@ function remaining(from: Date): string {
   return hours ? `${hours}h ${mins}min` : `${mins}min`;
 }
 
-function render(state: Workshop, selectedId: string | null): TopLevel[] {
+function upgradeRequirements(state: Workshop, upgradeId: string): string[] {
+  const upgrade = getPuppetUpgrade(upgradeId);
+  if (!upgrade) return [];
+  const inventory = new Map(state.inventory.map((entry) => [entry.itemId, entry.qty]));
+  const gradeUnlocked = state.skillNodes.some((node) => node.nodeId === craftNodeForGrade(upgrade.grade));
+  return [
+    `${ryo(upgrade.ryo)} Ryō — **${state.ryo}/${upgrade.ryo}**${state.ryo >= upgrade.ryo ? " ✓" : ` • falta **${upgrade.ryo - state.ryo}**`}`,
+    `${emoji("informacao")} Nível — **${state.level}/${upgrade.reqLevel}**${state.level >= upgrade.reqLevel ? " ✓" : " • insuficiente"}`,
+    `${emoji("mecanismo")} Oficina Grau ${upgrade.grade} — ${gradeUnlocked ? "**liberada** ✓" : "**bloqueada**"}`,
+    ...upgrade.ingredients.map((ingredient) => {
+      const have = inventory.get(ingredient.itemId) ?? 0;
+      const missing = Math.max(0, ingredient.qty - have);
+      return `${itemLabel(ingredient.itemId, getItem(ingredient.itemId)?.name ?? ingredient.itemId)} — **${have}/${ingredient.qty}**${missing ? ` • falta **${missing}**` : " ✓"}`;
+    }),
+  ];
+}
+
+function render(state: Workshop, selectedId: string | null, selectedUpgradeId: string | null = null, feedback?: Feedback): TopLevel[] {
   const selected = state.puppets.find((puppet) => puppet.id === selectedId) ?? state.puppets[0] ?? null;
   const caps = puppetCapabilities(state.skillNodes.map((node) => node.nodeId));
   const children: ContainerChild[] = [
-    titleBlock("marionete", "Oficina de Marionetes", "Construa, recolha e equipe seus mecanismos"),
+    titleBlock("marionete", "Oficina de Marionetes", "Construa, acompanhe e equipe seus mecanismos"),
     factsBlock([
-      { label: "Ryō", value: String(state.ryo) },
+      { label: `${emoji("ryo")} Ryō`, value: String(state.ryo) },
       { label: "Em campo", value: `${caps.slots} marionete(s)` },
-      { label: "Alcance dos fios", value: `${emoji("fios_chakra")} ${caps.leash} células` },
+      { label: `${emoji("fios_chakra")} Alcance`, value: `${caps.leash} células` },
     ]),
     divider(),
   ];
 
   if (!state.skillNodes.some((node) => node.nodeId === "kugutsu_oficina_inicial")) {
     children.push(noticeBlock("bloqueio", "Compre **Oficina de Marionetes** na árvore de Kugutsu para liberar construções."));
-    return [economyContainer("estoque", children)];
-  }
-
-  if (!state.puppets.length) {
-    children.push(noticeBlock("aviso", "Você ainda não possui uma marionete concluída."), text("-# Use `/craft marionete nome:<nome> carapaca:<tipo>` para iniciar sua primeira carapaça."));
-  } else {
+    children.push(text(`-# Depois, abra ${emoji("marionete")} **/craft marionete** para criar a sua carapaça.`));
+  } else if (!state.puppets.length) {
+    children.push(noticeBlock("aviso", "Você ainda não possui uma marionete concluída."));
+    children.push(text(`-# Use ${emoji("marionete")} **/craft marionete** para escolher a carapaça, conferir materiais e iniciar a obra.`));
+  } else if (selected) {
     if (state.puppets.length > 1) {
-      children.push(
-        selectRow(
-          new StringSelectMenuBuilder()
-            .setCustomId(id("selecionar"))
-            .setPlaceholder("Selecionar marionete")
-            .addOptions(state.puppets.slice(0, 25).map((puppet) => ({
-              label: puppet.name,
-              value: puppet.id,
-              description: `${PUPPET_SHELLS[puppet.shell as PuppetShell]?.name ?? puppet.shell} • ${puppet.upgrades.length}/2 mecanismos`,
-              default: puppet.id === selected?.id,
-            }))),
-        ),
-      );
+      children.push(selectRow(new StringSelectMenuBuilder().setCustomId(id("selecionar")).setPlaceholder("Selecionar marionete")
+        .addOptions(state.puppets.slice(0, 25).map((puppet) => ({
+          label: puppet.name,
+          value: puppet.id,
+          description: `${PUPPET_SHELLS[puppet.shell as PuppetShell]?.name ?? puppet.shell} • ${puppet.upgrades.length}/2 mecanismos`,
+          default: puppet.id === selected.id,
+        })))));
       children.push(divider());
     }
-    if (selected) {
-      const shell = PUPPET_SHELLS[selected.shell as PuppetShell];
-      children.push(
-        listBlock(`🪆 ${shell?.name ?? selected.shell} — ${selected.name}`, [
-          `**ID:** \`${selected.id}\``,
-          `**Mecanismos (${selected.upgrades.length}/2):** ${selected.upgrades.length ? selected.upgrades.map((part) => `**${getPuppetUpgrade(part.upgradeId)?.name ?? part.upgradeId}**`).join(" • ") : "nenhum"}`,
-          shell?.description ?? "",
-        ].filter(Boolean), ""),
-      );
-      if (selected.upgrades.length) {
-        children.push(buttonRow(...selected.upgrades.map((part) => button({ id: id("remover", `${selected.id}:${part.upgradeId}`), label: `Remover ${getPuppetUpgrade(part.upgradeId)?.name ?? "mecanismo"}`.slice(0, 80), style: ButtonStyle.Danger, emojiKey: "mecanismo" }))));
-      }
-      children.push(buttonRow(button({ id: id("invocar", selected.id), label: "Invocar em combate", style: ButtonStyle.Primary, emojiKey: "marionete" })));
-      children.push(text("-# Cada marionete aceita até 2 mecanismos. Inicie uma nova peça com `/craft evolucao` e recolha-a abaixo quando finalizar."));
+    const shell = PUPPET_SHELLS[selected.shell as PuppetShell];
+    children.push(listBlock(`${emoji("marionete")} ${shell?.name ?? selected.shell} — ${selected.name}`, [
+      `**ID:** \`${selected.id}\``,
+      `**Mecanismos (${selected.upgrades.length}/2):** ${selected.upgrades.length ? selected.upgrades.map((part) => `**${getPuppetUpgrade(part.upgradeId)?.name ?? part.upgradeId}**`).join(" • ") : "nenhum"}`,
+      shell?.description ?? "",
+    ].filter(Boolean), ""));
+    if (selected.upgrades.length) {
+      children.push(buttonRow(...selected.upgrades.map((part) => button({ id: id("remover", `${selected.id}:${part.upgradeId}`), label: `Remover ${getPuppetUpgrade(part.upgradeId)?.name ?? "mecanismo"}`.slice(0, 80), style: ButtonStyle.Danger, emojiKey: "mecanismo" }))));
     }
+    if (selected.upgrades.length < 2) {
+      children.push(selectRow(new StringSelectMenuBuilder().setCustomId(id("mecanismo", selected.id)).setPlaceholder("Escolher mecanismo para construir")
+        .addOptions(PUPPET_UPGRADES.map((upgrade) => ({
+          label: `Grau ${upgrade.grade} • ${upgrade.name}`,
+          value: upgrade.id,
+          description: `Nv. ${upgrade.reqLevel} • ${upgrade.durationHours}h • ${upgrade.ryo} Ryō`,
+          default: upgrade.id === selectedUpgradeId,
+        })))));
+      const selectedUpgrade = selectedUpgradeId ? getPuppetUpgrade(selectedUpgradeId) : undefined;
+      if (selectedUpgrade) {
+        children.push(text(`**${emoji("mecanismo")} ${selectedUpgrade.name}**\n${selectedUpgrade.description}\n-# Construção: ${selectedUpgrade.durationHours}h • Grau ${selectedUpgrade.grade}.`));
+        children.push(listBlock("Materiais necessários", upgradeRequirements(state, selectedUpgrade.id), "Nenhum material."));
+        children.push(buttonRow(button({ id: id("construir", `${selected.id}:${selectedUpgrade.id}`), label: "Iniciar construção", style: ButtonStyle.Primary, emojiKey: "mecanismo" })));
+      }
+    } else {
+      children.push(noticeBlock("aviso", "Esta marionete já possui os 2 mecanismos permitidos."));
+    }
+    children.push(buttonRow(button({ id: id("invocar", selected.id), label: "Invocar em combate", style: ButtonStyle.Primary, emojiKey: "marionete" })));
+    children.push(text("-# A invocação usa sua ação comum. A marionete recebe um turno próprio logo depois do seu."));
   }
 
   const ready = state.puppetOrders.filter((order) => order.status === "READY");
@@ -83,6 +107,7 @@ function render(state: Workshop, selectedId: string | null): TopLevel[] {
     if (ready.length) children.push(buttonRow(...ready.slice(0, 5).map((order) => button({ id: id("recolher", order.id), label: `Recolher ${order.kind === "PUPPET" ? order.puppetName : getPuppetUpgrade(order.optionId)?.name ?? "peça"}`.slice(0, 80), style: ButtonStyle.Success, emojiKey: "sucesso" }))));
     if (building.length) children.push(listBlock("Em construção", building.slice(0, 8).map((order) => `**${order.kind === "PUPPET" ? order.puppetName : getPuppetUpgrade(order.optionId)?.name ?? order.optionId}** — ${remaining(order.finishesAt)}`), ""));
   }
+  if (feedback) children.push(divider(), noticeBlock(feedback.kind, feedback.message));
   return [economyContainer("estoque", children)];
 }
 
@@ -101,27 +126,37 @@ export const marionetes: Command = {
   async handleSelect(interaction: AnySelectMenuInteraction) {
     if (!interaction.customId.startsWith(PREFIX) || !interaction.isStringSelectMenu()) return;
     const { state } = await load(interaction);
-    if (!state) { await interaction.reply({ content: "❌ Personagem não encontrado.", ephemeral: true }); return; }
-    await interaction.update({ components: render(state, interaction.values[0]!), flags: 1 << 15 });
+    if (!state) return;
+    const [, , action, puppetId] = interaction.customId.split(":");
+    if (action === "selecionar") await interaction.update({ components: render(state, interaction.values[0]!, null), flags: 1 << 15 });
+    else if (action === "mecanismo" && puppetId) await interaction.update({ components: render(state, puppetId, interaction.values[0]!), flags: 1 << 15 });
   },
   async handleButton(interaction: ButtonInteraction) {
     if (!interaction.customId.startsWith(PREFIX)) return;
     const [, , action, ...values] = interaction.customId.split(":");
     const { char, state } = await load(interaction);
-    if (!state) { await interaction.reply({ content: "❌ Personagem não encontrado.", ephemeral: true }); return; }
+    if (!state) return;
     if (action === "recolher") {
       const result = await claimPuppetConstruction(char.id, values[0]!);
-      if (!result.ok) { await interaction.reply({ content: `❌ ${result.error}`, ephemeral: true }); return; }
       const refreshed = await listPuppetWorkshop(char.id);
-      await interaction.update({ components: render(refreshed!, null), flags: 1 << 15 });
+      await interaction.update({ components: render(refreshed!, null, null, result.ok ? { kind: "sucesso", message: "Construção recolhida e equipada na oficina." } : { kind: "erro", message: result.error }), flags: 1 << 15 });
       return;
     }
     if (action === "remover") {
       const [puppetId, upgradeId] = values;
       const result = await uninstallPuppetUpgrade(char.id, puppetId!, upgradeId!);
-      if (!result.ok) { await interaction.reply({ content: `❌ ${result.error}`, ephemeral: true }); return; }
       const refreshed = await listPuppetWorkshop(char.id);
-      await interaction.update({ components: render(refreshed!, puppetId!), flags: 1 << 15 });
+      await interaction.update({ components: render(refreshed!, puppetId!, null, result.ok ? { kind: "sucesso", message: `${result.upgrade} foi removido.` } : { kind: "erro", message: result.error }), flags: 1 << 15 });
+      return;
+    }
+    if (action === "construir") {
+      const [puppetId, upgradeId] = values;
+      const result = await startPuppetUpgradeConstruction(char.id, puppetId!, upgradeId!);
+      const refreshed = await listPuppetWorkshop(char.id);
+      const upgrade = getPuppetUpgrade(upgradeId!);
+      await interaction.update({ components: render(refreshed!, puppetId!, upgradeId!, result.ok
+        ? { kind: "sucesso", message: `${upgrade?.name ?? "Mecanismo"} entrou em construção. Recolha-o aqui quando ficar pronto.` }
+        : { kind: "erro", message: result.error }), flags: 1 << 15 });
       return;
     }
     if (action === "invocar") {
@@ -129,17 +164,21 @@ export const marionetes: Command = {
       const owner = session?.participants.find((participant) => participant.charId === char.id);
       const active = session ? activeParticipant(session) : null;
       if (!session || !owner || active?.id !== owner.id) {
-        await interaction.reply({ content: "❌ Você só pode invocar uma marionete no seu próprio turno de combate.", ephemeral: true });
+        await interaction.update({ components: render(state, values[0]!, null, { kind: "erro", message: "Você só pode invocar a marionete no seu próprio turno de combate." }), flags: 1 << 15 });
         return;
       }
       if (owner.actedCommon) {
-        await interaction.reply({ content: "❌ A invocação usa sua ação comum deste turno.", ephemeral: true });
+        await interaction.update({ components: render(state, values[0]!, null, { kind: "erro", message: "A invocação usa sua ação comum deste turno." }), flags: 1 << 15 });
         return;
       }
       const deployed = await deployPuppet(session, owner.id, values[0]!);
-      if (!deployed.ok) { await interaction.reply({ content: `❌ ${deployed.error}`, ephemeral: true }); return; }
+      if (!deployed.ok) {
+        await interaction.update({ components: render(state, values[0]!, null, { kind: "erro", message: deployed.error }), flags: 1 << 15 });
+        return;
+      }
       await prisma.combatParticipant.update({ where: { id: owner.id }, data: { actedCommon: true } });
-      await interaction.reply({ content: `✅ **${deployed.name}** entrou em campo. A invocação consumiu sua ação comum.`, ephemeral: true });
+      const refreshed = await listPuppetWorkshop(char.id);
+      await interaction.update({ components: render(refreshed!, values[0]!, null, { kind: "sucesso", message: `${deployed.name} entrou em campo; a invocação consumiu sua ação comum.` }), flags: 1 << 15 });
     }
   },
 };

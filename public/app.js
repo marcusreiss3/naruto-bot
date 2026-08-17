@@ -186,7 +186,7 @@ const NODE_IMAGE_FALLBACKS = {
   bakurei_cupula: "/assets/icons/bakurei/cupula-sufocante.png",
 };
 
-const ICON_ASSET_VERSION = "20260813-simbolos-cla";
+const ICON_ASSET_VERSION = "20260817-kugutsu-transparent";
 
 // Ícones e fundos moram no CDN do Square Blob. O mapa caminho -> URL vem de
 // public/asset-manifest.js (gerado por `npm run blob:upload`), carregado antes
@@ -534,7 +534,7 @@ async function fetchGuideCatalog() {
   });
   if (!res.ok) throw new Error(`Catálogo de Guias indisponível (${res.status})`);
   const catalog = await res.json();
-  const valid = catalog?.schemaVersion === 8
+  const valid = catalog?.schemaVersion === 9
     && Array.isArray(catalog.traits) && catalog.traits.length > 0
     && Array.isArray(catalog.clanGroups) && catalog.clanGroups.some((group) => group.clans?.length)
     && Array.isArray(catalog.items) && catalog.items.length > 0

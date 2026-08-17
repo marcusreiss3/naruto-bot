@@ -52,6 +52,7 @@ export async function listPuppetWorkshop(charId: string) {
     select: {
       level: true,
       ryo: true,
+      inventory: { select: { itemId: true, qty: true } },
       skillNodes: { select: { nodeId: true } },
       puppets: { include: { upgrades: true }, orderBy: { createdAt: "asc" } },
       puppetOrders: { orderBy: { createdAt: "desc" } },
