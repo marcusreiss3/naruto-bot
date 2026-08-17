@@ -73,7 +73,7 @@ export async function renderAttributesCard(data: AttributesCardData): Promise<Bu
     .replace("Nenhuma trait equipada.", "Nenhum traço equipado.")
     .replace(
       "Ninjutsu, Taijutsu, Genjutsu, Bukijutsu, Iryō Ninjutsu, Fūinjutsu, Dōjutsu e Kenjutsu liberam e fortalecem técnicas.",
-      "Taijutsu aumenta Vida e Iniciativa; os demais atributos liberam e fortalecem suas técnicas.",
+      "Os atributos liberam técnicas, mas não aumentam o dano delas. Além disso, Taijutsu aumenta a vida máxima e a iniciativa em +1 a cada ponto.",
     )
     .replace("Kugutsu e Senjutsu ainda não possuem efeito mecânico. Use o seletor e os botões abaixo para distribuir seus pontos.", "Kugutsu controla marionetes e fortalece suas técnicas; Senjutsu sustenta suas próprias técnicas e progressões.")
     .replace('</g><rect x="1124"', '</g><g><rect x="1124"')
