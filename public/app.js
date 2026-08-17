@@ -534,7 +534,7 @@ async function fetchGuideCatalog() {
   });
   if (!res.ok) throw new Error(`Catálogo de Guias indisponível (${res.status})`);
   const catalog = await res.json();
-  const valid = catalog?.schemaVersion === 7
+  const valid = catalog?.schemaVersion === 8
     && Array.isArray(catalog.traits) && catalog.traits.length > 0
     && Array.isArray(catalog.clanGroups) && catalog.clanGroups.some((group) => group.clans?.length)
     && Array.isArray(catalog.items) && catalog.items.length > 0
