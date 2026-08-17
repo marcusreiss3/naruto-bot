@@ -22,6 +22,7 @@ export function registerApi(app: FastifyInstance): void {
 
   // Estado completo: personagem + as árvores com o status de cada nó.
   app.get("/api/state", async (req, reply) => {
+    reply.header("Cache-Control", "no-store");
     const discordId = getSessionDiscordId(req);
     if (!discordId) return reply.code(401).send({ authenticated: false });
 
