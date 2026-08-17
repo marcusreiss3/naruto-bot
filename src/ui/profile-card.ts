@@ -82,22 +82,30 @@ export async function renderProfileCard(data: ProfileCardData): Promise<Buffer> 
   const premiumRoll = (x: number) => `<g>
     <rect x="${x}" y="-12" width="96" height="699" rx="43" fill="url(#rollDark)" stroke="#080b12" stroke-width="6"/>
     <rect x="${x + 11}" y="20" width="74" height="635" rx="32" fill="#111827" stroke="#40516e" stroke-width="3"/>
-    <rect x="${x + 25}" y="91" width="46" height="493" rx="17" fill="#fff1c9" stroke="#b8791c" stroke-width="3"/>
-    <path d="M${x + 34} 108v459M${x + 62} 108v459" stroke="#dca63c" stroke-width="2" opacity=".7"/>
+    <rect x="${x + 23}" y="88" width="50" height="499" rx="19" fill="url(#rollCore)" stroke="#a66a17" stroke-width="3"/>
+    <path d="M${x + 32} 108v459M${x + 64} 108v459" stroke="#f0bd45" stroke-width="2" opacity=".66"/>
+    <path d="M${x + 38} 116q10 10 20 0M${x + 38} 206q10 10 20 0M${x + 38} 296q10 10 20 0M${x + 38} 386q10 10 20 0M${x + 38} 476q10 10 20 0" fill="none" stroke="#d99a2b" stroke-width="3" opacity=".7"/>
+    <rect x="${x + 20}" y="155" width="56" height="12" rx="5" fill="url(#rollGold)" stroke="#82500e" stroke-width="2"/>
+    <rect x="${x + 20}" y="508" width="56" height="12" rx="5" fill="url(#rollGold)" stroke="#82500e" stroke-width="2"/>
     <path d="M${x + 16} 52v571M${x + 80} 52v571" stroke="#40516e" stroke-width="4" opacity=".85"/>
     <rect x="${x - 3}" y="45" width="102" height="37" rx="15" fill="url(#rollGold)" stroke="#8c5812" stroke-width="4" filter="url(#goldGlow)"/>
     <rect x="${x - 3}" y="594" width="102" height="37" rx="15" fill="url(#rollGold)" stroke="#8c5812" stroke-width="4" filter="url(#goldGlow)"/>
+    <path d="M${x + 9} 53h76M${x + 9} 602h76" stroke="#fff3ac" stroke-width="3" stroke-linecap="round" opacity=".72"/>
     <path d="M${x + 8} 92h80M${x + 8} 584h80" stroke="#fff0a1" stroke-width="3" opacity=".85"/>
     <ellipse cx="${x + 48}" cy="17" rx="47" ry="23" fill="url(#rollGold)" stroke="#080b12" stroke-width="5"/>
     <ellipse cx="${x + 48}" cy="658" rx="47" ry="23" fill="url(#rollGold)" stroke="#080b12" stroke-width="5"/>
     <ellipse cx="${x + 48}" cy="17" rx="28" ry="13" fill="#71391f" stroke="#f2b33d" stroke-width="3"/>
     <ellipse cx="${x + 48}" cy="658" rx="28" ry="13" fill="#71391f" stroke="#f2b33d" stroke-width="3"/>
-    <path d="M${x + 8} 138c24-17 48-17 80 0M${x + 8} 537c24 17 48 17 80 0" fill="none" stroke="#dc2632" stroke-width="9"/>
-    <circle cx="${x + 48}" cy="138" r="8" fill="#ffe588" stroke="#9e6517" stroke-width="3"/>
-    <circle cx="${x + 48}" cy="537" r="8" fill="#ffe588" stroke="#9e6517" stroke-width="3"/>
+    <path d="M${x + 5} 135c27-18 55-18 86 0M${x + 5} 540c27 18 55 18 86 0" fill="none" stroke="#861923" stroke-width="12" stroke-linecap="round"/>
+    <path d="M${x + 5} 132c27-16 55-16 86 0M${x + 5} 537c27 16 55 16 86 0" fill="none" stroke="#e52d39" stroke-width="7" stroke-linecap="round"/>
+    <path d="M${x + 48} 137q-13 13-6 29l-12 15M${x + 48} 538q13-13 6-29l12-15" fill="none" stroke="#d52230" stroke-width="7" stroke-linecap="round"/>
+    <circle cx="${x + 48}" cy="135" r="7" fill="#ffe588" stroke="#9e6517" stroke-width="3"/>
+    <circle cx="${x + 48}" cy="540" r="7" fill="#ffe588" stroke="#9e6517" stroke-width="3"/>
   </g>`;
-  const scrollRolls = `<defs><linearGradient id="rollDark" x2="1"><stop stop-color="#080b12"/><stop offset=".48" stop-color="#1d2740"/><stop offset="1" stop-color="#070a10"/></linearGradient><linearGradient id="rollGold" x2="0" y2="1"><stop stop-color="#fff0a1"/><stop offset=".42" stop-color="#f5ba25"/><stop offset="1" stop-color="#b87114"/></linearGradient><filter id="goldGlow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>${premiumRoll(-20)}${premiumRoll(1124)}`;
-  const crossedKunai = `<g transform="translate(1110 575)"><circle r="47" fill="#121a2a" stroke="#080b12" stroke-width="5"/><circle r="41" fill="#1d2740" stroke="#f5ba25" stroke-width="4" filter="url(#goldGlow)"/><g stroke="#080b12" stroke-width="4" stroke-linejoin="round"><g transform="rotate(45)"><path d="M0-35 11-10 5-7 5 22 11 30 0 40-11 30-5 22-5-7-11-10Z" fill="#e9eef9"/><path d="M-5 9h10M-5 17h10" stroke="#f5ba25" stroke-width="3"/></g><g transform="rotate(-45)"><path d="M0-35 11-10 5-7 5 22 11 30 0 40-11 30-5 22-5-7-11-10Z" fill="#cbd5e5"/><path d="M-5 9h10M-5 17h10" stroke="#f5ba25" stroke-width="3"/></g></g></g>`;
+  const scrollRolls = `<defs><linearGradient id="rollDark" x2="1"><stop stop-color="#080b12"/><stop offset=".48" stop-color="#1d2740"/><stop offset="1" stop-color="#070a10"/></linearGradient><linearGradient id="rollCore" x2="1"><stop stop-color="#070a10"/><stop offset=".45" stop-color="#26334b"/><stop offset=".7" stop-color="#111827"/><stop offset="1" stop-color="#05070c"/></linearGradient><linearGradient id="rollGold" x2="0" y2="1"><stop stop-color="#fff0a1"/><stop offset=".42" stop-color="#f5ba25"/><stop offset="1" stop-color="#b87114"/></linearGradient><filter id="goldGlow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>${premiumRoll(-20)}${premiumRoll(1124)}`;
+  const crossedKunai = `<g transform="translate(1058 575)"><circle r="47" fill="#121a2a" stroke="#080b12" stroke-width="5"/><circle r="41" fill="#1d2740" stroke="#f5ba25" stroke-width="4" filter="url(#goldGlow)"/><g stroke="#080b12" stroke-width="4" stroke-linejoin="round"><g transform="rotate(45)"><path d="M0-35 11-10 5-7 5 22 11 30 0 40-11 30-5 22-5-7-11-10Z" fill="#e9eef9"/><path d="M-5 9h10M-5 17h10" stroke="#f5ba25" stroke-width="3"/></g><g transform="rotate(-45)"><path d="M0-35 11-10 5-7 5 22 11 30 0 40-11 30-5 22-5-7-11-10Z" fill="#cbd5e5"/><path d="M-5 9h10M-5 17h10" stroke="#f5ba25" stroke-width="3"/></g></g></g>`;
+  const currentLevelBadge = `<rect x="1010" y="62" width="112" height="67" rx="10" fill="#7b2820"/><text x="1066" y="88" text-anchor="middle" class="k" fill="#f2dfb5">NÍVEL</text><text x="1066" y="116" text-anchor="middle" class="v" fill="#fff1cc" style="font-size:27px">${data.level}</text>`;
+  const levelSeal = `<defs><filter id="waxShadow" x="-30%" y="-30%" width="170%" height="170%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#35100d" flood-opacity=".5"/></filter></defs><g transform="translate(1046 101)"><path d="M0-47c8 3 13-1 20 3 6 4 7 10 15 13 8 2 11 8 10 16 8 5 8 12 3 19 4 8 1 15-7 19-1 9-7 13-16 13-5 8-12 10-20 6-8 6-16 4-22-2-9 2-15-3-17-11-9-3-12-10-9-18-7-6-5-14 2-20-3-8 1-15 9-19 3-9 10-12 19-10 6-7 14-7 21-2 7-5 15-3 20 3Z" fill="#8f1722" stroke="#65101a" stroke-width="4" filter="url(#waxShadow)"/><circle r="36" fill="#b5202c" stroke="#e84a52" stroke-width="2"/><path d="M-25-22c12-13 34-16 49-3" fill="none" stroke="#ff7b76" stroke-width="5" stroke-linecap="round" opacity=".55"/><path d="M-26 24c15 11 36 10 50-2" fill="none" stroke="#660f18" stroke-width="5" stroke-linecap="round" opacity=".48"/><text y="-8" text-anchor="middle" style="font:700 11px Arial;letter-spacing:1.8px;fill:#ffe7ae">NÍVEL</text><text y="24" text-anchor="middle" style="font:800 29px Georgia,serif;fill:#fff4cd;paint-order:stroke;stroke:#70111b;stroke-width:1.5px">${data.level}</text></g>`;
   // O retrato agora ocupa exatamente a mesma caixa do recorte do pergaminho,
   // evitando o deslocamento vertical que cortava ou desalinhava a aparência.
   const portraitArtwork = image
@@ -112,6 +120,9 @@ export async function renderProfileCard(data: ProfileCardData): Promise<Buffer> 
   const themedParchment = parchmentSvg
     .replace('<rect width="1200" height="675" fill="#25170f"/>', landscapeLayer)
     .replace('fill="url(#paper)" stroke="#f6e5b8"', 'fill="url(#paper)" fill-opacity=".76" stroke="#f6e5b8"')
+    .replace(currentLevelBadge, levelSeal)
+    .replaceAll('x2="1122"', 'x2="1098"')
+    .replace('width="637" height="65"', 'width="613" height="65"')
     .replace('<rect x="60" y="80" width="365" height="500" fill="#39251d"/>', portraitBackground)
     .replace(artwork, portraitArtwork)
     .replace(/<path d="M45 75H1155M45 600H1155"[^>]*\/>/, "")
