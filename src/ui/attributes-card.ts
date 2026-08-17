@@ -43,16 +43,22 @@ async function landscape(): Promise<string> {
 /** Ficha visual do /atributos; os controles de distribuicao continuam no Discord. */
 export async function renderAttributesCard(data: AttributesCardData): Promise<Buffer> {
   const background = await landscape();
-  const traitLines = lines(data.trait?.description ?? "Nenhuma trait equipada.", 48);
-  const clanLines = lines(data.clan?.description ?? "Sem clã selecionado.", 48);
+  const traitLines = lines(data.trait?.description ?? "Nenhuma trait equipada.", 48, 3);
+  const clanLines = lines(data.clan?.description ?? "Sem clã selecionado.", 48, 3);
   const bonusPanel = (x: number, width: number, label: string, name: string, description: string[]) =>
     `<g><rect x="${x}" y="171" width="${width}" height="56" rx="10" fill="#fff5d1" fill-opacity=".5" stroke="#b77a26" stroke-opacity=".52"/><text x="${x + 17}" y="190" class="k">${label} · ${xml(name)}</text>${description.map((line, index) => `<text x="${x + 17}" y="${210 + index * 14}" class="description">${line}</text>`).join("")}</g>`;
   const bonusPanels = `${bonusPanel(105, 470, "TRAIT", data.trait?.name ?? "Nenhuma", traitLines)}${bonusPanel(610, 475, "CLÃ", data.clan?.name ?? "Nenhum", clanLines)}`;
+  const expandedBonusPanel = (x: number, width: number, label: string, name: string, description: string[]) =>
+    `<g><rect x="${x}" y="171" width="${width}" height="78" rx="10" fill="#fff5d1" fill-opacity=".5" stroke="#b77a26" stroke-opacity=".52"/><text x="${x + 17}" y="190" class="k">${label} · ${xml(name)}</text>${description.map((line, index) => `<text x="${x + 17}" y="${211 + index * 16}" class="description">${line}</text>`).join("")}</g>`;
+  const expandedBonusPanels = `${expandedBonusPanel(105, 470, "TRAIT", data.trait?.name ?? "Nenhuma", traitLines)}${expandedBonusPanel(610, 475, "CLÃ", data.clan?.name ?? "Nenhum", clanLines)}`;
+  const spaciousBonusPanel = (x: number, width: number, label: string, name: string, description: string[]) =>
+    `<g><rect x="${x}" y="171" width="${width}" height="94" rx="10" fill="#fff5d1" fill-opacity=".5" stroke="#b77a26" stroke-opacity=".52"/><text x="${x + 17}" y="190" class="k">${label} · ${xml(name)}</text>${description.map((line, index) => `<text x="${x + 17}" y="${211 + index * 16}" class="description">${line}</text>`).join("")}</g>`;
+  const spaciousBonusPanels = `${spaciousBonusPanel(105, 470, "TRAIT", data.trait?.name ?? "Nenhuma", traitLines)}${spaciousBonusPanel(610, 475, "CLÃ", data.clan?.name ?? "Nenhum", clanLines)}`;
   const rows = ATTRIBUTES.map((attribute, index) => {
     const column = index < 5 ? 0 : 1;
     const row = index % 5;
     const x = column === 0 ? 105 : 610;
-    const y = 242 + row * 55;
+    const y = 298 + row * 55;
     const base = data.current[attribute];
     const added = data.draft[attribute] ?? 0;
     const total = base + added;
@@ -67,6 +73,21 @@ export async function renderAttributesCard(data: AttributesCardData): Promise<Bu
     .replace('</g><rect x="1124"', '</g><g><rect x="1124"')
     .replace('<text x="105" y="137" class="title"', '<text x="105" y="124" class="title"')
     .replace('<line x1="105" y1="154"', `<text x="105" y="150" class="description">@${xml(data.username)}</text><line x1="105" y1="160"`)
-    .replace(/<g><rect x="105" y="171" width="470" height="39"[\s\S]*?<\/g><g><rect x="610" y="171" width="475" height="39"[\s\S]*?<\/g><text x="105" y="246"/, `${bonusPanels}<text x="105" y="234"`);
-  return sharp(Buffer.from(validSvg)).png().toBuffer();
+    .replace(/<g><rect x="105" y="171" width="470" height="39"[\s\S]*?<\/g><g><rect x="610" y="171" width="475" height="39"[\s\S]*?<\/g><text x="105" y="246"/, `${spaciousBonusPanels}<text x="105" y="288"`);
+  const spaciousSvg = validSvg
+    .replaceAll('height="675"', 'height="790"')
+    .replace('height="619"', 'height="715"')
+    .replaceAll('height="699"', 'height="814"')
+    .replaceAll('height="499"', 'height="614"')
+    .replaceAll('109v458', '109v573')
+    .replaceAll('y="594"', 'y="709"')
+    .replaceAll('cy="658"', 'cy="773"')
+    .replaceAll('540c27', '655c27')
+    .replace('<rect x="60" y="641"', '<rect x="60" y="738"')
+    .replace('M72 645h1056', 'M72 742h1056')
+    .replace('<rect x="105" y="532"', '<rect x="105" y="590"')
+    .replace('<text x="126" y="558"', '<text x="126" y="616"')
+    .replace('<text x="126" y="582"', '<text x="126" y="640"')
+    .replace('<text x="126" y="604"', '<text x="126" y="662"');
+  return sharp(Buffer.from(spaciousSvg)).png().toBuffer();
 }
