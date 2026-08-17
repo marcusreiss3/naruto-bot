@@ -97,7 +97,7 @@ export function partyPanel(party: PartyView, title = "Sua party", subtitle?: str
   return [economyContainer("vila", partyChildren(party, title, subtitle))];
 }
 
-export function partyHomePanel(party: PartyView | null): TopLevel[] {
+export function partyHomePanel(party: PartyView | null, viewerId?: string): TopLevel[] {
   if (!party) {
     return [
       economyContainer("vila", [
@@ -110,20 +110,29 @@ export function partyHomePanel(party: PartyView | null): TopLevel[] {
     ];
   }
 
+  const isLeader = party.leaderId === viewerId;
+  const controls: ContainerChild[] = [
+    divider(),
+    isLeader
+      ? text(`${emoji("convite")} Convide outro ninja ou saia do grupo quando quiser.`)
+      : text(`${emoji("lider_party")} Apenas o líder pode convidar novos integrantes.`),
+  ];
+  if (isLeader) controls.push(inviteSelect());
+  controls.push(
+    buttonRow(
+      button({
+        id: LEAVE_BUTTON_ID,
+        label: "Sair da party",
+        style: ButtonStyle.Danger,
+        emojiKey: "sair_party",
+      }),
+    ),
+  );
+
   return [
     economyContainer("vila", [
       ...partyChildren(party),
-      divider(),
-      text(`${emoji("convite")} Convide outro ninja ou saia do grupo quando quiser.`),
-      inviteSelect(),
-      buttonRow(
-        button({
-          id: LEAVE_BUTTON_ID,
-          label: "Sair da party",
-          style: ButtonStyle.Danger,
-          emojiKey: "sair_party",
-        }),
-      ),
+      ...controls,
     ]),
   ];
 }
@@ -163,7 +172,7 @@ export const party: Command = {
 
   async execute(interaction: ChatInputCommandInteraction) {
     const currentParty = await getMyParty(interaction.guildId ?? "global", interaction.user.id);
-    await interaction.reply(v2Payload(partyHomePanel(currentParty)));
+    await interaction.reply(v2Payload(partyHomePanel(currentParty, interaction.user.id)));
   },
 
   async handleButton(interaction: ButtonInteraction) {
@@ -219,7 +228,7 @@ export const party: Command = {
 
     await interaction.deferUpdate();
     const currentParty = await getMyParty(guildId, interaction.user.id);
-    await interaction.editReply(v2Edit(partyHomePanel(currentParty)));
+    await interaction.editReply(v2Edit(partyHomePanel(currentParty, interaction.user.id)));
     const channel = interaction.channel;
     if (channel?.isTextBased() && "send" in channel) {
       await channel.send(v2Public(invitePanel(interaction.user.id, alvoId, result.inviteId)));

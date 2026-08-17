@@ -38,10 +38,22 @@ describe("interface V2 de /party", () => {
       id: "party-id",
       leaderId: "lider",
       memberIds: ["lider", "membro"],
-    }).map((component) => component.toJSON());
+    }, "lider").map((component) => component.toJSON());
     const serialized = JSON.stringify(container);
 
     expect(serialized).toContain("party:leave");
     expect(serialized).toContain("1538718426162405457");
+  });
+
+  it("não oferece convite para integrantes que não são líderes", () => {
+    const [container] = partyHomePanel({
+      id: "party-id",
+      leaderId: "lider",
+      memberIds: ["lider", "membro"],
+    }, "membro").map((component) => component.toJSON());
+    const serialized = JSON.stringify(container);
+
+    expect(serialized).not.toContain("party:invite:select");
+    expect(serialized).toContain("party:leave");
   });
 });

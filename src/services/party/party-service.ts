@@ -52,6 +52,9 @@ export async function invite(
     await prisma.partyMember.create({ data: { partyId: created.id, guildId, discordId: inviterId } });
     party = { id: created.id, leaderId: inviterId, memberIds: [inviterId] };
   }
+  if (party.leaderId !== inviterId) {
+    return { ok: false, error: "Apenas o líder da party pode enviar convites." };
+  }
 
   const inviteeParty = await getMyParty(guildId, inviteeId);
   if (inviteeParty) return { ok: false, error: "Esse jogador já está em uma party." };
