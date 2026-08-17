@@ -109,7 +109,7 @@ export async function renderProfileCard(data: ProfileCardData): Promise<Buffer> 
   // Mantém a moldura inteira fora do rolo esquerdo sem reduzir a área útil.
   const portraitX = 84;
   const portraitArtwork = image
-    ? `<image href="${image}" x="${portraitX}" y="80" width="365" height="500" preserveAspectRatio="xMidYMid slice" transform="translate(12 0)"/>`
+    ? `<image href="${image}" x="${portraitX}" y="80" width="365" height="500" preserveAspectRatio="xMidYMid slice"/>`
     : artwork;
   const landscapeLayer = landscapeImage
     ? `<image href="${landscapeImage}" width="1200" height="675" preserveAspectRatio="xMidYMid slice"/><rect width="1200" height="675" fill="#fff0c2" fill-opacity=".48"/>`
