@@ -1,4 +1,6 @@
 import sharp from "sharp";
+import { readFile } from "node:fs/promises";
+import { resolve } from "node:path";
 
 export interface ProfileCardData {
   name: string;
@@ -18,6 +20,7 @@ export interface ProfileCardData {
 
 const xml = (value: string) => value.replace(/[<>&'"]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", "'": "&apos;", '"': "&quot;" })[c]!);
 const clamp = (value: number) => Math.max(0, Math.min(1, value));
+let landscapeData: Promise<string> | null = null;
 
 function wrap(values: string[], limit: number): string[] {
   const lines: string[] = [];
@@ -39,16 +42,27 @@ async function portrait(url?: string): Promise<string> {
     const response = await fetch(url, { signal: AbortSignal.timeout(5_000) });
     if (!response.ok) return "";
     const bytes = Buffer.from(await response.arrayBuffer());
-    const image = await sharp(bytes).resize(430, 620, { fit: "cover" }).jpeg({ quality: 82 }).toBuffer();
-    return `data:image/jpeg;base64,${image.toString("base64")}`;
+    // PNG preserva transparência: personagens recortados deixam aparecer o
+    // cenário do card, em vez de ganharem o fundo preto do JPEG.
+    const image = await sharp(bytes).resize(365, 500, { fit: "contain", position: "centre" }).png().toBuffer();
+    return `data:image/png;base64,${image.toString("base64")}`;
   } catch {
     return "";
   }
 }
 
+async function landscape(): Promise<string> {
+  landscapeData ??= readFile(resolve(process.cwd(), "public/assets/bg/profile-card-landscape.png"))
+    .then((file) => sharp(file).resize(1200, 675, { fit: "cover" }).jpeg({ quality: 86 }).toBuffer())
+    .then((file) => `data:image/jpeg;base64,${file.toString("base64")}`)
+    .catch(() => "");
+  return landscapeData;
+}
+
 /** Renderiza o card compactado do /perfil. A distribuicao completa segue no /atributos. */
 export async function renderProfileCard(data: ProfileCardData): Promise<Buffer> {
   const image = await portrait(data.appearanceUrl);
+  const landscapeImage = await landscape();
   const hp = clamp(data.hp.current / Math.max(1, data.hp.max));
   const chakra = clamp(data.chakra / 100);
   const energy = clamp(data.energy / 100);
@@ -63,10 +77,26 @@ export async function renderProfileCard(data: ProfileCardData): Promise<Buffer> 
   const styleLines = wrap(data.fightingStyles.length ? data.fightingStyles : ["Não definido"], 27);
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675"><defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#10151e"/><stop offset="1" stop-color="#080b11"/></linearGradient><style>.title{font:800 43px Arial;fill:#f8f1e7}.subtitle{font:500 18px Arial;fill:#b6c0ce}.kicker,.label{font:700 15px Arial;letter-spacing:2px;fill:#9fabbc}.value{font:700 23px Arial;fill:#f7f1e8}.amount{font:500 17px Arial;fill:#c8d0dc}.placeholder{font:700 15px Arial;letter-spacing:2px;fill:#e5b0a6}</style></defs><rect width="1200" height="675" fill="url(#bg)"/><rect x="28" y="28" width="1144" height="619" rx="25" fill="#101823" stroke="#ffffff" stroke-opacity=".14" stroke-width="2"/><rect x="28" y="28" width="13" height="619" rx="7" fill="#dc5b5b"/><clipPath id="p"><rect x="60" y="60" width="420" height="555" rx="18"/></clipPath><g clip-path="url(#p)"><rect x="60" y="60" width="420" height="555" fill="#291e2a"/>${artwork}</g><rect x="60" y="60" width="420" height="555" rx="18" fill="none" stroke="#ffffff" stroke-opacity=".12"/><text x="570" y="92" class="kicker" fill="#e4847d">PERFIL SHINOBI</text><text x="570" y="145" class="title">${xml(data.name)}</text><text x="570" y="177" class="subtitle">@${xml(data.username)}  •  ${xml(data.village)}</text><rect x="1010" y="68" width="115" height="74" rx="15" fill="#dc5b5b" fill-opacity=".14" stroke="#dc5b5b" stroke-opacity=".55"/><text x="1068" y="95" text-anchor="middle" class="kicker">NÍVEL</text><text x="1068" y="126" text-anchor="middle" class="value" style="font-size:29px">${data.level}</text><line x1="570" y1="208" x2="1125" y2="208" stroke="#ffffff" stroke-opacity=".12"/><text x="570" y="244" class="label">CLÃ</text><text x="570" y="274" class="value">${xml(data.clan)}</text><text x="850" y="244" class="label">RANK</text><text x="850" y="274" class="value">${xml(data.rank)}</text><rect x="570" y="300" width="555" height="72" rx="14" fill="#dc5b5b" fill-opacity=".08" stroke="#dc5b5b" stroke-opacity=".35"/><text x="592" y="327" class="label">TRAIT</text><text x="592" y="354" class="value" style="font-size:20px">${trait}</text>${bar(418,"VIDA",`${data.hp.current} / ${data.hp.max}`,hp,"#ef6b6c")}${bar(478,"CHAKRA",`${Math.round(data.chakra)} / 100`,chakra,"#66b7ed")}${bar(538,"ENERGIA",`${Math.round(data.energy)} / 100`,energy,"#efcf79")}<line x1="570" y1="589" x2="1125" y2="589" stroke="#ffffff" stroke-opacity=".12"/><text x="570" y="617" class="label">ELEMENTOS</text><text x="570" y="640" class="subtitle">${elements}</text><text x="850" y="617" class="label">ESTILO DE LUTA</text><text x="850" y="640" class="subtitle">${styles}</text></svg>`;
   const parchmentSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675"><defs><filter id="grain"><feTurbulence baseFrequency=".55" numOctaves="3"/><feColorMatrix values="1 0 0 0 .45 0 1 0 0 .30 0 0 1 0 .10 0 0 0 .13 0"/></filter><linearGradient id="paper" x2="1" y2="1"><stop stop-color="#ecd9a6"/><stop offset=".55" stop-color="#cfb278"/><stop offset="1" stop-color="#98703d"/></linearGradient><style>.t{font:800 42px Georgia,serif;fill:#302014}.s{font:500 17px Georgia,serif;fill:#5c412a}.k{font:700 14px Arial;letter-spacing:2px;fill:#704d2c}.v{font:700 21px Georgia,serif;fill:#342215}.a{font:500 16px Arial;fill:#543b24}</style></defs><rect width="1200" height="675" fill="#25170f"/><rect x="28" y="28" width="1144" height="619" rx="18" fill="url(#paper)" stroke="#f6e5b8" stroke-width="3"/><rect x="28" y="28" width="1144" height="619" rx="18" filter="url(#grain)" opacity=".3"/><path d="M45 75H1155M45 600H1155" stroke="#7b2820" stroke-width="5" opacity=".75"/><circle cx="1110" cy="575" r="42" fill="none" stroke="#7b2820" stroke-width="5" opacity=".75"/><path d="M1088 575h44m-22-22v44" stroke="#7b2820" stroke-width="4" opacity=".75"/><clipPath id="portrait"><rect x="60" y="80" width="365" height="500" rx="12"/></clipPath><g clip-path="url(#portrait)"><rect x="60" y="80" width="365" height="500" fill="#39251d"/>${artwork}</g><rect x="60" y="80" width="365" height="500" rx="12" fill="none" stroke="#603b22" stroke-width="3"/><text x="485" y="88" class="k">REGISTRO SHINOBI</text><text x="485" y="140" class="t">${xml(data.name)}</text><text x="485" y="170" class="s">@${xml(data.username)}  •  ${xml(data.village)}</text><rect x="1010" y="62" width="112" height="67" rx="10" fill="#7b2820"/><text x="1066" y="88" text-anchor="middle" class="k" fill="#f2dfb5">NÍVEL</text><text x="1066" y="116" text-anchor="middle" class="v" fill="#fff1cc" style="font-size:27px">${data.level}</text><line x1="485" y1="198" x2="1122" y2="198" stroke="#765331" stroke-opacity=".5"/><text x="485" y="230" class="k">CLÃ</text><text x="485" y="258" class="v">${xml(data.clan)}</text><text x="765" y="230" class="k">RANK</text><text x="765" y="258" class="v">${xml(data.rank)}</text><rect x="485" y="280" width="637" height="65" rx="10" fill="#f0dfb5" fill-opacity=".48" stroke="#8b3028" stroke-opacity=".55"/><text x="505" y="306" class="k">TRAIT</text><text x="505" y="331" class="v" style="font-size:19px">${trait}</text><text x="485" y="381" class="k">RECURSOS</text><text x="485" y="413" class="k">VIDA</text><text x="995" y="413" text-anchor="end" class="a">${data.hp.current} / ${data.hp.max}</text><rect x="485" y="426" width="510" height="14" rx="7" fill="#684b31" fill-opacity=".25"/><rect x="485" y="426" width="${Math.round(510 * hp)}" height="14" rx="7" fill="#af3c32"/><text x="485" y="466" class="k">CHAKRA</text><text x="995" y="466" text-anchor="end" class="a">${Math.round(data.chakra)} / 100</text><rect x="485" y="479" width="510" height="14" rx="7" fill="#684b31" fill-opacity=".25"/><rect x="485" y="479" width="${Math.round(510 * chakra)}" height="14" rx="7" fill="#397ea7"/><text x="485" y="519" class="k">ENERGIA</text><text x="995" y="519" text-anchor="end" class="a">${Math.round(data.energy)} / 100</text><rect x="485" y="532" width="510" height="14" rx="7" fill="#684b31" fill-opacity=".25"/><rect x="485" y="532" width="${Math.round(510 * energy)}" height="14" rx="7" fill="#a87525"/><line x1="485" y1="565" x2="1122" y2="565" stroke="#765331" stroke-opacity=".5"/><text x="485" y="589" class="k">ELEMENTOS</text>${elementLines.map((line, index) => `<text x="485" y="${614 + index * 18}" class="a">${line}</text>`).join("")}<text x="825" y="589" class="k">ESTILO DE LUTA</text>${styleLines.map((line, index) => `<text x="825" y="${614 + index * 18}" class="a">${line}</text>`).join("")}</svg>`;
-  const roll = (x: number) => `<g><rect x="${x}" y="24" width="55" height="627" rx="24" fill="#1d2740" stroke="#0c1120" stroke-width="4"/><rect x="${x + 8}" y="40" width="39" height="595" rx="18" fill="#26385d"/><path d="M${x + 17} 54v568M${x + 38} 54v568" stroke="#637ba9" stroke-width="3" stroke-opacity=".8"/><rect x="${x}" y="52" width="55" height="22" rx="9" fill="#f5ba25" stroke="#a86d14" stroke-width="3"/><rect x="${x}" y="594" width="55" height="22" rx="9" fill="#f5ba25" stroke="#a86d14" stroke-width="3"/><path d="M${x + 4} 86h47M${x + 4} 582h47" stroke="#fef0a4" stroke-width="3" opacity=".9"/><ellipse cx="${x + 27}" cy="31" rx="27" ry="15" fill="#ffe586" stroke="#1d2740" stroke-width="4"/><ellipse cx="${x + 27}" cy="644" rx="27" ry="15" fill="#cd7c2f" stroke="#1d2740" stroke-width="4"/><ellipse cx="${x + 27}" cy="31" rx="15" ry="8" fill="#9d5d25"/><path d="M${x + 8} 123c15-12 25-12 39 0M${x + 8} 550c15 12 25 12 39 0" fill="none" stroke="#dc2632" stroke-width="7"/><circle cx="${x + 27}" cy="123" r="6" fill="#ffe586"/><circle cx="${x + 27}" cy="550" r="6" fill="#ffe586"/></g>`;
+  const roll = (x: number) => `<g><rect x="${x}" y="12" width="64" height="651" rx="28" fill="#1d2740" stroke="#0c1120" stroke-width="5"/><rect x="${x + 9}" y="34" width="46" height="607" rx="21" fill="#26385d"/><rect x="${x + 18}" y="85" width="28" height="505" rx="12" fill="#fff0c2" stroke="#bd7a2a" stroke-width="2"/><path d="M${x + 21} 98v479M${x + 43} 98v479" stroke="#e5bc72" stroke-width="2" opacity=".8"/><path d="M${x + 14} 52v570M${x + 50} 52v570" stroke="#637ba9" stroke-width="3" stroke-opacity=".8"/><rect x="${x}" y="45" width="64" height="25" rx="10" fill="#f5ba25" stroke="#a86d14" stroke-width="3"/><rect x="${x}" y="606" width="64" height="25" rx="10" fill="#f5ba25" stroke="#a86d14" stroke-width="3"/><path d="M${x + 5} 82h54M${x + 5} 594h54" stroke="#fef0a4" stroke-width="3" opacity=".9"/><ellipse cx="${x + 32}" cy="22" rx="31" ry="16" fill="#ffe586" stroke="#1d2740" stroke-width="4"/><ellipse cx="${x + 32}" cy="653" rx="31" ry="16" fill="#cd7c2f" stroke="#1d2740" stroke-width="4"/><ellipse cx="${x + 32}" cy="22" rx="18" ry="9" fill="#9d5d25"/><path d="M${x + 8} 128c18-13 30-13 48 0M${x + 8} 545c18 13 30 13 48 0" fill="none" stroke="#dc2632" stroke-width="8"/><circle cx="${x + 32}" cy="128" r="7" fill="#ffe586"/><circle cx="${x + 32}" cy="545" r="7" fill="#ffe586"/></g>`;
   const scrollRolls = `${roll(-6)}${roll(1151)}`;
   const shinobiSeal = `<circle cx="1110" cy="575" r="42" fill="#7b2820" stroke="#5c1b18" stroke-width="4"/><circle cx="1110" cy="575" r="32" fill="none" stroke="#e8c875" stroke-width="2" opacity=".9"/><text x="1110" y="591" text-anchor="middle" style="font:700 40px serif;fill:#f2dfb5">忍</text>`;
+  // O retrato agora ocupa exatamente a mesma caixa do recorte do pergaminho,
+  // evitando o deslocamento vertical que cortava ou desalinhava a aparência.
+  const portraitArtwork = artwork.replace(
+    'x="60" y="60" width="420" height="555"',
+    'x="60" y="80" width="365" height="500"',
+  );
+  const landscapeLayer = landscapeImage
+    ? `<image href="${landscapeImage}" width="1200" height="675" preserveAspectRatio="xMidYMid slice"/><rect width="1200" height="675" fill="#fff0c2" fill-opacity=".48"/>`
+    : '<rect width="1200" height="675" fill="#25170f"/>';
+  const portraitBackground = landscapeImage
+    ? `<image href="${landscapeImage}" x="60" y="80" width="365" height="500" preserveAspectRatio="xMidYMid slice"/><rect x="60" y="80" width="365" height="500" fill="#13203a" fill-opacity=".16"/>`
+    : '<rect x="60" y="80" width="365" height="500" fill="#39251d"/>';
   const themedParchment = parchmentSvg
+    .replace('<rect width="1200" height="675" fill="#25170f"/>', landscapeLayer)
+    .replace('fill="url(#paper)" stroke="#f6e5b8"', 'fill="url(#paper)" fill-opacity=".76" stroke="#f6e5b8"')
+    .replace('<rect x="60" y="80" width="365" height="500" fill="#39251d"/>', portraitBackground)
+    .replace(artwork, portraitArtwork)
     .replace(/<path d="M45 75H1155M45 600H1155"[^>]*\/>/, "")
     .replace(/<circle cx="1110" cy="575"[^>]*\/><path d="M1088 575h44m-22-22v44"[^>]*\/>/, shinobiSeal)
     .replace("</svg>", `${scrollRolls}</svg>`);
