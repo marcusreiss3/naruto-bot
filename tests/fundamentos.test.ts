@@ -10,6 +10,7 @@ import {
 } from "../src/services/characters/skill-tree.js";
 import { clanStartingElement } from "../src/data/clans/starting-element.js";
 import { ATTRIBUTES } from "../src/config/enums.js";
+import { buildMechanicsSummary } from "../src/services/characters/skill-description.js";
 
 const ACADEMY_IDS = ["tecnica_clonagem", "tecnica_substituicao", "tecnica_caminhada_aquatica"] as const;
 
@@ -169,6 +170,11 @@ describe("Técnica de Clonagem: buff de esquiva via tag", () => {
     expect(ab.shape).toBe("SELF");
     expect(ab.baseDamage).toBeUndefined();
     expect(ab.tags).toContain("buff");
+  });
+
+  it("expõe a duração e o bônus no resumo exibido pela árvore", () => {
+    expect(buildMechanicsSummary(getAbility("tecnica_clonagem")!))
+      .toContain("Até o próximo golpe recebido, concede +10 pontos percentuais de chance de Esquiva.");
   });
 });
 

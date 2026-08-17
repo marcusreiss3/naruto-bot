@@ -226,6 +226,9 @@ export function buildMechanicsSummary(ability: Ability): string {
   if (ability.reactionDodgeBonus) {
     parts.push(`Como reação, concede +${Math.round(ability.reactionDodgeBonus * 100)}% de chance de Esquiva.`);
   }
+  if (ability.id === "tecnica_clonagem") {
+    parts.push("Até o próximo golpe recebido, concede +10 pontos percentuais de chance de Esquiva.");
+  }
   if (ability.reflectsProjectiles) parts.push("Ao Aparar um projétil, devolve o golpe ao atacante.");
 
   const itemPhrase = (entries: NonNullable<Ability["requiredItems"]>): string =>
