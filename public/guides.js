@@ -88,7 +88,7 @@
         },
         {
           id: "giros-e-troca-de-cla",
-          title: "Giros e troca de clã",
+          title: "Giros e troca de clã e traço",
           blocks: [
             { type: "paragraph", text: "Os três Giros gratuitos fazem parte da primeira ficha. Giros adicionais de Clã e de Traço permitem uma nova rolagem para ajustar sua origem ou sua build depois desse momento." },
             { type: "cards", items: [
