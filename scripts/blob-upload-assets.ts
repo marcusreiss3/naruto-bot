@@ -7,6 +7,12 @@
 //   npm run blob:upload           # sobe o que falta e regrava o manifesto
 //   npm run blob:upload -- --force  # sobe tudo de novo (arte trocada com o mesmo nome)
 //   npm run blob:upload -- --dry    # so mostra o plano, nao sobe nada
+//   npm run blob:upload -- --delay=6000  # 1 upload a cada 6s, um de cada vez
+//   npm run blob:upload -- --only=icons/interface/  # so' esse subcaminho
+//
+// --delay serve pra lote grande: forca concorrencia 1 e espera o intervalo
+// entre cada arquivo, pra ficar longe do teto de 300 req/min (que rende 30
+// minutos de castigo). Sem ele, sobe 4 em paralelo sem pausa, como sempre.
 //
 // O manifesto (public/asset-manifest.js) VAI pro git; public/assets nao vai mais.
 import "../src/config/load-env.js";
@@ -161,16 +167,23 @@ async function mapWithLimit<T>(items: T[], limit: number, worker: (item: T, inde
   await Promise.all(runners);
 }
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 async function main() {
   const force = process.argv.includes("--force");
   const dryRun = process.argv.includes("--dry");
+  const delayMs = Number(process.argv.find((a) => a.startsWith("--delay="))?.slice(8) ?? 0);
+  const concurrency = delayMs > 0 ? 1 : MAX_CONCURRENT_UPLOADS;
+  const only = process.argv.find((a) => a.startsWith("--only="))?.slice(7);
 
   const entries = collectEntries();
   const manifest = readExistingManifest();
-  const pending = force ? entries : entries.filter((e) => !manifest[e.webPath]);
+  const scoped = only ? entries.filter((e) => e.webPath.includes(only)) : entries;
+  const pending = force ? scoped : scoped.filter((e) => !manifest[e.webPath]);
   const totalMb = pending.reduce((sum, e) => sum + e.size, 0) / 1024 / 1024;
 
-  console.log(`${entries.length} assets elegiveis, ${pending.length} a subir (${totalMb.toFixed(1)} MB).`);
+  const eta = delayMs > 0 ? `, ~${((pending.length * delayMs) / 60000).toFixed(1)} min a ${delayMs}ms cada` : "";
+  console.log(`${entries.length} assets elegiveis, ${pending.length} a subir (${totalMb.toFixed(1)} MB${eta}).`);
   if (dryRun) {
     for (const e of pending.slice(0, 20)) console.log(`  ${e.webPath}  ->  ${e.prefix}/${e.name}`);
     if (pending.length > 20) console.log(`  ... e mais ${pending.length - 20}`);
@@ -189,8 +202,9 @@ async function main() {
   // que subiu, entao rodar de novo depois retoma exatamente de onde parou.
   let rateLimited = false;
 
-  await mapWithLimit(pending, MAX_CONCURRENT_UPLOADS, async (entry) => {
+  await mapWithLimit(pending, concurrency, async (entry, index) => {
     if (rateLimited) return;
+    if (delayMs > 0 && index > 0) await sleep(delayMs);
     try {
       const res = await createObject({
         file: readFileSync(entry.absPath),
