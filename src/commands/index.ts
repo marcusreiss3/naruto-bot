@@ -12,6 +12,7 @@ import { admin } from "./admin.js";
 import { adminVila } from "./admin-vila.js";
 import { vila } from "./vila.js";
 import { loja } from "./loja.js";
+import { lojaPremium } from "./loja-premium.js";
 import { aparencia } from "./aparencia.js";
 import { clear } from "./clear.js";
 import { bonecoTreino } from "./boneco-treino.js";
@@ -39,6 +40,7 @@ export const commands: Command[] = [
   ficha,
   vila,
   loja,
+  lojaPremium,
   equipar,
   desequipar,
   restaurarPergaminho,

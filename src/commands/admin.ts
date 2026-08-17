@@ -30,6 +30,7 @@ import { onCombatEnded } from "../services/missions/mission-runtime.js";
 import { getAppearance, releaseAppearance } from "../services/appearance/appearance-service.js";
 import { resetSheet } from "../services/sheet/sheet-reset.js";
 import { villageFromMember, VILLAGE_NAMES } from "../services/village-service.js";
+import { getPremiumWallet } from "../services/premium/ingot-store.js";
 
 const attrChoices = ATTRIBUTES.map((a) => ({ name: ATTRIBUTE_LABELS[a], value: a }));
 const resourceChoices = RESOURCES.map((r) => ({ name: r, value: r }));
@@ -147,6 +148,13 @@ export const admin: Command = {
         .setDescription("Define os pontos de atributo (valor exato)")
         .addUserOption((o) => o.setName("usuario").setDescription("Usuário").setRequired(true))
         .addIntegerOption((o) => o.setName("valor").setDescription("Quantidade").setRequired(true)),
+    )
+    .addSubcommand((s) =>
+      s
+        .setName("ingots-set")
+        .setDescription("Define a quantidade de Ingots de um jogador")
+        .addUserOption((o) => o.setName("usuario").setDescription("Usuário").setRequired(true))
+        .addIntegerOption((o) => o.setName("quantidade").setDescription("Quantidade").setMinValue(0).setRequired(true)),
     )
     .addSubcommand((s) =>
       s
@@ -450,6 +458,15 @@ export const admin: Command = {
         const valor = Math.max(0, interaction.options.getInteger("valor", true));
         await prisma.userCharacter.update({ where: { id: char.id }, data: { attributePoints: valor } });
         await interaction.editReply(`✅ Pontos de atributo de **${char.name}** = ${valor}.`);
+        return;
+      }
+      case "ingots-set": {
+        const user = interaction.options.getUser("usuario", true);
+        const quantidade = interaction.options.getInteger("quantidade", true);
+        if (!interaction.guildId) throw new Error("Este comando só funciona dentro de um servidor.");
+        const wallet = await getPremiumWallet(user.id, interaction.guildId);
+        await prisma.premiumWallet.update({ where: { id: wallet.id }, data: { ingots: quantidade } });
+        await interaction.editReply(`✅ Ingots de **${user.username}** = ${quantidade}.`);
         return;
       }
       case "respec": {

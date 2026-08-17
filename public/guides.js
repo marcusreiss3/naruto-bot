@@ -92,7 +92,7 @@
           blocks: [
             { type: "paragraph", text: "Os três Giros gratuitos fazem parte da primeira ficha. Giros adicionais de Clã e de Traço permitem uma nova rolagem para ajustar sua origem ou sua build depois desse momento." },
             { type: "cards", items: [
-              { title: "Ingots", text: "Giros adicionais usam Ingots, obtidos na loja, em eventos, sorteios, códigos promocionais ou passes." },
+              { title: "Ingots", text: "Giros adicionais usam Ingots. Use `/loja-premium` para comprar e usar Giros de Clã ou de Traço." },
               { title: "Boost do servidor", text: "O Boost do servidor também pode conceder Ingots para novos Giros." },
               { title: "Troca de Clã", text: "Antes de se tornar Genin, você pode trocar de Clã normalmente. Depois de alcançar Genin, é preciso resetar o personagem para escolher outro Clã." },
             ] },

@@ -103,21 +103,21 @@ export async function loadAllocState(charId: string): Promise<AllocState | null>
   if (!char || !char.attributes) return null;
   const current = {} as Record<Attribute, number>;
   for (const a of ATTRIBUTES) {
-    current[a] = (char.attributes as unknown as Record<string, number>)[a] ?? 1;
+    current[a] = (char.attributes as unknown as Record<string, number>)[a] ?? 0;
   }
   return { current, pool: char.attributePoints, draft: {} };
 }
 
-// Reseta todos os atributos para 1 e devolve os pontos gastos ao pool.
+// Reseta todos os atributos para 0 e devolve os pontos gastos ao pool.
 // Usado pelo /admin respec. O total devolvido e o que foi investido acima da
 // base, nao o que o nivel deu — assim admin somando ponto na mao nao some.
 export async function respec(charId: string): Promise<number> {
   const state = await loadAllocState(charId);
   if (!state) throw new Error("Personagem nao encontrado.");
-  const invested = ATTRIBUTES.reduce((acc, a) => acc + (state.current[a] - 1), 0);
+  const invested = ATTRIBUTES.reduce((acc, a) => acc + state.current[a], 0);
 
   const reset: Record<string, number> = {};
-  for (const a of ATTRIBUTES) reset[a] = 1;
+  for (const a of ATTRIBUTES) reset[a] = 0;
 
   await prisma.$transaction([
     prisma.characterAttributes.update({ where: { charId }, data: reset }),

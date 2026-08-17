@@ -20,7 +20,7 @@ model UserCharacter {
   level           Int      @default(1)
   xp              Int      @default(0)
   ryo             Int      @default(0)
-  attributePoints Int      @default(0)
+  attributePoints Int      @default(1)
   hpCurrent       Int      @default(100)
   hpMax           Int      @default(100)
   // contador de evolucoes de maestria liberadas (1 a cada 15 niveis)
@@ -81,16 +81,61 @@ model CharacterAttributes {
   id           String        @id @default(cuid())
   character    UserCharacter @relation(fields: [charId], references: [id], onDelete: Cascade)
   charId       String        @unique
-  ninjutsu     Int           @default(1)
-  taijutsu     Int           @default(1)
-  genjutsu     Int           @default(1)
-  bukijutsu    Int           @default(1)
-  iryoNinjutsu Int           @default(1)
-  fuinjutsu    Int           @default(1)
-  kugutsu      Int           @default(1)
-  senjutsu     Int           @default(1)
-  dojutsu      Int           @default(1)
-  kenjutsu     Int           @default(1)
+  ninjutsu     Int           @default(0)
+  taijutsu     Int           @default(0)
+  genjutsu     Int           @default(0)
+  bukijutsu    Int           @default(0)
+  iryoNinjutsu Int           @default(0)
+  fuinjutsu    Int           @default(0)
+  kugutsu      Int           @default(0)
+  senjutsu     Int           @default(0)
+  dojutsu      Int           @default(0)
+  kenjutsu     Int           @default(0)
+}
+
+model PremiumPurchase {
+  id            String        @id @default(cuid())
+  wallet        PremiumWallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  walletId      String
+  interactionId String        @unique
+  productId     String
+  cost          Int
+  createdAt     DateTime      @default(now())
+
+  @@index([walletId, createdAt])
+}
+
+// Saldo premium pertence Ã  conta no servidor, nÃ£o Ã  ficha. Assim, resetar ou
+// perder um personagem nÃ£o apaga Ingots nem Giros ainda nÃ£o usados.
+model PremiumWallet {
+  id            String            @id @default(cuid())
+  discordId     String
+  guildId       String
+  ingots        Int               @default(0)
+  clanSpins     Int               @default(0)
+  traitSpins    Int               @default(0)
+  purchases     PremiumPurchase[]
+  spinSessions  PremiumSpinSession[]
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@unique([discordId, guildId])
+  @@index([guildId])
+}
+
+// Uma rolagem mÃ­tica oferece todas as opÃ§Ãµes dessa raridade antes de consumir
+// o Giro. A sessÃ£o expira para nÃ£o deixar escolhas pendentes para sempre.
+model PremiumSpinSession {
+  id        String        @id @default(cuid())
+  wallet    PremiumWallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  walletId  String
+  kind      String
+  choices   String
+  usedAt    DateTime?
+  expiresAt DateTime
+  createdAt DateTime      @default(now())
+
+  @@index([walletId, kind, expiresAt])
 }
 
 model CharacterResourceState {

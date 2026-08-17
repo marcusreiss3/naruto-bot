@@ -5,10 +5,7 @@
    no topo, o renderer embaixo so' desenha o que estiver aqui. Mexer em
    texto, secao ou card nao exige tocar no renderer.
 
-   ATENCAO: os numeros desta pagina sao PROVISORIOS. O sistema de Ingots
-   ainda nao existe no bot — nao ha' modelo no Prisma, comando, nem saldo.
-   Esta pagina e' a casca publica combinada antes da implementacao; ao
-   ligar o sistema de verdade, revisar valor por valor aqui.
+   O saldo e os Giros ficam vinculados a conta do Discord no servidor.
    ================================================================ */
 
 window.INGOTS_PAGE = {
@@ -77,31 +74,19 @@ window.INGOTS_PAGE = {
     {
       id: "no-que-gastar",
       title: "No que gastar",
-      intro: "Tudo cosmético, de conveniência ou de identidade. Nada que mude número em combate.",
+      intro: "Use `/loja-premium` para comprar e usar Giros. Nada é vendido com efeito de combate.",
       cards: [
         {
-          icon: "/assets/icons/items/pergaminho_desgastado.png",
-          title: "Reset de ficha",
-          text: "Refaz a criação do personagem e sorteia clã e traço de novo. O nível e o progresso voltam ao zero — não é atalho, é recomeço.",
-          meta: "Custo: a definir",
+          icon: "/assets/icons/items/ingots.png",
+          title: "Giro de Clã",
+          text: "Permite sortear outro Clã da Vila de origem enquanto o personagem ainda for da Academia.",
+          meta: "Custo: 100 Ingots",
         },
         {
-          icon: "/assets/icons/items/tinta_de_selo.png",
-          title: "Cosméticos de perfil",
-          text: "Moldura, fundo e detalhe do card de `/perfil`. Aparência apenas, sem efeito em ficha.",
-          meta: "Custo: a definir",
-        },
-        {
-          icon: "/assets/icons/items/lamina_chakra.png",
-          title: "Skin de arma",
-          text: "Troca o visual da arma equipada nas mensagens de combate. Dano, alcance e requisitos ficam idênticos.",
-          meta: "Custo: a definir",
-        },
-        {
-          icon: "/assets/icons/ui/yingyang.png",
-          title: "Slot extra de personagem",
-          text: "Permite manter mais de um personagem vivo na mesma conta. Cada slot é independente e tem ficha própria.",
-          meta: "Custo: a definir",
+          icon: "/assets/icons/items/ingots.png",
+          title: "Giro de Traço",
+          text: "Permite obter um novo Traço usando as probabilidades normais. Um resultado Mítico deixa você escolher entre as opções sorteadas.",
+          meta: "Custo: 100 Ingots",
         },
       ],
     },

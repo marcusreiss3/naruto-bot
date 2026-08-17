@@ -14,7 +14,7 @@ export { meetsRequirements };
 // evita ter que tocar aqui toda vez que um atributo novo entra no enum.
 export function attrsFromRow(row: Record<string, unknown>): Record<Attribute, number> {
   const out = {} as Record<Attribute, number>;
-  for (const a of ATTRIBUTES) out[a] = (row[a] as number | undefined) ?? 1;
+  for (const a of ATTRIBUTES) out[a] = (row[a] as number | undefined) ?? 0;
   return out;
 }
 
