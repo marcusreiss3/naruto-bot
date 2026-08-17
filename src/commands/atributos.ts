@@ -54,20 +54,20 @@ function buildEmbed(state: AllocState, charName: string): EmbedBuilder {
   return embed;
 }
 
-async function buildView(state: AllocState, char: Awaited<ReturnType<typeof getOrCreateCharacter>>) {
+async function buildView(state: AllocState, char: Awaited<ReturnType<typeof getOrCreateCharacter>>, username: string) {
   const left = pointsLeft(state);
   const trait = char.trait ? getTrait(char.trait.traitId) : undefined;
   const clan = char.clan ? getClan(char.clan.clanId) : undefined;
   const card = await renderAttributesCard({
     name: char.name,
+    username,
     pool: left,
     current: state.current,
     draft: state.draft,
     trait: trait && { name: trait.name, description: trait.description },
     clan: clan && { name: clan.name, description: clan.description },
   });
-  const embed = buildEmbed(state, char.name).setImage("attachment://atributos.png");
-  return { embeds: [embed], files: [new AttachmentBuilder(card, { name: "atributos.png" })] };
+  return { files: [new AttachmentBuilder(card, { name: "atributos.png" })] };
 }
 
 function buildRows(state: AllocState, selected: Attribute | null) {
@@ -129,7 +129,7 @@ export async function abrirPainel(interaction: ChatInputCommandInteraction): Pro
   }
   if (state.pool <= 0) {
     await interaction.reply({
-      ...(await buildView(state, char)),
+      ...(await buildView(state, char, interaction.user.username)),
       content: "Você não tem pontos para distribuir.",
       ephemeral: true,
     });
@@ -138,7 +138,7 @@ export async function abrirPainel(interaction: ChatInputCommandInteraction): Pro
 
   // efemero: so o dono ve e mexe no proprio painel
   await interaction.reply({
-    ...(await buildView(state, char)),
+    ...(await buildView(state, char, interaction.user.username)),
     components: buildRows(state, null),
     ephemeral: true,
   });
@@ -153,13 +153,13 @@ export async function abrirPainel(interaction: ChatInputCommandInteraction): Pro
   collector.on("collect", async (i) => {
     if (i.componentType === ComponentType.StringSelect) {
       selected = i.values[0] as Attribute;
-      await i.update({ ...(await buildView(state, char)), components: buildRows(state, selected) });
+      await i.update({ ...(await buildView(state, char, interaction.user.username)), components: buildRows(state, selected) });
       return;
     }
 
     if (i.customId === "attr_clear") {
       clearDraft(state);
-      await i.update({ ...(await buildView(state, char)), components: buildRows(state, selected) });
+      await i.update({ ...(await buildView(state, char, interaction.user.username)), components: buildRows(state, selected) });
       return;
     }
 
@@ -172,7 +172,7 @@ export async function abrirPainel(interaction: ChatInputCommandInteraction): Pro
         const extra = nomes.length ? `\n🔓 Jutsu liberado: **${nomes.join(", ")}**` : "";
         await i.update({
           content: `✅ ${spent} ponto(s) gravado(s).${extra}`,
-          ...(await buildView(fresh, char)),
+          ...(await buildView(fresh, char, interaction.user.username)),
           components: [],
         });
       } catch (err) {
@@ -188,7 +188,7 @@ export async function abrirPainel(interaction: ChatInputCommandInteraction): Pro
     if (!selected) return;
     const n = i.customId === "attr_p1" ? 1 : i.customId === "attr_p5" ? 5 : roomFor(state, selected);
     addToDraft(state, selected, n);
-    await i.update({ ...(await buildView(state, char)), components: buildRows(state, selected) });
+    await i.update({ ...(await buildView(state, char, interaction.user.username)), components: buildRows(state, selected) });
   });
 
   collector.on("end", async (_c, reason) => {

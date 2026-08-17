@@ -5,6 +5,7 @@ import { ATTRIBUTE_LABELS, ATTRIBUTES, type Attribute } from "../config/enums.js
 
 export interface AttributesCardData {
   name: string;
+  username: string;
   pool: number;
   current: Record<Attribute, number>;
   draft: Partial<Record<Attribute, number>>;
@@ -44,6 +45,9 @@ export async function renderAttributesCard(data: AttributesCardData): Promise<Bu
   const background = await landscape();
   const traitLines = lines(data.trait?.description ?? "Nenhuma trait equipada.", 48);
   const clanLines = lines(data.clan?.description ?? "Sem clã selecionado.", 48);
+  const bonusPanel = (x: number, width: number, label: string, name: string, description: string[]) =>
+    `<g><rect x="${x}" y="171" width="${width}" height="56" rx="10" fill="#fff5d1" fill-opacity=".5" stroke="#b77a26" stroke-opacity=".52"/><text x="${x + 17}" y="190" class="k">${label} · ${xml(name)}</text>${description.map((line, index) => `<text x="${x + 17}" y="${210 + index * 14}" class="description">${line}</text>`).join("")}</g>`;
+  const bonusPanels = `${bonusPanel(105, 470, "TRAIT", data.trait?.name ?? "Nenhuma", traitLines)}${bonusPanel(610, 475, "CLÃ", data.clan?.name ?? "Nenhum", clanLines)}`;
   const rows = ATTRIBUTES.map((attribute, index) => {
     const column = index < 5 ? 0 : 1;
     const row = index % 5;
@@ -61,6 +65,8 @@ export async function renderAttributesCard(data: AttributesCardData): Promise<Bu
   // externo criado na interpolacao, entao abrimos o grupo do segundo aqui.
   const validSvg = svg
     .replace('</g><rect x="1124"', '</g><g><rect x="1124"')
-    .replace('<text x="105" y="246"', '<text x="105" y="234"');
+    .replace('<text x="105" y="137" class="title"', '<text x="105" y="124" class="title"')
+    .replace('<line x1="105" y1="154"', `<text x="105" y="150" class="description">@${xml(data.username)}</text><line x1="105" y1="160"`)
+    .replace(/<g><rect x="105" y="171" width="470" height="39"[\s\S]*?<\/g><g><rect x="610" y="171" width="475" height="39"[\s\S]*?<\/g><text x="105" y="246"/, `${bonusPanels}<text x="105" y="234"`);
   return sharp(Buffer.from(validSvg)).png().toBuffer();
 }
