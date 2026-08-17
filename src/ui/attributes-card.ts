@@ -75,7 +75,7 @@ export async function renderAttributesCard(data: AttributesCardData): Promise<Bu
       "Ninjutsu, Taijutsu, Genjutsu, Bukijutsu, Iryō Ninjutsu, Fūinjutsu, Dōjutsu e Kenjutsu liberam e fortalecem técnicas.",
       "Os atributos liberam técnicas, mas não aumentam o dano delas. Além disso, Taijutsu aumenta a vida máxima e a iniciativa em +1 a cada ponto.",
     )
-    .replace("Kugutsu e Senjutsu ainda não possuem efeito mecânico. Use o seletor e os botões abaixo para distribuir seus pontos.", "Kugutsu controla marionetes e fortalece suas técnicas; Senjutsu sustenta suas próprias técnicas e progressões.")
+    .replace("Kugutsu e Senjutsu ainda não possuem efeito mecânico. Use o seletor e os botões abaixo para distribuir seus pontos.", "Use o seletor e os botões abaixo para distribuir seus pontos.")
     .replace('</g><rect x="1124"', '</g><g><rect x="1124"')
     .replace('<text x="105" y="137" class="title"', '<text x="105" y="124" class="title"')
     .replace('<line x1="105" y1="154"', `<text x="105" y="150" class="description">@${xml(data.username)}</text><line x1="105" y1="160"`)
