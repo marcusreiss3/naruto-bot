@@ -57,8 +57,7 @@
               type: "steps",
               items: [
                 { title: "Veja as três origens", text: "O painel apresenta o símbolo, a Vila e a descrição de cada clã sorteado." },
-                { title: "Escolha por botão", text: "Selecione uma das três opções em até 10 minutos." },
-                { title: "Se o tempo acabar", text: "O bot escolhe aleatoriamente uma das três origens que já estavam reservadas para sua ficha." },
+                { title: "Escolha por botão", text: "Selecione uma das três opções." },
               ],
             },
             {

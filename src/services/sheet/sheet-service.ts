@@ -404,7 +404,15 @@ async function runClanAnimation(
       divider(),
       ...sections,
       divider(),
-      text(`### ${emoji("lingote_ferro")} Ingots\nA moeda de apoio do servidor, separada do Ryo e sem efeito em combate. [Clique aqui](${INGOTS_URL}) para ver como conseguir e no que gastar.`),
+      text(
+        `### ${emoji("lingote_ferro")} Ingots\n`
+        + "Moeda de apoio do servidor. Com ela você compra **spins de clã** extras no site.\n\n"
+        + "**E se eu quiser trocar de clã depois?**\n"
+        + "- De graça até você terminar o treinamento e virar Genin.\n"
+        + "- Depois disso, só no nível 10, resetando o personagem do zero.\n"
+        + "- Ou com o **reset especial**, que troca o clã e mantém seu nível.\n\n"
+        + `[Clique aqui](${INGOTS_URL}) para ver como conseguir Ingots.`,
+      ),
       divider(),
       buttons(...options.map((_, index) => button(`ficha:v1:clan:${sessionId}:${index}`, `Escolher opção ${index + 1}`))),
     ])),
