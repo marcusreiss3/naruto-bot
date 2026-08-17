@@ -30,6 +30,7 @@ const CAT_BY_SUB: Record<string, string> = {
   bukijutsu: "BUKIJUTSU",
   iryo: "IRYO_NINJUTSU",
   genjutsu: "GENJUTSU",
+  kugutsu: "KUGUTSU",
   cla: "CLA",
 };
 
@@ -54,6 +55,7 @@ export const jutsu: Command = {
     .addSubcommand(addCatSub("bukijutsu", "Bukijutsu (armas/arremesso)"))
     .addSubcommand(addCatSub("iryo", "Iryō (médico)"))
     .addSubcommand(addCatSub("genjutsu", "Genjutsu"))
+    .addSubcommand(addCatSub("kugutsu", "Kugutsu (marionetes)"))
     .addSubcommand(addCatSub("cla", "Clã")),
 
   execute(interaction: ChatInputCommandInteraction) {
@@ -98,7 +100,10 @@ export const jutsu: Command = {
     let ownedIds: string[];
     if (session) {
       const own = session.participants.find((p) => p.charId === char.id) ?? null;
-      const actingId = own ? resolveActingParticipantId(own, session.participants) : null;
+      const active = session.participants.find((p) => p.id === session.turnOrder[session.activeIndex]);
+      const actingId = active?.flags.isPuppet && active.flags.controllerId === own?.id
+        ? active.id
+        : own ? resolveActingParticipantId(own, session.participants, active?.id) : null;
       const acting = actingId ? session.participants.find((p) => p.id === actingId) : undefined;
       ownedIds = acting ? await ownedJutsuIds(acting) : [];
     } else {
@@ -123,6 +128,9 @@ async function getMyParticipant(
   if (!char) return null;
   const own = session.participants.find((p) => p.charId === char.id) ?? null;
   if (!own) return null;
-  const actingId = resolveActingParticipantId(own, session.participants);
+  const active = session.participants.find((p) => p.id === session.turnOrder[session.activeIndex]);
+  const actingId = active?.flags.isPuppet && active.flags.controllerId === own.id
+    ? active.id
+    : resolveActingParticipantId(own, session.participants, active?.id);
   return actingId ? (session.participants.find((p) => p.id === actingId) ?? null) : null;
 }

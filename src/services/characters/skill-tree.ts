@@ -35,6 +35,7 @@ import { TAIJUTSU_PASSIVES_TREE } from "../../data/taijutsu-passives-tree.js";
 import { ASSASSINATO_NINJA_TREE } from "../../data/assassinato-ninja-tree.js";
 import { TAIJUTSU_AGITACAO_TREE } from "../../data/taijutsu-agitacao-tree.js";
 import { FUINJUTSU_TREE } from "../../data/fuinjutsu-tree.js";
+import { KUGUTSU_TREE } from "../../data/kugutsu-tree.js";
 import type { VillageId } from "../village-service.js";
 import { CLAN_TREES } from "../../data/clan-trees/index.js";
 import { getAbility, getClan } from "../../data/index.js";
@@ -479,6 +480,15 @@ export function viewAssassinatoNinjaTree(snap: CharSnapshot): NodeView[] {
 
 export function viewFuinjutsuTree(snap: CharSnapshot): NodeView[] {
   return FUINJUTSU_TREE.map((node) => {
+    const combat = combatOf(node); const mechanics = mechanicsOf(node); const visualDescription = visualDescriptionOf(node); const effectiveRequired = effectiveReqPool(node);
+    if (snap.owned.has(node.id)) return { ...node, combat, mechanics, visualDescription, effectiveReqPool: effectiveRequired, cost: effectiveNodeCost(node, snap), status: "OWNED" };
+    const reason = lockReason(snap, node);
+    return reason ? { ...node, combat, mechanics, visualDescription, effectiveReqPool: effectiveRequired, cost: effectiveNodeCost(node, snap), status: "LOCKED", reason } : { ...node, combat, mechanics, visualDescription, effectiveReqPool: effectiveRequired, cost: effectiveNodeCost(node, snap), status: "BUYABLE" };
+  });
+}
+
+export function viewKugutsuTree(snap: CharSnapshot): NodeView[] {
+  return KUGUTSU_TREE.map((node) => {
     const combat = combatOf(node); const mechanics = mechanicsOf(node); const visualDescription = visualDescriptionOf(node); const effectiveRequired = effectiveReqPool(node);
     if (snap.owned.has(node.id)) return { ...node, combat, mechanics, visualDescription, effectiveReqPool: effectiveRequired, cost: effectiveNodeCost(node, snap), status: "OWNED" };
     const reason = lockReason(snap, node);

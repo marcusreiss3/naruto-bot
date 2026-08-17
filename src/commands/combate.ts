@@ -410,6 +410,10 @@ async function getMyParticipant(interaction: ChatInputCommandInteraction | Butto
   const char = await getOrCreateCharacter(interaction.user.id, guildId, interaction.user.username);
   const own = session.participants.find((p) => p.charId === char.id) ?? null;
   if (!own) return { session, me: null };
+  const active = activeParticipant(session);
+  if (active?.flags.isPuppet && active.flags.controllerId === own.id) {
+    return { session, me: active };
+  }
   // passa quem esta na vez agora: com os Clones de Transferencia de Mente o
   // jogador pode pilotar ate' 3 corpos ao mesmo tempo, entao precisa saber
   // QUAL deles esta ativo pra ensureMyTurn nao acusar "nao e' seu turno" errado.
@@ -773,7 +777,7 @@ async function nextIsPlayer(sessionId: string): Promise<boolean> {
   const s = await getSessionById(sessionId);
   if (!s || s.status !== "ACTIVE") return false;
   const active = activeParticipant(s);
-  return Boolean(active && (!active.isNpc || active.controlledById));
+  return Boolean(active && (!active.isNpc || active.controlledById || active.flags.isPuppet));
 }
 
 // Mostra a area de um jutsu no mapa e pede confirmacao antes de gastar recurso.
@@ -924,6 +928,18 @@ async function resolveWithReaction(
         a.actionType === "REACAO" &&
         (!a.requiresActiveDoujutsu || reactor.flags[a.requiresActiveDoujutsu.flag] === true),
     );
+  // Modificador de Aparência é um mecanismo, não um CharacterJutsu. Enquanto
+  // uma marionete equipada estiver viva no campo, ele entra no mesmo seletor
+  // de reações do dono.
+  const puppetSubstitution = session!.participants.some((p) =>
+    p.hpCurrent > 0 && p.flags.isPuppet && p.flags.controllerId === target.id
+      && Array.isArray(p.flags.puppetUpgrades)
+      && (p.flags.puppetUpgrades as string[]).includes("modificador_aparencia"),
+  );
+  if (puppetSubstitution) {
+    const ability = getAbility("kugutsu_modificador_aparencia");
+    if (ability) reactionJutsus.push(ability);
+  }
 
   // ---- Passo 1: reagir ou levar o dano ----
   const gateRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -1062,7 +1078,7 @@ async function advanceTurn(
     const active = activeParticipant(s);
     // controlledById: um jogador roubou o corpo deste NPC (Shintenshin) —
     // quem age agora e' o jogador, nao a IA.
-    if (!active || !active.isNpc || active.hpCurrent <= 0 || active.controlledById) break;
+    if (!active || !active.isNpc || active.hpCurrent <= 0 || active.controlledById || active.flags.isPuppet) break;
     logs.push(`— Turno de **${active.name}** (${active.flags.isSummon ? "invocação" : "NPC"}) —`);
     logs.push(...(await runNpcTurn(s.id, active.id)));
     result = await endTurn(s.id);
@@ -1132,7 +1148,7 @@ async function fimTurno(interaction: ChatInputCommandInteraction): Promise<void>
   const s2 = await getSessionById(session.id);
   const nextActive = s2 && s2.status === "ACTIVE" ? activeParticipant(s2) : null;
   await sendCombatView(interaction, session.id, logs, {
-    movement: Boolean(nextActive && !nextActive.isNpc),
+    movement: Boolean(nextActive && (!nextActive.isNpc || nextActive.flags.isPuppet)),
   });
 }
 

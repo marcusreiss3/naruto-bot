@@ -165,6 +165,10 @@ export const ECONOMY_EMOJI_PLACEHOLDERS = {
   investigacao: "🔎",
   descoberta: "🧩",
   aparencia: "🎭",
+  marionete: "🪆",
+  carapaca: "🛡️",
+  mecanismo: "⚙️",
+  fios_chakra: "🧵",
 } as const;
 
 export type EmojiKey = keyof typeof ECONOMY_EMOJI_PLACEHOLDERS;
@@ -243,6 +247,10 @@ const CUSTOM_EMOJIS: Partial<Record<EmojiKey, string>> = {
   investigacao: "<:investigacao:1538717595124113569>",
   descoberta: "<:descoberta:1538717328232030329>",
   aparencia: "<:aparencia:1538716825653608478>",
+  marionete: "<:marionete:1538949880435703909>",
+  carapaca: "<:carapaca:1538949882969194566>",
+  mecanismo: "<:mecanismo:1538949884265369601>",
+  fios_chakra: "<:fios_chakra:1538949886249275464>",
   // Madeira e derivados
   madeira: "<:madeira:1538182896613986314>",
   fibra_vegetal: "<:fibra_vegetal:1538182874216534027>",

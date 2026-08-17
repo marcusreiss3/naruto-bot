@@ -8,7 +8,7 @@ import { ELEMENT_TREES } from "../data/element-trees/index.js";
 import { CLAN_TREES } from "../data/clan-trees/index.js";
 import { CLANS, getAbility } from "../data/index.js";
 import { getTrait } from "../data/traits.js";
-import { loadSnapshot, viewTree, viewFundamentosTree, viewClanTree, viewBukijutsuTree, viewIryoNinjutsuTree, viewGenjutsuTree, viewFuinjutsuTree, viewTaijutsuTree, viewArhatTree, viewAdamantinoTree, viewTaijutsuPassivesTree, viewAssassinatoNinjaTree, viewTaijutsuAgitacaoTree, buyNode } from "../services/characters/skill-tree.js";
+import { loadSnapshot, viewTree, viewFundamentosTree, viewClanTree, viewBukijutsuTree, viewIryoNinjutsuTree, viewGenjutsuTree, viewFuinjutsuTree, viewKugutsuTree, viewTaijutsuTree, viewArhatTree, viewAdamantinoTree, viewTaijutsuPassivesTree, viewAssassinatoNinjaTree, viewTaijutsuAgitacaoTree, buyNode } from "../services/characters/skill-tree.js";
 import { villageForDiscordUser } from "../services/village-service.js";
 import { buildMechanicsSummary, buildVisualDescription } from "../services/characters/skill-description.js";
 import { MANGEKYO_VARIANT_LABEL } from "../services/characters/mangekyo.js";
@@ -34,6 +34,7 @@ export function registerApi(app: FastifyInstance): void {
       BUKIJUTSU: viewBukijutsuTree(snap),
       GENJUTSU: viewGenjutsuTree(snap),
       FUINJUTSU: viewFuinjutsuTree(snap),
+      KUGUTSU: viewKugutsuTree(snap),
       TAIJUTSU: viewTaijutsuTree(snap),
       ARHAT: viewArhatTree(snap),
       ADAMANTINO: viewAdamantinoTree(snap),

@@ -9,6 +9,7 @@ const ELEMENTS = [
   { id: "BUKIJUTSU", name: "Bukijutsu", icon: "", img: "/assets/icons/footer/bukijutsu.png", color: "#b7a27a" },
   { id: "GENJUTSU", name: "Genjutsu", icon: "", img: "/assets/icons/footer/genjutsu.png", color: "#9b63c7" },
   { id: "FUINJUTSU", name: "Fuinjutsu", icon: "", img: "/assets/icons/footer/fuinjutsu.png", color: "#d6a13d" },
+  { id: "KUGUTSU", name: "Kugutsu", icon: "🪆", img: "/assets/icons/kugutsu/marionete.png", color: "#a76545" },
   { id: "TAIJUTSU_PASSIVAS", name: "Taijutsu", icon: "", img: "/assets/icons/footer/taijutsu-geral.png", color: "#d8794f" },
   { id: "ASSASSINATO_NINJA", name: "Assassinato Silencioso", icon: "", img: "/assets/icons/footer/assassinato-ninja.png", color: "#7f9ebf" },
   { id: "TAIJUTSU_AGITACAO", name: "Taijutsu de Agitação", icon: "", img: "/assets/icons/footer/taijutsu-agitacao.png", color: "#d67e58" },
@@ -274,6 +275,7 @@ const ELEMENT_BG = {
   BUKIJUTSU: `url('/assets/bg/bukijutsu.webp?v=${BG_ASSET_VERSION}')`,
   GENJUTSU: `url('/assets/bg/genjutsu.webp?v=${BG_ASSET_VERSION}')`,
   FUINJUTSU: `url('/assets/bg/fuinjutsu.webp?v=${BG_ASSET_VERSION}')`,
+  KUGUTSU: "linear-gradient(135deg, rgba(66, 35, 26, .92), rgba(142, 75, 43, .72))",
   // taijutsu passiva (arvore central) + os 4 estilos de luta especificos
   TAIJUTSU_PASSIVAS: `url('/assets/bg/taijutsu.webp?v=${BG_ASSET_VERSION}')`,
   TAIJUTSU: `url('/assets/bg/punho-forte.webp?v=${BG_ASSET_VERSION}')`,
@@ -827,7 +829,7 @@ function buildElemBar() {
     // todo no' de todo cla sem trocar o clanId do personagem).
     const unlocked =
       e.id === "FUNDAMENTOS" ||
-      e.id === "BUKIJUTSU" || e.id === "IRYO_NINJUTSU" || e.id === "GENJUTSU" || e.id === "FUINJUTSU" || e.id === "TAIJUTSU_PASSIVAS" ||
+      e.id === "BUKIJUTSU" || e.id === "IRYO_NINJUTSU" || e.id === "GENJUTSU" || e.id === "FUINJUTSU" || e.id === "KUGUTSU" || e.id === "TAIJUTSU_PASSIVAS" ||
       (STYLE_TREE_IDS.has(e.id)
         ? (state.trees[e.id] || []).some((n) => n.status === "OWNED")
         : e.clanGate

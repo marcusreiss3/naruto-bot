@@ -11,6 +11,7 @@ import { TAIJUTSU_ABILITIES } from "./jutsus/taijutsu.js";
 import { ARHAT_ABILITIES } from "./jutsus/arhat.js";
 import { ADAMANTINO_ABILITIES } from "./jutsus/adamantino.js";
 import { FUINJUTSU_ABILITIES } from "./jutsus/fuinjutsu.js";
+import { KUGUTSU_ABILITIES } from "./jutsus/kugutsu.js";
 import { CLAN_ABILITIES, CLANS } from "./clans/index.js";
 
 export const ALL_ABILITIES: Ability[] = [
@@ -26,6 +27,7 @@ export const ALL_ABILITIES: Ability[] = [
   ...ARHAT_ABILITIES,
   ...ADAMANTINO_ABILITIES,
   ...FUINJUTSU_ABILITIES,
+  ...KUGUTSU_ABILITIES,
   ...CLAN_ABILITIES,
 ];
 

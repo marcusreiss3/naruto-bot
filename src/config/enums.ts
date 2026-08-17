@@ -101,6 +101,7 @@ export const CATEGORIES = [
   "BUKIJUTSU",
   "KENJUTSU",
   "DOJUTSU",
+  "KUGUTSU",
   "CLA",
 ] as const;
 export type Category = (typeof CATEGORIES)[number];

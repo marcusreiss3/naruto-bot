@@ -225,7 +225,7 @@ async function renderLoja(
   if (receitas.length) {
     // O custo do painel e' CALCULADO pelo catalogo e pelo preco de compra atual;
     // nunca um numero escrito a mao (secao 7.4).
-    const linhas = receitas.slice(0, 6).map((recipe) => {
+    const linhas = receitas.map((recipe) => {
       const margem = estimateMargin(recipe, view.taxRate);
       const extra = margem
         ? ` — varejo ${margem.varejo}, custo estimado ${margem.custo}, margem ${margem.margem}`

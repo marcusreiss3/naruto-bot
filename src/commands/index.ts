@@ -19,6 +19,7 @@ import { invocacao } from "./invocacao.js";
 import { inventario } from "./inventario.js";
 import { acao } from "./acao.js";
 import { craft } from "./craft.js";
+import { marionetes } from "./marionetes.js";
 import { comer } from "./comer.js";
 import { sincronizarVila } from "./sincronizar-vila.js";
 import { viajar } from "./viajar.js";
@@ -31,6 +32,7 @@ export const commands: Command[] = [
   inventario,
   acao,
   craft,
+  marionetes,
   comer,
   sincronizarVila,
   viajar,

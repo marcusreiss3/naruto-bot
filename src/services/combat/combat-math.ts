@@ -28,8 +28,9 @@ const SCALE: Record<Attribute, number> = {
 // para avisar o jogador antes de ele gastar ponto.
 // kenjutsu/dojutsu/fuinjutsu SAIRAM daqui: viraram `pool` de nos de arvore de
 // cla (ver skill-tree.ts), entao gastar ponto neles compra habilidade.
-// kugutsu/senjutsu continuam sem nenhum consumidor.
-export const ATTRIBUTES_SEM_EFEITO: readonly Attribute[] = ["kugutsu", "senjutsu"];
+// Senjutsu ainda não tem consumidor. Kugutsu agora escala as habilidades das
+// marionetes e também é a bolsa da sua árvore de oficina.
+export const ATTRIBUTES_SEM_EFEITO: readonly Attribute[] = ["senjutsu"];
 
 // UNICA fonte de verdade do que conta como golpe FISICO. Usada em ~7 lugares
 // (queimadura corta dano fisico, esquiva gasta energia em vez de chakra,

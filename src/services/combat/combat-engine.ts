@@ -90,6 +90,8 @@ import {
   sharinganCopyNodeId,
   type SharinganTomoe,
 } from "./sharingan.js";
+import { PUPPET_UPGRADE_ABILITY } from "../../data/jutsus/kugutsu.js";
+import { puppetCapabilities } from "../puppets/puppet-service.js";
 
 type ParticipantRow = Awaited<ReturnType<typeof prisma.combatParticipant.findFirstOrThrow>>;
 
@@ -590,6 +592,15 @@ export function validateMove(s: SessionFull, participantId: string, dest: string
   if (!coord || coord.row >= scenario.rows || coord.col > scenario.cols || coord.col < 1) {
     return { ok: false, error: "Célula inválida." };
   }
+  // Marionetes não podem se afastar além do alcance dos fios de chakra do
+  // condutor. A checagem acontece em cada passo, portanto também bloqueia uma
+  // rota longa que tentaria cruzar o limite sem precisar de lógica especial.
+  if (p.flags.isPuppet) {
+    const owner = s.participants.find((candidate) => candidate.id === p.flags.controllerId);
+    const leash = Number(p.flags.puppetLeash ?? 2);
+    if (!owner || owner.hpCurrent <= 0) return { ok: false, error: "Os fios perderam o condutor da marionete." };
+    if (cellDistance(owner.cell, dest) > leash) return { ok: false, error: `A marionete só pode ficar até ${leash} células do condutor.` };
+  }
   if (isStunned(p.effects)) return { ok: false, error: "Você está atordoado e não pode se mover." };
   if (isRooted(p.effects)) return { ok: false, error: "Você está enraizado e não pode se mover." };
   if (isShadowBound(p.effects)) {
@@ -749,18 +760,90 @@ export function displayName(name: string, num: number | null | undefined): strin
 }
 
 function getAttr(p: SessionFull["participants"][number], attr: Attribute): number {
+  const cached = (p.flags.attrs as Record<string, number> | undefined)?.[attr];
+  // Marionete é armazenada como NPC para aproveitar a entidade de combate,
+  // mas usa o snapshot de atributos do seu condutor, não um template estático.
+  if (p.flags.isPuppet) return cached ?? 1;
   // NPC: do template; player: precisa de lookup. Guardamos em flags p/ simplificar NPC.
   if (p.isNpc && p.npcTemplate) {
     const tpl = getNpc(p.npcTemplate);
     return tpl?.attributes[attr] ?? 1;
   }
-  const cached = (p.flags.attrs as Record<string, number> | undefined)?.[attr];
   return cached ?? 1;
+}
+
+// Marionetes reutilizam a entidade de invocação, mas NÃO a IA: cada uma ganha
+// um turno controlado pelo dono logo após ele. O modelo persistente fornece
+// carapaça/peças; o participante recebe um snapshot para o combate continuar
+// consistente mesmo se o painel for alterado depois.
+export async function deployPuppet(
+  s: SessionFull,
+  ownerId: string,
+  puppetId: string,
+): Promise<{ ok: true; name: string } | { ok: false; error: string }> {
+  const owner = s.participants.find((p) => p.id === ownerId);
+  if (!owner || !owner.charId) return { ok: false, error: "Condutor inválido." };
+  const puppet = await prisma.puppet.findFirst({
+    where: { id: puppetId, charId: owner.charId },
+    include: { upgrades: true },
+  });
+  if (!puppet) return { ok: false, error: "Marionete não encontrada." };
+  if (s.participants.some((p) => p.flags.isPuppet && p.flags.puppetId === puppet.id && p.hpCurrent > 0)) {
+    return { ok: false, error: "Essa marionete já está em campo." };
+  }
+  const nodes = ownedNodes(owner);
+  const caps = puppetCapabilities(nodes);
+  const deployed = s.participants.filter((p) => p.flags.isPuppet && p.flags.controllerId === owner.id && p.hpCurrent > 0);
+  if (deployed.length >= caps.slots) return { ok: false, error: `Seu limite atual é ${caps.slots} marionete(s) em campo.` };
+
+  const scenario = getScenarioById(s.scenarioId)!;
+  const blocked = effectiveObstacles(scenario, s.terrain, s.round);
+  const taken = new Set(s.participants.filter((p) => p.hpCurrent > 0).map((p) => p.cell));
+  const origin = parseCell(owner.cell);
+  const spot = origin && neighbors(origin)
+    .filter((c) => c.row >= 0 && c.row < scenario.rows && c.col >= 1 && c.col <= scenario.cols)
+    .map(toCell)
+    .find((cell) => !blocked.has(cell) && !taken.has(cell));
+  if (!spot) return { ok: false, error: "Não há uma célula livre ao seu lado para a marionete." };
+
+  const baseHp = Math.max(35, Math.round(owner.hpMax * (0.20 + Math.min(30, Number(owner.flags.level ?? 1)) * 0.002)));
+  const baseDamage = puppet.shell === "OFFENSE" ? 0.10 : 0;
+  const baseHpBonus = puppet.shell === "DEFENSE" ? 0.12 : 0;
+  const baseShield = puppet.shell === "DEFENSE" ? 0.12 : 0;
+  const baseEffectTurns = puppet.shell === "EFFECT" ? 1 : 0;
+  const baseDrain = puppet.shell === "EFFECT" ? 0.05 : 0;
+  const hp = Math.round(baseHp * (1 + baseHpBonus + (puppet.shell === "DEFENSE" ? caps.shellHpBonus : 0)));
+  const abilityIds = puppet.upgrades.map((part) => PUPPET_UPGRADE_ABILITY[part.upgradeId]).filter((value): value is string => Boolean(value));
+  const cp = await prisma.combatParticipant.create({
+    data: {
+      sessionId: s.id, isNpc: true, npcTemplate: null, name: puppet.name, teamId: owner.teamId, cell: spot,
+      hpCurrent: hp, hpMax: hp, chakra: owner.chakra, energia: 100, jutsuIdsJson: JSON.stringify(abilityIds),
+      flagsJson: JSON.stringify({
+        isPuppet: true, isSummon: true, puppetId: puppet.id, controllerId: owner.id, summonerId: owner.id,
+        puppetShell: puppet.shell, puppetUpgrades: puppet.upgrades.map((part) => part.upgradeId),
+        puppetLeash: caps.leash, puppetDamageBonus: baseDamage + (puppet.shell === "OFFENSE" ? caps.shellDamageBonus : 0),
+        puppetShieldBonus: baseShield + (puppet.shell === "DEFENSE" ? caps.shellShieldBonus : 0),
+        puppetEffectTurns: baseEffectTurns + (puppet.shell === "EFFECT" ? caps.shellEffectTurns : 0),
+        puppetChakraDrainBonus: baseDrain + (puppet.shell === "EFFECT" ? caps.shellChakraDrainBonus : 0),
+        puppetBonusAttack: caps.bonusAttack, attrs: owner.flags.attrs, nodes,
+      }),
+    },
+  });
+  const order = [...s.turnOrder];
+  let insertAt = order.indexOf(owner.id) + 1;
+  while (order[insertAt] && s.participants.find((p) => p.id === order[insertAt])?.flags.controllerId === owner.id) insertAt++;
+  order.splice(Math.max(0, insertAt), 0, cp.id);
+  await prisma.combatSession.update({ where: { id: s.id }, data: { turnOrderJson: JSON.stringify(order) } });
+  return { ok: true, name: puppet.name };
 }
 
 // Nos da arvore que o participante possui (snapshot tirado no inicio do combate).
 // NPC nao tem arvore: nunca ganha passiva de no.
 function ownedNodes(p: SessionFull["participants"][number]): string[] {
+  if (p.flags.isPuppet) {
+    const nodes = p.flags.nodes;
+    return Array.isArray(nodes) ? (nodes as string[]) : [];
+  }
   if (p.isNpc) return [];
   const nodes = p.flags.nodes;
   return Array.isArray(nodes) ? (nodes as string[]) : [];
@@ -1050,6 +1133,30 @@ export async function useAbility(
   if (ability.toggleRules) {
     return fail(`Esta técnica é contínua. Use ${ability.toggleRules.command} para ativar ou desativar.`);
   }
+  if (actor.flags.isPuppet) {
+    const damageBonus = Number(actor.flags.puppetDamageBonus ?? 0);
+    const effectTurns = Number(actor.flags.puppetEffectTurns ?? 0);
+    const shieldBonus = Number(actor.flags.puppetShieldBonus ?? 0);
+    const prolong = (effects: AppliedEffect[] | undefined) => effects?.map((effect) => ({
+      ...effect,
+      duration: effect.duration === undefined ? undefined : effect.duration + effectTurns,
+      ...(effect.effectId === "SHIELD" ? {
+        stacks: effect.stacks === undefined ? undefined : Math.round(effect.stacks * (1 + shieldBonus)),
+        hpPercentStacks: effect.hpPercentStacks === undefined ? undefined : effect.hpPercentStacks * (1 + shieldBonus),
+      } : {}),
+    }));
+    ability = {
+      ...ability,
+      baseDamage: ability.baseDamage === undefined ? undefined : ability.baseDamage * (1 + damageBonus),
+      effects: prolong(ability.effects),
+      selfEffects: prolong(ability.selfEffects),
+    };
+    // Comando Paralelo transforma o SEGUNDO ataque de mecanismo do turno em
+    // ação bônus. Defesa/substituição continuam com suas ações originais.
+    if (ability.tags.includes("puppet-attack") && actor.actedCommon && !actor.actedBonus && actor.flags.puppetBonusAttack) {
+      ability = { ...ability, actionType: "BONUS" };
+    }
+  }
   if (ability.gateRules) {
     return fail(`Este Portão é ativado ou desativado com ${ability.gateRules.command}.`);
   }
@@ -1095,14 +1202,20 @@ export async function useAbility(
   // custo apos maestria, apos passivas de reducao de custo e apos o
   // Congelamento (Gelo) — o unico efeito que encarece a tecnica de quem o
   // carrega: dedos duros e chakra travado atrasam os selos de mao.
-  const mastery = await masteryFor(actor, ability.resource);
+  // Fios de chakra não criam uma reserva extra: toda técnica da marionete
+  // drena o reservatório do condutor. Sem isso, três marionetes virariam três
+  // barras de chakra completas e a especialização quebraria a economia.
+  const resourceOwner = actor.flags.isPuppet
+    ? s.participants.find((p) => p.id === actor.flags.controllerId && p.hpCurrent > 0) ?? actor
+    : actor;
+  const mastery = await masteryFor(resourceOwner, ability.resource);
   const cost = Math.max(
     1,
     Math.round(
       costAfterMastery(ability.cost, mastery) * mods.costMult * frozenCostMultiplier(actor.effects),
     ),
   );
-  const pool = ability.resource === "chakra" ? actor.chakra : actor.energia;
+  const pool = ability.resource === "chakra" ? resourceOwner.chakra : resourceOwner.energia;
   if (pool < cost) return fail(`${ability.resource} insuficiente (precisa ${cost}%).`);
 
   // alvo específico (por participante) ou por célula (fallback p/ NPC/área)
@@ -1143,6 +1256,22 @@ export async function useAbility(
     return fail(
       `O alvo precisa estar sob ${ability.requiresTargetEffect.map(effectLabel).join(" ou ")} para esta técnica funcionar.`,
     );
+  }
+  if (ability.id === "kugutsu_dama_ferro") {
+    const ownPuppets = s.participants.filter((p) => p.hpCurrent > 0 && p.flags.isPuppet && p.flags.controllerId === actor.flags.controllerId);
+    const hasCaptor = ownPuppets.some((p) => Array.isArray(p.flags.puppetUpgrades) && (p.flags.puppetUpgrades as string[]).includes("capturar"));
+    const hasNeedle = ownPuppets.some((p) => p.id !== actor.id && Array.isArray(p.flags.puppetUpgrades) && (p.flags.puppetUpgrades as string[]).includes("lamina_agulha"));
+    if (!hasCaptor || !hasNeedle || !targetP || !hasEffect(targetP.effects, "ROOT")) {
+      return fail("Dama de Ferro exige um alvo Imobilizado, uma marionete com Capturar e outra com Lâmina Agulha em campo.");
+    }
+    if (targetP.hpCurrent / Math.max(1, targetP.hpMax) < 0.08) {
+      ability = { ...ability, baseDamage: targetP.hpMax * 5, undodgeable: true, unblockable: true };
+      logs.push(`☠️ ${targetP.name} está abaixo de 8% de vida: a Dama de Ferro será uma execução.`);
+    }
+  }
+  if (ability.id === "kugutsu_atacando_ambos_lados") {
+    const paired = s.participants.filter((p) => p.hpCurrent > 0 && p.flags.isPuppet && p.flags.controllerId === actor.flags.controllerId && Array.isArray(p.flags.puppetUpgrades) && (p.flags.puppetUpgrades as string[]).includes("atacando_ambos_lados"));
+    if (paired.length < 2) return fail("Atacando de Ambos os Lados exige duas marionetes com esse mecanismo em campo.");
   }
   if (ability.oncePerCombat && actor.flags.usedOnceAbility === ability.id) {
     return fail(`${ability.name} so pode ser usado uma vez por combate.`);
@@ -1217,7 +1346,7 @@ export async function useAbility(
   }
 
   // deduz recurso e marca acao
-  await deductResource(actor.id, ability.resource, cost);
+  await deductResource(resourceOwner.id, ability.resource, cost);
   // Clones das Sombras (e futuras invocacoes com deathReflect): o custo BASE
   // do jutsu (sem maestria) vira divida acumulada, cobrada do invocador de
   // uma vez so' quando o clone morrer — ver reflectSummonDeath().
@@ -1369,12 +1498,15 @@ export async function useAbility(
   // Terra e Punho Rochoso dao Barreira a quem golpeia. Aplica ao usar com
   // sucesso, independente de acertar alvo ou nao.
   if (ability.selfEffects) {
+    const selfEffectTarget = ability.id === "kugutsu_carapaca_resistente" && actor.flags.isPuppet
+      ? s.participants.find((p) => p.id === actor.flags.controllerId) ?? actor
+      : actor;
     for (const ae of ability.selfEffects) {
       if (ae.chance !== undefined && !chance(ae.chance)) continue;
       await applyEffect(
-        actor.id,
+        selfEffectTarget.id,
         ae.effectId,
-        (ae.stacks ?? 1) + extraHpStacks(ae, actor.hpMax) + (mods.effectStacksBonus[ae.effectId] ?? 0),
+        (ae.stacks ?? 1) + extraHpStacks(ae, selfEffectTarget.hpMax) + (mods.effectStacksBonus[ae.effectId] ?? 0),
         (ae.duration ?? defaultDurationFor(ae.effectId)) + (mods.effectDurationBonus[ae.effectId] ?? 0),
         {
           replaceGroup: ae.replaceGroup,
@@ -1729,6 +1861,20 @@ export async function resolveHit(
         // mensagem por tipo de reacao usada
         const how = reactAb ? `usou ${reactAb.name} e escapou` : "esquivou no reflexo";
         logs.push(`💨 ${target.name} ${how} (${Math.round(dc * 100)}%)!`);
+        if (reactAb?.tags.includes("puppet-substitution")) {
+          const puppet = s.participants.find((p) =>
+            p.hpCurrent > 0 && p.flags.isPuppet && p.flags.controllerId === target.id
+              && Array.isArray(p.flags.puppetUpgrades)
+              && (p.flags.puppetUpgrades as string[]).includes("modificador_aparencia"),
+          );
+          if (puppet) {
+            await prisma.$transaction([
+              prisma.combatParticipant.update({ where: { id: target.id }, data: { cell: puppet.cell } }),
+              prisma.combatParticipant.update({ where: { id: puppet.id }, data: { cell: target.cell } }),
+            ]);
+            logs.push(`🪆 ${target.name} trocou de lugar com **${puppet.name}**.`);
+          }
+        }
         damage = 0;
         dodged = true;
       } else {

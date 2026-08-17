@@ -29,6 +29,7 @@ import { TAIJUTSU_PASSIVES_TREE } from "../taijutsu-passives-tree.js";
 import { ASSASSINATO_NINJA_TREE } from "../assassinato-ninja-tree.js";
 import { TAIJUTSU_AGITACAO_TREE } from "../taijutsu-agitacao-tree.js";
 import { FUINJUTSU_TREE } from "../fuinjutsu-tree.js";
+import { KUGUTSU_TREE } from "../kugutsu-tree.js";
 
 export type NodeKind = "JUTSU" | "PASSIVE" | "ELEMENT";
 export type NodeRank = "D" | "C" | "B" | "A" | "S";
@@ -463,7 +464,7 @@ export const ELEMENT_TREES: Record<Element, SkillNodeDef[]> = {
 // ELEMENT_TREES (nao pertencem a nenhum elemento), mas entram no indice
 // global — e' aqui que getNode/allNodes/buyNode as acham.
 const NODE_INDEX: Map<string, SkillNodeDef> = new Map(
-  [...Object.values(ELEMENT_TREES).flat(), ...FUNDAMENTOS, ...BUKIJUTSU_TREE, ...IRYO_NINJUTSU_TREE, ...GENJUTSU_TREE, ...FUINJUTSU_TREE, ...TAIJUTSU_TREE, ...ARHAT_TREE, ...ADAMANTINO_TREE, ...TAIJUTSU_PASSIVES_TREE, ...ASSASSINATO_NINJA_TREE, ...TAIJUTSU_AGITACAO_TREE, ...Object.values(CLAN_TREES).flat()].map((n) => [
+  [...Object.values(ELEMENT_TREES).flat(), ...FUNDAMENTOS, ...BUKIJUTSU_TREE, ...IRYO_NINJUTSU_TREE, ...GENJUTSU_TREE, ...FUINJUTSU_TREE, ...KUGUTSU_TREE, ...TAIJUTSU_TREE, ...ARHAT_TREE, ...ADAMANTINO_TREE, ...TAIJUTSU_PASSIVES_TREE, ...ASSASSINATO_NINJA_TREE, ...TAIJUTSU_AGITACAO_TREE, ...Object.values(CLAN_TREES).flat()].map((n) => [
     n.id,
     n,
   ]),
@@ -473,6 +474,15 @@ const NODE_INDEX: Map<string, SkillNodeDef> = new Map(
 // A subpasta de árvore de clã tem o mesmo nome do clanId (nara/, hyuuga/...),
 // igual as elementais usam o nome do elemento.
 const NODE_ICONS: Record<string, string> = {
+  // ---- Kugutsu ----
+  kugutsu_oficina_inicial: "kugutsu/marionete.png",
+  kugutsu_carapaca_ofensiva: "kugutsu/mecanismo.png",
+  kugutsu_carapaca_defensiva: "kugutsu/carapaca.png",
+  kugutsu_carapaca_efeito: "kugutsu/mecanismo.png",
+  kugutsu_alcance_fios_i: "kugutsu/fios-chakra.png",
+  kugutsu_alcance_fios_ii: "kugutsu/fios-chakra.png",
+  kugutsu_alcance_fios_iii: "kugutsu/fios-chakra.png",
+
   // ---- Bukijutsu ----
   buki_fundamentos: "bukijutsu/fundamentos-de-bukijutsu.png",
   buki_manipulacao_fios: "bukijutsu/manipulacao-de-fios.png",
