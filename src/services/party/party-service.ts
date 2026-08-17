@@ -2,6 +2,7 @@ import { prisma } from "../../db/client.js";
 
 // Convites pendentes em memória (chave: guildId:inviteeId).
 interface Invite {
+  id: string;
   partyId: string;
   leaderId: string;
   ts: number;
@@ -41,7 +42,7 @@ export async function invite(
   guildId: string,
   inviterId: string,
   inviteeId: string,
-): Promise<{ ok: boolean; error?: string }> {
+): Promise<{ ok: boolean; error?: string; inviteId?: string }> {
   if (inviterId === inviteeId) return { ok: false, error: "Você não pode se convidar." };
 
   // garante que o convidante tenha uma party (cria como líder se não tiver)
@@ -55,17 +56,22 @@ export async function invite(
   const inviteeParty = await getMyParty(guildId, inviteeId);
   if (inviteeParty) return { ok: false, error: "Esse jogador já está em uma party." };
 
-  invites.set(ikey(guildId, inviteeId), { partyId: party.id, leaderId: inviterId, ts: Date.now() });
-  return { ok: true };
+  const id = crypto.randomUUID();
+  invites.set(ikey(guildId, inviteeId), { id, partyId: party.id, leaderId: inviterId, ts: Date.now() });
+  return { ok: true, inviteId: id };
 }
 
 export async function accept(
   guildId: string,
   discordId: string,
+  inviteId: string,
 ): Promise<{ ok: boolean; error?: string; party?: PartyView }> {
-  const inv = invites.get(ikey(guildId, discordId));
-  if (!inv || Date.now() - inv.ts > INVITE_TTL_MS) {
-    invites.delete(ikey(guildId, discordId));
+  const key = ikey(guildId, discordId);
+  const inv = invites.get(key);
+  if (!inv || inv.id !== inviteId || Date.now() - inv.ts > INVITE_TTL_MS) {
+    // Um botão de convite antigo não pode apagar o convite mais novo do mesmo
+    // jogador. Só removemos a entrada quando ela própria expirou.
+    if (inv && Date.now() - inv.ts > INVITE_TTL_MS) invites.delete(key);
     return { ok: false, error: "Você não tem convite de party pendente (ou expirou)." };
   }
   const exists = await prisma.party.findUnique({ where: { id: inv.partyId } });
@@ -79,6 +85,21 @@ export async function accept(
   invites.delete(ikey(guildId, discordId));
   const party = await getMyParty(guildId, discordId);
   return { ok: true, party: party ?? undefined };
+}
+
+export function decline(
+  guildId: string,
+  discordId: string,
+  inviteId: string,
+): { ok: boolean; error?: string } {
+  const key = ikey(guildId, discordId);
+  const inv = invites.get(key);
+  if (!inv || inv.id !== inviteId || Date.now() - inv.ts > INVITE_TTL_MS) {
+    if (inv && Date.now() - inv.ts > INVITE_TTL_MS) invites.delete(key);
+    return { ok: false, error: "Este convite não está mais disponível." };
+  }
+  invites.delete(key);
+  return { ok: true };
 }
 
 export async function leave(

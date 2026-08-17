@@ -219,7 +219,7 @@ export function buildGuideCatalog() {
         { command: "/missoes minhas", description: "Mostra as missões que seu personagem está realizando." },
         { command: "/interagir npc", description: "Conversa ou interage com personagens e elementos disponíveis no canal." },
         { command: "/party convidar", description: "Convida outro jogador para formar um grupo." },
-        { command: "/party aceitar", description: "Aceita o convite de grupo pendente." },
+        { command: "Botão Entrar na party", description: "Aceita o convite de grupo recebido no canal." },
         { command: "/party ver", description: "Mostra os integrantes do seu grupo atual." },
         { command: "/party sair", description: "Sai do grupo; se você for o líder, o grupo é desfeito." },
       ],

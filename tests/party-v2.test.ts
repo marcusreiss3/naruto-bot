@@ -1,0 +1,36 @@
+import { describe, expect, it } from "vitest";
+import { invitePanel, party, partyPanel } from "../src/commands/party.js";
+
+describe("interface V2 de /party", () => {
+  it("remove o subcomando aceitar em favor do botão do convite", () => {
+    const json = party.data.toJSON();
+    const subcommands = json.options?.map((option) => option.name) ?? [];
+
+    expect(subcommands).toEqual(["convidar", "sair", "ver"]);
+  });
+
+  it("monta convite público em container com botões de aceitar e recusar", () => {
+    const [container] = invitePanel("lider", "convidado", "invite-id").map((component) => component.toJSON());
+    const serialized = JSON.stringify(container);
+
+    expect(container?.type).toBe(17);
+    expect(serialized).toContain("party:invite:accept:invite-id");
+    expect(serialized).toContain("party:invite:decline:invite-id");
+    expect(serialized).toContain("1538718124847923220");
+    expect(container && "components" in container ? container.components.length : 0).toBeLessThanOrEqual(10);
+  });
+
+  it("destaca líder e integrantes no painel da party", () => {
+    const [container] = partyPanel({
+      id: "party-id",
+      leaderId: "lider",
+      memberIds: ["lider", "membro"],
+    }).map((component) => component.toJSON());
+    const serialized = JSON.stringify(container);
+
+    expect(container?.type).toBe(17);
+    expect(serialized).toContain("<@lider>");
+    expect(serialized).toContain("<@membro>");
+    expect(serialized).toContain("1538717783209148587");
+  });
+});
