@@ -396,6 +396,7 @@ window.__BLOB_ASSETS = {
   "/assets/icons/items/fruta.png": "https://public-blob.squarecloud.dev/7d832704f601b901e94bbc61ac38256dcbc8439d/icons_items/fruta.png",
   "/assets/icons/items/fuma_shuriken.png": "https://public-blob.squarecloud.dev/7d832704f601b901e94bbc61ac38256dcbc8439d/icons_items/fuma_shuriken.png",
   "/assets/icons/items/grao.png": "https://public-blob.squarecloud.dev/7d832704f601b901e94bbc61ac38256dcbc8439d/icons_items/grao.png",
+  "/assets/icons/items/ingots.png": "https://public-blob.squarecloud.dev/7d832704f601b901e94bbc61ac38256dcbc8439d/icons_items/ingots.png",
   "/assets/icons/items/katana.png": "https://public-blob.squarecloud.dev/7d832704f601b901e94bbc61ac38256dcbc8439d/icons_items/katana.png",
   "/assets/icons/items/kunai_explosiva.png": "https://public-blob.squarecloud.dev/7d832704f601b901e94bbc61ac38256dcbc8439d/icons_items/kunai_explosiva.png",
   "/assets/icons/items/kunai.png": "https://public-blob.squarecloud.dev/7d832704f601b901e94bbc61ac38256dcbc8439d/icons_items/kunai.png",

@@ -15,7 +15,7 @@ window.INGOTS_PAGE = {
   eyebrow: "Economia premium",
   title: "Ingots",
   lead: "A moeda de apoio do servidor. Separada do Ryo, nunca cai de missão nem de drop — e não compra poder de combate.",
-  icon: "/assets/icons/items/lingote_de_ferro.png",
+  icon: "/assets/icons/items/ingots.png",
 
   // Resumo rapido no topo, em tres numeros. Valor "—" aparece como
   // pendente na tela, entao da' pra publicar a pagina antes de fechar
@@ -33,7 +33,7 @@ window.INGOTS_PAGE = {
       intro: "Ingot é a moeda de apoio ao servidor. Ela existe fora da economia do jogo: não entra em loja de vila, não paga imposto e não é afetada por taxa nem por confisco.",
       cards: [
         {
-          icon: "/assets/icons/items/lingote_de_ferro.png",
+          icon: "/assets/icons/items/ingots.png",
           title: "Fora da economia de Ryo",
           text: "Ryo circula entre jogadores, sofre imposto e some quando você morre. Ingot fica preso à sua conta do Discord e sobrevive a qualquer reset de personagem.",
         },

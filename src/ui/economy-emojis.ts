@@ -33,6 +33,10 @@ export const ECONOMY_EMOJI_PLACEHOLDERS = {
   ryo: "💴",
   cofre: "🏦",
 
+  // Ingot: moeda de apoio, fora da economia de Ryo. Nao e' item do catalogo,
+  // entao a chave nao corresponde a nenhum itemId — como ryo e cofre.
+  ingots: "🔩",
+
   // Madeira e derivados
   madeira: "🪵",
   fibra_vegetal: "🧵",
@@ -173,6 +177,7 @@ const CUSTOM_EMOJIS: Partial<Record<EmojiKey, string>> = {
   // Interface, estados e gestao
   ryo: "<:ryo:1538718357916876841>",
   cofre: "<:cofre:1538717227115614280>",
+  ingots: "<:ingots:1538746422260797440>",
   vila: "<:vila:1538718821127430206>",
   kage: "<:kage:1538717658713694332>",
   estoque: "<:estoque:1538717428798722120>",

@@ -197,6 +197,13 @@ function assetUrl(path) {
   return (map && map[path]) || path;
 }
 
+// guides-ui.js e ingots.js sao carregados antes deste arquivo e leem
+// `window.assetUrl` na hora de desenhar, nao no carregamento — por isso a
+// atribuicao aqui embaixo funciona pros dois. Sem ela os dois caiam no
+// caminho local e ignoravam o manifesto do Blob, o que so nao aparecia
+// porque public/assets tambem existe em disco no ambiente de dev.
+window.assetUrl = assetUrl;
+
 function versionedIcon(path) {
   if (!path || !path.startsWith("/assets/icons/")) return path;
   const url = assetUrl(path);
