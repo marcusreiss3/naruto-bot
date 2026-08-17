@@ -449,9 +449,15 @@ model PartyMember {
   partyId   String
   guildId   String
   discordId String
+  role      PartyMemberRole @default(MEMBER)
 
   @@unique([guildId, discordId]) // 1 party por usuário por servidor
   @@index([partyId])
+}
+
+enum PartyMemberRole {
+  MEMBER
+  SUB_LEADER
 }
 
 // ---------------- Aparência ----------------

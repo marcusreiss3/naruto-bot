@@ -24,6 +24,10 @@ describe("interface V2 de /party", () => {
       id: "party-id",
       leaderId: "lider",
       memberIds: ["lider", "membro"],
+      members: [
+        { discordId: "lider", role: "MEMBER" },
+        { discordId: "membro", role: "MEMBER" },
+      ],
     }).map((component) => component.toJSON());
     const serialized = JSON.stringify(container);
 
@@ -38,11 +42,17 @@ describe("interface V2 de /party", () => {
       id: "party-id",
       leaderId: "lider",
       memberIds: ["lider", "membro"],
+      members: [
+        { discordId: "lider", role: "MEMBER" },
+        { discordId: "membro", role: "MEMBER" },
+      ],
     }, "lider").map((component) => component.toJSON());
     const serialized = JSON.stringify(container);
 
     expect(serialized).toContain("party:leave");
     expect(serialized).toContain("1538718426162405457");
+    expect(serialized).toContain("party:manage:remove");
+    expect(serialized).toContain("party:manage:promote");
   });
 
   it("não oferece convite para integrantes que não são líderes", () => {
@@ -50,10 +60,34 @@ describe("interface V2 de /party", () => {
       id: "party-id",
       leaderId: "lider",
       memberIds: ["lider", "membro"],
+      members: [
+        { discordId: "lider", role: "MEMBER" },
+        { discordId: "membro", role: "MEMBER" },
+      ],
     }, "membro").map((component) => component.toJSON());
     const serialized = JSON.stringify(container);
 
     expect(serialized).not.toContain("party:invite:select");
+    expect(serialized).not.toContain("party:manage:remove");
+    expect(serialized).not.toContain("party:manage:promote");
     expect(serialized).toContain("party:leave");
+  });
+
+  it("dá ao sub-líder convite e remoção, mas não promoção", () => {
+    const [container] = partyHomePanel({
+      id: "party-id",
+      leaderId: "lider",
+      memberIds: ["lider", "sub-lider", "membro"],
+      members: [
+        { discordId: "lider", role: "MEMBER" },
+        { discordId: "sub-lider", role: "SUB_LEADER" },
+        { discordId: "membro", role: "MEMBER" },
+      ],
+    }, "sub-lider").map((component) => component.toJSON());
+    const serialized = JSON.stringify(container);
+
+    expect(serialized).toContain("party:invite:select");
+    expect(serialized).toContain("party:manage:remove");
+    expect(serialized).not.toContain("party:manage:promote");
   });
 });

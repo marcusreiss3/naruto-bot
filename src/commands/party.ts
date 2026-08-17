@@ -8,7 +8,16 @@ import {
   type ChatInputCommandInteraction,
 } from "discord.js";
 import type { Command } from "./types.js";
-import { accept, decline, getMyParty, invite, leave, type PartyView } from "../services/party/party-service.js";
+import {
+  accept,
+  decline,
+  getMyParty,
+  invite,
+  leave,
+  promote,
+  removeMember,
+  type PartyView,
+} from "../services/party/party-service.js";
 import {
   button,
   buttonRow,
@@ -30,15 +39,20 @@ import { emoji } from "../ui/economy-emojis.js";
 const INVITE_PREFIX = "party:invite";
 const INVITE_SELECT_ID = "party:invite:select";
 const LEAVE_BUTTON_ID = "party:leave";
+const REMOVE_BUTTON_ID = "party:manage:remove";
+const PROMOTE_BUTTON_ID = "party:manage:promote";
+type ManagementAction = "remove" | "promote";
+
 const inviteButtonId = (action: "accept" | "decline", inviteId: string) =>
   `${INVITE_PREFIX}:${action}:${inviteId}`;
+const managementSelectId = (action: ManagementAction) => `party:manage:${action}:select`;
 
 function memberLines(party: PartyView): string[] {
-  return party.memberIds.map((id) =>
-    id === party.leaderId
-      ? `${emoji("lider_party")} <@${id}> — líder`
-      : `${emoji("party")} <@${id}>`,
-  );
+  return party.members.map((member) => {
+    if (member.discordId === party.leaderId) return `${emoji("lider_party")} <@${member.discordId}> — líder`;
+    if (member.role === "SUB_LEADER") return `${emoji("lider_party")} <@${member.discordId}> — sub-líder`;
+    return `${emoji("party")} <@${member.discordId}>`;
+  });
 }
 
 function errorPanel(message: string): TopLevel[] {
@@ -55,6 +69,16 @@ function inviteSelect(): ActionRowBuilder<UserSelectMenuBuilder> {
   );
 }
 
+function memberSelect(action: ManagementAction): ActionRowBuilder<UserSelectMenuBuilder> {
+  return new ActionRowBuilder<UserSelectMenuBuilder>().addComponents(
+    new UserSelectMenuBuilder()
+      .setCustomId(managementSelectId(action))
+      .setPlaceholder(action === "remove" ? "Escolha quem remover" : "Escolha quem promover")
+      .setMinValues(1)
+      .setMaxValues(1),
+  );
+}
+
 function partyChildren(party: PartyView, title = "Sua party", subtitle?: string): ContainerChild[] {
   return [
     titleBlock("party", title, subtitle ?? "Joguem juntos em missões e combates."),
@@ -65,6 +89,31 @@ function partyChildren(party: PartyView, title = "Sua party", subtitle?: string)
     divider(),
     listBlock("Integrantes", memberLines(party), "Nenhum integrante encontrado."),
   ];
+}
+
+function managementRow(canRemove: boolean, canPromote: boolean) {
+  const buttons = [];
+  if (canRemove) {
+    buttons.push(
+      button({
+        id: REMOVE_BUTTON_ID,
+        label: "Remover da party",
+        style: ButtonStyle.Danger,
+        emojiKey: "sair_party",
+      }),
+    );
+  }
+  if (canPromote) {
+    buttons.push(
+      button({
+        id: PROMOTE_BUTTON_ID,
+        label: "Promover",
+        style: ButtonStyle.Primary,
+        emojiKey: "lider_party",
+      }),
+    );
+  }
+  return buttons.length ? buttonRow(...buttons) : null;
 }
 
 export function invitePanel(inviterId: string, inviteeId: string, inviteId: string): TopLevel[] {
@@ -111,13 +160,19 @@ export function partyHomePanel(party: PartyView | null, viewerId?: string): TopL
   }
 
   const isLeader = party.leaderId === viewerId;
+  const isSubLeader = party.members.some((member) => member.discordId === viewerId && member.role === "SUB_LEADER");
+  const canInvite = isLeader || isSubLeader;
+  const management = managementRow(canInvite, isLeader);
   const controls: ContainerChild[] = [
     divider(),
     isLeader
-      ? text(`${emoji("convite")} Convide outro ninja ou saia do grupo quando quiser.`)
-      : text(`${emoji("lider_party")} Apenas o líder pode convidar novos integrantes.`),
+      ? text(`${emoji("lider_party")} Você lidera a party e pode organizar seus integrantes.`)
+      : isSubLeader
+        ? text(`${emoji("lider_party")} Você é sub-líder: pode convidar e remover membros comuns.`)
+        : text(`${emoji("party")} Apenas o líder e sub-líderes podem convidar ou remover integrantes.`),
   ];
-  if (isLeader) controls.push(inviteSelect());
+  if (canInvite) controls.push(inviteSelect());
+  if (management) controls.push(management);
   controls.push(
     buttonRow(
       button({
@@ -129,16 +184,18 @@ export function partyHomePanel(party: PartyView | null, viewerId?: string): TopL
     ),
   );
 
-  return [
-    economyContainer("vila", [
-      ...partyChildren(party),
-      ...controls,
-    ]),
-  ];
+  return [economyContainer("vila", [...partyChildren(party), ...controls])];
 }
 
 function acceptedPanel(inviteeId: string, party: PartyView): TopLevel[] {
-  return partyPanel(party, "Party formada", `<@${inviteeId}> entrou no esquadrão.`);
+  const management = managementRow(true, true);
+  const children: ContainerChild[] = [
+    ...partyChildren(party, "Party formada", `<@${inviteeId}> entrou no esquadrão.`),
+    divider(),
+    text(`${emoji("lider_party")} O líder pode organizar a party pelos botões abaixo.`),
+  ];
+  if (management) children.push(management);
+  return [economyContainer("vila", children)];
 }
 
 function declinedPanel(inviteeId: string): TopLevel[] {
@@ -165,6 +222,42 @@ function leftPanel(disbanded: boolean, userId: string): TopLevel[] {
   ];
 }
 
+function managementPanel(action: ManagementAction): TopLevel[] {
+  const isRemoval = action === "remove";
+  return [
+    economyContainer(isRemoval ? "aviso" : "vila", [
+      titleBlock(isRemoval ? "sair_party" : "lider_party", isRemoval ? "Remover integrante" : "Promover sub-líder"),
+      text(
+        isRemoval
+          ? "Escolha um integrante da sua party para remover."
+          : "Escolha um membro comum para promover a sub-líder.",
+      ),
+      memberSelect(action),
+    ]),
+  ];
+}
+
+async function openManagement(interaction: ButtonInteraction, action: ManagementAction): Promise<void> {
+  const party = await getMyParty(interaction.guildId ?? "global", interaction.user.id);
+  if (!party) {
+    await interaction.reply(v2Payload(errorPanel("Você não está em uma party.")));
+    return;
+  }
+  const isLeader = party.leaderId === interaction.user.id;
+  const isSubLeader = party.members.some(
+    (member) => member.discordId === interaction.user.id && member.role === "SUB_LEADER",
+  );
+  if (action === "promote" && !isLeader) {
+    await interaction.reply(v2Payload(errorPanel("Apenas o líder pode promover sub-líderes.")));
+    return;
+  }
+  if (action === "remove" && !isLeader && !isSubLeader) {
+    await interaction.reply(v2Payload(errorPanel("Apenas o líder ou um sub-líder pode remover integrantes.")));
+    return;
+  }
+  await interaction.reply(v2Payload(managementPanel(action)));
+}
+
 export const party: Command = {
   data: new SlashCommandBuilder()
     .setName("party")
@@ -184,6 +277,14 @@ export const party: Command = {
         return;
       }
       await interaction.update(v2Edit(leftPanel(result.disbanded ?? false, interaction.user.id)));
+      return;
+    }
+    if (interaction.customId === REMOVE_BUTTON_ID) {
+      await openManagement(interaction, "remove");
+      return;
+    }
+    if (interaction.customId === PROMOTE_BUTTON_ID) {
+      await openManagement(interaction, "promote");
       return;
     }
 
@@ -209,29 +310,45 @@ export const party: Command = {
   },
 
   async handleSelect(interaction: AnySelectMenuInteraction) {
-    if (!interaction.isUserSelectMenu() || interaction.customId !== INVITE_SELECT_ID) return;
-
+    if (!interaction.isUserSelectMenu()) return;
     const alvoId = interaction.values[0];
     if (!alvoId) return;
-    const alvo = interaction.users.get(alvoId) ?? await interaction.client.users.fetch(alvoId).catch(() => null);
-    if (!alvo || alvo.bot) {
-      await interaction.reply(v2Payload(errorPanel("Não dá para convidar um bot.")));
+
+    if (interaction.customId === INVITE_SELECT_ID) {
+      const alvo = interaction.users.get(alvoId) ?? await interaction.client.users.fetch(alvoId).catch(() => null);
+      if (!alvo || alvo.bot) {
+        await interaction.reply(v2Payload(errorPanel("Não dá para convidar um bot.")));
+        return;
+      }
+
+      const guildId = interaction.guildId ?? "global";
+      const result = await invite(guildId, interaction.user.id, alvoId);
+      if (!result.ok || !result.inviteId) {
+        await interaction.reply(v2Payload(errorPanel(result.error ?? "Não consegui criar o convite.")));
+        return;
+      }
+
+      await interaction.deferUpdate();
+      const currentParty = await getMyParty(guildId, interaction.user.id);
+      await interaction.editReply(v2Edit(partyHomePanel(currentParty, interaction.user.id)));
+      const channel = interaction.channel;
+      if (channel?.isTextBased() && "send" in channel) {
+        await channel.send(v2Public(invitePanel(interaction.user.id, alvoId, result.inviteId)));
+      }
       return;
     }
+
+    const [, group, action, stage] = interaction.customId.split(":");
+    if (group !== "manage" || stage !== "select" || (action !== "remove" && action !== "promote")) return;
 
     const guildId = interaction.guildId ?? "global";
-    const result = await invite(guildId, interaction.user.id, alvoId);
-    if (!result.ok || !result.inviteId) {
-      await interaction.reply(v2Payload(errorPanel(result.error ?? "Não consegui criar o convite.")));
+    const result = action === "remove"
+      ? await removeMember(guildId, interaction.user.id, alvoId)
+      : await promote(guildId, interaction.user.id, alvoId);
+    if (!result.ok || !result.party) {
+      await interaction.reply(v2Payload(errorPanel(result.error ?? "Não consegui atualizar a party.")));
       return;
     }
-
-    await interaction.deferUpdate();
-    const currentParty = await getMyParty(guildId, interaction.user.id);
-    await interaction.editReply(v2Edit(partyHomePanel(currentParty, interaction.user.id)));
-    const channel = interaction.channel;
-    if (channel?.isTextBased() && "send" in channel) {
-      await channel.send(v2Public(invitePanel(interaction.user.id, alvoId, result.inviteId)));
-    }
+    await interaction.update(v2Edit(partyHomePanel(result.party, interaction.user.id)));
   },
 };
