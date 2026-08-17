@@ -81,6 +81,7 @@ import {
 } from "./terrain.js";
 import { fleeCheck } from "./flee.js";
 import { characterPassiveMods, passiveMods, receivedEffectDurationReduction } from "./passives.js";
+import { initiativeScore, orderByInitiative } from "./initiative.js";
 import { validateAndConsumeAbilityItems } from "../characters/inventory.js";
 import { resolvePush, impactDamage } from "./push.js";
 import { clampInfiniteHp } from "./training-dummy.js";
@@ -94,6 +95,11 @@ import { PUPPET_UPGRADE_ABILITY } from "../../data/jutsus/kugutsu.js";
 import { puppetCapabilities } from "../puppets/puppet-service.js";
 
 type ParticipantRow = Awaited<ReturnType<typeof prisma.combatParticipant.findFirstOrThrow>>;
+
+function resourceCap(resource: "chakra" | "energia", mods: ReturnType<typeof characterPassiveMods>): number {
+  const bonus = resource === "chakra" ? mods.maxChakraBonus : mods.maxEnergyBonus;
+  return Math.round(100 * (1 + bonus));
+}
 
 export interface SessionFull {
   id: string;
@@ -241,7 +247,7 @@ export async function startCombat(opts: {
       },
     });
     participantIds.push(cp.id);
-    initiative.set(cp.id, cMods.initiativePriority);
+    initiative.set(cp.id, initiativeScore(p.attrs, p.nodes ?? []));
   }
   let ri = 0;
   for (const n of opts.npcs ?? []) {
@@ -269,16 +275,16 @@ export async function startCombat(opts: {
       },
     });
     participantIds.push(cp.id);
-    initiative.set(cp.id, 0);
+    initiative.set(cp.id, initiativeScore(tpl.attributes));
   }
 
-  // Ordenacao estavel: Sinapse Acelerada antecipa o participante, mantendo a
-  // ordem relativa entre personagens com a mesma prioridade.
-  participantIds.sort((a, b) => (initiative.get(b) ?? 0) - (initiative.get(a) ?? 0));
+  // Taijutsu define a iniciativa; passivas somam seus bônus. Empates mantêm a
+  // ordem em que os participantes entraram na sessão.
+  const turnOrder = orderByInitiative(participantIds, initiative);
 
   await prisma.combatSession.update({
     where: { id: session.id },
-    data: { turnOrderJson: JSON.stringify(participantIds) },
+    data: { turnOrderJson: JSON.stringify(turnOrder) },
   });
 
   return (await getSessionById(session.id))!;
@@ -1431,11 +1437,7 @@ export async function useAbility(
         ability.restoreResource.amount +
         (healTarget.hpCurrent / healTarget.hpMax <= 0.5 ? alvoMods.woundedResourceRecoveryBonus : 0);
       const pool = resource === "chakra" ? healTarget.chakra : healTarget.energia;
-      const energyCap = Math.round(100 * (1 + alvoMods.maxEnergyBonus));
-      // o teto de chakra tambem sobe com trait (Determinacao, Celestiais)
-      const cap = resource === "chakra"
-        ? Math.round(100 * (1 + alvoMods.maxChakraBonus))
-        : energyCap;
+      const cap = resourceCap(resource, alvoMods);
       const restored = Math.min(cap, pool + amount) - pool;
       if (restored > 0) {
         await prisma.combatParticipant.update({
@@ -2782,8 +2784,7 @@ async function processTurnStart(sessionId: string, participantId: string, logs: 
     if (hp > 0 && gateRules.energyRecoveryPerTurn) {
       const before = energia;
       const turnNodes = Array.isArray(flags.nodes) ? flags.nodes as string[] : [];
-      const energyCap = Math.round(100 * (1 + characterPassiveMods(turnNodes).maxEnergyBonus));
-      energia = Math.min(energyCap, energia + gateRules.energyRecoveryPerTurn);
+      energia = Math.min(resourceCap("energia", characterPassiveMods(turnNodes)), energia + gateRules.energyRecoveryPerTurn);
       if (energia > before) {
         logs.push(`⚡ ${p.name} recuperou ${energia - before}% de energia pelo Portão ${openGate}.`);
       }
@@ -2954,7 +2955,7 @@ async function processTurnStart(sessionId: string, participantId: string, logs: 
     }
     if (cMods.chakraRegenPerTurn > 0) {
       const before = chakra;
-      chakra = Math.min(100, chakra + cMods.chakraRegenPerTurn);
+      chakra = Math.min(resourceCap("chakra", cMods), chakra + cMods.chakraRegenPerTurn);
       if (chakra > before) logs.push(`🌀 ${p.name} recuperou ${chakra - before}% de chakra.`);
     }
   }

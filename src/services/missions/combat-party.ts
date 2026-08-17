@@ -3,7 +3,7 @@ import { prisma } from "../../db/client.js";
 import { getOrCreateCharacter, attrsFromRow } from "../characters/character-service.js";
 import { partyMemberIds } from "../party/party-service.js";
 import type { SessionFull, StartPlayer } from "../combat/combat-engine.js";
-import { characterPassiveMods } from "../combat/passives.js";
+import { initiativeScore, orderByInitiative } from "../combat/initiative.js";
 import { withTraitNode } from "../characters/trait-service.js";
 
 // Personagem que dispara o combate (já carregado pelo chamador).
@@ -99,7 +99,7 @@ export async function cacheAttrs(
   const priorities = new Map<string, number>();
   for (const p of session.participants) {
     if (p.isNpc || !p.charId) {
-      priorities.set(p.id, 0);
+      priorities.set(p.id, initiativeScore(p.flags.attrs as Record<string, number> | undefined));
       continue;
     }
     const a = attrsById.get(p.charId);
@@ -121,15 +121,13 @@ export async function cacheAttrs(
           }),
         },
       });
-      priorities.set(p.id, characterPassiveMods(nodeIds).initiativePriority);
+      priorities.set(p.id, initiativeScore(a, nodeIds));
     }
   }
 
-  // Os combates de missao montam o snapshot depois de criar a sessao. Reordena
-  // aqui para que passivas de iniciativa tambem funcionem neles.
-  const order = [...session.turnOrder].sort(
-    (a, b) => (priorities.get(b) ?? 0) - (priorities.get(a) ?? 0),
-  );
+  // Os combates de missão montam o snapshot depois de criar a sessão. Reordena
+  // aqui para aplicar Taijutsu e passivas de iniciativa também neles.
+  const order = orderByInitiative(session.turnOrder, priorities);
   await prisma.combatSession.update({
     where: { id: session.id },
     data: { turnOrderJson: JSON.stringify(order) },

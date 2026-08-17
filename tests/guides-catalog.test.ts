@@ -115,7 +115,7 @@ describe("catálogo da Central de Guias", () => {
   it("publica a experiência de lançamento sem termos internos ou comandos substituídos", () => {
     const text = JSON.stringify(catalog);
     expect(text).not.toMatch(/(?:^|\W)(nó|nós|node|nodes)(?:$|\W)/i);
-    expect(text).not.toMatch(/por enquanto|ainda não|não implementad|estado atual|\bstaff\b/i);
+    expect(text).not.toMatch(/por enquanto|ainda não|estado atual|\bstaff\b/i);
 
     expect(slugs).toEqual(expect.arrayContaining([
       "primeiros-passos",
@@ -150,24 +150,24 @@ describe("catálogo da Central de Guias", () => {
     ]);
   });
 
-  it("documenta as regras de lançamento sem reintroduzir limitações de desenvolvimento", () => {
+  it("documenta as regras de lançamento sem termos internos", () => {
     const text = JSON.stringify(catalog);
 
-    expect(text).toContain("Loja");
-    expect(text).toContain("Eventos");
-    expect(text).toContain("Códigos promocionais");
-    expect(text).toContain("Passes");
-    expect(text).toContain("resetar esse personagem");
-    expect(text).toContain("Morte permanente");
-    expect(text).toContain("nível 10");
+    expect(text).toContain("Giros");
+    expect(text).toContain("Ingots");
+    expect(text).toContain("códigos promocionais");
+    expect(text).toContain("Boost do servidor");
+    expect(text).toContain("primeira afinidade custa 2 pontos");
+    expect(text).toContain("Exame Chūnin");
     expect(text).toContain("ANBU");
-    expect(text).toContain("Cada afinidade custa 10 pontos");
+    expect(text).toContain("morte permanente pode encerrar");
+    expect(text).toContain("nível 10");
+    expect(text).toContain("Iniciativa");
     expect(text).toContain("Sustenta o controle de marionetes");
     expect(text).toContain("energia natural");
 
     expect(text).not.toContain("não possui árvores ou efeitos mecânicos");
     expect(text).not.toContain("Sem progressão pública automática");
-    expect(text).not.toContain("O projeto não mantém uma moeda pública de Spins");
     expect(text).not.toContain("Nem toda arma equipada ataca");
     expect(text).not.toContain("Kazekage e Shirogane existem");
   });

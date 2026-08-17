@@ -534,7 +534,7 @@ async function fetchGuideCatalog() {
   });
   if (!res.ok) throw new Error(`Catálogo de Guias indisponível (${res.status})`);
   const catalog = await res.json();
-  const valid = catalog?.schemaVersion === 10
+  const valid = catalog?.schemaVersion === 11
     && Array.isArray(catalog.traits) && catalog.traits.length > 0
     && Array.isArray(catalog.clanGroups) && catalog.clanGroups.some((group) => group.clans?.length)
     && Array.isArray(catalog.items) && catalog.items.length > 0
@@ -598,9 +598,9 @@ function updateDossier(elId) {
   $("dsClan").textContent = c.clanName || "Sem clã";
   $("dsLevel").textContent = "Nv. " + c.level;
 
-  // Trait: nome no dossiê, descrição completa no title (o painel é estreito).
+  // Traço: nome no dossiê, descrição completa no title (o painel é estreito).
   const dsTrait = $("dsTrait");
-  dsTrait.textContent = c.trait ? `${c.trait.name} (${c.trait.rarityLabel})` : "Sem trait";
+  dsTrait.textContent = c.trait ? `${c.trait.name} (${c.trait.rarityLabel})` : "Sem traço";
   dsTrait.title = c.trait ? c.trait.description : "";
 
   // técnicas = nós JUTSU possuídos em todas as árvores

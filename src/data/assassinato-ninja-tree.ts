@@ -35,6 +35,6 @@ export const ASSASSINATO_NINJA_TREE: SkillNodeDef[] = [
   passive("tai_nevoa_misericordia", "Golpe de Misericórdia", "taijutsu", 0, 4, ["tai_nevoa_marca"], 46, 46, "Passiva: seus ataques de Taijutsu ou Kenjutsu causam 6% mais dano; contra inimigos abaixo de 20% da vida, mais 18%."),
 
   // Caminho da Lâmina: segunda saída, paga com Kenjutsu.
-  passive("tai_nevoa_saque", "Saque Relâmpago", "kenjutsu", 1.25, 3, ["tai_nevoa_ponto_cego"], 30, 30, "Passiva: você recebe +1 de prioridade no início do combate e seu primeiro ataque de Kenjutsu causa 14% mais dano."),
+  passive("tai_nevoa_saque", "Saque Relâmpago", "kenjutsu", 1.25, 3, ["tai_nevoa_ponto_cego"], 30, 30, "Passiva: você recebe +1 de iniciativa no início do combate e seu primeiro ataque de Kenjutsu causa 14% mais dano."),
   passive("tai_nevoa_corte", "Corte Decisivo", "kenjutsu", 1.25, 4, ["tai_nevoa_saque"], 40, 40, "Passiva: após passar uma rodada sem atacar, seu próximo ataque de Kenjutsu causa 18% mais dano e corta 18% da redução de Bloqueio/Aparo."),
 ];

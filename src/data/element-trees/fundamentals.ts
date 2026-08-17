@@ -31,7 +31,7 @@ export const FUNDAMENTOS: SkillNodeDef[] = [
     pool: "ninjutsu",
     reqPool: 1,
     grantsAbilityId: "tecnica_clonagem",
-    desc: "Cria uma ou mais imagens de si mesmo, sem corpo físico. Os clones não causam dano, mas confundem o adversário: seu próximo golpe recebido tem chance de acertar a ilusão em vez de você.",
+    desc: "Cria imagens de si mesmo, sem corpo físico. Os clones não causam dano: até o próximo golpe recebido, você ganha +10 pontos percentuais de chance de esquiva.",
   },
   {
     id: "funda_substituicao",

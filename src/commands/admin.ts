@@ -201,20 +201,20 @@ export const admin: Command = {
     .addSubcommand((s) =>
       s
         .setName("trait-set")
-        .setDescription("Define a trait (substitui a atual)")
+        .setDescription("Define um traço (substitui o atual)")
         .addUserOption((o) => o.setName("usuario").setDescription("Usuário").setRequired(true))
-        .addStringOption((o) => o.setName("trait").setDescription("Trait").setAutocomplete(true).setRequired(true)),
+        .addStringOption((o) => o.setName("trait").setDescription("Traço").setAutocomplete(true).setRequired(true)),
     )
     .addSubcommand((s) =>
       s
         .setName("trait-ver")
-        .setDescription("Mostra a trait do personagem")
+        .setDescription("Mostra o traço do personagem")
         .addUserOption((o) => o.setName("usuario").setDescription("Usuário").setRequired(true)),
     )
     .addSubcommand((s) =>
       s
         .setName("trait-limpar")
-        .setDescription("Remove a trait do personagem")
+        .setDescription("Remove o traço do personagem")
         .addUserOption((o) => o.setName("usuario").setDescription("Usuário").setRequired(true)),
     )
     .addSubcommand((s) =>
@@ -509,7 +509,7 @@ export const admin: Command = {
         const traitId = interaction.options.getString("trait", true);
         const trait = getTrait(traitId);
         if (!trait) {
-          await interaction.editReply(`❌ Trait desconhecida: \`${traitId}\`.`);
+          await interaction.editReply(`❌ Traço desconhecido: \`${traitId}\`.`);
           return;
         }
         await setCharacterTrait(char.id, traitId);
@@ -526,14 +526,14 @@ export const admin: Command = {
           trait
             ? `${traitEmoji(trait.id)} **${char.name}** — **${trait.name}** ` +
               `[${TRAIT_RARITY_LABELS[trait.rarity]}, ${trait.pp} PP]\n${trait.description}`
-            : `🎲 **${char.name}** não tem trait.`,
+            : `🎲 **${char.name}** não tem traço.`,
         );
         return;
       }
       case "trait-limpar": {
         const char = await getChar();
         await clearCharacterTrait(char.id);
-        await interaction.editReply(`✅ Trait de **${char.name}** removida.`);
+        await interaction.editReply(`✅ Traço de **${char.name}** removido.`);
         return;
       }
       case "combate-encerrar": {

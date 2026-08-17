@@ -13,9 +13,9 @@ describe("árvore geral de Taijutsu", () => {
     expect(TAIJUTSU_PASSIVES_TREE.some((node) => node.id.startsWith("tai_nevoa_"))).toBe(false);
   });
 
-  it("limita a reserva máxima de energia a 150%", () => {
-    const mods = characterPassiveMods(["tai_pass_reserva", "tai_pass_reserva_profunda", "tai_pass_reserva_profunda"]);
-    expect(mods.maxEnergyBonus).toBe(0.5);
+  it("soma os bônus de reserva de energia", () => {
+    const mods = characterPassiveMods(["tai_pass_reserva", "tai_pass_reserva_profunda", "trait_determinacao"]);
+    expect(mods.maxEnergyBonus).toBeCloseTo(0.65);
   });
 
   it("deixa os patamares de energia para a progressão avançada", () => {

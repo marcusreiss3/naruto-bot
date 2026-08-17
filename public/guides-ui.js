@@ -498,11 +498,11 @@
 
     function traitsMarkup() {
       const traits = runtimeCatalog?.traits || [];
-      if (!traits.length) return catalogContractError("Traits");
+      if (!traits.length) return catalogContractError("Traços");
       const rarities = [...new Map(traits.map((trait) => [trait.rarity, trait.rarityLabel])).entries()];
       return `<div class="compendium" data-compendium="traits">
         <div class="compendium-toolbar">
-          <label class="compendium-search"><span class="sr-only">Pesquisar Traits</span><input type="search" placeholder="Pesquisar Trait..." data-compendium-search></label>
+          <label class="compendium-search"><span class="sr-only">Pesquisar Traços</span><input type="search" placeholder="Pesquisar Traço..." data-compendium-search></label>
           <div class="compendium-filters" aria-label="Filtrar por raridade">
             <button class="active" type="button" data-filter="all" aria-pressed="true">Todas</button>
             ${rarities.map(([id, label]) => `<button type="button" data-filter="${escapeHtml(id)}" aria-pressed="false">${escapeHtml(label)}</button>`).join("")}
@@ -510,7 +510,7 @@
         </div>
         <p class="compendium-status" role="status" aria-live="polite"></p>
         <div class="trait-grid">${traits.map((trait) => `<details class="trait-card" id="trait-${escapeHtml(trait.id)}" data-entry data-entry-id="${escapeHtml(trait.id)}" data-filter-value="${escapeHtml(trait.rarity)}" data-search-value="${escapeHtml(normalize(`${trait.name} ${trait.rarityLabel} ${trait.description}`))}">
-          <summary><img src="${escapeHtml(assetUrl(trait.icon))}" alt="Ícone da Trait ${escapeHtml(trait.name)}" loading="lazy"><span class="compendium-card-heading"><span class="rarity-badge rarity-${escapeHtml(trait.rarity.toLowerCase())}">${escapeHtml(trait.rarityLabel)}</span><strong>${escapeHtml(trait.name)}</strong><small>Abrir efeito</small></span><span class="compendium-chevron" aria-hidden="true">⌄</span></summary>
+          <summary><img src="${escapeHtml(assetUrl(trait.icon))}" alt="Ícone do Traço ${escapeHtml(trait.name)}" loading="lazy"><span class="compendium-card-heading"><span class="rarity-badge rarity-${escapeHtml(trait.rarity.toLowerCase())}">${escapeHtml(trait.rarityLabel)}</span><strong>${escapeHtml(trait.name)}</strong><small>Abrir efeito</small></span><span class="compendium-chevron" aria-hidden="true">⌄</span></summary>
           <div class="compendium-card-details"><strong>Efeito</strong><p>${escapeHtml(trait.description)}</p></div>
         </details>`).join("")}</div>
       </div>`;

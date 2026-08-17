@@ -2,7 +2,7 @@
 
 (function exposeGuideCatalog() {
   const categories = [
-    { id: "inicio", title: "Começando", description: "Criação, Clãs, Traits, atributos e leitura da ficha.", icon: "cat-start", order: 1 },
+    { id: "inicio", title: "Começando", description: "Criação, Clãs, Traços, atributos e leitura da ficha.", icon: "cat-start", order: 1 },
     { id: "progressao", title: "Progressão", description: "Árvores, afinidades e jutsus.", icon: "cat-progress", order: 2 },
     { id: "combate", title: "Combate", description: "Turnos, posicionamento, reações e efeitos.", icon: "cat-combat", order: 3 },
     { id: "aventura", title: "Aventura", description: "Missões, grupos e personagens do mundo.", icon: "cat-adventure", order: 4 },
@@ -32,7 +32,7 @@
       order: 1,
       type: "guide",
       readingTime: 7,
-      keywords: ["ficha", "criação", "personagem", "spins", "vila", "clã", "trait", "nome", "história", "aparência"],
+      keywords: ["ficha", "criação", "personagem", "giros", "vila", "clã", "traço", "nome", "história", "aparência"],
       sections: [
         {
           id: "iniciar-ficha",
@@ -50,9 +50,9 @@
         },
         {
           id: "origem-e-spins",
-          title: "Três Spins de origem",
+          title: "Três Giros de origem",
           blocks: [
-            { type: "paragraph", text: "Na primeira ficha, seus três Spins iniciais gratuitos geram três combinações válidas de **Vila + Clã**. Cada clã pertence a uma Vila específica, então combinações incompatíveis nunca entram no sorteio." },
+            { type: "paragraph", text: "Na primeira ficha, seus três Giros iniciais gratuitos geram três combinações válidas de **Vila + Clã**. Cada clã pertence a uma Vila específica, então combinações incompatíveis nunca entram no sorteio." },
             {
               type: "steps",
               items: [
@@ -63,35 +63,50 @@
             {
               type: "links",
               items: [
-                { slug: "clas-e-spins", section: "clas-por-vila", title: "Ver todos os clãs por Vila", text: "Compare as origens que podem aparecer nos Spins." },
-                { slug: "clas-e-spins", section: "novos-spins", title: "Entender novos Spins e reset", text: "Saiba quando outras rolagens podem ser usadas." },
+                { slug: "clas-e-spins", section: "clas-por-vila", title: "Ver todos os clãs por Vila", text: "Compare as origens que podem aparecer nos Giros." },
               ],
             },
           ],
         },
         {
           id: "dados-do-personagem",
-          title: "Nome, Trait, idade e história",
+          title: "Nome, Traço, idade e história",
           blocks: [
             {
               type: "steps",
               items: [
                 { title: "Escreva o nome próprio", text: "Digite apenas o primeiro nome, com 2 a 24 caracteres. O sobrenome do clã é acrescentado automaticamente." },
-                { title: "Receba sua Trait", text: "O bot sorteia a raridade e apresenta o efeito real. Resultados Míticos permitem escolher entre as três Traits Míticas." },
-                { title: "Defina a idade", text: "A idade inicial vai de 11 a 13 anos. A Trait Prodígio Ninja também libera 9 e 10 anos." },
+                { title: "Receba seu Traço", text: "O bot sorteia a raridade e apresenta o efeito real. Resultados Míticos permitem escolher entre os três Traços Míticos." },
+                { title: "Defina a idade", text: "A idade inicial vai de 11 a 13 anos. O Traço Prodígio Ninja também libera 9 e 10 anos." },
                 { title: "Conte sua história", text: "Envie, em uma única mensagem, de 10 a 1.800 caracteres sobre origem, personalidade, objetivos e acontecimentos importantes." },
                 { title: "Envie a aparência", text: "Anexe uma imagem ou cole um link direto PNG, JPEG, JPG, GIF ou WEBP." },
               ],
             },
-            { type: "callout", tone: "info", title: "Como funciona o sorteio de Trait", text: "As chances são: Comum 47,5%, Rara 30%, Épica 15%, Lendária 7% e Mítica 0,5%. O Guia de Traits reúne todas as opções e seus efeitos." },
-            { type: "links", items: [{ slug: "traits", section: "compendio", title: "Abrir o compêndio de Traits", text: "Consulte ícones, raridades e efeitos." }] },
+            { type: "callout", tone: "info", title: "Como funciona o sorteio de Traço", text: "As chances são: Comum 47,5%, Rara 30%, Épica 15%, Lendária 7% e Mítica 0,5%. O Guia de Traços reúne todas as opções e seus efeitos." },
+            { type: "links", items: [{ slug: "traits", section: "compendio", title: "Abrir o compêndio de Traços", text: "Consulte ícones, raridades e efeitos." }] },
+          ],
+        },
+        {
+          id: "giros-e-troca-de-cla",
+          title: "Giros e troca de clã",
+          blocks: [
+            { type: "paragraph", text: "Os três Giros gratuitos fazem parte da primeira ficha. Giros adicionais de Clã e de Traço permitem uma nova rolagem para ajustar sua origem ou sua build depois desse momento." },
+            { type: "cards", items: [
+              { title: "Ingots", text: "Giros adicionais usam Ingots, obtidos na loja, em eventos, sorteios, códigos promocionais ou passes." },
+              { title: "Boost do servidor", text: "O Boost do servidor também pode conceder Ingots para novos Giros." },
+              { title: "Troca de Clã", text: "Antes de se tornar Genin, você pode trocar de Clã normalmente. Depois de alcançar Genin, é preciso resetar o personagem para escolher outro Clã." },
+            ] },
+            { type: "links", items: [
+              { slug: "clas-e-spins", section: "spins", title: "Rever os Giros de Clã", text: "Compare as linhagens e suas Vilas de origem." },
+              { slug: "traits", section: "como-obter", title: "Rever os Giros de Traço", text: "Entenda raridades e efeitos antes de rolar novamente." },
+            ] },
           ],
         },
         {
           id: "concluir-e-jogar",
           title: "Revise e comece a jogar",
           blocks: [
-            { type: "paragraph", text: "A última tela reúne aparência, Vila, clã, Trait, idade e história. Use **Concluir ficha** para confirmar ou **Trocar imagem** para corrigir a aparência antes de finalizar." },
+            { type: "paragraph", text: "A última tela reúne aparência, Vila, clã, Traço, idade e história. Use **Concluir ficha** para confirmar ou **Trocar imagem** para corrigir a aparência antes de finalizar." },
             {
               type: "list",
               items: [
@@ -99,10 +114,9 @@
                 "Use `/atributos` para planejar e confirmar sua primeira distribuição de pontos.",
                 "Confira `/inventario` antes de entrar em combate.",
                 "Estude suas árvores no site antes de comprar habilidades.",
-                "Use `/boneco-treino` e `/mapa` para praticar alcance, posicionamento e jutsus.",
               ],
             },
-            { type: "commands", groupIds: ["character", "combat"] },
+            { type: "commands", groupIds: ["character"] },
           ],
         },
       ],
@@ -110,30 +124,30 @@
     },
     {
       slug: "clas-e-spins",
-      title: "Clãs, Vilas e Spins",
+      title: "Clãs, Vilas e Giros",
       description: "Entenda o sorteio inicial de origem e compare todos os Clãs de cada Vila.",
       category: "inicio",
       icon: "guide-clans",
       order: 2,
       type: "guide",
       readingTime: 7,
-      keywords: ["clã", "Vila", "Spins", "origem", "Uchiha", "Hyuuga", "Konohagakure", "Sunagakure", "Kirigakure", "Kumogakure", "Iwagakure"],
+      keywords: ["clã", "Vila", "Giros", "origem", "Uchiha", "Hyuuga", "Konohagakure", "Sunagakure", "Kirigakure", "Kumogakure", "Iwagakure"],
       sections: [
         {
           id: "o-que-sao-clas",
           title: "Sua linhagem shinobi",
           blocks: [
             { type: "paragraph", text: "Clãs são famílias ou grupos que formam a base das Vilas ninja. A linhagem pode abrir Kekkei Genkai, Hiden, técnicas exclusivas e árvores próprias de progressão." },
-            { type: "callout", tone: "info", title: "Vila e clã permanecem vinculados", text: "Cada clã possui uma Vila de origem. Os Spins sempre entregam pares válidos; por exemplo, um Uchiha não nasce em Sunagakure." },
+            { type: "callout", tone: "info", title: "Vila e clã permanecem vinculados", text: "Cada clã possui uma Vila de origem. Os Giros sempre entregam pares válidos; por exemplo, um Uchiha não nasce em Sunagakure." },
           ],
         },
         {
           id: "spins",
-          title: "Spins e escolha de origem",
+          title: "Giros e escolha de origem",
           blocks: [
             {
               type: "flow",
-              label: "Fluxo dos Spins iniciais",
+              label: "Fluxo dos Giros iniciais",
               items: [
                 { title: "Use /ficha", text: "Inicie a criação guiada" },
                 { title: "Receba 3 opções", text: "Vila + Clã" },
@@ -141,32 +155,9 @@
                 { title: "Escolha", text: "Confirme por botão" },
               ],
             },
-            { type: "paragraph", text: "Os três Spins gratuitos são usados no início da primeira ficha. Você escolhe uma das três combinações exibidas; as outras duas não mudam a origem depois da confirmação." },
-            { type: "links", items: [{ slug: "primeiros-passos", section: "origem-e-spins", title: "Voltar ao passo a passo da ficha", text: "Veja a criação completa desde o primeiro comando." }] },
-          ],
-        },
-        {
-          id: "novos-spins",
-          title: "Como conseguir novos Spins",
-          blocks: [
-            { type: "paragraph", text: "Além dos três Spins gratuitos da criação, novas rolagens podem ser obtidas por diferentes atividades e benefícios do jogo." },
-            { type: "cards", items: [
-              { title: "Loja", text: "Ofertas de Spins disponíveis para aquisição." },
-              { title: "Eventos", text: "Recompensas ligadas a atividades especiais." },
-              { title: "Sorteios", text: "Distribuições realizadas em ocasiões especiais." },
-              { title: "Códigos promocionais", text: "Códigos válidos podem conceder novas rolagens." },
-              { title: "Passes", text: "Benefícios de passes podem incluir Spins." },
-            ] },
-            { type: "callout", tone: "warning", title: "Novo Spin não troca seu clã imediatamente", text: "Depois que a ficha é concluída, sua combinação de Vila + Clã fica vinculada ao personagem. Para usar Spins novamente, é necessário resetar esse personagem e recomeçar a criação." },
-          ],
-        },
-        {
-          id: "reset-e-nova-origem",
-          title: "Reset e nova origem",
-          blocks: [
-            { type: "paragraph", text: "O reset encerra a jornada do personagem atual. Ao voltar para a criação, os Spins disponíveis podem ser usados para tentar outra combinação válida de Vila + Clã." },
-            { type: "list", items: ["Nível, atributos e progressões do personagem recomeçam.", "Itens, equipamentos e jutsus ligados à ficha anterior não acompanham o novo personagem.", "Os Spins disponíveis voltam a ser usados durante a escolha de origem.", "Sem reset, não é possível trocar livremente de clã durante a progressão."] },
-            { type: "links", items: [{ slug: "primeiros-passos", section: "origem-e-spins", title: "Rever a criação de origem", text: "Entenda como as três combinações são apresentadas." }] },
+            { type: "paragraph", text: "Os três Giros gratuitos são usados no início da primeira ficha. Você escolhe uma das três combinações exibidas; as outras duas não mudam a origem depois da confirmação." },
+            { type: "callout", tone: "info", title: "Trocar sua linhagem", text: "Antes de se tornar Genin, você pode trocar de Clã normalmente. Depois de alcançar Genin, é preciso resetar o personagem para escolher outro Clã." },
+            { type: "links", items: [{ slug: "primeiros-passos", section: "giros-e-troca-de-cla", title: "Giros, Ingots e troca de Clã", text: "Veja o fluxo completo para novos Giros." }] },
           ],
         },
         {
@@ -208,7 +199,7 @@
               type: "cards",
               items: [
                 { title: "Ninjutsu", text: "Sustenta a progressão dos ninjutsus básicos, das afinidades elementais e dos jutsus de natureza de chakra." },
-                { title: "Taijutsu", text: "Sustenta técnicas corporais e também aumenta sua Vida máxima. É a base de estilos focados em combate físico." },
+                { title: "Taijutsu", text: "Sustenta técnicas corporais, aumenta sua Vida máxima e define sua Iniciativa. É a base de estilos focados em combate físico." },
                 { title: "Genjutsu", text: "Sustenta ilusões e técnicas de controle mental. Valores maiores também podem ampliar a duração dos Genjutsus." },
                 { title: "Bukijutsu", text: "Sustenta técnicas com armas e ferramentas ninja, arremessos, fios, pergaminhos e Lâminas de Chakra." },
                 { title: "Iryō Ninjutsu", text: "Sustenta técnicas médicas, cura, proteção e progressões de suporte ao grupo." },
@@ -223,11 +214,11 @@
         },
         {
           id: "vida-e-recursos",
-          title: "Como sua Vida aumenta",
+          title: "Vida e Iniciativa",
           blocks: [
-            { type: "paragraph", text: "Sua Vida máxima base cresce quando o personagem sobe de **nível** e quando você investe em **Taijutsu**. O valor persistido é recalculado depois da progressão." },
-            { type: "list", items: ["Consulte a Vida base atual e máxima em `/perfil ver`.", "Ao entrar em combate, Traits e habilidades passivas podem modificar a Vida máxima aplicada ao participante.", "Durante a luta, a interface de combate mostra a Vida já usada naquele confronto.", "Leia Traits e passivas antes de comparar duas builds: algumas alteram a Vida somente no contexto de combate."] },
-            { type: "callout", tone: "info", title: "Perfil e combate mostram etapas diferentes", text: "O perfil mostra a base calculada por nível e Taijutsu. Modificadores de Trait e passivas são aplicados ao montar o participante do combate." },
+            { type: "paragraph", text: "Sua Vida máxima base cresce quando o personagem sobe de **nível** e quando você investe em **Taijutsu**. O mesmo atributo define sua Iniciativa: quem tiver o maior valor começa o combate; em empate, a ordem de entrada na sessão é mantida." },
+            { type: "list", items: ["Consulte a Vida base atual e máxima em `/perfil ver`.", "Ao entrar em combate, Traços e habilidades passivas podem modificar a Vida máxima e a Iniciativa aplicadas ao participante.", "Durante a luta, a interface de combate mostra a Vida já usada naquele confronto.", "Leia Traços e passivas antes de comparar duas builds: alguns alteram a Vida somente no contexto de combate."] },
+            { type: "callout", tone: "info", title: "Perfil e combate mostram etapas diferentes", text: "O perfil mostra a base calculada por nível e Taijutsu. Modificadores de Traço e passivas são aplicados ao montar o participante do combate." },
           ],
         },
       ],
@@ -235,20 +226,21 @@
     },
     {
       slug: "traits",
-      title: "Compêndio de Traits",
-      description: "Compare todas as Traits do jogo pelos ícones, raridades e efeitos aplicados à sua build.",
+      title: "Compêndio de Traços",
+      description: "Compare todos os Traços do jogo pelos ícones, raridades e efeitos aplicados à sua build.",
       category: "inicio",
       icon: "guide-traits",
       order: 3,
       type: "reference",
       readingTime: 8,
-      keywords: ["Trait", "traço", "raridade", "Comum", "Rara", "Épica", "Lendária", "Mítica", "build"],
+      keywords: ["Traço", "raridade", "Comum", "Rara", "Épica", "Lendária", "Mítica", "build"],
       sections: [
         {
           id: "como-obter",
-          title: "Como a Trait é obtida",
+          title: "Como o Traço é obtido",
           blocks: [
-            { type: "paragraph", text: "Cada personagem recebe uma Trait permanente durante a criação com `/ficha`. Primeiro é sorteada a raridade; nas faixas Comum, Rara, Épica e Lendária, o resultado é definido automaticamente. Ao alcançar a faixa Mítica, você escolhe uma entre as três Traits Míticas." },
+            { type: "paragraph", text: "Cada personagem recebe um Traço permanente durante a criação com `/ficha`. Primeiro é sorteada a raridade; nas faixas Comum, Rara, Épica e Lendária, o resultado é definido automaticamente. Ao alcançar a faixa Mítica, você escolhe um entre os três Traços Míticos." },
+            { type: "links", items: [{ slug: "primeiros-passos", section: "giros-e-troca-de-cla", title: "Giros adicionais de Traço", text: "Veja como Ingots e Boost do servidor liberam novas rolagens." }] },
             { type: "cards", items: [
               { title: "Comum", meta: "47,5%", text: "Especializações diretas e fáceis de encaixar em uma build." },
               { title: "Rara", meta: "30%", text: "Defesa, mobilidade, recursos, invocações ou economia." },
@@ -256,13 +248,11 @@
               { title: "Lendária", meta: "7%", text: "Identidades de build marcantes, com bônus amplos e algumas penalidades." },
               { title: "Mítica", meta: "0,5%", text: "Efeitos únicos de grande impacto; você escolhe uma das três opções." },
             ] },
-            { type: "callout", tone: "info", title: "Novos Spins de Trait", text: "Traits também podem ser trocadas ou roladas seguindo a mesma lógica de Spins usada para Clãs. Esses Spins podem ser obtidos por Loja, Eventos, Sorteios, Códigos promocionais e Passes." },
-            { type: "links", items: [{ slug: "clas-e-spins", section: "novos-spins", title: "Ver formas de obter Spins", text: "Consulte os meios de obtenção compartilhados por Clãs e Traits." }] },
           ],
         },
         {
           id: "compendio",
-          title: "Todas as Traits",
+          title: "Todos os Traços",
           blocks: [
             { type: "paragraph", text: "Filtre por raridade ou pesquise pelo nome. Cada card usa o mesmo ícone e a mesma descrição funcional apresentados na criação da ficha." },
             { type: "traits" },
@@ -270,13 +260,13 @@
         },
         {
           id: "montando-build",
-          title: "Como comparar Traits",
+          title: "Como comparar Traços",
           blocks: [
-            { type: "list", items: ["Procure efeitos que reforcem o atributo e as habilidades em que pretende investir.", "Observe bônus de Vida, Chakra e Energia antes de escolher uma rota muito ofensiva.", "Leia também as penalidades: algumas Traits trocam resistência ou um tipo de dano por outra vantagem.", "Efeitos de invocação, economia, alcance ou controle podem ser decisivos mesmo sem aumentar dano diretamente."] },
+            { type: "list", items: ["Procure efeitos que reforcem o atributo e as habilidades em que pretende investir.", "Observe bônus de Vida, Chakra e Energia antes de escolher uma rota muito ofensiva.", "Leia também as penalidades: alguns Traços trocam resistência ou um tipo de dano por outra vantagem.", "Efeitos de invocação, economia, alcance ou controle podem ser decisivos mesmo sem aumentar dano diretamente."] },
             { type: "links", items: [
               { slug: "personagem-e-atributos", section: "dez-atributos", title: "Comparar os dez atributos", text: "Entenda qual progressão cada atributo sustenta." },
               { slug: "arvores-e-jutsus", section: "afinidades-elementais", title: "Planejar árvores e afinidades", text: "Veja como a build vira habilidades e jutsus." },
-              { slug: "itens-e-equipamentos", section: "armas-e-requisitos", title: "Consultar armas", text: "Combine Traits físicas com os equipamentos corretos." },
+              { slug: "itens-e-equipamentos", section: "armas-e-requisitos", title: "Consultar armas", text: "Combine Traços físicos com os equipamentos corretos." },
             ] },
           ],
         },
@@ -286,7 +276,7 @@
     {
       slug: "ranks-ninja",
       title: "Ranks Ninja",
-      description: "Ranks representam experiência, responsabilidade, reconhecimento e autoridade dentro da Vila. A evolução acompanha a jornada narrativa do personagem e influencia o tipo de missão e responsabilidade que ele pode assumir.",
+      description: "Ranks representam experiência, responsabilidade, reconhecimento e autoridade dentro da Vila.",
       category: "progressao",
       icon: "guide-ranks",
       order: 5,
@@ -299,16 +289,12 @@
           title: "Ranks Ninja",
           blocks: [
             { type: "paragraph", text: "Ranks representam experiência, responsabilidade, reconhecimento e autoridade dentro da Vila. A evolução acompanha a jornada narrativa do personagem e influencia o tipo de missão e responsabilidade que ele pode assumir." },
-            {
-              type: "flow",
-              label: "Progressão principal de ranks",
-              items: [
-                { title: "Aluno da Academia", text: "Aprenda os fundamentos shinobi" },
-                { title: "Genin", text: "Torne-se um ninja oficial" },
-                { title: "Chūnin", text: "Mostre estratégia e liderança" },
-                { title: "Jōnin", text: "Alcance a elite da Vila" },
-              ],
-            },
+            { type: "flow", label: "Progressão principal de ranks", items: [
+              { title: "Aluno da Academia", text: "Aprenda os fundamentos" },
+              { title: "Genin", text: "Assuma as primeiras missões" },
+              { title: "Chūnin", text: "Demonstre estratégia e liderança" },
+              { title: "Jōnin", text: "Atue entre a elite da Vila" },
+            ] },
             { type: "cards", items: [
               { title: "Aluno da Academia", text: "É o começo da jornada. O personagem aprende os fundamentos da vida shinobi antes de assumir missões oficiais normalmente." },
               { title: "Genin", text: "Ninja oficial preparado para missões de menor risco e atividades moderadas quando acompanhado." },
@@ -317,7 +303,7 @@
               { title: "ANBU", text: "Caminho especial para operações confidenciais, espionagem, proteção e missões sigilosas. A entrada depende da confiança e escolha do Kage." },
               { title: "Kage", text: "Liderança máxima de uma Vila Oculta, responsável por sua administração, proteção e decisões políticas e militares." },
             ] },
-            { type: "callout", tone: "info", title: "ANBU e Kage são caminhos especiais", text: "Essas posições não formam etapas automáticas depois de Jōnin. Elas dependem dos acontecimentos do Roleplay, do reconhecimento conquistado e das decisões da Vila." },
+            { type: "callout", tone: "info", title: "ANBU e Kage são caminhos especiais", text: "Essas posições dependem da história do personagem, da confiança da Vila e das decisões tomadas dentro do Roleplay." },
           ],
         },
       ],
@@ -356,11 +342,11 @@
             { type: "flow", label: "Progressão elemental", items: [
               { title: "Clonagem", text: "Aprenda o fundamento inicial" },
               { title: "Substituição", text: "Abra o ramo de elementos" },
-              { title: "Primeira afinidade", text: "Invista 10 pontos de Ninjutsu" },
+              { title: "Primeira afinidade", text: "Invista 2 pontos de Ninjutsu" },
               { title: "Árvore elemental", text: "Abra a natureza adquirida" },
               { title: "Novos jutsus", text: "Avance pela progressão" },
             ] },
-            { type: "callout", tone: "info", title: "Cada afinidade custa 10 pontos", text: "Conclua a progressão de Ninjutsus Padrões Básicos para abrir as afinidades. Cada elemento é adquirido separadamente por 10 pontos de Ninjutsu: o primeiro custa 10, o segundo exige outros 10, e assim por diante." },
+            { type: "callout", tone: "info", title: "Custo das afinidades", text: "Depois de aprender Técnica de Clonagem e Técnica de Substituição, a primeira afinidade custa 2 pontos de Ninjutsu. Da segunda à quinta, cada afinidade custa 10 pontos." },
           ],
         },
         {
@@ -404,6 +390,14 @@
       keywords: ["combate", "turno", "setas", "movimento", "mapa", "ação", "reação", "esquiva", "bloqueio", "aparo"],
       sections: [
         {
+          id: "iniciativa",
+          title: "Iniciativa e ordem de turno",
+          blocks: [
+            { type: "paragraph", text: "A ordem inicial do combate é definida pela **Iniciativa**. Seu valor de Taijutsu é a base dessa ordem: quem tiver o maior Taijutsu age primeiro. Bônus de passivas e Traços somam à Iniciativa antes da comparação." },
+            { type: "callout", tone: "info", title: "Empates preservam a entrada", text: "Quando dois participantes terminam com a mesma Iniciativa, o combate mantém a ordem em que eles entraram na sessão." },
+          ],
+        },
+        {
           id: "seu-turno",
           title: "Leia o campo antes de agir",
           blocks: [
@@ -420,7 +414,7 @@
           id: "acoes-e-recursos",
           title: "Ações, Chakra e Energia",
           blocks: [
-            { type: "paragraph", text: "Cada técnica informa o recurso e o tipo de ação consumidos. Ninjutsus e técnicas de suporte costumam usar Chakra; técnicas físicas costumam usar Energia. Se precisar recuperar recursos, use **Concentrar Chakra** ou **Recuperar o Fôlego**, salvo quando uma habilidade ou Trait modificar essa recuperação." },
+            { type: "paragraph", text: "Cada técnica informa o recurso e o tipo de ação consumidos. Ninjutsus e técnicas de suporte costumam usar Chakra; técnicas físicas costumam usar Energia. Se precisar recuperar recursos, use **Concentrar Chakra** ou **Recuperar o Fôlego**, salvo quando uma habilidade ou Traço modificar essa recuperação." },
             { type: "commands", groupIds: ["combat"] },
           ],
         },
@@ -451,7 +445,7 @@
     {
       slug: "morte-permanente",
       title: "Morte permanente",
-      description: "A morte permanente pode encerrar definitivamente a jornada de um personagem a partir do **nível 10**. Antes disso, ele ainda pode ser derrotado, ferido ou capturado, mas não é perdido por esse sistema.",
+      description: "A morte permanente pode encerrar definitivamente a jornada de um personagem a partir do nível 10.",
       category: "combate",
       icon: "guide-death",
       order: 11,
@@ -465,20 +459,20 @@
           blocks: [
             { type: "paragraph", text: "A morte permanente pode encerrar definitivamente a jornada de um personagem a partir do **nível 10**. Antes disso, ele ainda pode ser derrotado, ferido ou capturado, mas não é perdido por esse sistema." },
             { type: "cards", items: [
-              { title: "Batalhas oficiais", text: "Depois de uma derrota em batalha oficial, o personagem pode ficar à mercê do vencedor. Uma execução válida pode resultar em morte permanente." },
-              { title: "Velhice", text: "Grandes avanços de tempo no Roleplay também podem encerrar naturalmente a vida de personagens idosos." },
+              { title: "Batalhas oficiais", text: "A morte pode ocorrer em combates que permitam execução dentro da narrativa e das regras da atividade." },
+              { title: "Velhice", text: "A idade do personagem também pode encerrar sua jornada quando a história chegar a esse ponto." },
             ] },
-            { type: "callout", tone: "warning", title: "O que é perdido", text: "A morte encerra a progressão daquele personagem: nível, atributos, estatísticas, itens, equipamentos, jutsus, cargos, títulos e demais avanços ligados a ele." },
-            { type: "callout", tone: "info", title: "O que você mantém", text: "**Clã e Trait não são perdidos.** Os dois vêm da sua origem, não da progressão, e continuam disponíveis para o próximo personagem." },
+            { type: "callout", tone: "warning", title: "O que é perdido", text: "Nível, atributos, habilidades, inventário, Ryō e progresso pessoal da ficha são removidos ao fim da jornada." },
+            { type: "callout", tone: "info", title: "O que é mantido", text: "Clã e Traço não são perdidos. Eles continuam disponíveis para a nova ficha do jogador." },
           ],
         },
         {
           id: "recomeco-apos-morte",
           title: "Recomeço após a morte",
           blocks: [
-            { type: "paragraph", text: "Depois de uma morte permanente, é necessário criar um novo personagem e iniciar outra jornada." },
-            { type: "list", items: ["O clã já obtido permanece disponível para o novo personagem.", "A Trait também permanece: ela não é perdida na morte.", "Se quiser tentar outro clã, você recebe uma rolagem gratuita.", "A nova origem continua respeitando as combinações válidas de Vila + Clã."] },
-            { type: "links", items: [{ slug: "clas-e-spins", section: "reset-e-nova-origem", title: "Entender Spins e nova origem", text: "Veja como uma nova escolha de Vila + Clã funciona." }] },
+            { type: "paragraph", text: "Depois da morte permanente, você pode iniciar uma nova jornada. O recomeço devolve a escolha de uma nova origem e preserva o que faz parte da identidade permanente do jogador." },
+            { type: "list", items: ["Clã e Traço permanecem disponíveis.", "A nova ficha começa sem os níveis, habilidades, itens e Ryō da anterior.", "Uma nova rolagem gratuita permite definir a próxima origem."] },
+            { type: "links", items: [{ slug: "primeiros-passos", section: "giros-e-troca-de-cla", title: "Rever Giros e troca de Clã", text: "Entenda como escolher a origem da próxima ficha." }] },
           ],
         },
       ],
@@ -568,7 +562,7 @@
       keywords: ["efeito", "Queimadura", "Veneno", "Sangramento", "controle", "Barreira", "Encharcado", "marca"],
       sections: [
         { id: "como-ler", title: "Como os efeitos funcionam", blocks: [
-          { type: "paragraph", text: "Jutsus, armas, Traits e terreno podem aplicar condições temporárias. Leia duração, acúmulos e chance de aplicação na habilidade; o combate atualiza os estados após cada ação e rodada." },
+          { type: "paragraph", text: "Jutsus, armas, Traços e terreno podem aplicar condições temporárias. Leia duração, acúmulos e chance de aplicação na habilidade; o combate atualiza os estados após cada ação e rodada." },
           { type: "list", items: ["Dano contínuo pressiona a Vida ao longo das rodadas.", "Controles limitam movimento, ações, recursos ou fuga.", "Apoio e defesa fortalecem o usuário ou protegem contra dano.", "Marcadores preparam combinações para ataques seguintes.", "Efeitos de clã e Kekkei Genkai possuem interações próprias."] },
         ] },
         { id: "catalogo-de-efeitos", title: "Catálogo de efeitos", blocks: [
@@ -599,8 +593,8 @@
           { type: "commands", groupIds: ["missions"] },
         ] },
         { id: "party", title: "Jogue em party", blocks: [
-          { type: "paragraph", text: "Convites de party duram 10 minutos. Qualquer integrante pode convidar outro jogador; o convidado aceita pelo comando e o grupo passa a acompanhar combates e missões compatíveis." },
-          { type: "list", items: ["Use `/party ver` para conferir todos os integrantes.", "Use `/party sair` para deixar o grupo.", "Se o líder sair, a party é desfeita.", "Cada missão define participantes, objetivos e recompensas; formar party não compartilha todo conteúdo automaticamente."] },
+          { type: "paragraph", text: "Use `/party` para abrir o painel do grupo. Convites duram 10 minutos e são aceitos ou recusados pelos botões da própria mensagem; o grupo acompanha combates e missões compatíveis." },
+          { type: "list", items: ["O líder e os sub-líderes podem convidar integrantes.", "O líder pode promover sub-líderes; líder e sub-líderes removem membros comuns.", "Use o botão **Sair da party** no painel para deixar o grupo. Se o líder sair, a party é desfeita.", "Cada missão define participantes, objetivos e recompensas; formar party não compartilha todo conteúdo automaticamente."] },
         ] },
       ],
       related: ["mundo-e-viagem", "combate-tatico", "economia"],
@@ -733,28 +727,29 @@
       order: 15,
       type: "reference",
       readingTime: 6,
-      keywords: ["dúvida", "FAQ", "ficha", "Spins", "Vida", "elemento", "viagem", "party", "inventário"],
+      keywords: ["dúvida", "FAQ", "ficha", "Giros", "Vida", "elemento", "viagem", "party", "inventário"],
       sections: [
         { id: "criacao", title: "Criação e origem", blocks: [
           { type: "faq", items: [
             { question: "O que faço se o espaço da ficha expirar?", answer: "Use `/ficha` novamente no local de criação. O bot abre outro espaço privado e retoma a etapa salva." },
-            { question: "Posso combinar qualquer clã com qualquer Vila?", answer: "Não. Cada clã pertence a uma Vila e os três Spins de origem entregam somente combinações válidas." },
-            { question: "Posso usar um novo Spin para trocar de clã?", answer: "Não durante a progressão do mesmo personagem. Para usar novos Spins, é necessário resetar a ficha e recomeçar a criação." },
-            { question: "Posso escolher minha Trait?", answer: "Nas raridades Comum, Rara, Épica e Lendária, o resultado é automático. Se a raridade Mítica for sorteada, você escolhe uma das três Traits Míticas." },
+            { question: "Posso combinar qualquer clã com qualquer Vila?", answer: "Não. Cada clã pertence a uma Vila e os três Giros de origem entregam somente combinações válidas." },
+            { question: "Posso escolher meu Traço?", answer: "Nas raridades Comum, Rara, Épica e Lendária, o resultado é automático. Se a raridade Mítica for sorteada, você escolhe um dos três Traços Míticos." },
+            { question: "Como consigo novos Giros?", answer: "Giros de Clã e de Traço usam Ingots, obtidos na loja, em eventos, sorteios, códigos promocionais, passes ou pelo Boost do servidor." },
+            { question: "Posso trocar de Clã depois de criar a ficha?", answer: "Antes de se tornar Genin, a troca é normal. Depois de alcançar Genin, é preciso resetar o personagem para escolher outro Clã." },
           ] },
         ] },
         { id: "progressao", title: "Progressão", blocks: [
           { type: "faq", items: [
-            { question: "O que aumenta minha Vida máxima?", answer: "Subir de nível e investir em Taijutsu aumentam a Vida base exibida em `/perfil ver`. Traits e passivas podem modificar a Vida máxima aplicada ao entrar em combate." },
+            { question: "O que aumenta minha Vida máxima e minha Iniciativa?", answer: "Subir de nível e investir em Taijutsu aumentam a Vida base exibida em `/perfil ver`. Taijutsu também define a Iniciativa: o maior valor começa o combate, com bônus de passivas e Traços somados antes da ordem." },
             { question: "Comprar uma habilidade reduz meu atributo?", answer: "Não. A compra consome o saldo de progressão ligado ao atributo, mas o valor do atributo na ficha permanece igual." },
             { question: "Por que uma habilidade está bloqueada?", answer: "Abra seus detalhes e confira nível, saldo do atributo, habilidades anteriores, elemento, clã, estilo ou outro requisito indicado." },
-            { question: "Quanto custa uma afinidade elemental?", answer: "Depois de concluir os Ninjutsus Padrões Básicos, cada afinidade é adquirida individualmente por 10 pontos de Ninjutsu." },
-            { question: "Quando meu personagem pode sofrer morte permanente?", answer: "A partir do nível 10, em uma batalha oficial com execução válida ou em situações narrativas de velhice após grandes avanços de tempo." },
+            { question: "Quanto custa uma afinidade elemental?", answer: "Depois de aprender Técnica de Clonagem e Técnica de Substituição, a primeira afinidade custa 2 pontos de Ninjutsu. A segunda até a quinta custam 10 pontos cada." },
           ] },
         ] },
         { id: "combate-e-itens", title: "Combate e itens", blocks: [
           { type: "faq", items: [
             { question: "Como me movimento no combate?", answer: "Use as setas exibidas na própria interface. Elas mostram apenas as posições válidas dentro do alcance disponível." },
+            { question: "O que acontece em um empate de Iniciativa?", answer: "O combate mantém a ordem em que os participantes entraram na sessão." },
             { question: "Por que não consigo equipar a Lâmina de Chakra?", answer: "Ela exige a habilidade Lâmina de Chakra na árvore de Bukijutsu. Aprenda essa habilidade antes de tentar equipar a arma." },
             { question: "Onde vejo o efeito de uma condição?", answer: "Abra o catálogo do Guia de Efeitos. Ele reúne dano contínuo, controles, bônus, marcas e efeitos de linhagem." },
           ] },

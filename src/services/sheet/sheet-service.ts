@@ -406,7 +406,7 @@ async function runClanAnimation(
       divider(),
       text(
         `### ${emoji("ingots")} Ingots\n`
-        + "Moeda de apoio do servidor. Com ela você compra **spins de clã** extras no site.\n\n"
+        + "Moeda de apoio do servidor. Com ela você compra **giros de clã** extras no site.\n\n"
         + "**E se eu quiser trocar de clã depois?**\n"
         + "- De graça até você terminar o treinamento e virar Genin.\n"
         + "- Depois disso, só no nível 10, resetando o personagem do zero.\n"

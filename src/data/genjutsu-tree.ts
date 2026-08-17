@@ -29,7 +29,7 @@ const jutsu = (id: string, name: string, rank: NonNullable<SkillNodeDef["rank"]>
 const passive = (id: string, name: string, icon: string, branch: string, col: number, row: number, requires: string[], reqLevel: number, reqPool: number, desc: string, root = false): SkillNodeDef => ({ id, name, kind: "PASSIVE", icon, pool: "genjutsu", cost: root ? 1 : 2, branch, col, row, requires, reqLevel, reqPool, desc });
 
 export const GENJUTSU_TREE: SkillNodeDef[] = [
-  passive("gen_raiz", "Véu da Mente", "🌫️", "Raiz", 0, 0, [], 1, 1, "Passiva sempre ativa: você lê o fluxo de chakra do adversário — ganha +3 pontos percentuais de esquiva contra Ninjutsu/Genjutsu e recebe +1 de prioridade na ordem do turno.", true),
+  passive("gen_raiz", "Véu da Mente", "🌫️", "Raiz", 0, 0, [], 1, 1, "Passiva sempre ativa: você lê o fluxo de chakra do adversário — ganha +3 pontos percentuais de esquiva contra Ninjutsu/Genjutsu e recebe +1 de iniciativa.", true),
 
   // ------------------------------------------------------- Aprisionamento
   jutsu("gen_raizes_obscuras", "Raízes Obscuras", "C", "🌱", "Aprisionamento", -1.25, 1, ["gen_raiz"], 4, 4, "Uma raiz surge do solo e vira uma árvore crescente que se enrola no alvo, prendendo-o (Imobilização)."),

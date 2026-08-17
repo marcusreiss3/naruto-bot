@@ -401,10 +401,9 @@ export function characterPassiveMods(ownedNodeIds: string[]): CharacterPassiveMo
     mindControlUpkeepMult,
     sharinganUpkeepMult,
     mindControlNinjutsuBonus,
-    maxEnergyBonus: Math.min(0.5, maxEnergyBonus),
+    maxEnergyBonus,
     moveBonus,
-    // mesmo teto da energia: reserva nao passa de +50%
-    maxChakraBonus: Math.min(0.5, maxChakraBonus),
+    maxChakraBonus,
     guardStrengthBonus,
     fleeBonus,
     controlDurationResistance,

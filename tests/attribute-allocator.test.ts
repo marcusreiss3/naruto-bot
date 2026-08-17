@@ -95,7 +95,7 @@ describe("distribuicao de pontos", () => {
     // Senjutsu ainda não tem consumidor; Kugutsu agora banca a árvore e as
     // habilidades de marionete.
     expect(attrHasNoEffect("kugutsu")).toBe(false);
-    expect(attrHasNoEffect("senjutsu")).toBe(true);
+    expect(attrHasNoEffect("senjutsu")).toBe(false);
     expect(attrHasNoEffect("ninjutsu")).toBe(false);
     expect(attrHasNoEffect("taijutsu")).toBe(false);
     // estes viraram `pool` de nos de arvore de cla — gastar ponto neles

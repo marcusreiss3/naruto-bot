@@ -67,7 +67,7 @@ export async function renderProfileCard(data: ProfileCardData): Promise<Buffer> 
   const hp = clamp(data.hp.current / Math.max(1, data.hp.max));
   const chakra = clamp(data.chakra / 100);
   const energy = clamp(data.energy / 100);
-  const trait = data.trait ? `${xml(data.trait.name)} · ${xml(data.trait.rarity)}` : "Nenhuma trait";
+  const trait = data.trait ? `${xml(data.trait.name)} · ${xml(data.trait.rarity)}` : "Nenhum traço";
   const elements = data.elements.length ? data.elements.map(xml).join("  •  ") : "Nenhum elemento";
   const styles = data.fightingStyles.length ? data.fightingStyles.map(xml).join("  •  ") : "Não definido";
   const artwork = image
@@ -118,6 +118,7 @@ export async function renderProfileCard(data: ProfileCardData): Promise<Buffer> 
     ? `<image href="${landscapeImage}" x="${portraitX}" y="80" width="365" height="500" preserveAspectRatio="xMidYMid slice"/><rect x="${portraitX}" y="80" width="365" height="500" fill="#13203a" fill-opacity=".16"/>`
     : `<rect x="${portraitX}" y="80" width="365" height="500" fill="#39251d"/>`;
   const themedParchment = parchmentSvg
+    .replaceAll("TRAIT", "TRAÇO")
     .replace('<rect width="1200" height="675" fill="#25170f"/>', landscapeLayer)
     .replace('fill="url(#paper)" stroke="#f6e5b8"', 'fill="url(#paper)" fill-opacity=".76" stroke="#f6e5b8"')
     .replace(currentLevelBadge, levelSeal)

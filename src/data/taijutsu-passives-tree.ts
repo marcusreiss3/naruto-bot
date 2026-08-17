@@ -47,8 +47,8 @@ export const TAIJUTSU_PASSIVES_TREE: SkillNodeDef[] = [
   passive("tai_pass_resistencia_fisica", "Resistência Física", "Meio", "taijutsu", 0, 4, ["tai_pass_recuperacao"], 30, 30, "Passiva sempre ativa: sua vida máxima é mais 5% maior e você recupera mais 2 de vida no início de cada rodada.", { cost: 3 }),
 
   // Direita: só energia, 2 etapas (sem nível 10).
-  passive("tai_pass_reserva", "Reserva Física", "Direita", "taijutsu", 1.25, 2, ["tai_pass_vigor"], 20, 20, "Passiva: sua energia máxima aumenta 25% (até 125%).", { cost: 3 }),
-  passive("tai_pass_reserva_profunda", "Reserva Física Profunda", "Direita", "taijutsu", 1.25, 3, ["tai_pass_reserva"], 30, 30, "Passiva: sua energia máxima ganha mais 25%, chegando ao limite de 150%.", { cost: 4 }),
+  passive("tai_pass_reserva", "Reserva Física", "Direita", "taijutsu", 1.25, 2, ["tai_pass_vigor"], 20, 20, "Passiva: sua energia máxima aumenta 25%.", { cost: 3 }),
+  passive("tai_pass_reserva_profunda", "Reserva Física Profunda", "Direita", "taijutsu", 1.25, 3, ["tai_pass_reserva"], 30, 30, "Passiva: sua energia máxima ganha mais 25%.", { cost: 4 }),
 
   // Depois de completar as três ramificações, elas convergem de novo.
   passive("tai_pass_maestria", "Maestria Marcial", "Fundamento", "taijutsu", 0, 5,

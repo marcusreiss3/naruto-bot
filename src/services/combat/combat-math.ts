@@ -30,7 +30,7 @@ const SCALE: Record<Attribute, number> = {
 // cla (ver skill-tree.ts), entao gastar ponto neles compra habilidade.
 // Senjutsu ainda não tem consumidor. Kugutsu agora escala as habilidades das
 // marionetes e também é a bolsa da sua árvore de oficina.
-export const ATTRIBUTES_SEM_EFEITO: readonly Attribute[] = ["senjutsu"];
+export const ATTRIBUTES_SEM_EFEITO: readonly Attribute[] = [];
 
 // UNICA fonte de verdade do que conta como golpe FISICO. Usada em ~7 lugares
 // (queimadura corta dano fisico, esquiva gasta energia em vez de chakra,

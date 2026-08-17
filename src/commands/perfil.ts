@@ -105,7 +105,7 @@ export const perfil: Command = {
             `Pontos de atributo: **${char.attributePoints}**`,
             `Elementos: ${elements}`,
             `Clã: ${clan}`,
-            `Trait: ${trait ? `**${trait.name}** [${TRAIT_RARITY_LABELS[trait.rarity]}]` : "nenhuma"}`,
+            `Traço: ${trait ? `**${trait.name}** [${TRAIT_RARITY_LABELS[trait.rarity]}]` : "nenhum"}`,
             ...(char.profile?.completedAt ? [`Idade: **${char.profile.age} anos**`] : []),
           ].join("\n"),
         },

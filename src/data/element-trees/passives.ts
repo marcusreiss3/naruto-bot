@@ -85,7 +85,7 @@ export interface PassiveDef {
   effectStacksBonus?: Partial<Record<EffectId, number>>;
   maxHpBonus?: number;
   hpRegenPerTurn?: number;
-  // teto/reserva de energia; a engine limita o acumulado a +50% (150% total).
+  // teto/reserva de energia; os bônus acumulados definem a reserva máxima.
   maxEnergyBonus?: number;
   // casas adicionais na ação de movimento; aplicado antes de lentidão/terreno.
   moveBonus?: number;
