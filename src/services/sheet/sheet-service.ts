@@ -56,6 +56,7 @@ import {
   type ContainerChild,
   type TopLevel,
 } from "../../ui/economy-components-v2.js";
+import { emoji } from "../../ui/economy-emojis.js";
 import { getOrCreateCharacter, setCharacterName, setClan } from "../characters/character-service.js";
 import { setCharacterTrait } from "../characters/trait-service.js";
 import { ENV } from "../../config/env.js";
@@ -114,6 +115,17 @@ const RARITY_LABEL: Record<string, string> = {
 };
 const TUTORIAL_MOBILE_GIF = "https://placehold.co/900x500.gif?text=Tutorial+Mobile";
 const TUTORIAL_PC_GIF = "https://placehold.co/900x500.gif?text=Tutorial+PC";
+
+// Links do site mostrados durante a criacao da ficha. Sao escritos como link
+// mascarado ([texto](url)) porque TextDisplay renderiza markdown completo: a URL
+// crua ocupa duas linhas no mobile e polui o container de escolha.
+//
+// O fallback cobre o bot rodando sem o site configurado (WEB_BASE_URL vazio):
+// sem ele o link sairia "/#/guias/..." e o Discord nao renderizaria.
+const SITE_URL = ENV.WEB_BASE_URL || "https://naruto-rp.squareweb.app";
+const GUIA_CLAS_URL = `${SITE_URL}/#/guias/clas-e-spins`;
+const GUIA_TRAITS_URL = `${SITE_URL}/#/guias/traits`;
+const INGOTS_URL = `${SITE_URL}/#/ingots`;
 
 function parseData(value: string): SheetData {
   try {
@@ -387,9 +399,12 @@ async function runClanAnimation(
     ...v2Edit(card([
       heading("Escolha sua origem", "Vila e clã permanecem vinculados"),
       text("Estas são as possibilidades registradas para sua ficha."),
+      text(`📖 Não sabe o que cada clã concede? [Clique aqui](${GUIA_CLAS_URL}) para ver o resumo de todos eles.`),
       text("-# As três opções foram registradas e continuarão as mesmas até você escolher uma delas."),
       divider(),
       ...sections,
+      divider(),
+      text(`### ${emoji("lingote_ferro")} Ingots\nA moeda de apoio do servidor, separada do Ryo e sem efeito em combate. [Clique aqui](${INGOTS_URL}) para ver como conseguir e no que gastar.`),
       divider(),
       buttons(...options.map((_, index) => button(`ficha:v1:clan:${sessionId}:${index}`, `Escolher opção ${index + 1}`))),
     ])),
@@ -444,6 +459,7 @@ async function runTraitAnimation(channel: TextChannel, sessionId: string, data: 
   const children: ContainerChild[] = [
     heading(result.rarity === "MITICA" ? "Uma assinatura mítica foi encontrada" : "Traço definido"),
     text(`Resultado da faixa: **${RARITY_LABEL[result.rarity]}**.`),
+    text(`📖 Quer entender o que cada traço faz? [Clique aqui](${GUIA_TRAITS_URL}) para ver o compêndio completo.`),
     divider(),
     ...sections,
   ];
@@ -478,6 +494,7 @@ async function showSavedTraitChoice(channel: TextChannel, sessionId: string, dat
   await channel.send({
     ...v2Public(card([
       heading("Escolha seu traço mítico", "Opções recuperadas do seu rascunho"),
+      text(`📖 Quer entender o que cada traço faz? [Clique aqui](${GUIA_TRAITS_URL}) para ver o compêndio completo.`),
       ...sections,
       divider(),
       buttons(...traits.map((_, index) => button(`ficha:v1:trait:${sessionId}:${index}`, `Escolher traço ${index + 1}`))),

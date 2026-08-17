@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="dark">
   <meta name="theme-color" content="#0d0f12">
   <title>Arquivo Shinobi — Árvores e Guias</title>
-  <link rel="stylesheet" href="/style.css?v=guide-catalog-6">
+  <link rel="stylesheet" href="/style.css?v=guide-catalog-7">
 </head>
 <body>
   <a class="skip-link hidden" id="skipLink" href="#mainContent">Pular para o conteúdo</a>
@@ -100,6 +100,10 @@
           <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H11v16H6.5A2.5 2.5 0 0 0 4 21.5v-16Zm16 0A2.5 2.5 0 0 0 17.5 3H13v16h4.5a2.5 2.5 0 0 1 2.5 2.5v-16Z"/></svg>
           <span>Guias</span>
         </button>
+        <button class="nav-item" id="ingotsNavBtn" type="button">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M8 6h8l2.5 4h-13L8 6Zm-4.5 6h17l2 5H1.5l2-5Zm-1 7h19"/></svg>
+          <span>Ingots</span>
+        </button>
       </nav>
 
       <div class="topbar-context">
@@ -172,6 +176,10 @@
         <div class="reading-progress hidden" id="readingProgress" aria-hidden="true"><span id="readingProgressBar"></span></div>
         <div id="guidesRoot"></div>
       </section>
+
+      <section class="guides-page ingots-page hidden" id="ingotsPage" aria-label="Ingots">
+        <div id="ingotsRoot"></div>
+      </section>
     </main>
   </section>
 
@@ -209,9 +217,10 @@
 
   <!-- Mapa caminho local -> URL do CDN (Square Blob). Gerado por `npm run blob:upload`.
      Precisa vir antes de app.js: define window.__BLOB_ASSETS, que assetUrl() lê. -->
-<script src="/asset-manifest.js?v=guide-catalog-6"></script>
-<script src="/guides.js?v=guide-catalog-6"></script>
-  <script src="/guides-ui.js?v=guide-catalog-6"></script>
-  <script src="/app.js?v=guide-catalog-6"></script>
+<script src="/asset-manifest.js?v=guide-catalog-7"></script>
+<script src="/guides.js?v=guide-catalog-7"></script>
+  <script src="/guides-ui.js?v=guide-catalog-7"></script>
+  <script src="/ingots.js?v=guide-catalog-7"></script>
+  <script src="/app.js?v=guide-catalog-7"></script>
 </body>
 </html>

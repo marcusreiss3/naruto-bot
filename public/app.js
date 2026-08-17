@@ -480,6 +480,7 @@ let activeEl = null;   // elemento em exibição
 let modalNode = null;  // nó aberto no modal
 let currentView = "trees";
 let guideCenter = null;
+let ingotsPage = null;
 let appReady = false;
 let hasCharacter = false;
 let activeDialog = null;
@@ -524,7 +525,7 @@ async function fetchGuideCatalog() {
   });
   if (!res.ok) throw new Error(`Catálogo de Guias indisponível (${res.status})`);
   const catalog = await res.json();
-  const valid = catalog?.schemaVersion === 5
+  const valid = catalog?.schemaVersion === 7
     && Array.isArray(catalog.traits) && catalog.traits.length > 0
     && Array.isArray(catalog.clanGroups) && catalog.clanGroups.some((group) => group.clans?.length)
     && Array.isArray(catalog.items) && catalog.items.length > 0
@@ -685,11 +686,14 @@ async function boot() {
         catalog: window.GUIDE_CATALOG,
         runtime: runtimeCatalog,
       });
+      ingotsPage = window.IngotsPage.create({ root: $("ingotsRoot"), scrollContainer: $("ingotsPage") });
       appReady = true;
-      navigate(location.hash.startsWith("#/guias") ? location.hash : "#/guias/primeiros-passos");
+      // Ingots e guias sao consultaveis sem personagem; so' a arvore exige ficha.
+      const consultable = location.hash.startsWith("#/guias") || location.hash.startsWith("#/ingots");
+      navigate(consultable ? location.hash : "#/guias/primeiros-passos");
     };
     $("nocharGuidesBtn").onclick = openGuidesWithoutCharacter;
-    if (location.hash.startsWith("#/guias")) openGuidesWithoutCharacter();
+    if (location.hash.startsWith("#/guias") || location.hash.startsWith("#/ingots")) openGuidesWithoutCharacter();
     return;
   }
   show("app");
@@ -704,6 +708,7 @@ async function boot() {
     catalog: window.GUIDE_CATALOG,
     runtime: runtimeCatalog,
   });
+  ingotsPage = window.IngotsPage.create({ root: $("ingotsRoot"), scrollContainer: $("ingotsPage") });
   lastSig = sigOf(state);
   appReady = true;
   handleRoute();
@@ -734,6 +739,7 @@ async function pull() {
 function parsedRoute() {
   const raw = location.hash.replace(/^#\/?/, "");
   const parts = raw.split("/").filter(Boolean);
+  if (parts[0] === "ingots") return { view: "ingots", slug: null, section: null };
   if (parts[0] !== "guias") return { view: "trees", slug: null, section: null };
   let slug = null;
   let section = null;
@@ -748,28 +754,32 @@ function parsedRoute() {
   return { view: "guides", slug, section };
 }
 
+// Tres abas hoje (arvores, guias, ingots). A tabela evita o encadeamento de
+// booleanos que a versao de duas abas usava: cada aba nova era mais um
+// `classList.toggle` pra manter em sincronia, e esquecer um deixava duas
+// abas marcadas como ativas ao mesmo tempo.
+const VIEW_PANELS = {
+  trees: { panel: "treeView", nav: "treesNavBtn" },
+  guides: { panel: "guidesPage", nav: "guidesNavBtn" },
+  ingots: { panel: "ingotsPage", nav: "ingotsNavBtn" },
+};
+
 function setCurrentView(view) {
   currentView = view;
-  const guidesOpen = view === "guides";
-  $("treeView").classList.toggle("hidden", guidesOpen);
-  $("guidesPage").classList.toggle("hidden", !guidesOpen);
-  document.querySelector(".topbar-context").classList.toggle("hidden", guidesOpen);
-
-  const treesButton = $("treesNavBtn");
-  const guidesButton = $("guidesNavBtn");
-  treesButton.classList.toggle("active", !guidesOpen);
-  guidesButton.classList.toggle("active", guidesOpen);
-  if (guidesOpen) {
-    guidesButton.setAttribute("aria-current", "page");
-    treesButton.removeAttribute("aria-current");
-  } else {
-    treesButton.setAttribute("aria-current", "page");
-    guidesButton.removeAttribute("aria-current");
+  for (const [id, refs] of Object.entries(VIEW_PANELS)) {
+    const isActive = id === view;
+    $(refs.panel).classList.toggle("hidden", !isActive);
+    const navButton = $(refs.nav);
+    navButton.classList.toggle("active", isActive);
+    if (isActive) navButton.setAttribute("aria-current", "page");
+    else navButton.removeAttribute("aria-current");
   }
+  // Pontos e "ver todas" so' fazem sentido sobre a arvore aberta.
+  document.querySelector(".topbar-context").classList.toggle("hidden", view !== "trees");
 }
 
 function handleRoute() {
-  if (!appReady || !guideCenter) return;
+  if (!appReady || !guideCenter || !ingotsPage) return;
   const route = parsedRoute();
   if (!hasCharacter && route.view === "trees") {
     navigate("#/guias/primeiros-passos");
@@ -779,6 +789,10 @@ function handleRoute() {
   if (route.view === "guides") {
     if (route.slug) guideCenter.showGuide(route.slug, route.section);
     else guideCenter.showHome();
+    return;
+  }
+  if (route.view === "ingots") {
+    ingotsPage.show();
     return;
   }
   document.title = `${ELEMENTS.find((entry) => entry.id === activeEl)?.name || "Árvores"} — Arquivo Shinobi`;
@@ -1208,6 +1222,7 @@ $("showAllBtn").onclick = () => {
 };
 $("treesNavBtn").onclick = () => navigate("#/arvores");
 $("guidesNavBtn").onclick = () => navigate("#/guias");
+$("ingotsNavBtn").onclick = () => navigate("#/ingots");
 window.addEventListener("hashchange", handleRoute);
 
 boot();

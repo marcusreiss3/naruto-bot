@@ -5066,3 +5066,232 @@ details.guide-faq > div {
   .clan-card,
   .compendium-filters button { transition: none !important; }
 }
+
+/* ================================================================
+   Aba de Ingots
+   Reaproveita .guides-shell, .section-heading e .guides-eyebrow do
+   Central de Guias; o que muda e' o acento, dourado (--rank-s) em vez
+   do azul, pra separar a moeda premium do resto do portal.
+   ================================================================ */
+
+.ingots-page {
+  background:
+    radial-gradient(720px 360px at 50% -120px, rgba(214, 168, 79, 0.08), transparent 72%),
+    var(--background-primary);
+}
+
+#ingotsRoot {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 100%;
+}
+
+.ingots-shell {
+  width: min(100%, var(--content-width));
+}
+
+.ingots-shell .guides-eyebrow::before { background: var(--rank-s); box-shadow: 0 0 8px rgba(214, 168, 79, 0.35); }
+
+.ingot-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: clamp(20px, 4vw, 48px);
+  padding: clamp(24px, 4vw, 40px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background:
+    radial-gradient(420px 220px at 88% 8%, rgba(214, 168, 79, 0.14), transparent 70%),
+    var(--surface);
+  box-shadow: var(--shadow-md);
+}
+
+.ingot-hero-copy { min-width: 0; }
+
+.ingot-hero h1 {
+  margin: 0 0 10px;
+  font-family: var(--font-display);
+  font-size: clamp(34px, 5vw, 54px);
+  letter-spacing: 0.5px;
+  color: var(--text-primary);
+}
+
+.ingot-hero h1:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: var(--radius-sm); }
+
+.ingot-hero p {
+  max-width: 62ch;
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.ingot-hero-emblem {
+  display: grid;
+  place-items: center;
+  width: clamp(96px, 14vw, 148px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 40%, rgba(214, 168, 79, 0.2), transparent 68%);
+}
+
+.ingot-hero-emblem img { width: 72%; height: auto; filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.45)); }
+
+.ingot-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 22px 0 0;
+}
+
+.ingot-fact {
+  padding: 9px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-inset);
+}
+
+.ingot-fact dt {
+  font-size: 11px;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.ingot-fact dd { margin: 3px 0 0; font-weight: 600; color: var(--text-primary); }
+
+.ingot-fact.is-pending dd { color: var(--warning); }
+
+.ingot-draft-note {
+  margin: 22px 0 0;
+  padding: 12px 16px;
+  border: 1px solid rgba(221, 180, 93, 0.34);
+  border-radius: var(--radius-sm);
+  background: var(--warning-subtle);
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.ingot-draft-note strong { color: var(--warning); }
+
+.ingot-section { margin-top: clamp(34px, 5vw, 56px); }
+
+.ingot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(268px, 1fr));
+  gap: 16px;
+}
+
+.ingot-card {
+  display: flex;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  transition: border-color 140ms ease, transform 140ms ease;
+}
+
+.ingot-card:hover { border-color: rgba(214, 168, 79, 0.42); transform: translateY(-2px); }
+
+.ingot-card-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 52px;
+  height: 52px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--surface-inset);
+}
+
+.ingot-card-icon img { width: 34px; height: 34px; object-fit: contain; }
+
+.ingot-card-body { min-width: 0; }
+
+.ingot-card-body h3 { margin: 0 0 6px; font-size: 16px; color: var(--text-primary); }
+
+.ingot-card-body p { margin: 0; font-size: 14px; line-height: 1.55; color: var(--text-secondary); }
+
+.ingot-card-meta {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 4px 9px;
+  border-radius: var(--radius-xs);
+  background: var(--warning-subtle);
+  color: var(--warning);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.ingot-rules {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+
+.ingot-rules li {
+  position: relative;
+  padding: 13px 16px 13px 38px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+
+.ingot-rules li::before {
+  content: "";
+  position: absolute;
+  top: 21px;
+  left: 17px;
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  background: var(--rank-s);
+  transform: rotate(45deg);
+}
+
+.ingot-faq { display: grid; gap: 10px; }
+
+.ingot-faq-item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.ingot-faq-item summary {
+  padding: 15px 18px;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text-primary);
+  list-style: none;
+}
+
+.ingot-faq-item summary::-webkit-details-marker { display: none; }
+
+.ingot-faq-item summary::after { content: "+"; float: right; color: var(--rank-s); font-size: 18px; line-height: 1; }
+
+.ingot-faq-item[open] summary::after { content: "−"; }
+
+.ingot-faq-item summary:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+.ingot-faq-item p {
+  margin: 0;
+  padding: 0 18px 17px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+@media (max-width: 720px) {
+  .ingot-hero { grid-template-columns: minmax(0, 1fr); }
+  .ingot-hero-emblem { justify-self: start; }
+  .ingot-grid { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ingot-card { transition: none !important; }
+}

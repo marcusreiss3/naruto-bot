@@ -37,10 +37,22 @@ describe("catálogo vivo da Central de Guias", () => {
     const appSource = readFileSync(new URL("../public/app.js", import.meta.url), "utf8");
     const htmlSource = readFileSync(new URL("../public/index.html", import.meta.url), "utf8");
     const clientVersion = Number(appSource.match(/catalog\?\.schemaVersion === (\d+)/)?.[1]);
-    const cacheVersions = [...htmlSource.matchAll(/guide-catalog-(\d+)/g)].map((match) => Number(match[1]));
+
+    // Todo .js/.css servido pelo proprio site precisa carregar o cache-buster,
+    // senao o navegador guarda a versao velha e o catalogo novo nunca chega.
+    // A lista sai do HTML em vez de ser um numero fixo: a versao anterior deste
+    // teste travava a contagem em 4 e ficou vermelha assim que um quinto script
+    // entrou no index.html — falhava por desatualizacao, nao por regressao.
+    const localAssets = [...htmlSource.matchAll(/(?:src|href)="(\/[^"]+\.(?:js|css)[^"]*)"/g)]
+      .map((match) => match[1]!);
+    const semBuster = localAssets.filter((asset) => !/\?v=guide-catalog-\d+/.test(asset));
+    const cacheVersions = localAssets
+      .map((asset) => Number(asset.match(/guide-catalog-(\d+)/)?.[1]))
+      .filter((version) => Number.isFinite(version));
 
     expect(clientVersion).toBe(GUIDE_CATALOG_SCHEMA_VERSION);
-    expect(cacheVersions).toHaveLength(4);
+    expect(semBuster).toEqual([]);
+    expect(cacheVersions.length).toBeGreaterThan(0);
     expect(new Set(cacheVersions)).toEqual(new Set([GUIDE_CATALOG_SCHEMA_VERSION]));
   });
 
