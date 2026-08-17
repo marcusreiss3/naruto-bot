@@ -1,4 +1,12 @@
-import { ButtonStyle, SlashCommandBuilder, type ButtonInteraction, type ChatInputCommandInteraction } from "discord.js";
+import {
+  ActionRowBuilder,
+  ButtonStyle,
+  SlashCommandBuilder,
+  UserSelectMenuBuilder,
+  type AnySelectMenuInteraction,
+  type ButtonInteraction,
+  type ChatInputCommandInteraction,
+} from "discord.js";
 import type { Command } from "./types.js";
 import { accept, decline, getMyParty, invite, leave, type PartyView } from "../services/party/party-service.js";
 import {
@@ -11,13 +19,17 @@ import {
   noticeBlock,
   text,
   titleBlock,
+  v2Edit,
   v2Payload,
   v2Public,
+  type ContainerChild,
   type TopLevel,
 } from "../ui/economy-components-v2.js";
 import { emoji } from "../ui/economy-emojis.js";
 
 const INVITE_PREFIX = "party:invite";
+const INVITE_SELECT_ID = "party:invite:select";
+const LEAVE_BUTTON_ID = "party:leave";
 const inviteButtonId = (action: "accept" | "decline", inviteId: string) =>
   `${INVITE_PREFIX}:${action}:${inviteId}`;
 
@@ -31,6 +43,28 @@ function memberLines(party: PartyView): string[] {
 
 function errorPanel(message: string): TopLevel[] {
   return [economyContainer("erro", [noticeBlock("erro", message)])];
+}
+
+function inviteSelect(): ActionRowBuilder<UserSelectMenuBuilder> {
+  return new ActionRowBuilder<UserSelectMenuBuilder>().addComponents(
+    new UserSelectMenuBuilder()
+      .setCustomId(INVITE_SELECT_ID)
+      .setPlaceholder("Escolha um ninja para convidar")
+      .setMinValues(1)
+      .setMaxValues(1),
+  );
+}
+
+function partyChildren(party: PartyView, title = "Sua party", subtitle?: string): ContainerChild[] {
+  return [
+    titleBlock("party", title, subtitle ?? "Joguem juntos em missões e combates."),
+    factsBlock([
+      { label: "Líder", value: `${emoji("lider_party")} <@${party.leaderId}>` },
+      { label: "Integrantes", value: `${party.memberIds.length}` },
+    ]),
+    divider(),
+    listBlock("Integrantes", memberLines(party), "Nenhum integrante encontrado."),
+  ];
 }
 
 export function invitePanel(inviterId: string, inviteeId: string, inviteId: string): TopLevel[] {
@@ -60,15 +94,36 @@ export function invitePanel(inviterId: string, inviteeId: string, inviteId: stri
 }
 
 export function partyPanel(party: PartyView, title = "Sua party", subtitle?: string): TopLevel[] {
+  return [economyContainer("vila", partyChildren(party, title, subtitle))];
+}
+
+export function partyHomePanel(party: PartyView | null): TopLevel[] {
+  if (!party) {
+    return [
+      economyContainer("vila", [
+        titleBlock("party", "Forme sua party", "Convide ninjas para enfrentar missões e combates juntos."),
+        noticeBlock("aviso", "Você ainda não faz parte de uma party."),
+        divider(),
+        text(`${emoji("convite")} Escolha um ninja para enviar um convite.`),
+        inviteSelect(),
+      ]),
+    ];
+  }
+
   return [
     economyContainer("vila", [
-      titleBlock("party", title, subtitle ?? "Joguem juntos em missões e combates."),
-      factsBlock([
-        { label: "Líder", value: `${emoji("lider_party")} <@${party.leaderId}>` },
-        { label: "Integrantes", value: `${party.memberIds.length}` },
-      ]),
+      ...partyChildren(party),
       divider(),
-      listBlock("Integrantes", memberLines(party), "Nenhum integrante encontrado."),
+      text(`${emoji("convite")} Convide outro ninja ou saia do grupo quando quiser.`),
+      inviteSelect(),
+      buttonRow(
+        button({
+          id: LEAVE_BUTTON_ID,
+          label: "Sair da party",
+          style: ButtonStyle.Danger,
+          emojiKey: "sair_party",
+        }),
+      ),
     ]),
   ];
 }
@@ -90,11 +145,12 @@ function leftPanel(disbanded: boolean, userId: string): TopLevel[] {
   return [
     economyContainer("aviso", [
       titleBlock("party", disbanded ? "Party dissolvida" : "Você saiu da party"),
-      noticeBlock(
-        "aviso",
-        disbanded
-          ? `<@${userId}> era o líder, então a party foi dissolvida.`
-          : `<@${userId}> saiu da party.`,
+      text(
+        `${emoji("sair_party")} ${
+          disbanded
+            ? `<@${userId}> era o líder, então a party foi dissolvida.`
+            : `<@${userId}> saiu da party.`
+        }`,
       ),
     ]),
   ];
@@ -103,67 +159,28 @@ function leftPanel(disbanded: boolean, userId: string): TopLevel[] {
 export const party: Command = {
   data: new SlashCommandBuilder()
     .setName("party")
-    .setDescription("Grupo de jogadores (aparecem juntos no combate)")
-    .addSubcommand((s) =>
-      s
-        .setName("convidar")
-        .setDescription("Convida um jogador para sua party")
-        .addUserOption((o) => o.setName("jogador").setDescription("Quem convidar").setRequired(true)),
-    )
-    .addSubcommand((s) => s.setName("sair").setDescription("Sai da party (líder dissolve a party)"))
-    .addSubcommand((s) => s.setName("ver").setDescription("Mostra sua party")),
+    .setDescription("Abre seu painel de party"),
 
   async execute(interaction: ChatInputCommandInteraction) {
+    const currentParty = await getMyParty(interaction.guildId ?? "global", interaction.user.id);
+    await interaction.reply(v2Payload(partyHomePanel(currentParty)));
+  },
+
+  async handleButton(interaction: ButtonInteraction) {
     const guildId = interaction.guildId ?? "global";
-    const sub = interaction.options.getSubcommand();
-
-    if (sub === "convidar") {
-      const alvo = interaction.options.getUser("jogador", true);
-      if (alvo.bot) {
-        await interaction.reply(v2Payload(errorPanel("Não dá para convidar um bot.")));
-        return;
-      }
-
-      const result = await invite(guildId, interaction.user.id, alvo.id);
-      if (!result.ok || !result.inviteId) {
-        await interaction.reply(v2Payload(errorPanel(result.error ?? "Não consegui criar o convite.")));
-        return;
-      }
-
-      await interaction.reply(v2Payload(invitePanel(interaction.user.id, alvo.id, result.inviteId), false));
-      return;
-    }
-
-    if (sub === "sair") {
+    if (interaction.customId === LEAVE_BUTTON_ID) {
       const result = await leave(guildId, interaction.user.id);
       if (!result.ok) {
         await interaction.reply(v2Payload(errorPanel("Você não está em uma party.")));
         return;
       }
-      await interaction.reply(v2Payload(leftPanel(result.disbanded ?? false, interaction.user.id), false));
+      await interaction.update(v2Edit(leftPanel(result.disbanded ?? false, interaction.user.id)));
       return;
     }
 
-    const currentParty = await getMyParty(guildId, interaction.user.id);
-    if (!currentParty) {
-      await interaction.reply(
-        v2Payload([
-          economyContainer("aviso", [
-            titleBlock("party", "Você ainda não tem party"),
-            noticeBlock("aviso", "Use /party convidar para chamar outro ninja."),
-          ]),
-        ]),
-      );
-      return;
-    }
-    await interaction.reply(v2Payload(partyPanel(currentParty), false));
-  },
-
-  async handleButton(interaction: ButtonInteraction) {
     const [, , action, inviteId] = interaction.customId.split(":");
     if ((action !== "accept" && action !== "decline") || !inviteId) return;
 
-    const guildId = interaction.guildId ?? "global";
     if (action === "decline") {
       const result = await decline(guildId, interaction.user.id, inviteId);
       if (!result.ok) {
@@ -180,5 +197,32 @@ export const party: Command = {
       return;
     }
     await interaction.update(v2Public(acceptedPanel(interaction.user.id, result.party)));
+  },
+
+  async handleSelect(interaction: AnySelectMenuInteraction) {
+    if (!interaction.isUserSelectMenu() || interaction.customId !== INVITE_SELECT_ID) return;
+
+    const alvoId = interaction.values[0];
+    if (!alvoId) return;
+    const alvo = interaction.users.get(alvoId) ?? await interaction.client.users.fetch(alvoId).catch(() => null);
+    if (!alvo || alvo.bot) {
+      await interaction.reply(v2Payload(errorPanel("Não dá para convidar um bot.")));
+      return;
+    }
+
+    const guildId = interaction.guildId ?? "global";
+    const result = await invite(guildId, interaction.user.id, alvoId);
+    if (!result.ok || !result.inviteId) {
+      await interaction.reply(v2Payload(errorPanel(result.error ?? "Não consegui criar o convite.")));
+      return;
+    }
+
+    await interaction.deferUpdate();
+    const currentParty = await getMyParty(guildId, interaction.user.id);
+    await interaction.editReply(v2Edit(partyHomePanel(currentParty)));
+    const channel = interaction.channel;
+    if (channel?.isTextBased() && "send" in channel) {
+      await channel.send(v2Public(invitePanel(interaction.user.id, alvoId, result.inviteId)));
+    }
   },
 };

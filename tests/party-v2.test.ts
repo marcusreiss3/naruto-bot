@@ -1,12 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { invitePanel, party, partyPanel } from "../src/commands/party.js";
+import { invitePanel, party, partyHomePanel, partyPanel } from "../src/commands/party.js";
 
 describe("interface V2 de /party", () => {
-  it("remove o subcomando aceitar em favor do botão do convite", () => {
+  it("expõe apenas /party, sem subcomandos", () => {
     const json = party.data.toJSON();
-    const subcommands = json.options?.map((option) => option.name) ?? [];
 
-    expect(subcommands).toEqual(["convidar", "sair", "ver"]);
+    expect(json.options).toEqual([]);
   });
 
   it("monta convite público em container com botões de aceitar e recusar", () => {
@@ -32,5 +31,17 @@ describe("interface V2 de /party", () => {
     expect(serialized).toContain("<@lider>");
     expect(serialized).toContain("<@membro>");
     expect(serialized).toContain("1538717783209148587");
+  });
+
+  it("oferece o botão de sair com o emoji customizado para membros", () => {
+    const [container] = partyHomePanel({
+      id: "party-id",
+      leaderId: "lider",
+      memberIds: ["lider", "membro"],
+    }).map((component) => component.toJSON());
+    const serialized = JSON.stringify(container);
+
+    expect(serialized).toContain("party:leave");
+    expect(serialized).toContain("1538718426162405457");
   });
 });
