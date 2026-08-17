@@ -10,6 +10,23 @@ function opt(name: string, fallback = ""): string {
   return process.env[name] ?? fallback;
 }
 
+// Normaliza a base do site: aceita "app.squareweb.app", "https://app.squareweb.app"
+// e "https://app.squareweb.app/", devolve sempre a forma canonica sem barra final.
+//
+// Os dois formatos errados ja derrubaram o login em producao:
+// - sem esquema, `${base}/auth/callback` nao e' URL absoluta e o Discord recusa
+//   o authorize inteiro com "redirect_uri: URL introduzido incorretamente";
+// - com barra final, sai "...app//auth/callback", e o Discord compara a URI como
+//   texto exato contra o que esta cadastrado no portal, entao nunca bate.
+//
+// Assumir https no caso sem esquema tambem liga o flag Secure dos cookies em
+// server/auth.ts, que le o esquema daqui. Dev local escreve http:// explicito.
+function normalizeBaseUrl(raw: string): string {
+  const v = raw.trim().replace(/\/+$/, "");
+  if (!v) return "";
+  return /^https?:\/\//i.test(v) ? v : `https://${v}`;
+}
+
 export const ENV = {
   DISCORD_TOKEN: req("DISCORD_TOKEN"),
   DISCORD_CLIENT_ID: req("DISCORD_CLIENT_ID"),
@@ -29,10 +46,8 @@ export const ENV = {
   // Sem estes, o servidor web nao sobe e o bot roda normal.
   DISCORD_CLIENT_SECRET: opt("DISCORD_CLIENT_SECRET"),
   // URL publica do site (usada no redirect do OAuth). Ex.: https://app.squareweb.app
-  // Barra final e' removida: o redirect_uri e' montado com `${WEB_BASE_URL}/auth/callback`
-  // e o Discord compara a URI como texto exato — "...app//auth/callback" nunca bate
-  // com o que esta cadastrado no portal. Ja quebrou o login em producao.
-  WEB_BASE_URL: opt("WEB_BASE_URL").replace(/\/+$/, ""),
+  // Ver normalizeBaseUrl: esquema faltando e barra final sao corrigidos aqui.
+  WEB_BASE_URL: normalizeBaseUrl(opt("WEB_BASE_URL")),
   // segredo p/ assinar o cookie de sessao
   SESSION_SECRET: opt("SESSION_SECRET"),
   // porta do servidor HTTP (Square injeta PORT)
