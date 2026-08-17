@@ -25,7 +25,8 @@ function panel(wallet: PremiumWallet, feedback?: string): TopLevel[] {
   children.push(divider(), buttonRow(
     button({ id: cid("use-clan"), label: "Usar Giro de Clã", disabled: wallet.clanSpins < 1 }),
     button({ id: cid("use-trait"), label: "Usar Giro de Traço", disabled: wallet.traitSpins < 1 }),
-  ), text("-# Giros de Clã só podem ser usados enquanto o personagem ainda for da Academia."));
+  ), text("-# Giros de Clã só podem ser usados enquanto o personagem ainda for da Academia."), divider(),
+  text("**Como obter Ingots**\nIngots são concedidos pelo staff por apoio ao servidor, eventos e torneios oficiais ou contribuições de conteúdo aprovadas. Não existe farm nem transferência entre jogadores."));
   return [economyContainer("cofre", children)];
 }
 
