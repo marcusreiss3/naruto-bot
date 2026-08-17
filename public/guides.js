@@ -463,7 +463,7 @@
               { title: "Velhice", text: "A idade do personagem também pode encerrar sua jornada quando a história chegar a esse ponto." },
             ] },
             { type: "callout", tone: "warning", title: "O que é perdido", text: "Nível, atributos, habilidades, inventário, Ryō e progresso pessoal da ficha são removidos ao fim da jornada." },
-            { type: "callout", tone: "info", title: "O que é mantido", text: "Clã e Traço não são perdidos. Eles continuam disponíveis para a nova ficha do jogador." },
+            { type: "callout", tone: "info", title: "O que é mantido", text: "Clã, Traço e Ingots não são perdidos. Os Ingots ficam vinculados à conta do Discord e continuam disponíveis para a nova ficha do jogador." },
           ],
         },
         {
