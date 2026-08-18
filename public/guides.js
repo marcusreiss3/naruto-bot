@@ -373,6 +373,7 @@
           blocks: [
             { type: "paragraph", text: "Depois de aprender um jutsu, use a categoria indicada pela habilidade: `/jutsu ninjutsu`, `/jutsu taijutsu`, `/jutsu kenjutsu`, `/jutsu bukijutsu`, `/jutsu iryo` ou `/jutsu genjutsu`. O autocomplete mostra as técnicas disponíveis e a interface pede um alvo ou posição quando necessário." },
             { type: "callout", tone: "info", title: "Técnicas de clã seguem sua categoria", text: "Um jutsu exclusivo continua aparecendo na categoria mecânica exibida em sua habilidade. Ativações oculares e Portões Internos usam os controles correspondentes de `/combate`." },
+            { type: "links", items: [{ slug: "combate-tatico", section: "seu-turno", title: "Aprender ações e posicionamento", text: "Veja como movimento, terreno, alcance e ações funcionam no combate." }] },
             { type: "commands", groupIds: ["combat"] },
           ],
         },
@@ -428,6 +429,14 @@
               { title: "Grau III", text: "Arquiteto de Marionetes" },
             ] },
             { type: "callout", tone: "info", title: "Requisitos do mecanismo", text: "Além dos recursos, o Grau da oficina e o nível exigido precisam estar liberados. Não é possível instalar o mesmo mecanismo duas vezes na mesma marionete." },
+          ],
+        },
+        {
+          id: "materiais-e-equipamentos",
+          title: "Materiais e equipamentos",
+          blocks: [
+            { type: "paragraph", text: "Carapaças, mecanismos e reconstruções usam Ryō e materiais do inventário. Consulte a ficha de cada construção na oficina para ver as quantidades exigidas antes de iniciar a obra." },
+            { type: "links", items: [{ slug: "itens-e-equipamentos", section: "coleta-e-producao", title: "Consultar materiais, coleta e produção", text: "Veja onde obter recursos, criar receitas e administrar seu inventário." }] },
           ],
         },
         {
