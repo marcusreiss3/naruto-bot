@@ -22,7 +22,7 @@ const passive = (
 export const KUGUTSU_TREE: SkillNodeDef[] = [
   passive(
     "kugutsu_oficina_inicial", "Oficina de Marionetes", "Fundamento", 0, 0, [], 5, 1, 5,
-    "Libera o craft de carapaças e mecanismos de marionete Grau I, além do comando /marionetes. Custa 5 pontos de Kugutsu por ser a entrada da disciplina.",
+    "Libera o craft de carapaças e mecanismos de marionete Grau I, além do comando /marionetes.",
   ),
   passive(
     "kugutsu_carapaca_ofensiva", "Engrenagens Ofensivas", "Carapaça ofensiva", -1.5, 1, ["kugutsu_oficina_inicial"], 2, 4, 7,
