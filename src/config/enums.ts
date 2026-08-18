@@ -122,9 +122,6 @@ export const TRAIT_RARITY_LABELS: Record<TraitRarity, string> = {
   MITICA: "Mítica",
 };
 
-export const MASTERY_LEVELS = ["BASICO", "CONTROLADO", "MESTRE"] as const;
-export type MasteryLevel = (typeof MASTERY_LEVELS)[number];
-
 export const ACTION_TYPES = ["COMUM", "BONUS", "MOVIMENTO", "REACAO"] as const;
 export type ActionType = (typeof ACTION_TYPES)[number];
 

@@ -68,7 +68,7 @@ export interface Ability {
   category: Category;
   element?: Element;
   tier: number;
-  // recurso e custo base (antes da maestria)
+  // recurso e custo base
   resource: "chakra" | "energia";
   cost: number; // percentual base
   actionType: ActionType;
@@ -236,7 +236,7 @@ export interface Ability {
     // em vez do NpcTemplate.abilityIds fixo, a invocacao herda um snapshot dos
     // jutsu que o PROPRIO invocador ja possui no momento da criacao (ver
     // ownedJutsuIds em combat-engine.ts), filtrado a `maxCostPct` (custo base
-    // da ability, sem maestria). Ex: Clones das Sombras usam o que o jogador
+    // da ability. Ex: Clones das Sombras usam o que o jogador
     // sabe, mas nao os jutsus mais caros que 35% de chakra.
     inheritOwnerJutsu?: { maxCostPct: number };
     // a invocacao entra no grid e pode se mover nesta rodada, mas so' pode

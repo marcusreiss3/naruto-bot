@@ -2,7 +2,7 @@ import { SlashCommandBuilder, type ChatInputCommandInteraction, type Autocomplet
 import type { Command } from "./types.js";
 import { prisma } from "../db/client.js";
 import { isAdmin } from "../utils/permissions.js";
-import { ATTRIBUTES, ATTRIBUTE_LABELS, ELEMENTS, FIGHTING_STYLES, FIGHTING_STYLE_LABELS, MASTERY_LEVELS, RESOURCES, EFFECT_IDS, effectLabel, TRAIT_RARITIES, TRAIT_RARITY_LABELS } from "../config/enums.js";
+import { ATTRIBUTES, ATTRIBUTE_LABELS, ELEMENTS, FIGHTING_STYLES, FIGHTING_STYLE_LABELS, RESOURCES, EFFECT_IDS, effectLabel, TRAIT_RARITIES, TRAIT_RARITY_LABELS } from "../config/enums.js";
 import type { Attribute, Element, EffectId, FightingStyle } from "../config/enums.js";
 import { getTrait, traitEmoji, traitsByRarity } from "../data/traits.js";
 import { getCharacterTrait, setCharacterTrait, clearCharacterTrait } from "../services/characters/trait-service.js";
@@ -13,7 +13,6 @@ import {
   addAttribute,
   setLevel,
   setResource,
-  setMastery,
   setElement,
   setFightingStyle,
   setClan,
@@ -34,7 +33,6 @@ import { getPremiumWallet } from "../services/premium/ingot-store.js";
 
 const attrChoices = ATTRIBUTES.map((a) => ({ name: ATTRIBUTE_LABELS[a], value: a }));
 const resourceChoices = RESOURCES.map((r) => ({ name: r, value: r }));
-const masteryChoices = MASTERY_LEVELS.map((m) => ({ name: m, value: m }));
 const elementChoices = ELEMENTS.map((e) => ({ name: e, value: e }));
 const fightingStyleChoices = FIGHTING_STYLES.map((s) => ({ name: FIGHTING_STYLE_LABELS[s], value: s }));
 
@@ -176,14 +174,6 @@ export const admin: Command = {
         .addUserOption((o) => o.setName("usuario").setDescription("Usuário").setRequired(true))
         .addStringOption((o) => o.setName("recurso").setDescription("Recurso").addChoices(...resourceChoices).setRequired(true))
         .addIntegerOption((o) => o.setName("valor").setDescription("0-100").setRequired(true)),
-    )
-    .addSubcommand((s) =>
-      s
-        .setName("maestria-set")
-        .setDescription("Define maestria")
-        .addUserOption((o) => o.setName("usuario").setDescription("Usuário").setRequired(true))
-        .addStringOption((o) => o.setName("recurso").setDescription("Recurso").addChoices(...resourceChoices).setRequired(true))
-        .addStringOption((o) => o.setName("nivel").setDescription("Nível").addChoices(...masteryChoices).setRequired(true)),
     )
     .addSubcommand((s) =>
       s
@@ -492,14 +482,6 @@ export const admin: Command = {
         await interaction.editReply(`✅ ${recurso} de **${char.name}** = ${valor}%.`);
         return;
       }
-      case "maestria-set": {
-        const char = await getChar();
-        const recurso = interaction.options.getString("recurso", true) as "chakra" | "energia";
-        const nivel = interaction.options.getString("nivel", true) as "BASICO" | "CONTROLADO" | "MESTRE";
-        await setMastery(char.id, recurso, nivel);
-        await interaction.editReply(`✅ Maestria de ${recurso} = ${nivel} para **${char.name}**.`);
-        return;
-      }
       case "elemento-set": {
         const char = await getChar();
         const elemento = interaction.options.getString("elemento", true) as Element;
@@ -652,7 +634,7 @@ export const admin: Command = {
         const char = await getChar();
         const full = await prisma.userCharacter.findUnique({
           where: { id: char.id },
-          include: { attributes: true, resources: true, mastery: true, elements: true, fightingStyles: true, clan: true, jutsus: true },
+          include: { attributes: true, resources: true, elements: true, fightingStyles: true, clan: true, jutsus: true },
         });
         await interaction.editReply("```json\n" + JSON.stringify(full, null, 2).slice(0, 1900) + "\n```");
         return;

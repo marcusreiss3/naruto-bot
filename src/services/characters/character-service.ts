@@ -4,7 +4,7 @@ import { ATTRIBUTES, type Attribute, type Element, type FightingStyle } from "..
 import { ALL_ABILITIES, getClan } from "../../data/index.js";
 import { getNode } from "../../data/element-trees/index.js";
 import { ensureEconomyState } from "../economy/character-economy.js";
-import { maxHp, expectedMasteryPoints } from "./formulas.js";
+import { maxHp } from "./formulas.js";
 import { meetsRequirements } from "./requirements.js";
 import { traitMods } from "./trait-service.js";
 
@@ -26,7 +26,6 @@ export async function getFullCharacter(discordId: string, guildId: string) {
     include: {
       attributes: true,
       resources: true,
-      mastery: true,
       clan: true,
       profile: true,
       trait: true, // trait entra no combate junto dos nos — ver trait-service
@@ -60,7 +59,6 @@ export async function getOrCreateCharacter(discordId: string, guildId: string, n
       hpMax: BALANCE.hpBase,
       attributes: { create: {} },
       resources: { create: {} },
-      mastery: { create: {} },
       // Nasce ACADEMIA (default do schema), 100 de saciedade e 0 Ryo.
       economy: { create: {} },
     },
@@ -103,10 +101,9 @@ export async function setLevel(charId: string, level: number): Promise<void> {
   level = Math.max(1, Math.min(BALANCE.maxLevel, level));
   const delta = level - char.level;
   const newPoints = char.attributePoints + Math.max(0, delta) * BALANCE.attributePointsPerLevel;
-  const masteryPoints = expectedMasteryPoints(level);
   await prisma.userCharacter.update({
     where: { id: charId },
-    data: { level, attributePoints: newPoints, masteryPoints },
+    data: { level, attributePoints: newPoints },
   });
   await refreshDerived(charId);
   await autoUnlockJutsus(charId);
@@ -134,7 +131,6 @@ export async function addXp(charId: string, xp: number): Promise<{ leveledTo: nu
       xp: total,
       level,
       attributePoints: char.attributePoints + gained * BALANCE.attributePointsPerLevel,
-      masteryPoints: expectedMasteryPoints(level),
     },
   });
   if (gained > 0) {
@@ -174,15 +170,6 @@ export async function spendAttributePoint(charId: string, attr: Attribute): Prom
 export async function setResource(charId: string, resource: "chakra" | "energia", value: number): Promise<void> {
   const v = Math.max(0, Math.min(BALANCE.resourceMax, value));
   await prisma.characterResourceState.update({ where: { charId }, data: { [resource]: v } });
-}
-
-export async function setMastery(
-  charId: string,
-  resource: "chakra" | "energia",
-  level: "BASICO" | "CONTROLADO" | "MESTRE",
-): Promise<void> {
-  const field = resource === "chakra" ? "chakraMastery" : "energiaMastery";
-  await prisma.characterMastery.update({ where: { charId }, data: { [field]: level } });
 }
 
 export async function setElement(charId: string, element: Element): Promise<void> {

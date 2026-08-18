@@ -23,8 +23,6 @@ model UserCharacter {
   attributePoints Int      @default(1)
   hpCurrent       Int      @default(100)
   hpMax           Int      @default(100)
-  // contador de evolucoes de maestria liberadas (1 a cada 15 niveis)
-  masteryPoints   Int      @default(0)
   // Rank narrativo do ninja (NinjaRank em src/config/enums.ts). Fonte de verdade
   // do gate financeiro: cargo do Discord pode espelhar depois, mas a regra de
   // imposto consulta este campo. ACADEMIA nao e' tributado.
@@ -41,7 +39,6 @@ model UserCharacter {
 
   attributes      CharacterAttributes?
   resources       CharacterResourceState?
-  mastery         CharacterMastery?
   clan            CharacterClan?
   trait           CharacterTrait?
   profile         CharacterProfile?
@@ -144,14 +141,6 @@ model CharacterResourceState {
   charId    String        @unique
   chakra    Float         @default(100)
   energia   Float         @default(100)
-}
-
-model CharacterMastery {
-  id             String        @id @default(cuid())
-  character      UserCharacter @relation(fields: [charId], references: [id], onDelete: Cascade)
-  charId         String        @unique
-  chakraMastery  String        @default("BASICO") // BASICO | CONTROLADO | MESTRE
-  energiaMastery String        @default("BASICO")
 }
 
 model CharacterElement {

@@ -157,7 +157,7 @@ src/
   data/          jutsus, clans, scenarios, missions, npcs (conteúdo editável)
   db/            client Prisma
   services/
-    characters/  progressão, atributos, recursos, maestria, requisitos
+    characters/  progressão, atributos, recursos, requisitos
     combat/      engine, math, efeitos, IA de NPC em combate
     maps/        renderer SVG->PNG
     missions/    serviço, lógica do gato (pura), runtime (bandidos)

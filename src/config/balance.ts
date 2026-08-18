@@ -1,5 +1,5 @@
 // Camada de balanceamento editavel. Ajuste tudo aqui sem mexer na engine.
-import type { EffectId, MasteryLevel } from "./enums.js";
+import type { EffectId } from "./enums.js";
 
 export const BALANCE = {
   // ---- Vida / atributos ----
@@ -29,9 +29,6 @@ export const BALANCE = {
   attributePointsPerLevel: 4,
   // teto por atributo (0 = sem teto)
   attributeCap: 0,
-  // a cada N niveis, 1 ponto de maestria
-  masteryEveryLevels: 15,
-
   // ---- Escalas de dano/cura ----
   // Escala 0 = o atributo NAO soma dano/cura. Isso e' intencional nos quatro
   // primeiros: dano vem de BUILD (jutsu comprado + passivas da arvore), nao de
@@ -126,13 +123,6 @@ export const BALANCE = {
     7: { taijutsuDamageMult: 1.85, selfDamagePerTurn: 60 },
     8: { taijutsuDamageMult: 2.50, selfDamagePerTurn: 80 },
   } as Record<number, { taijutsuDamageMult: number; selfDamagePerTurn: number; energyRecoveryPerTurn?: number }>,
-
-  // ---- Maestria: multiplicador de custo por recurso ----
-  masteryCostMultiplier: {
-    BASICO: 1.0,
-    CONTROLADO: 0.7,
-    MESTRE: 0.55,
-  } as Record<MasteryLevel, number>,
 
   // ---- Formato de area ----
   // meio-angulo do cone, em graus. 45 = cone de 90deg (padrao).

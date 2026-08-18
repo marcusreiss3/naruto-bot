@@ -38,7 +38,7 @@ npm run seed         # grava MissionDef no banco (após editar src/data/missions
 src/config/      enums.ts (Element/Attribute/Category/Shape/EffectId), balance.ts (TODOS os números), env.ts
 src/data/        jutsus/, clans/, scenarios/, missions/, npcs.ts, types.ts  <- conteúdo editável
 src/services/
-  characters/    formulas.ts (maxHp, moveRange, costAfterMastery), progressão, requisitos
+  characters/    formulas.ts (maxHp, moveRange), progressão, requisitos
   combat/        combat-engine.ts (estado+DB), combat-math.ts (puro), effects.ts (puro), npc-combat.ts (IA)
   missions/      mission-service.ts, mission-runtime.ts, um arquivo por missão
   npc-ai/        Groq + fallback local (personas.ts)

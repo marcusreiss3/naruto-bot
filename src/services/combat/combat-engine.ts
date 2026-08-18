@@ -6,7 +6,7 @@ import { allNodes } from "../../data/element-trees/index.js";
 import type { Ability, AppliedEffect, ScenarioDef } from "../../data/types.js";
 import { allCells, neighbors, parseCell, radiusCells, toCell } from "../../utils/grid.js";
 import { pick, randInt, chance } from "../../utils/random.js";
-import { costAfterMastery, moveRange, genjutsuDuration } from "../characters/formulas.js";
+import { moveRange, genjutsuDuration } from "../characters/formulas.js";
 import {
   computeDamage,
   computeHeal,
@@ -1205,8 +1205,8 @@ export async function useAbility(
   // passivas dos nos comprados (snapshot em flags.nodes)
   const mods = passiveMods(ownedNodes(actor), ability);
 
-  // custo apos maestria, apos passivas de reducao de custo e apos o
-  // Congelamento (Gelo) — o unico efeito que encarece a tecnica de quem o
+  // Custo apos passivas de reducao de custo e apos o Congelamento (Gelo) — o
+  // unico efeito que encarece a tecnica de quem o
   // carrega: dedos duros e chakra travado atrasam os selos de mao.
   // Fios de chakra não criam uma reserva extra: toda técnica da marionete
   // drena o reservatório do condutor. Sem isso, três marionetes virariam três
@@ -1214,12 +1214,9 @@ export async function useAbility(
   const resourceOwner = actor.flags.isPuppet
     ? s.participants.find((p) => p.id === actor.flags.controllerId && p.hpCurrent > 0) ?? actor
     : actor;
-  const mastery = await masteryFor(resourceOwner, ability.resource);
   const cost = Math.max(
     1,
-    Math.round(
-      costAfterMastery(ability.cost, mastery) * mods.costMult * frozenCostMultiplier(actor.effects),
-    ),
+    Math.round(ability.cost * mods.costMult * frozenCostMultiplier(actor.effects)),
   );
   const pool = ability.resource === "chakra" ? resourceOwner.chakra : resourceOwner.energia;
   if (pool < cost) return fail(`${ability.resource} insuficiente (precisa ${cost}%).`);
@@ -1354,7 +1351,7 @@ export async function useAbility(
   // deduz recurso e marca acao
   await deductResource(resourceOwner.id, ability.resource, cost);
   // Clones das Sombras (e futuras invocacoes com deathReflect): o custo BASE
-  // do jutsu (sem maestria) vira divida acumulada, cobrada do invocador de
+  // do jutsu vira divida acumulada, cobrada do invocador de
   // uma vez so' quando o clone morrer — ver reflectSummonDeath().
   if (actor.flags.isSummon && actor.flags.deathReflect && ability.resource === "chakra") {
     const debtRate = (actor.flags.deathReflect as { jutsuCostPct: number }).jutsuCostPct;
@@ -2322,9 +2319,8 @@ async function payReaction(
     }
   }
 
-  const mastery = await masteryFor(target, reactAb.resource);
   const mods = passiveMods(ownedNodes(target), reactAb);
-  const cost = Math.max(1, Math.round(costAfterMastery(reactAb.cost, mastery) * mods.costMult));
+  const cost = Math.max(1, Math.round(reactAb.cost * mods.costMult));
   const pool = reactAb.resource === "chakra" ? target.chakra : target.energia;
   if (pool < cost) {
     return { ok: false, reason: `${target.name} não tinha ${reactAb.resource} para usar ${reactAb.name}.` };
@@ -3142,16 +3138,6 @@ async function setFlag(id: string, key: string, value: unknown): Promise<void> {
   const flags = parseFlags(p.flagsJson);
   flags[key] = value;
   await prisma.combatParticipant.update({ where: { id }, data: { flagsJson: JSON.stringify(flags) } });
-}
-
-async function masteryFor(
-  p: SessionFull["participants"][number],
-  resource: "chakra" | "energia",
-): Promise<"BASICO" | "CONTROLADO" | "MESTRE"> {
-  if (p.isNpc || !p.charId) return "BASICO";
-  const m = await prisma.characterMastery.findUnique({ where: { charId: p.charId } });
-  const lvl = resource === "chakra" ? m?.chakraMastery : m?.energiaMastery;
-  return (lvl as "BASICO" | "CONTROLADO" | "MESTRE") ?? "BASICO";
 }
 
 // Pega arma dropada na celula do participante (gasta acao comum no command layer).

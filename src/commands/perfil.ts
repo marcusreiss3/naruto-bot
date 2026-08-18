@@ -55,7 +55,6 @@ export const perfil: Command = {
 
     const a = char.attributes!;
     const r = char.resources!;
-    const m = char.mastery!;
     const elements = char.elements.map((e) => e.element).join(", ") || "nenhum";
     const clan = char.clan ? getClan(char.clan.clanId)?.name ?? char.clan.clanId : "nenhum";
     const trait = char.trait ? getTrait(char.trait.traitId) : undefined;
@@ -89,8 +88,8 @@ export const perfil: Command = {
         {
           name: "Recursos",
           value: [
-            `Chakra: **${r.chakra.toFixed(0)}%** (${m.chakraMastery})`,
-            `Energia: **${r.energia.toFixed(0)}%** (${m.energiaMastery})`,
+            `Chakra: **${r.chakra.toFixed(0)}%**`,
+            `Energia: **${r.energia.toFixed(0)}%**`,
             `HP: **${char.hpCurrent}/${char.hpMax}**`,
             `Movimento: **${moveRange()}**`,
           ].join("\n"),
