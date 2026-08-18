@@ -125,10 +125,12 @@ describe("Gelo: passiva de dano — balanceado no nível de Vapor/Calor/Lava", (
 describe("Domo de Iceberg: defesa pura, sem dano, prende quem está corpo a corpo", () => {
   const domo = getAbility("gelo_domo")!;
 
-  it("não tem baseDamage e é SELF — dá Barreira", () => {
+  // flat + %HP (11/08/2026): era so' stacks fixo, o unico SHIELD do jogo
+  // assim — todo outro Barreira usa os dois juntos.
+  it("não tem baseDamage e é SELF — dá Barreira (flat + % do HP máximo)", () => {
     expect(domo.baseDamage).toBeUndefined();
     expect(domo.shape).toBe("SELF");
-    expect(domo.effects).toEqual([{ effectId: "SHIELD", stacks: 16, duration: 3 }]);
+    expect(domo.effects).toEqual([{ effectId: "SHIELD", stacks: 9, hpPercentStacks: 0.13, duration: 3 }]);
   });
 
   it("trapField prende inimigos adjacentes (ROOT, raio 1) até a Barreira quebrar", () => {

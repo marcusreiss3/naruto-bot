@@ -1226,6 +1226,11 @@ export const ELEMENTAL: Ability[] = [
     description:
       "O usuário usa o estilo de Ebulição para se propulsionar num soco à queima-roupa, misturando ninjutsu com taijutsu. O vapor residual do impacto pode cravar Corrosão.",
   },
+  // S-rank/apice (11/08/2026, era A): balanceamento de KKG promoveu a
+  // tecnica de ponta em vez de inventar golpe novo. baseDamage 40->46 e
+  // custo 48->58 pra fechar no mesmo teto (×2,025x = 93,15) do resto dos
+  // KKG; Corrosao escala 2->3 acumulos e 3->4 rodadas, mesmo salto que o
+  // Magma leva no S-rank do Lava.
   {
     id: "vapor_chute_propulsao",
     name: "Chute em Propulsão",
@@ -1233,13 +1238,13 @@ export const ELEMENTAL: Ability[] = [
     element: "VAPOR",
     tier: 3,
     resource: "chakra",
-    cost: 48,
+    cost: 58,
     actionType: "COMUM",
-    baseDamage: 40,
+    baseDamage: 46,
     scalingAttribute: "ninjutsu",
     range: 1,
     shape: "MELEE",
-    effects: [{ effectId: "CORROSION", stacks: 2, duration: 3 }],
+    effects: [{ effectId: "CORROSION", stacks: 3, duration: 4 }],
     push: 2,
     requirements: { element: "VAPOR", manualOnly: true },
     tags: ["vapor", "melee", "corrosivo", "impacto"],
@@ -1289,6 +1294,11 @@ export const ELEMENTAL: Ability[] = [
     description:
       "Uma única esfera de calor que suga a água do corpo do alvo ao acertar, evaporando qualquer Encharcado nele e deixando-o desidratado e fraco.",
   },
+  // S-rank/apice (11/08/2026, era A): balanceamento de KKG promoveu a
+  // tecnica de ponta em vez de inventar golpe novo. baseDamage 34->46 e
+  // custo 48->62 pra fechar no mesmo teto (×2,025x = 93,15) do resto dos
+  // KKG. Troca BURN por DEHYDRATION (a identidade propria do Calor, ausente
+  // do golpe mais forte ate aqui) escalado igual ao Magma do Lava.
   {
     id: "calor_assassinato_extremo",
     name: "Assassinato de Calor Extremo",
@@ -1296,15 +1306,15 @@ export const ELEMENTAL: Ability[] = [
     element: "CALOR",
     tier: 3,
     resource: "chakra",
-    cost: 48,
+    cost: 62,
     actionType: "COMUM",
-    baseDamage: 34,
+    baseDamage: 46,
     scalingAttribute: "ninjutsu",
     range: 6,
     shape: "RADIUS",
-    effects: [{ effectId: "BURN", stacks: 2, duration: 3 }],
+    effects: [{ effectId: "DEHYDRATION", stacks: 3, duration: 4 }],
     requirements: { element: "CALOR", manualOnly: true },
-    tags: ["calor", "area", "queimadura"],
+    tags: ["calor", "area", "desidratante"],
     description:
       "Envolve a área ao redor do alvo num calor imenso, causando queimaduras graves em todos que estiverem perto.",
   },
@@ -1548,6 +1558,19 @@ export const ELEMENTAL: Ability[] = [
     description:
       "Técnica semelhante ao Desprendimento do Mundo Primitivo padrão, porém em formato de cone, com um alcance em área muito maior.",
   },
+  // S-rank/apice de verdade (11/08/2026, era A): balanceamento de KKG
+  // promoveu a tecnica de ponta em vez de inventar golpe novo. baseDamage
+  // 34->46 e custo 60->68 — com o 2.17x de Poeira (acima do 2.025x padrao),
+  // o teto sobe pra 99,82, ACIMA do resto dos KKG, do jeito que enums.ts
+  // sempre disse que devia ser.
+  //
+  // 1 -> 2 acumulos: reverte a mudanca de 09/08/2026 (que tinha ido de 2 pra
+  // 1 porque colapsar a defesa num golpe so' era forte demais pra um A-rank
+  // alcancavel no nivel 26). Agora que isso e' o apice de verdade, gate no
+  // nivel 38 e no maior custo de toda a arvore, um colapso instantaneo (2
+  // aqui + 1 do Estilhaco de Poeira = 3, o gatilho) e' o mesmo padrao que o
+  // proprio Cristal ja usa no dele (2 acumulos de Cristalizado no S-rank,
+  // "o bastante pra selar quem ja tiver um cristal").
   {
     id: "jinton_projeteis",
     name: "Desprendimento do Mundo Primitivo: Projéteis",
@@ -1555,18 +1578,14 @@ export const ELEMENTAL: Ability[] = [
     element: "POEIRA",
     tier: 3,
     resource: "chakra",
-    cost: 60,
+    cost: 68,
     actionType: "COMUM",
-    baseDamage: 34,
+    baseDamage: 46,
     scalingAttribute: "ninjutsu",
     range: 5,
     shape: "SINGLE_TARGET",
     unguardable: true,
-    // 2 -> 1 acumulo (09/08/2026): com o Estilhaco de Poeira (+1) os 2 batiam
-    // exatamente no gatilho de 3 e colapsavam a defesa do alvo num uso so'.
-    // Todos os outros jutsus de Poeira ja' aplicavam 1 — este era o unico
-    // fora do padrao.
-    effects: [{ effectId: "DISINTEGRATION", stacks: 1, duration: 3 }],
+    effects: [{ effectId: "DISINTEGRATION", stacks: 2, duration: 4 }],
     requirements: { element: "POEIRA", manualOnly: true },
     tags: ["poeira", "jinton", "barragem", "indefensavel", "apice", "desintegracao"],
     description:
@@ -1629,7 +1648,11 @@ export const ELEMENTAL: Ability[] = [
     actionType: "BONUS",
     range: 0,
     shape: "SELF",
-    effects: [{ effectId: "SHIELD", stacks: 16, duration: 3 }],
+    // stacks fixo sem hpPercentStacks era o unico SHIELD do jogo assim (todo
+    // outro Barreira do roster usa flat + % do HP maximo de quem defende).
+    // 9/0,13 bate o par ja usado em Chinoike/outro cla pra Barreira de porte
+    // parecido.
+    effects: [{ effectId: "SHIELD", stacks: 9, hpPercentStacks: 0.13, duration: 3 }],
     trapField: { effectId: "ROOT", radius: 1, duration: 3 },
     requirements: { element: "GELO", manualOnly: true },
     tags: ["gelo", "hyoton", "defesa", "controle"],

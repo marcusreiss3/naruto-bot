@@ -37,9 +37,13 @@ describe("Vapor: integridade da arvore", () => {
     }
   });
 
-  it("Chute em Propulsão exige o nó de Punho em Propulsão (versão aprimorada)", () => {
+  // Chute virou o S-rank/apice (11/08/2026): exige a passiva de +50% em vez
+  // de vir logo depois do Punho — mesmo padrao do resto dos KKG (apice
+  // passivo antes do golpe final).
+  it("Chute em Propulsão é o S-rank/ápice, exigindo Ebulição Total", () => {
     const chute = allNodes().find((n) => n.id === "vapor_chute")!;
-    expect(chute.requires).toEqual(["vapor_punho"]);
+    expect(chute.requires).toEqual(["vapor_ebulicao_total"]);
+    expect(chute.rank).toBe("S");
   });
 
   it("VAPOR e' kekkei genkai", () => {

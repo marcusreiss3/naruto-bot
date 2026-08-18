@@ -80,10 +80,13 @@ describe("Esfera de Calor: evapora o Encharcado", () => {
   });
 });
 
-describe("Assassinato de Calor Extremo: reusa Queimadura, não é Desidratação", () => {
-  it("aplica BURN, não DEHYDRATION — 'queimaduras graves' é BURN mesmo", () => {
+// Virou o S-rank/apice (11/08/2026): passou a aplicar Desidratacao (a
+// identidade propria do Calor) em vez de Queimadura generica — o golpe mais
+// forte da arvore precisa mostrar a cara do proprio elemento.
+describe("Assassinato de Calor Extremo: S-rank/ápice, aplica Desidratação no teto", () => {
+  it("aplica DEHYDRATION no teto de 3 acúmulos, não BURN", () => {
     const ab = getAbility("calor_assassinato_extremo")!;
-    expect(ab.effects).toEqual([{ effectId: "BURN", stacks: 2, duration: 3 }]);
+    expect(ab.effects).toEqual([{ effectId: "DEHYDRATION", stacks: 3, duration: 4 }]);
   });
 });
 

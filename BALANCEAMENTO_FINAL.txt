@@ -1,6 +1,6 @@
 ================================================================================
 BALANCEAMENTO FINAL — ÁRVORES DE DANO
-Atualizado em 09/08/2026
+Atualizado em 11/08/2026
 ================================================================================
 
 1. OBJETIVO DE CADA CATEGORIA
@@ -275,6 +275,96 @@ Bukijutsu é melhor no começo e perde eficiência no final.
 Elementais comuns são a base de comparação.
 Clãs ofensivos ficam próximos ou acima dos elementais com afinidades.
 Estilos de luta ficam abaixo dos elementais sem modo e têm explosão temporária.
-Kekkei Genkai será revisada separadamente.
+Kekkei Genkai ficam acima de todo o resto — ver capítulo 12.
+
+
+12. KEKKEI GENKAI
+--------------------------------------------------------------------------------
+
+Cristal, Vapor, Calor, Lava, Explosão, Poeira e Gelo. Diferente das árvores
+dos capítulos anteriores, aqui o "custo de entrada" não é só o PN da própria
+árvore: seis das sete só abrem depois de completar uma combinação de árvores
+elementais básicas inteiras (ver `KEKKEI_GENKAI_RECIPES` em
+kekkei-genkai.ts) — o método de obtenção mais caro do jogo é o motivo pelo
+qual elas têm que bater mais forte que o elemental comum.
+
+COMPARATIVO NO NÍVEL 45, com as passivas próprias (script:
+`npx tsx scripts/kkg-balance-report.ts`)
+
+Linhagem    PN   nós  passivas  jutsus  Dano médio  Melhor golpe  Custo/dano  Pico/PN  nvS
+--------------------------------------------------------------------------------------------
+Explosão    32     9      5        4       72,90        76,95        0,80      2,40    38
+Poeira      31     8      4        4       70,53        99,82        0,82      3,22    38
+Lava        32     9      5        4       63,79        93,15        0,65      2,91    38
+Vapor       26     8      5        3       60,75        93,15        0,56      3,58    38
+Cristal     62    15      5       10       60,75        93,15        0,86      1,50    38
+Calor       26     8      5        3       59,40        93,15        0,61      3,58    38
+Gelo        53    14      5        9       55,69        93,15        0,58      1,76    38
+
+Pra comparar: Elemental (capítulo 6) fecha o nível 45 em dano médio 37,96,
+melhor golpe 63,07, custo/dano 0,82. Toda Kekkei Genkai bate mais forte que
+isso — a mais fraca da tabela (Gelo, 55,69 de dano médio) ainda está 47%
+acima do elemental comum, e o pior custo/dano do grupo (Cristal, 0,86) seria
+mediano numa árvore elemental normal.
+
+CUSTO TOTAL DE OBTENÇÃO — PN da(s) árvore(s) elemental(is) exigida(s) pela
+fusão (capítulo 6) + PN da própria árvore de KKG. Sem afinidade de clã.
+
+  Linhagem    Árvores exigidas         PN prévio  + PN próprio  = Total
+  Calor       Fogo + Vento                    100          26      126
+  Vapor       Fogo + Água                     105          26      131
+  Explosão    Terra + Raio                     98          32      130
+  Lava        Fogo + Terra                    104          32      136
+  Gelo        Água + Vento                      99          53      152
+  Poeira      Fogo + Terra + Vento             151          31      182
+  Cristal     (sem receita de fusão ainda)        —          62        —
+
+Explosão (Bakurei), Gelo (Yuki) e Poeira (Onoki) fundem com 25% de cada
+árvore em vez de 100% pra quem já é do clã dono do kekkei genkai — um
+desconto de clã, não um problema de balanceamento (mesma lógica das
+afinidades naturais do capítulo 4).
+
+O QUE MUDOU NESTA REVISÃO (11/08/2026)
+
+Antes desta revisão, o balanceamento de KKG nunca tinha sido conferido, e a
+comparação com o custo de obtenção real mostrava dois furos que o próprio
+código já sinalizava em comentário mas nunca tinha corrigido:
+
+  - Poeira (Jinton) tem no `enums.ts` o rótulo explícito de "kekkei genkai
+    mais forte do jogo" e a passiva certa pra isso (2,17x contra o 2,025x
+    padrão dos outros KKG, em `passives.ts`) — mas as 4 técnicas da árvore
+    nunca passavam de rank A. Era, na prática, a PENÚLTIMA linhagem em dano
+    (64,02 de médio) apesar de ser a MAIS CARA de obter (151 PN só nas
+    árvores elementais prévias — mais que qualquer outra).
+  - Vapor e Calor tinham o comentário "devem empatar no mesmo patamar do
+    Cristal" no cabeçalho da árvore de Lava, mas nunca ganharam a
+    equalização que Lava e Explosão já tinham recebido: paravam em rank A,
+    3 jutsus só, sem ápice.
+
+A correção NÃO criou golpe novo nenhum (as técnicas do jogo vêm da obra
+original) — promoveu a própria técnica de ponta de cada árvore pro posto de
+S-rank/ápice, igual Cristal/Lava/Explosão/Gelo já faziam:
+
+  - Vapor: Chute em Propulsão (era A, nível 16) virou S, nível 38. baseDamage
+    40→46, custo 48→58, Corrosão 2/3 rodadas → 3/4 rodadas.
+  - Calor: Assassinato de Calor Extremo (era A, nível 16) virou S, nível 38.
+    baseDamage 34→46, custo 48→62. Passou a aplicar Desidratação (a
+    identidade própria do Calor) em vez de Queimadura genérica — o golpe
+    mais forte da árvore agora mostra a cara do próprio elemento.
+  - Poeira: Projéteis (era A, nível 26) virou S, nível 38. baseDamage
+    34→46, custo 60→68, Desintegração 1→2 acúmulos (some com o acúmulo
+    extra do Estilhaço de Poeira pra colapsar a defesa do alvo num golpe
+    só — mesmo padrão que o Cristal já usa no S-rank dele).
+
+Cristal continua sem receita de fusão (`kekkei-genkai.ts`: "fica de fora por
+enquanto", pedido explícito de quem pediu a árvore) — os números dela estão
+balanceados pro dia em que um caminho de obtenção for definido, mas hoje
+ninguém chega nela em jogo. Não é um problema de número; é uma peça de
+conteúdo/design que falta, fora do escopo desta revisão.
+
+Domo de Iceberg (Gelo) foi corrigido separadamente: a Barreira usava só
+stacks fixo (16), o único efeito SHIELD do jogo inteiro sem o par
+flat + % do HP máximo que todo outro Barreira usa. Virou 9 + 13% do HP,
+mesmo par já usado em Barreiras de porte parecido.
 
 ================================================================================

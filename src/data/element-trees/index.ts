@@ -285,49 +285,64 @@ const CRISTAL: SkillNodeDef[] = [
 
 // ----------------------------------------------------------------- VAPOR (KG)
 // Kekkei genkai: nao e' sorteado, so entra via /admin, igual Cristal. Arvore
-// Arvore com os 3 jutsus oficiais de Vapor — raiz (1,35x) +
-// ápice (1,50x) = 2,025x, idêntico — custando um pouco menos (52 PN contra
-// 62 do Cristal). As passivas de dano vem so das duas (raiz+apice); as
-// outras tres sao utilidade pura, espalhadas pela arvore (nao mais tudo
-// numa raiz so). Identidade mantida: Corrosao derrete a Barreira do alvo.
+// com os 3 jutsus oficiais de Vapor — raiz (1,35x) + ápice (1,50x) = 2,025x,
+// idêntico ao resto dos KKG (26 PN). As passivas de dano vem so das duas
+// (raiz+apice); as outras tres sao utilidade pura, espalhadas pela arvore
+// (nao mais tudo numa raiz so). Identidade mantida: Corrosao derrete a
+// Barreira do alvo. Chute em Propulsao (11/08/2026) virou o S-rank/apice —
+// sem golpe canonico novo pra Vapor, promove a tecnica que ja existia em vez
+// de inventar uma (ver capitulo de KKG do BALANCEAMENTO_FINAL.txt).
 const VP = make("VAPOR");
 const VAPOR: SkillNodeDef[] = [
   VP.pass("vapor_raiz", "Ponto de Ebulição", "♨️", "Raiz", 0, 0, [], 1, 1, "Passiva sempre ativa: todos os seus jutsus de Vapor causam +35% de dano.", true),
   VP.jutsu("vapor_nevoa", "Névoa Qualificada", "☁️", "C", "Névoa", 0, 1, ["vapor_raiz"], 1, 4, "Cria uma nuvem de névoa extremamente corrosiva e a libera pela boca. Derrete o que atinge, cravando Corrosão em todos os alvos na área."),
   VP.jutsu("vapor_punho", "Punho em Propulsão", "👊", "B", "Propulsão", 0, 2, ["vapor_nevoa"], 9, 9, "Usa o estilo de Ebulição para se propulsionar num soco à queima-roupa, misturando ninjutsu com taijutsu. O vapor residual do impacto pode cravar Corrosão."),
   VP.pass("vapor_condensacao", "Condensação", "💧", "Névoa", 1, 3, ["vapor_nevoa"], 13, 11, "Passiva: a Corrosão que você aplica dura 1 rodada a mais."),
-  VP.jutsu("vapor_chute", "Chute em Propulsão", "🦵", "A", "Propulsão", 0, 4, ["vapor_punho"], 16, 15, "Versão aprimorada do Punho em Propulsão: mais velocidade e poder de impacto usando a força das pernas junto da propulsão do estilo Ebulição. Crava Corrosão com força total."),
   VP.pass("vapor_pressurizacao", "Pressurização", "🌡️", "Propulsão", -1, 4, ["vapor_punho"], 14, 12, "Passiva: seus golpes corpo a corpo de Vapor custam 15% menos chakra."),
   VP.pass("vapor_instinto_termal", "Instinto Térmico", "🔥", "Propulsão", -1, 5, ["vapor_pressurizacao"], 20, 16, "Passiva: seus golpes de Vapor perfuram 20% da redução de quem bloqueia ou apara."),
-  VP.pass("vapor_ebulicao_total", "Ebulição Total", "♨️", "Ápice", 0, 6, ["vapor_chute"], 30, 22, "Passiva: seus jutsus de Vapor causam +50% de dano."),
+  // Chute virou o apice (S) em vez de A: nao existe golpe canonico novo pra
+  // Vapor, entao a arvore promove a propria tecnica de ponta pra fechar no
+  // mesmo teto do resto dos KKG (pedido explicito: nao inventar golpe, so'
+  // pular rank). A passiva de +50% agora vem ANTES dela, nao depois.
+  VP.pass("vapor_ebulicao_total", "Ebulição Total", "♨️", "Ápice", 0, 6, ["vapor_punho"], 24, 19, "Passiva: seus jutsus de Vapor causam +50% de dano."),
+  VP.jutsu("vapor_chute", "Chute em Propulsão", "🦵", "S", "Ápice", 0, 7, ["vapor_ebulicao_total"], 38, 28, "Versão aprimorada do Punho em Propulsão: mais velocidade e poder de impacto usando a força das pernas junto da propulsão do estilo Ebulição. Crava Corrosão com força total."),
 ];
 
 // ----------------------------------------------------------------- CALOR (KG)
-// Kekkei genkai, mesmo nivel do Vapor/Cristal agora: arvore expandida (13 nos)
-// com raiz (1,35x) + ápice (1,50x) = 2,025x, idêntico ao Cristal, custando
-// um pouco menos (52 PN). Passivas de dano so nas duas pontas; as outras
-// tres sao utilidade, espalhadas pela arvore. Identidade mantida:
-// Desidratacao corta TODO o dano que o alvo causa (nao so TAI/BUKI).
+// Kekkei genkai, mesmo nivel do Vapor/Cristal: raiz (1,35x) + ápice (1,50x)
+// = 2,025x, idêntico ao resto dos KKG (26 PN). Passivas de dano so nas duas
+// pontas; as outras tres sao utilidade, espalhadas pela arvore. Identidade
+// mantida: Desidratacao corta TODO o dano que o alvo causa (nao so
+// TAI/BUKI). Assassinato de Calor Extremo (11/08/2026) virou o S-rank/apice
+// — sem golpe canonico novo pra Calor, promove a tecnica que ja existia em
+// vez de inventar uma, e volta a aplicar Desidratacao (a A-rank antiga usava
+// so' Queimadura generica, sem mostrar a identidade propria do Calor no seu
+// golpe mais forte).
 const CL = make("CALOR");
 const CALOR: SkillNodeDef[] = [
   CL.pass("calor_raiz", "Ebulição Corporal", "🔥", "Raiz", 0, 0, [], 1, 1, "Passiva sempre ativa: todos os seus jutsus de Calor causam +35% de dano.", true),
   CL.jutsu("calor_disparo", "Disparo das Bolas de Calor", "🔴", "C", "Calor", 0, 1, ["calor_raiz"], 1, 4, "Dispara quatro esferas de calor extremo contra a área do oponente. Quem é atingido desidrata e fica fraco."),
   CL.jutsu("calor_esfera", "Esfera de Calor", "🟠", "B", "Calor", 0, 2, ["calor_disparo"], 9, 9, "Uma única esfera de calor que suga a água do corpo do alvo ao acertar, evaporando qualquer Encharcado nele e deixando-o desidratado e fraco."),
   CL.pass("calor_ressecamento", "Ressecamento", "🏜️", "Calor", 1, 3, ["calor_disparo"], 13, 11, "Passiva: a Desidratação que você aplica dura 1 rodada a mais."),
-  CL.jutsu("calor_assassinato", "Assassinato de Calor Extremo", "☀️", "A", "Miragem", 0, 4, ["calor_esfera"], 16, 15, "Envolve a área ao redor do alvo num calor imenso, causando queimaduras graves em todos que estiverem perto."),
   CL.pass("calor_ondas_termicas", "Ondas Térmicas", "🌫️", "Calor", -1, 4, ["calor_esfera"], 14, 12, "Passiva: seus jutsus de Calor em área custam 15% menos chakra."),
   CL.pass("calor_pele_rachada", "Pele Rachada", "🏔️", "Calor", -1, 5, ["calor_ondas_termicas"], 20, 16, "Passiva: seus jutsus de Calor perfuram 20% da redução de quem bloqueia ou apara."),
-  CL.pass("calor_combustao_interna", "Combustão Interna", "🔥", "Ápice", 0, 6, ["calor_assassinato"], 30, 22, "Passiva: seus jutsus de Calor causam +50% de dano."),
+  // Assassinato de Calor Extremo virou o apice (S) em vez de A, mesmo motivo
+  // do Chute em Vapor: sem golpe canonico novo, promove a tecnica de ponta
+  // que ja existe. A passiva de +50% agora vem ANTES dela, nao depois.
+  CL.pass("calor_combustao_interna", "Combustão Interna", "🔥", "Ápice", 0, 6, ["calor_esfera"], 24, 19, "Passiva: seus jutsus de Calor causam +50% de dano."),
+  CL.jutsu("calor_assassinato", "Assassinato de Calor Extremo", "☀️", "S", "Ápice", 0, 7, ["calor_combustao_interna"], 38, 28, "Envolve a área ao redor do alvo num calor imenso, causando queimaduras graves em todos que estiverem perto."),
 ];
 
 // ----------------------------------------------------------------- LAVA (KG)
-// Kekkei genkai no MESMO nivel do Cristal agora (pedido explicito do
-// usuario: as arvores de Lava/Explosao/Vapor/Calor devem empatar ou ficar
-// so um pouco abaixo do custo do Cristal, no mesmo patamar de dano). Arvore
-// expandida (13 nós): raiz (1,35x) + Coração do Vulcão (1,50x) = 2,025x,
-// identico ao Cristal, custando um pouco menos (52 PN contra 62). Passivas
-// de dano so nas duas pontas; as outras tres sao utilidade, espalhadas pela
-// arvore em vez de concentradas. Identidade mantida: Magma acumula e
+// Kekkei genkai no MESMO nivel do Cristal (pedido explicito do usuario: as
+// arvores de Lava/Explosao/Vapor/Calor devem empatar ou ficar so um pouco
+// abaixo do custo do Cristal, no mesmo patamar de dano — Vapor e Calor
+// alcancaram em 11/08/2026, promovendo a tecnica de ponta que ja existia em
+// cada uma pro posto de S-rank/apice em vez de golpe novo). Arvore com 9
+// nós: raiz (1,35x) + Coração do Vulcão (1,50x) = 2,025x, identico ao
+// Cristal, custando bem menos (32 PN contra 62). Passivas de dano so nas
+// duas pontas; as outras tres sao utilidade, espalhadas pela arvore em vez
+// de concentradas. Identidade mantida: Magma acumula e
 // endurece (ROOT), sem Atordoar como o Cristal.
 const LV = make("LAVA");
 const LAVA: SkillNodeDef[] = [
@@ -378,15 +393,20 @@ const EXPLOSAO: SkillNodeDef[] = [
 // primeiro no' e' o proprio jutsu rank C (Desprendimento base), e a passiva
 // generica de dano ("Nucleo do Mundo Primitivo") fica logo depois dele, no
 // meio do tronco. Dali em diante e' o mesmo padrao Aburame/Hyuuga de
-// ramo-e-convergencia ate o apice:
+// ramo-e-convergencia ate o apice — so' que Projeteis (11/08/2026) deixou de
+// ser uma ponta lateral e virou o S-rank de verdade, unico jutsu depois de
+// Vazio Absoluto (que agora exige so' a Conica, nao mais as duas pontas):
+// nenhum KKG tinha golpe canonico novo pra virar apice, entao a arvore
+// promove a tecnica de ponta que ja existia em vez de inventar uma.
 //   Desprendimento do Mundo Primitivo (base, RADIUS): a esfera se expande,
 //     prende (ROOT) e explode — dano em area.
 //   Pilar (LINE, undodgeable): a mesma tecnica esticada da mao ate o alvo —
 //     feixe direto, dificil de esquivar por ser instantaneo.
 //   Cônica (CONE, alcance maior): a mesma tecnica em area bem mais ampla.
-//   Projéteis (SINGLE_TARGET, unguardable): barragem de projeteis pequenos —
-//     Bloqueio/Aparo nao adianta (a propria desintegracao "passa por cima"),
-//     so' Esquiva continua valendo (dificil por causa da velocidade).
+//   Projéteis (SINGLE_TARGET, unguardable, S-rank/apice): barragem de
+//     projeteis pequenos — Bloqueio/Aparo nao adianta (a propria
+//     desintegracao "passa por cima"), so' Esquiva continua valendo (dificil
+//     por causa da velocidade).
 // Ver as Abilities reais em data/jutsus/elemental.ts (familia "jinton_*") e
 // a ponte de id em NODE_ABILITY, mais abaixo.
 const PO = make("POEIRA");
@@ -397,8 +417,16 @@ const POEIRA: SkillNodeDef[] = [
   PO.pass("poeira_estilhaco", "Fragmentação Progressiva", "💠", "Colapso", -1, 3, ["poeira_pilar"], 16, 14, "Passiva: cada acerto seu de Poeira crava 1 acúmulo de Desintegração a mais, acelerando o colapso da defesa do alvo."),
   PO.pass("poeira_erosao", "Erosão Absoluta", "🧪", "Colapso", 1, 3, ["poeira_pilar"], 16, 14, "Passiva: seus jutsus de Poeira perfuram 25% da redução de quem bloqueia ou apara."),
   PO.jutsu("poeira_conica", "Desprendimento do Mundo Primitivo: Cônica", "📐", "A", "Colapso", -1, 4, ["poeira_estilhaco"], 24, 20, "Variação em formato de cone da técnica padrão, cobrindo uma área muito mais ampla."),
-  PO.jutsu("poeira_projeteis", "Desprendimento do Mundo Primitivo: Projéteis", "✴️", "A", "Colapso", 1, 4, ["poeira_erosao"], 26, 21, "Lança pequenos projéteis da técnica consecutivamente contra o alvo, desintegrando proporcionalmente o que tocam. Defender é impossível, e a velocidade extrema torna a esquiva muito difícil."),
-  PO.pass("poeira_apice", "Vazio Absoluto", "🕳️", "Ápice", 0, 5, ["poeira_conica", "poeira_projeteis"], 34, 28, "Passiva: seus jutsus de Poeira causam +55% de dano — nada resiste ao Poeira."),
+  // Vazio Absoluto agora exige so' a Conica (nao mais as duas pontas): Projeteis
+  // virou o apice de verdade (S), entao nao pode mais ser pre-requisito da
+  // propria passiva que o precede. Erosao Absoluta (perfura 25%) continua de
+  // pe' como bonus terminal do ramo, sem gatilhar nada depois dela.
+  PO.pass("poeira_apice", "Vazio Absoluto", "🕳️", "Ápice", 0, 5, ["poeira_conica"], 34, 28, "Passiva: seus jutsus de Poeira causam +55% de dano — nada resiste ao Poeira."),
+  // Projeteis virou o apice (S) em vez de A, mesmo motivo do Chute/Assassinato:
+  // sem golpe canonico novo, promove a tecnica de ponta que ja existe — e Poeira
+  // e' o KKG mais forte do jogo (ver enums.ts), entao o teto dela fica ACIMA do
+  // resto (2.17x em vez de 2.025x).
+  PO.jutsu("poeira_projeteis", "Desprendimento do Mundo Primitivo: Projéteis", "✴️", "S", "Ápice", 0, 6, ["poeira_apice"], 38, 28, "Lança pequenos projéteis da técnica consecutivamente contra o alvo, desintegrando proporcionalmente o que tocam. Defender é impossível, e a velocidade extrema torna a esquiva muito difícil."),
 ];
 
 // ---------------------------------------------------------------- GELO (KG)
