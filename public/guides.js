@@ -380,6 +380,82 @@
       related: ["personagem-e-atributos", "clas-e-spins", "combate-tatico"],
     },
     {
+      slug: "marionetes-e-kugutsu",
+      title: "Marionetes e Kugutsu",
+      description: "Desbloqueie a oficina, construa marionetes, instale mecanismos e use seu arsenal em combate.",
+      category: "progressao",
+      icon: "guide-puppets",
+      order: 7,
+      type: "guide",
+      readingTime: 7,
+      keywords: ["marionete", "Kugutsu", "oficina", "carapaça", "mecanismo", "craft", "fios de chakra", "reconstrução"],
+      sections: [
+        {
+          id: "desbloquear-oficina",
+          title: "Desbloqueie a Oficina de Marionetes",
+          blocks: [
+            { type: "paragraph", text: "Kugutsu é o atributo que financia a árvore de Marionetes. O primeiro passo é comprar **Oficina de Marionetes**: ela libera a construção de carapaças de Grau I e o painel `/marionetes`." },
+            { type: "steps", items: [
+              { title: "Invista em Kugutsu", text: "Distribua pontos no atributo para cumprir os requisitos da árvore." },
+              { title: "Compre a Oficina", text: "Aprenda Oficina de Marionetes na árvore de Kugutsu." },
+              { title: "Abra a construção", text: "Use `/craft marionete` para escolher uma carapaça, informar o nome e iniciar a obra." },
+              { title: "Acompanhe na oficina", text: "Use `/marionetes` para ver a construção e recolhê-la quando estiver pronta." },
+            ] },
+            { type: "commands", groupIds: ["equipment"] },
+          ],
+        },
+        {
+          id: "carapacas-e-construcao",
+          title: "Carapaças e construção",
+          blocks: [
+            { type: "paragraph", text: "A carapaça define a especialidade inicial da marionete. A construção consome Ryō e os materiais mostrados no painel; você também pode registrar uma aparência por anexo ou link." },
+            { type: "cards", items: [
+              { title: "Carapaça ofensiva", text: "Prioriza mecanismos de dano." },
+              { title: "Carapaça defensiva", text: "Prioriza vida própria e escudos." },
+              { title: "Carapaça de efeito", text: "Prioriza toxinas, duração e drenagem de chakra." },
+            ] },
+            { type: "callout", tone: "info", title: "Limite de oficina", text: "Você pode possuir até 5 marionetes, contando construções em andamento ou prontas para recolher. Cada marionete aceita até 2 mecanismos instalados." },
+          ],
+        },
+        {
+          id: "mecanismos-e-evolucao",
+          title: "Mecanismos e evolução",
+          blocks: [
+            { type: "paragraph", text: "No painel `/marionetes`, selecione uma marionete operacional para escolher, construir, recolher ou remover mecanismos. Cada mecanismo informa Grau, nível exigido, Ryō, materiais e tempo de construção." },
+            { type: "flow", label: "Evolução da oficina", items: [
+              { title: "Grau I", text: "Oficina de Marionetes" },
+              { title: "Grau II", text: "Oficina de Precisão" },
+              { title: "Grau III", text: "Arquiteto de Marionetes" },
+            ] },
+            { type: "callout", tone: "info", title: "Requisitos do mecanismo", text: "Além dos recursos, o Grau da oficina e o nível exigido precisam estar liberados. Não é possível instalar o mesmo mecanismo duas vezes na mesma marionete." },
+          ],
+        },
+        {
+          id: "marionetes-no-combate",
+          title: "Marionetes no combate",
+          blocks: [
+            { type: "paragraph", text: "No seu próprio turno, abra `/marionetes` e use o botão de invocação. Invocar consome sua ação bônus. As técnicas da marionete usam o Chakra e as ações do condutor; escolha-as com `/jutsu kugutsu`." },
+            { type: "list", items: [
+              "Sem Fios de Chakra Estendidos, a marionete pode ficar até 2 metros de você. As três passivas de fios ampliam esse limite para 3, 4 e 5 metros.",
+              "Dupla Manipulação e Tríade de Fios ampliam o número de marionetes que podem ficar em campo ao mesmo tempo.",
+              "Ataque Descuidado permite um ataque adicional de mecanismo com ação bônus, mas deixa o condutor sem reação contra o próximo golpe recebido.",
+              "Alguns mecanismos exigem duas marionetes com as peças adequadas em campo para realizar seu combo.",
+            ] },
+            { type: "links", items: [{ slug: "combate-tatico", section: "marionetes-no-campo", title: "Ler combate tático com marionetes", text: "Veja como posicionamento, ações e reações afetam sua marionete." }] },
+          ],
+        },
+        {
+          id: "destruicao-e-reconstrucao",
+          title: "Destruição e reconstrução",
+          blocks: [
+            { type: "paragraph", text: "Se uma marionete for destruída em combate, ela deixa de poder ser invocada até ser reconstruída. O painel `/marionetes` mostra os materiais necessários e inicia a reconstrução." },
+            { type: "callout", tone: "warning", title: "Reconstrução", text: "A reconstrução leva 2 horas, não custa Ryō e usa metade dos materiais da carapaça. Descartar uma marionete remove seus mecanismos e obras pendentes sem reembolso." },
+          ],
+        },
+      ],
+      related: ["arvores-e-jutsus", "combate-tatico", "itens-e-equipamentos"],
+    },
+    {
       slug: "combate-tatico",
       title: "Combate tático",
       description: "Domine turnos, movimento pela interface, ações, terreno, alcance e reações.",
@@ -420,6 +496,15 @@
           ],
         },
         {
+          id: "marionetes-no-campo",
+          title: "Marionetes no campo",
+          blocks: [
+            { type: "paragraph", text: "Marionetes são invocadas pelo painel `/marionetes` no turno do condutor e consomem sua ação bônus. Seus mecanismos usam as ações e o Chakra do condutor; por isso, posicione-as dentro do alcance dos fios antes de usar `/jutsu kugutsu`." },
+            { type: "callout", tone: "info", title: "Posicionamento e alcance", text: "A distância permitida entre condutor e marionete começa em 2 metros. As passivas Fios de Chakra Estendidos ampliam esse limite até 5 metros." },
+            { type: "links", items: [{ slug: "marionetes-e-kugutsu", section: "marionetes-no-combate", title: "Abrir o guia de Marionetes e Kugutsu", text: "Entenda oficina, carapaças, mecanismos, alcance e reconstrução." }] },
+          ],
+        },
+        {
           id: "reacoes",
           title: "Reações defensivas",
           blocks: [
@@ -441,7 +526,7 @@
           ],
         },
       ],
-      related: ["arvores-e-jutsus", "efeitos-de-combate", "itens-e-equipamentos"],
+      related: ["marionetes-e-kugutsu", "arvores-e-jutsus", "efeitos-de-combate", "itens-e-equipamentos"],
     },
     {
       slug: "morte-permanente",
@@ -745,6 +830,7 @@
             { question: "Comprar uma habilidade reduz meu atributo?", answer: "Não. A compra consome o saldo de progressão ligado ao atributo, mas o valor do atributo na ficha permanece igual." },
             { question: "Por que uma habilidade está bloqueada?", answer: "Abra seus detalhes e confira nível, saldo do atributo, habilidades anteriores, elemento, clã, estilo ou outro requisito indicado." },
             { question: "Quanto custa uma afinidade elemental?", answer: "Depois de aprender Técnica de Clonagem e Técnica de Substituição, a primeira afinidade custa 2 pontos de Ninjutsu. A segunda até a quinta custam 10 pontos cada." },
+            { question: "Aonde aumento meu Chakra e Energia máximos?", answer: "As árvores de Ninjutsu e Taijutsu possuem passivas voltadas a recursos. Reserva de Chakra e Reserva de Chakra Profunda aumentam seu Chakra máximo; Reserva Física e Reserva Física Profunda aumentam sua Energia máxima." },
           ] },
         ] },
         { id: "combate-e-itens", title: "Combate e itens", blocks: [

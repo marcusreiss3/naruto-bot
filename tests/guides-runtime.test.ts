@@ -135,7 +135,7 @@ describe("catálogo vivo da Central de Guias", () => {
     const styles = readFileSync(new URL("../public/style.css", import.meta.url), "utf8");
 
     expect(source).toContain("Naruto <span>RP</span>");
-    expect(source).toContain("/assets/guides/guide-icons.svg?v=1");
+    expect(source).toContain("/assets/guides/guide-icons.svg?v=2");
     expect(source).toContain('class="guide-card-icon">${guideIcon(guide.icon)}');
     expect(source).toContain("category-tab-icon");
     expect(source).toContain("sidebar-category-icon");

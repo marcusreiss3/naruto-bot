@@ -45,7 +45,7 @@ describe("catálogo da Central de Guias", () => {
     const guidesBySlug = new Map(catalog.guides.map((guide) => [guide.slug, guide]));
     expect(new Set(slugs).size).toBe(slugs.length);
     expect(new Set(categoryIds).size).toBe(categoryIds.length);
-    expect(catalog.guides).toHaveLength(15);
+    expect(catalog.guides).toHaveLength(16);
     expect(new Set(catalog.guides.map((guide) => guide.order)).size).toBe(catalog.guides.length);
 
     for (const guide of catalog.guides) {
@@ -180,7 +180,7 @@ describe("catálogo da Central de Guias", () => {
     const sprite = readFileSync(new URL("../public/assets/guides/guide-icons.svg", import.meta.url), "utf8");
     const spriteIds = new Set([...sprite.matchAll(/<symbol id="([^"]+)"/g)].map((match) => match[1]));
 
-    expect(iconIds).toHaveLength(21);
+    expect(iconIds).toHaveLength(22);
     expect(new Set(iconIds).size).toBe(iconIds.length);
     expect(iconIds.every((icon) => typeof icon === "string" && spriteIds.has(icon))).toBe(true);
     expect(iconIds.every((icon) => /^[a-z0-9-]+$/.test(icon!))).toBe(true);

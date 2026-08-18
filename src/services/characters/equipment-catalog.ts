@@ -41,7 +41,7 @@ import { buildEffectCatalog } from "./effect-catalog.js";
 // tests/guides-runtime.test.ts trava os tres. O 6 foi pulado: o index.html ja
 // estava em "guide-catalog-6" com esta constante em 5, e responder 6 quebraria
 // justamente o app.js cacheado sob essa URL, que compara contra 5.
-export const GUIDE_CATALOG_SCHEMA_VERSION = 15;
+export const GUIDE_CATALOG_SCHEMA_VERSION = 16;
 
 function abilityView(abilityId: string | undefined) {
   if (!abilityId) return null;
@@ -198,6 +198,8 @@ export function buildGuideCatalog() {
         { command: "/restaurar-pergaminho pergaminho", description: "Restaura um pergaminho de Bukijutsu gasto por metade do valor em Ryō." },
         { command: "/arremessar item alvo", description: "Lança uma arma à distância e consome uma unidade após a ação ser validada." },
         { command: "/usar item", description: "Ativa ou prepara ferramentas ninja e consome os materiais necessários." },
+        { command: "/craft marionete", description: "Abre a oficina para construir uma marionete quando Oficina de Marionetes estiver aprendida." },
+        { command: "/marionetes", description: "Gerencia marionetes, mecanismos, construções, reconstruções e invocações em combate." },
         { command: "/dar item jogador", description: "Entrega uma quantidade do item diretamente a outro jogador." },
         { command: "/largar item", description: "Deixa uma quantidade do item na sua célula durante o combate." },
       ],
