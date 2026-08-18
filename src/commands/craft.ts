@@ -1,10 +1,8 @@
 import {
-  ActionRowBuilder,
   ButtonStyle,
   ModalBuilder,
   SlashCommandBuilder,
   StringSelectMenuBuilder,
-  TextInputBuilder,
   TextInputStyle,
   type AnySelectMenuInteraction,
   type AutocompleteInteraction,
@@ -154,13 +152,18 @@ export const craft: Command = {
     const [prefix, group, version, action, shell] = interaction.customId.split(":");
     if (`${prefix}:${group}:${version}` !== PUPPET_PREFIX || action !== "nome" || !shell || !PUPPET_SHELLS[shell as PuppetShell]) return;
     const recipe = PUPPET_SHELLS[shell as PuppetShell];
+    // Nenhum dos dois campos de aparencia e' obrigatorio AQUI — o modal nao
+    // sabe expressar "um dos dois". A exigencia de pelo menos um vira
+    // validacao pos-envio em handleModal, com erro explicado no container.
     await interaction.showModal(new ModalBuilder().setCustomId(`${PUPPET_PREFIX}:confirmar:${shell}`).setTitle(`Nomear ${recipe.name}`.slice(0, 45))
-      .addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(
-        new TextInputBuilder().setCustomId("nome").setLabel("Nome da marionete").setStyle(TextInputStyle.Short).setMinLength(2).setMaxLength(32).setRequired(true),
-      ))
-      .addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(
-        new TextInputBuilder().setCustomId("aparencia").setLabel("Aparência (link direto da imagem)").setStyle(TextInputStyle.Short).setPlaceholder("https://.../marionete.png").setMaxLength(2000).setRequired(false),
-      )));
+      .addLabelComponents(
+        (label) => label.setLabel("Nome da marionete").setTextInputComponent((input) =>
+          input.setCustomId("nome").setStyle(TextInputStyle.Short).setMinLength(2).setMaxLength(32).setRequired(true)),
+        (label) => label.setLabel("Aparência por link").setDescription("Opcional — cole um link direto de imagem. Pode usar o anexo abaixo em vez disso.").setTextInputComponent((input) =>
+          input.setCustomId("aparencia").setStyle(TextInputStyle.Short).setPlaceholder("https://.../marionete.png").setMaxLength(2000).setRequired(false)),
+        (label) => label.setLabel("Aparência por anexo").setDescription("Opcional — envie uma imagem em vez de um link.").setFileUploadComponent((upload) =>
+          upload.setCustomId("aparencia_anexo").setMaxValues(1).setRequired(false)),
+      ));
   },
 
   async handleModal(interaction: ModalSubmitInteraction) {
@@ -169,13 +172,23 @@ export const craft: Command = {
     const char = await getOrCreateCharacter(interaction.user.id, interaction.guildId ?? "global", interaction.user.username);
     const puppetShell = shell as PuppetShell;
     await interaction.deferReply({ ephemeral: true });
-    const appearanceUrl = interaction.fields.getTextInputValue("aparencia");
-    const outcome = await startPuppetConstruction(char.id, interaction.fields.getTextInputValue("nome"), puppetShell, appearanceUrl);
+    const appearanceUrl = interaction.fields.getTextInputValue("aparencia").trim();
+    const appearanceFile = interaction.fields.getUploadedFiles("aparencia_anexo", false)?.first();
+    if (!appearanceUrl && !appearanceFile) {
+      const workshop = await listPuppetWorkshop(char.id);
+      await interaction.editReply(v2Edit(puppetCraftPanel(
+        workshop!,
+        puppetShell,
+        "Defina a aparência da marionete antes de construir: cole um link de imagem OU envie um anexo — pelo menos um dos dois.",
+      )));
+      return;
+    }
+    const outcome = await startPuppetConstruction(char.id, interaction.fields.getTextInputValue("nome"), puppetShell, appearanceFile?.url ?? appearanceUrl);
     if (!outcome.ok) {
       const workshop = await listPuppetWorkshop(char.id);
       await interaction.editReply(v2Edit(puppetCraftPanel(workshop!, puppetShell, outcome.error)));
       return;
     }
-    await interaction.editReply(v2Edit(constructionPanel(outcome.name, puppetShell, Boolean(appearanceUrl.trim()))));
+    await interaction.editReply(v2Edit(constructionPanel(outcome.name, puppetShell, Boolean(appearanceFile || appearanceUrl))));
   },
 };
