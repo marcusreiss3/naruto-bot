@@ -6,6 +6,10 @@ import type { TraitRarity } from "../config/enums.js";
 import type { VillageId } from "./villages.js";
 
 export const SHEET_LAUNCH_CHANNEL_ID = "1537492104819900427";
+// Canal restrito a staff: recebe o molde da ficha com os botões Aprovar/Recusar.
+export const SHEET_REVIEW_CHANNEL_ID = "1539280111092891749";
+// Canal público: recebe o aviso simples de ficha aprovada ou recusada.
+export const SHEET_LOG_CHANNEL_ID = "1539279190715662447";
 export const UNREGISTERED_ROLE_ID = "1527501428401373305";
 export const REGISTERED_ROLE_ID = "1527501571943039006";
 export const SHEET_CHANNEL_TTL_MS = 60 * 60_000;

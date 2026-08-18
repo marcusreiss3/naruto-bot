@@ -31,6 +31,8 @@ import {
   SHEET_CHANNEL_TTL_MS,
   SHEET_LAUNCH_CHANNEL_ID,
   SHEET_LOCATION_ROLES,
+  SHEET_LOG_CHANNEL_ID,
+  SHEET_REVIEW_CHANNEL_ID,
   SHEET_VILLAGE_ROLES,
   UNREGISTERED_ROLE_ID,
   clanIconPath,
@@ -84,6 +86,7 @@ type Stage =
   | "APPEARANCE"
   | "APPEARANCE_CONFIRM"
   | "CONFIRM"
+  | "PENDING_REVIEW"
   | "FINALIZING"
   | "COMPLETED";
 
@@ -101,6 +104,10 @@ interface SheetData {
   appearanceUrl?: string;
   appearanceSourceUrl?: string;
   appearanceCandidate?: IdentifiedCharacter;
+  // Id da mensagem do molde no canal de revisão da staff — permite fechar o
+  // card (remover botões) quando a ficha for recusada por um modal, que chega
+  // numa interação separada da do botão que abriu o molde.
+  reviewMessageId?: string;
 }
 
 type Session = Awaited<ReturnType<typeof getSessionByChannel>>;
@@ -223,7 +230,7 @@ async function resolveTextChannel(client: Client, channelId: string | null | und
 }
 
 export interface OpenSheetResult {
-  status: "CREATED" | "RESUMED" | "EXISTING" | "COMPLETED";
+  status: "CREATED" | "RESUMED" | "EXISTING" | "COMPLETED" | "PENDING_REVIEW";
   channelId?: string;
 }
 
@@ -299,6 +306,10 @@ export async function openSheetChannel(guild: Guild, member: GuildMember): Promi
   });
   if (existing) {
     if (existing.stage === "COMPLETED") return { status: "COMPLETED" };
+    // Ficha em análise pela staff: nenhum canal privado novo, o jogador so'
+    // pode continuar depois de uma decisao (aprovada -> COMPLETED; recusada ->
+    // volta pro stage anterior e libera um novo canal normalmente).
+    if (existing.stage === "PENDING_REVIEW") return { status: "PENDING_REVIEW" };
     const channel = await resolveTextChannel(guild.client, existing.channelId);
     if (channel) return { status: "EXISTING", channelId: channel.id };
     await prisma.sheetCreationSession.update({
@@ -638,6 +649,9 @@ async function resumeSheet(channel: TextChannel, session: PersistedSession): Pro
     case "CONFIRM":
       await sendAppearancePreview(channel, session.id, data);
       return;
+    case "PENDING_REVIEW":
+      // Sem canal nesse estado (ver openSheetChannel); nada a redesenhar.
+      return;
     case "FINALIZING": {
       const restored = await transitionSession(session.id, "FINALIZING", "CONFIRM", data);
       if (restored) await sendAppearancePreview(channel, session.id, data);
@@ -847,14 +861,17 @@ async function removeRole(member: GuildMember, roleId: string, reason: string) {
   if (member.roles.cache.has(roleId)) await member.roles.remove(roleId, reason);
 }
 
-async function finalizeSheet(interaction: ButtonInteraction, session: NonNullable<Session>, data: SheetData) {
-  if (!interaction.guild || !completeData(data)) throw new Error("A ficha ainda possui campos incompletos.");
+// Grava o personagem no banco e aplica os cargos. Chamado só depois da staff
+// aprovar a ficha no canal de revisão — por isso recebe guild/member
+// explícitos em vez de derivar do autor da interação (quem aprova não é quem
+// preenche a ficha).
+async function finalizeSheet(guild: Guild, member: GuildMember, session: NonNullable<Session>, data: SheetData) {
+  if (!completeData(data)) throw new Error("A ficha ainda possui campos incompletos.");
   const clan = CLAN_INDEX.get(data.clanId);
   const trait = getTrait(data.traitId);
   if (!clan || !trait) throw new Error("Clã ou traço inválido na ficha.");
 
-  const member = await interaction.guild.members.fetch(interaction.user.id);
-  const char = await getOrCreateCharacter(member.id, interaction.guild.id, member.user.username);
+  const char = await getOrCreateCharacter(member.id, guild.id, member.user.username);
   await prisma.characterProfile.upsert({
     where: { charId: char.id },
     create: {
@@ -872,7 +889,7 @@ async function finalizeSheet(interaction: ButtonInteraction, session: NonNullabl
       completedAt: null,
     },
   });
-  await setCharacterName(member.id, interaction.guild.id, `${data.givenName} ${clan.name}`);
+  await setCharacterName(member.id, guild.id, `${data.givenName} ${clan.name}`);
   await prisma.userCharacter.update({ where: { id: char.id }, data: { villageId: data.villageId } });
   await setClan(char.id, clan.id);
   await setCharacterTrait(char.id, trait.id);
@@ -903,21 +920,197 @@ async function finalizeSheet(interaction: ButtonInteraction, session: NonNullabl
       clanChoiceExpiresAt: null,
     },
   });
-  await armSheetScheduler(interaction.client);
+  await armSheetScheduler(guild.client);
+}
 
-  await interaction.editReply(v2Edit(card([
-    heading("Ficha concluída", `${data.givenName} ${clan.name}`),
-    text("Seu personagem foi registrado com sucesso."),
+// ---------------- Revisão da staff ----------------
+
+const REJECTED_PART_LABEL: Record<"APPEARANCE" | "STORY", string> = {
+  APPEARANCE: "Aparência",
+  STORY: "História",
+};
+
+// Interpreta o texto livre do modal de recusa ("aparencia"/"aparência"/
+// "historia"/"história", com ou sem acento) na etapa correspondente do
+// fluxo. `startsWith` cobre digitação parcial ("apar", "hist") sem exigir
+// bater a palavra inteira.
+function normalizeRejectedPart(raw: string): "APPEARANCE" | "STORY" | null {
+  const clean = raw
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLocaleLowerCase("pt-BR")
+    .trim();
+  if (clean.startsWith("apar")) return "APPEARANCE";
+  if (clean.startsWith("hist")) return "STORY";
+  return null;
+}
+
+async function buildReviewChildren(
+  session: NonNullable<Session>,
+  data: SheetData,
+  guild: Guild,
+): Promise<ContainerChild[]> {
+  const clan = CLAN_INDEX.get(data.clanId!)!;
+  const trait = getTrait(data.traitId!)!;
+  const appearance = await getAppearance(session.discordId, guild.id);
+  const identLine = appearance
+    ? `**Personagem identificado:** ${appearance.characterName} (${Math.round(appearance.confidence * 100)}% de certeza)`
+    : "**Personagem identificado:** não disponível";
+  return [
+    heading("Ficha para revisão", `${data.givenName} ${clan.name} — <@${session.discordId}>`),
+    media(data.appearanceUrl!, `Aparência de ${data.givenName} ${clan.name}`),
     divider(),
     text(
-      `**Vila:** ${VILLAGE_NAMES[data.villageId]}\n` +
+      `**Nome:** ${data.givenName} ${clan.name}\n` +
+      `**Vila:** ${VILLAGE_NAMES[data.villageId!]}\n` +
       `**Clã:** ${clan.name}\n` +
       `**Traço:** ${trait.name}\n` +
-      `**Idade:** ${data.age} anos`,
+      `**Idade:** ${data.age} anos\n` +
+      identLine,
     ),
     divider(),
-    text("Os cargos de registro, vila e localização já foram aplicados. Este canal será excluído em 30 segundos."),
-  ], "cofre")));
+    text(`**História:**\n${data.story}`),
+  ];
+}
+
+// Publica o molde no canal de revisão e guarda o id da mensagem em dataJson —
+// é por esse id que a recusa (que chega numa interação de modal separada do
+// botão) consegue fechar o card depois.
+async function sendReviewCard(guild: Guild, session: NonNullable<Session>, data: SheetData): Promise<void> {
+  const channel = await resolveTextChannel(guild.client, SHEET_REVIEW_CHANNEL_ID);
+  if (!channel) {
+    log.error(`Canal de revisão de ficha não encontrado: ${SHEET_REVIEW_CHANNEL_ID}`);
+    return;
+  }
+  const children = await buildReviewChildren(session, data, guild);
+  const message = await channel.send(v2Public(card([
+    ...children,
+    divider(),
+    buttons(
+      button(`ficha:v1:review:${session.id}:approve`, "Aprovar", ButtonStyle.Success),
+      button(`ficha:v1:review:${session.id}:reject`, "Recusar", ButtonStyle.Danger),
+    ),
+  ], "vila")));
+  data.reviewMessageId = message.id;
+  await updateSession(session.id, "PENDING_REVIEW", data);
+}
+
+// Reedita o molde já publicado removendo os botões e anexando o veredito.
+async function closeReviewCard(
+  guild: Guild,
+  session: NonNullable<Session>,
+  data: SheetData,
+  statusLine: string,
+  accent: "cofre" | "erro",
+): Promise<void> {
+  if (!data.reviewMessageId) return;
+  const channel = await resolveTextChannel(guild.client, SHEET_REVIEW_CHANNEL_ID);
+  if (!channel) return;
+  const message = await channel.messages.fetch(data.reviewMessageId).catch(() => null);
+  if (!message) return;
+  const children = await buildReviewChildren(session, data, guild);
+  await message.edit(v2Edit(card([...children, divider(), text(statusLine)], accent))).catch(() => undefined);
+}
+
+async function postApprovalLog(guild: Guild, discordId: string): Promise<void> {
+  const channel = await resolveTextChannel(guild.client, SHEET_LOG_CHANNEL_ID);
+  if (!channel) return;
+  await channel.send(v2Public(card([
+    text(`${emoji("sucesso")} <@${discordId}>, sua ficha foi **aprovada**!`),
+  ], "cofre"))).catch((error) => log.error("Falha ao publicar aprovação de ficha:", error));
+}
+
+async function postRejectionLog(
+  guild: Guild,
+  discordId: string,
+  part: "APPEARANCE" | "STORY",
+  motivo: string,
+): Promise<void> {
+  const channel = await resolveTextChannel(guild.client, SHEET_LOG_CHANNEL_ID);
+  if (!channel) return;
+  await channel.send(v2Public(card([
+    text(
+      `${emoji("erro")} <@${discordId}>, sua ficha foi **recusada**.\n` +
+      `**Parte recusada:** ${REJECTED_PART_LABEL[part]}\n` +
+      `**Motivo:** ${motivo}`,
+    ),
+    text("-# Use `/ficha` novamente para continuar de onde parou."),
+  ], "erro"))).catch((error) => log.error("Falha ao publicar recusa de ficha:", error));
+}
+
+// Aprovação: fecha a etapa PENDING_REVIEW com um CAS (evita dois staffs
+// decidindo a mesma ficha em paralelo), finaliza e edita o próprio molde.
+async function approveSheet(interaction: ButtonInteraction, session: NonNullable<Session>, data: SheetData): Promise<void> {
+  const guild = interaction.guild!;
+  const changed = await prisma.sheetCreationSession.updateMany({
+    where: { id: session.id, stage: "PENDING_REVIEW" },
+    data: { stage: "FINALIZING", dataJson: JSON.stringify(data) },
+  });
+  if (changed.count !== 1) {
+    await interaction.editReply(v2Edit(card([heading("Ficha já analisada"), text("Outro membro da staff já decidiu esta ficha.")], "aviso")));
+    return;
+  }
+  let member: GuildMember;
+  try {
+    member = await guild.members.fetch(session.discordId);
+  } catch {
+    await updateSession(session.id, "PENDING_REVIEW", data);
+    await interaction.editReply(v2Edit(card([heading("Não foi possível aprovar"), text("O jogador não está mais no servidor.")], "erro")));
+    return;
+  }
+  try {
+    await finalizeSheet(guild, member, session, data);
+  } catch (error) {
+    log.error("Falha ao aprovar ficha:", error);
+    await updateSession(session.id, "PENDING_REVIEW", data);
+    await interaction.editReply(v2Edit(card([
+      heading("Não foi possível concluir a ficha"),
+      text("Tente aprovar novamente; se persistir, verifique os cargos do bot."),
+    ], "erro")));
+    return;
+  }
+  const children = await buildReviewChildren(session, data, guild);
+  await interaction.editReply(v2Edit(card([...children, divider(), text(`${emoji("sucesso")} **Ficha aprovada.**`)], "cofre")));
+  await postApprovalLog(guild, session.discordId);
+}
+
+// Recusa: CAS igual à aprovação, depois solta a reserva de aparência (se
+// houver) e volta a ficha para a etapa recusada — o que aconteceu antes dela
+// (clã, nome, trait, idade) permanece intacto; a etapa recusada em diante
+// (história e/ou aparência) é apagada e refeita quando o jogador usar
+// /ficha de novo.
+async function rejectSheet(
+  interaction: ModalSubmitInteraction,
+  session: NonNullable<Session>,
+  part: "APPEARANCE" | "STORY",
+  motivo: string,
+): Promise<void> {
+  const guild = interaction.guild!;
+  const original = parseData(session.dataJson);
+  const reset: SheetData = {
+    ...original,
+    reviewMessageId: undefined,
+    appearanceUrl: undefined,
+    appearanceCandidate: undefined,
+    appearanceSourceUrl: undefined,
+    ...(part === "STORY" ? { story: undefined } : {}),
+  };
+
+  const changed = await prisma.sheetCreationSession.updateMany({
+    where: { id: session.id, stage: "PENDING_REVIEW" },
+    data: { stage: part, dataJson: JSON.stringify(reset) },
+  });
+  if (changed.count !== 1) return;
+
+  await releaseAppearance(session.discordId, guild.id);
+  await closeReviewCard(
+    guild,
+    session,
+    original,
+    `${emoji("erro")} **Ficha recusada** — ${REJECTED_PART_LABEL[part]}.`,
+    "erro",
+  );
+  await postRejectionLog(guild, session.discordId, part, motivo);
 }
 
 export async function handleSheetButton(interaction: ButtonInteraction): Promise<void> {
@@ -928,11 +1121,15 @@ export async function handleSheetButton(interaction: ButtonInteraction): Promise
     await interaction.reply({ content: "Este painel expirou.", flags: MessageFlags.Ephemeral });
     return;
   }
-  try {
-    requireOwner(interaction, session);
-  } catch (error) {
-    await interaction.reply({ content: String(error instanceof Error ? error.message : error), flags: MessageFlags.Ephemeral });
-    return;
+  // O painel de revisão pertence à staff, não ao dono da ficha — pula a
+  // checagem de dono e valida permissão de admin dentro do próprio branch.
+  if (action !== "review") {
+    try {
+      requireOwner(interaction, session);
+    } catch (error) {
+      await interaction.reply({ content: String(error instanceof Error ? error.message : error), flags: MessageFlags.Ephemeral });
+      return;
+    }
   }
   const data = parseData(session.dataJson);
 
@@ -1072,29 +1269,84 @@ export async function handleSheetButton(interaction: ButtonInteraction): Promise
       return;
     }
     if (rawValue !== "yes") return;
+    if (!interaction.guild) return;
     await interaction.deferUpdate();
-    if (!await transitionSession(session.id, "CONFIRM", "FINALIZING", data)) {
-      await interaction.editReply(v2Edit(card([heading("Finalização já iniciada"), text("Aguarde a conclusão da ficha.")], "aviso")));
+    // Não finaliza direto: a ficha vai para a staff analisar. O canal
+    // privado ganha o mesmo prazo curto usado após COMPLETED e some sozinho
+    // pelo agendador — nenhuma exclusão sincrona aqui.
+    const submitted = await prisma.sheetCreationSession.updateMany({
+      where: { id: session.id, stage: "CONFIRM" },
+      data: {
+        stage: "PENDING_REVIEW",
+        dataJson: JSON.stringify(data),
+        channelExpiresAt: new Date(Date.now() + COMPLETED_CHANNEL_TTL_MS),
+        clanChoiceExpiresAt: null,
+      },
+    });
+    if (submitted.count !== 1) {
+      await interaction.editReply(v2Edit(card([heading("Envio já iniciado"), text("Aguarde a análise da staff.")], "aviso")));
       return;
     }
-    try {
-      await finalizeSheet(interaction, session, data);
-    } catch (error) {
-      log.error("Falha ao concluir ficha:", error);
-      await updateSession(session.id, "CONFIRM", data);
-      await interaction.editReply(v2Edit(card([
-        heading("Não foi possível concluir a ficha"),
-        text("Os dados foram preservados. Tente confirmar novamente; se continuar, peça para a staff verificar os cargos do bot."),
-        divider(),
-        buttons(button(`ficha:v1:confirm:${session.id}:yes`, "Tentar concluir novamente", ButtonStyle.Success)),
-      ], "erro")));
+    await sendReviewCard(interaction.guild, session, data);
+    await armSheetScheduler(interaction.client);
+    await interaction.editReply(v2Edit(card([
+      heading("Ficha enviada para análise"),
+      text("Sua ficha foi enviada para a staff analisar. Você será avisado assim que houver uma decisão."),
+      divider(),
+      text("-# Este canal será apagado em instantes."),
+    ], "cofre")));
+    return;
+  }
+
+  if (action === "review") {
+    if (!interaction.guild) return;
+    const staffMember = interaction.member as GuildMember | null;
+    if (!isAdminMember(staffMember)) {
+      await interaction.reply({ content: "Apenas a staff pode analisar fichas.", flags: MessageFlags.Ephemeral });
+      return;
+    }
+    if (session.stage !== "PENDING_REVIEW") {
+      await interaction.reply({ content: "Esta ficha já foi analisada.", flags: MessageFlags.Ephemeral });
+      return;
+    }
+    if (rawValue === "approve") {
+      await interaction.deferUpdate();
+      await approveSheet(interaction, session, data);
+      return;
+    }
+    if (rawValue === "reject") {
+      const modal = new ModalBuilder().setCustomId(`ficha:reject:${session.id}`).setTitle("Recusar ficha");
+      const parte = new TextInputBuilder()
+        .setCustomId("parte")
+        .setLabel("Parte recusada")
+        .setPlaceholder("aparência ou história")
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true)
+        .setMaxLength(30);
+      const motivo = new TextInputBuilder()
+        .setCustomId("motivo")
+        .setLabel("Motivo da recusa")
+        .setStyle(TextInputStyle.Paragraph)
+        .setRequired(true)
+        .setMaxLength(1000);
+      modal.addComponents(
+        new ActionRowBuilder<TextInputBuilder>().addComponents(parte),
+        new ActionRowBuilder<TextInputBuilder>().addComponents(motivo),
+      );
+      await interaction.showModal(modal);
+      return;
     }
   }
 }
 
 export async function handleSheetModal(interaction: ModalSubmitInteraction): Promise<void> {
   const [command, action, sessionId] = interaction.customId.split(":");
-  if (command !== "ficha" || action !== "appearance" || !sessionId) return;
+  if (command !== "ficha" || !sessionId) return;
+  if (action === "reject") {
+    await handleRejectModal(interaction, sessionId);
+    return;
+  }
+  if (action !== "appearance") return;
   const session = await prisma.sheetCreationSession.findUnique({ where: { id: sessionId } });
   if (!session || session.discordId !== interaction.user.id || session.stage !== "APPEARANCE_CONFIRM" || !interaction.guild) {
     await interaction.reply({ content: "Esta correção de aparência expirou.", flags: MessageFlags.Ephemeral });
@@ -1122,6 +1374,31 @@ export async function handleSheetModal(interaction: ModalSubmitInteraction): Pro
   const channel = await resolveTextChannel(interaction.client, latest.channelId);
   if (channel) await sendAppearancePreview(channel, latest.id, claimed.data);
   await interaction.editReply("✅ Aparência corrigida, salva e reservada. Continue pela prévia enviada no canal da ficha.");
+}
+
+async function handleRejectModal(interaction: ModalSubmitInteraction, sessionId: string): Promise<void> {
+  const session = await prisma.sheetCreationSession.findUnique({ where: { id: sessionId } });
+  if (!session || session.stage !== "PENDING_REVIEW" || !interaction.guild) {
+    await interaction.reply({ content: "Esta ficha já foi analisada.", flags: MessageFlags.Ephemeral });
+    return;
+  }
+  const staffMember = interaction.member as GuildMember | null;
+  if (!isAdminMember(staffMember)) {
+    await interaction.reply({ content: "Apenas a staff pode analisar fichas.", flags: MessageFlags.Ephemeral });
+    return;
+  }
+  const part = normalizeRejectedPart(interaction.fields.getTextInputValue("parte"));
+  if (!part) {
+    await interaction.reply({
+      content: "Não entendi a parte recusada. Clique em Recusar novamente e digite `aparência` ou `história`.",
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+  const motivo = interaction.fields.getTextInputValue("motivo").trim();
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  await rejectSheet(interaction, session, part, motivo);
+  await interaction.editReply("✅ Ficha recusada e jogador avisado.");
 }
 
 let scheduler: NodeJS.Timeout | null = null;

@@ -34,6 +34,10 @@ export const ficha: Command = {
       await interaction.editReply("Sua ficha já foi concluída. Use `/perfil ver` para consultá-la.");
       return;
     }
+    if (result.status === "PENDING_REVIEW") {
+      await interaction.editReply("Sua ficha já foi enviada e está em análise pela staff. Aguarde a decisão.");
+      return;
+    }
     if (result.status === "EXISTING") {
       await interaction.editReply(`Você já possui uma criação em andamento: <#${result.channelId}>.`);
       return;
