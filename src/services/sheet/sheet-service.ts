@@ -33,6 +33,7 @@ import {
   SHEET_LOCATION_ROLES,
   SHEET_LOG_CHANNEL_ID,
   SHEET_REVIEW_CHANNEL_ID,
+  SHEET_REVIEW_ROLE_ID,
   SHEET_VILLAGE_ROLES,
   UNREGISTERED_ROLE_ID,
   clanIconPath,
@@ -983,14 +984,20 @@ async function sendReviewCard(guild: Guild, session: NonNullable<Session>, data:
     return;
   }
   const children = await buildReviewChildren(session, data, guild);
-  const message = await channel.send(v2Public(card([
-    ...children,
-    divider(),
-    buttons(
-      button(`ficha:v1:review:${session.id}:approve`, "Aprovar", ButtonStyle.Success),
-      button(`ficha:v1:review:${session.id}:reject`, "Recusar", ButtonStyle.Danger),
-    ),
-  ], "vila")));
+  const message = await channel.send({
+    ...v2Public(card([
+      text(`<@&${SHEET_REVIEW_ROLE_ID}>`),
+      ...children,
+      divider(),
+      buttons(
+        button(`ficha:v1:review:${session.id}:approve`, "Aprovar", ButtonStyle.Success),
+        button(`ficha:v1:review:${session.id}:reject`, "Recusar", ButtonStyle.Danger),
+      ),
+    ], "vila")),
+    // Sem isto, o ping so' funciona se o cargo ja estiver marcado como
+    // "mencionavel" no servidor — forcamos aqui pra nao depender disso.
+    allowedMentions: { roles: [SHEET_REVIEW_ROLE_ID] },
+  });
   data.reviewMessageId = message.id;
   await updateSession(session.id, "PENDING_REVIEW", data);
 }

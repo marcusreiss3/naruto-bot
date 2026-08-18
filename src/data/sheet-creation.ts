@@ -8,6 +8,8 @@ import type { VillageId } from "./villages.js";
 export const SHEET_LAUNCH_CHANNEL_ID = "1537492104819900427";
 // Canal restrito a staff: recebe o molde da ficha com os botões Aprovar/Recusar.
 export const SHEET_REVIEW_CHANNEL_ID = "1539280111092891749";
+// Cargo mencionado toda vez que uma ficha nova chega no canal de revisão.
+export const SHEET_REVIEW_ROLE_ID = "1523409572759474306";
 // Canal público: recebe o aviso simples de ficha aprovada ou recusada.
 export const SHEET_LOG_CHANNEL_ID = "1539279190715662447";
 export const UNREGISTERED_ROLE_ID = "1527501428401373305";
