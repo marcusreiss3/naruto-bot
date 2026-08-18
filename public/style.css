@@ -1953,6 +1953,99 @@ svg {
   line-height: 1.55;
 }
 
+/* Arsenal de Kugutsu — mesma paleta de madeira/latão da árvore, em vez do
+   vermelho do Sharingan. */
+#kugutsuArsenalBtn {
+  border-color: rgba(167, 101, 69, 0.45);
+  background: rgba(66, 35, 26, 0.78);
+  color: #e3b696;
+}
+
+#kugutsuArsenalBtn:hover {
+  border-color: rgba(167, 101, 69, 0.75);
+  background: rgba(90, 48, 35, 0.88);
+}
+
+.kugutsu-item .copy-arsenal-tags span {
+  border-color: rgba(167, 101, 69, 0.35);
+  background: rgba(167, 101, 69, 0.14);
+  color: #e3b696;
+}
+
+.kugutsu-item p {
+  margin-bottom: 10px;
+}
+
+.kugutsu-recipe {
+  border-top: 1px dashed var(--border);
+  padding-top: 8px;
+  outline: none;
+}
+
+.kugutsu-recipe-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-raised);
+  color: var(--text-secondary);
+  font-size: 11px;
+  cursor: default;
+}
+
+/* Sem position:absolute de proposito — o modal-card ja rola (overflow:auto),
+   entao um tooltip flutuante seria cortado. Em vez disso, a receita expande
+   dentro do proprio fluxo ao passar o mouse ou focar (teclado). */
+.kugutsu-recipe-tooltip {
+  display: none;
+  margin-top: 8px;
+}
+
+.kugutsu-recipe:hover .kugutsu-recipe-tooltip,
+.kugutsu-recipe:focus-within .kugutsu-recipe-tooltip {
+  display: block;
+}
+
+.kugutsu-recipe-tooltip-title {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text-secondary);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.kugutsu-recipe-tooltip ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.kugutsu-recipe-tooltip li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px 4px 4px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  font-size: 11px;
+  color: var(--text-primary);
+}
+
+.kugutsu-recipe-tooltip li img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  border-radius: 4px;
+  background: var(--surface-raised);
+}
+
 .toast {
   position: fixed;
   bottom: 24px;

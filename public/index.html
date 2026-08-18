@@ -161,6 +161,7 @@
             <div class="stage-scroll">
               <h1 class="tree-title" id="treeTitle">Fogo</h1>
               <button id="copyArsenalBtn" class="copy-arsenal-btn hidden" type="button">👁 Arsenal copiado</button>
+              <button id="kugutsuArsenalBtn" class="copy-arsenal-btn hidden" type="button">🪆 Arsenal de mecanismos</button>
               <div class="canvas-wrap" id="canvasWrap">
                 <svg id="edges" class="edges" aria-hidden="true"></svg>
                 <div id="nodes" class="nodes"></div>
@@ -208,6 +209,19 @@
       <div id="copyArsenalList" class="copy-arsenal-list"></div>
       <div class="modal-actions">
         <button class="btn-ghost" id="copyArsenalClose" type="button">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="kugutsuArsenalModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="kugutsuArsenalTitle">
+    <div class="modal-card copy-arsenal-card" tabindex="-1">
+      <div class="modal-icon">🪆</div>
+      <div class="modal-rank">KUGUTSU</div>
+      <h2 id="kugutsuArsenalTitle">Arsenal de mecanismos</h2>
+      <p class="modal-desc">Todo mecanismo que pode ser instalado numa marionete. Passe o mouse (ou foque pelo teclado) na receita pra ver os materiais de construção.</p>
+      <div id="kugutsuArsenalList" class="copy-arsenal-list"></div>
+      <div class="modal-actions">
+        <button class="btn-ghost" id="kugutsuArsenalClose" type="button">Fechar</button>
       </div>
     </div>
   </div>

@@ -499,7 +499,9 @@ model Puppet {
   character UserCharacter @relation(fields: [charId], references: [id], onDelete: Cascade)
   charId    String
   name      String
+  appearanceUrl String?
   shell     String        // OFFENSE | DEFENSE | EFFECT
+  destroyedAt DateTime?
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
   upgrades  PuppetUpgrade[]
@@ -530,9 +532,10 @@ model PuppetCraftOrder {
   charId    String
   puppet    Puppet?       @relation("PuppetOrderTarget", fields: [puppetId], references: [id], onDelete: SetNull)
   puppetId  String?
-  kind      String        // PUPPET | UPGRADE
+  kind      String        // PUPPET | UPGRADE | REBUILD
   optionId  String        // shell para PUPPET; id da evolução para UPGRADE
   puppetName String?
+  appearanceUrl String?
   shell     String?
   status    String        @default("BUILDING") // BUILDING | READY | INSTALLED | CANCELLED
   finishesAt DateTime

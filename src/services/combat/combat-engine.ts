@@ -790,7 +790,7 @@ export async function deployPuppet(
   const owner = s.participants.find((p) => p.id === ownerId);
   if (!owner || !owner.charId) return { ok: false, error: "Condutor inválido." };
   const puppet = await prisma.puppet.findFirst({
-    where: { id: puppetId, charId: owner.charId },
+    where: { id: puppetId, charId: owner.charId, destroyedAt: null },
     include: { upgrades: true },
   });
   if (!puppet) return { ok: false, error: "Marionete não encontrada." };
@@ -826,7 +826,7 @@ export async function deployPuppet(
       hpCurrent: hp, hpMax: hp, chakra: owner.chakra, energia: 100, jutsuIdsJson: JSON.stringify(abilityIds),
       flagsJson: JSON.stringify({
         isPuppet: true, isSummon: true, puppetId: puppet.id, controllerId: owner.id, summonerId: owner.id,
-        puppetShell: puppet.shell, puppetUpgrades: puppet.upgrades.map((part) => part.upgradeId),
+        puppetShell: puppet.shell, puppetAppearanceUrl: puppet.appearanceUrl, puppetUpgrades: puppet.upgrades.map((part) => part.upgradeId),
         puppetLeash: caps.leash, puppetDamageBonus: baseDamage + (puppet.shell === "OFFENSE" ? caps.shellDamageBonus : 0),
         puppetShieldBonus: baseShield + (puppet.shell === "DEFENSE" ? caps.shellShieldBonus : 0),
         puppetEffectTurns: baseEffectTurns + (puppet.shell === "EFFECT" ? caps.shellEffectTurns : 0),
@@ -1075,6 +1075,13 @@ export async function useAbility(
   const actor = s.participants.find((p) => p.id === actorId);
   if (!actor) return fail("Você não está neste combate.");
   if (actor.hpCurrent <= 0) return fail("Personagem incapacitado.");
+  // Marionete nao tem acao propria (comum/bonus) alem do movimento: quem
+  // realmente gasta a acao comum/bonus e' o condutor, o mesmo participante
+  // que ja paga o chakra (ver resourceOwner mais abaixo). So' o deslocamento
+  // fica no participante da marionete — ver validateMove/moveParticipant.
+  const actionOwner = actor.flags.isPuppet
+    ? s.participants.find((p) => p.id === actor.flags.controllerId && p.hpCurrent > 0) ?? actor
+    : actor;
   const foundAbility = getAbility(abilityId);
   if (!foundAbility) return fail("Habilidade desconhecida.");
   let ability = foundAbility;
@@ -1139,6 +1146,7 @@ export async function useAbility(
   if (ability.toggleRules) {
     return fail(`Esta técnica é contínua. Use ${ability.toggleRules.command} para ativar ou desativar.`);
   }
+  let carelessAttackTriggered = false;
   if (actor.flags.isPuppet) {
     const damageBonus = Number(actor.flags.puppetDamageBonus ?? 0);
     const effectTurns = Number(actor.flags.puppetEffectTurns ?? 0);
@@ -1157,10 +1165,14 @@ export async function useAbility(
       effects: prolong(ability.effects),
       selfEffects: prolong(ability.selfEffects),
     };
-    // Comando Paralelo transforma o SEGUNDO ataque de mecanismo do turno em
-    // ação bônus. Defesa/substituição continuam com suas ações originais.
-    if (ability.tags.includes("puppet-attack") && actor.actedCommon && !actor.actedBonus && actor.flags.puppetBonusAttack) {
+    // Ataque Descuidado: se o condutor ja gastou a acao comum (na marionete
+    // ou nele mesmo) e ainda tem a bonus livre, ele pode arriscar mais um
+    // ataque de mecanismo. O preco (nextNoReaction) e' aplicado depois que a
+    // acao e' marcada — ver mais abaixo. Defesa/substituicao nao entram
+    // (so' "puppet-attack" conta como o ataque arriscado).
+    if (ability.tags.includes("puppet-attack") && actionOwner.actedCommon && !actionOwner.actedBonus && actor.flags.puppetBonusAttack) {
       ability = { ...ability, actionType: "BONUS" };
+      carelessAttackTriggered = true;
     }
   }
   if (ability.gateRules) {
@@ -1176,12 +1188,13 @@ export async function useAbility(
     return fail("Esta técnica exige que seu modo correspondente esteja ativo.");
   }
 
-  // economia de acao
-  if (ability.additionalActionType === "COMUM" && actor.actedCommon) return fail("Ação comum já usada.");
-  if (ability.additionalActionType === "BONUS" && actor.actedBonus) return fail("Ação bônus já usada.");
+  // economia de acao — comum/bonus e' sempre do actionOwner (o proprio actor,
+  // exceto marionete, que usa a do condutor); movimento fica sempre no actor.
+  if (ability.additionalActionType === "COMUM" && actionOwner.actedCommon) return fail("Ação comum já usada.");
+  if (ability.additionalActionType === "BONUS" && actionOwner.actedBonus) return fail("Ação bônus já usada.");
   if (ability.additionalActionType === "MOVIMENTO" && actor.actedMove) return fail("Ação de movimento já usada.");
-  if (ability.actionType === "COMUM" && actor.actedCommon) return fail("Ação comum já usada.");
-  if (ability.actionType === "BONUS" && actor.actedBonus) return fail("Ação bônus já usada.");
+  if (ability.actionType === "COMUM" && actionOwner.actedCommon) return fail("Ação comum já usada.");
+  if (ability.actionType === "BONUS" && actionOwner.actedBonus) return fail("Ação bônus já usada.");
   if (ability.actionType === "MOVIMENTO" && actor.actedMove) return fail("Ação de movimento já usada.");
 
   if (ability.category === "NINJUTSU" && ninjutsuBlocked(actor.effects)) {
@@ -1209,11 +1222,10 @@ export async function useAbility(
   // unico efeito que encarece a tecnica de quem o
   // carrega: dedos duros e chakra travado atrasam os selos de mao.
   // Fios de chakra não criam uma reserva extra: toda técnica da marionete
-  // drena o reservatório do condutor. Sem isso, três marionetes virariam três
-  // barras de chakra completas e a especialização quebraria a economia.
-  const resourceOwner = actor.flags.isPuppet
-    ? s.participants.find((p) => p.id === actor.flags.controllerId && p.hpCurrent > 0) ?? actor
-    : actor;
+  // drena o reservatório do condutor — o mesmo actionOwner que já paga a
+  // ação comum/bônus dela (ver acima). Sem isso, três marionetes virariam
+  // três barras de chakra completas e a especialização quebraria a economia.
+  const resourceOwner = actionOwner;
   const cost = Math.max(
     1,
     Math.round(ability.cost * mods.costMult * frozenCostMultiplier(actor.effects)),
@@ -1361,11 +1373,16 @@ export async function useAbility(
       await setFlag(actor.id, "chakraDebt", current + increment);
     }
   }
-  await markAction(actor.id, ability.actionType);
-  if (ability.additionalActionType) await markAction(actor.id, ability.additionalActionType);
+  const actionMarkTarget = (type: string) => (type === "MOVIMENTO" ? actor.id : actionOwner.id);
+  await markAction(actionMarkTarget(ability.actionType), ability.actionType);
+  if (ability.additionalActionType) await markAction(actionMarkTarget(ability.additionalActionType), ability.additionalActionType);
   if (ability.oncePerCombat) await setFlag(actor.id, "usedOnceAbility", ability.id);
   if (isCopied) await setFlag(actor.id, "sharinganCopiedAbilityId", undefined);
   logs.push(`✨ ${actor.name} usou **${ability.name}** (-${cost}% ${ability.resource}).`);
+  if (carelessAttackTriggered) {
+    await setFlag(actionOwner.id, "nextNoReaction", true);
+    logs.push(`⚠️ ${actionOwner.name} arriscou um Ataque Descuidado: o próximo golpe que sofrer não poderá ser reagido.`);
+  }
   await offerSharinganCopy(s, actor.id, ability, logs);
 
   // cura / cleanse / buff
@@ -1786,7 +1803,14 @@ export async function resolveHit(
   if (alreadyReacted && requestedReaction !== "NONE") {
     logs.push(`⏳ ${target.name} já usou uma reação defensiva nesta rodada.`);
   }
-  const reaction = boundByShadow || frozenSolid || alreadyReacted ? "NONE" : requestedReaction;
+  // Ataque Descuidado (Kugutsu): quem arriscou o ataque bônus com a marionete
+  // fica exposto no proprio golpe seguinte — nao ha' Esquivar/Bloquear/Aparar
+  // possivel, o dano acerta cheio.
+  const carelessExposed = Boolean(target.flags.nextNoReaction);
+  if (carelessExposed && requestedReaction !== "NONE") {
+    logs.push(`⚠️ ${target.name} está exposto pelo próprio Ataque Descuidado — não consegue reagir a este golpe.`);
+  }
+  const reaction = boundByShadow || frozenSolid || alreadyReacted || carelessExposed ? "NONE" : requestedReaction;
   if (reaction === "DODGE" && !undodgeable && !ability.unblockable) {
     const reactAb = opts.reactionAbilityId ? getAbility(opts.reactionAbilityId) : undefined;
     const physical = isPhysicalCategory(ability.category);
@@ -1991,6 +2015,8 @@ export async function resolveHit(
 
   // limpa flag de undodgeable do atacante (consumido)
   if (attacker?.flags.nextUndodgeable) await setFlag(attacker.id, "nextUndodgeable", false);
+  // limpa a exposicao do Ataque Descuidado do alvo (consumida neste golpe)
+  if (target.flags.nextNoReaction) await setFlag(target.id, "nextNoReaction", false);
   // Tecnica de Clonagem (Fundamentos): o bonus de esquiva so vale pro
   // PROXIMO golpe recebido — a ilusao se desfaz depois de proteger uma vez.
   if (target.flags.reactionBuff) await setFlag(target.id, "reactionBuff", false);
@@ -3067,12 +3093,16 @@ async function mirrorControlledDamage(
 // Cuida do clamp E do espelhamento Yamanaka num lugar so'.
 async function applyDamage(
   sessionId: string,
-  participant: { id: string; name: string; hpCurrent: number; hpMax: number; controlledById?: string | null },
+  participant: { id: string; name: string; hpCurrent: number; hpMax: number; controlledById?: string | null; flags?: Record<string, unknown> },
   delta: number,
   logs: string[],
 ): Promise<number> {
   const newHp = Math.max(0, participant.hpCurrent - delta);
   await prisma.combatParticipant.update({ where: { id: participant.id }, data: { hpCurrent: newHp } });
+  if (newHp <= 0 && participant.hpCurrent > 0 && participant.flags?.isPuppet && typeof participant.flags.puppetId === "string") {
+    await prisma.puppet.updateMany({ where: { id: participant.flags.puppetId, destroyedAt: null }, data: { destroyedAt: new Date() } });
+    logs.push(`⚙️ ${participant.name} foi destruída; poderá ser reconstruída na oficina.`);
+  }
   if (delta > 0) await mirrorControlledDamage(sessionId, participant.controlledById, delta, participant.name, logs);
   return newHp;
 }

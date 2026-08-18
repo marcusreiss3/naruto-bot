@@ -63,15 +63,20 @@ export function buildCombatEmbed(opts: {
   if (log) embed.setDescription(log);
 
   // Painel de economia de acao — so faz sentido no turno de um jogador.
-  if (active && phase !== "NPC" && phase !== "NEUTRO") {
+  // Marionete nao tem acao comum/bonus propria: o painel mostra a do
+  // condutor, que e' quem realmente paga por atacar com ela.
+  const economyOwner = active?.flags.isPuppet
+    ? session.participants.find((p) => p.id === active.flags.controllerId) ?? active
+    : active;
+  if (active && economyOwner && phase !== "NPC" && phase !== "NEUTRO") {
     embed.addFields(
       {
         name: "Movimento",
         value: movementStatus(active, opts.moveBudget ?? 0, opts.moveUsed ?? 0),
         inline: true,
       },
-      { name: "Ação comum", value: active.actedCommon ? "Usada" : "Disponível", inline: true },
-      { name: "Ação bônus", value: active.actedBonus ? "Usada" : "Disponível", inline: true },
+      { name: "Ação comum", value: economyOwner.actedCommon ? "Usada" : "Disponível", inline: true },
+      { name: "Ação bônus", value: economyOwner.actedBonus ? "Usada" : "Disponível", inline: true },
     );
   }
 

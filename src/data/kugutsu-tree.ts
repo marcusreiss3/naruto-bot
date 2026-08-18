@@ -65,8 +65,8 @@ export const KUGUTSU_TREE: SkillNodeDef[] = [
     "A distância máxima entre você e sua marionete sobe para 4 células.",
   ),
   passive(
-    "kugutsu_acao_bonus", "Comando Paralelo", "Controle", 0.75, 4, ["kugutsu_slot_2"], 4, 16, 19,
-    "Cada marionete pode usar um ataque de mecanismo como ação bônus depois de atacar com a ação comum.",
+    "kugutsu_acao_bonus", "Ataque Descuidado", "Controle", 0.75, 4, ["kugutsu_slot_2"], 4, 16, 19,
+    "Depois de atacar com a ação comum, você pode arriscar mais um ataque de mecanismo com sua marionete usando a ação bônus. O preço vem no giro seguinte: o próximo ataque que você sofrer acerta em cheio, sem chance de Esquivar, Bloquear ou Aparar.",
   ),
   passive(
     "kugutsu_craft_grau_iii", "Arquiteto de Marionetes", "Oficina", 0, 5, ["kugutsu_craft_grau_ii"], 4, 18, 21,

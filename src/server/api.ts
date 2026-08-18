@@ -13,6 +13,7 @@ import { villageForDiscordUser } from "../services/village-service.js";
 import { buildMechanicsSummary, buildVisualDescription } from "../services/characters/skill-description.js";
 import { MANGEKYO_VARIANT_LABEL } from "../services/characters/mangekyo.js";
 import { buildGuideCatalog } from "../services/characters/equipment-catalog.js";
+import { buildKugutsuArsenal } from "../services/puppets/puppet-service.js";
 
 export function registerApi(app: FastifyInstance): void {
   app.get("/api/guides/catalog", async (_req, reply) => {
@@ -100,6 +101,7 @@ export function registerApi(app: FastifyInstance): void {
             }];
           })
         : [],
+      kugutsuArsenal: buildKugutsuArsenal(),
       trees,
     });
   });

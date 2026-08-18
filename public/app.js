@@ -883,6 +883,7 @@ function renderTree(elId) {
   const nodes = state.trees[elId] || [];
   const ownedIds = new Set(nodes.filter((n) => n.status === "OWNED").map((n) => n.id));
   $("copyArsenalBtn").classList.toggle("hidden", elId !== "UCHIHA");
+  $("kugutsuArsenalBtn").classList.toggle("hidden", elId !== "KUGUTSU");
 
   // marca ativo na barra
   document.querySelectorAll(".elem").forEach((d) => {
@@ -1024,6 +1025,51 @@ function openCopyArsenal() {
 
 function closeCopyArsenal() {
   hideDialog("copyArsenalModal");
+}
+
+// Diferente do arsenal do Sharingan (só mostra o que já foi copiado), o
+// arsenal de Kugutsu é um catálogo fixo: todo mecanismo que existe pra
+// instalar numa marionete, com o mesmo combate de um nó JUTSU normal
+// (ação, alcance, custo, dano) e a receita de construção junto — passar o
+// mouse (ou focar, no teclado) num mecanismo mostra os materiais com ícone.
+function openKugutsuArsenal() {
+  const list = $("kugutsuArsenalList");
+  const arsenal = state.kugutsuArsenal || [];
+  if (!arsenal.length) {
+    list.innerHTML = '<div class="copy-arsenal-empty">Nenhum mecanismo cadastrado ainda.</div>';
+  } else {
+    list.innerHTML = arsenal.map((a) => {
+      const resource = RES_LABEL[a.resource] || a.resource;
+      const tags = [
+        `Grau ${a.grade}`,
+        actionLabel(a),
+        areaText(a),
+        `${resource}: ${a.cost}%`,
+      ];
+      if (a.baseDamage) tags.push(`Dano base: ${a.baseDamage}`);
+      if (a.baseHeal) tags.push(`Cura base: ${a.baseHeal}`);
+      const ingredients = (a.ingredients || []).map((i) =>
+        `<li><img src="${assetUrl(i.icon)}" alt="" loading="lazy"><span>${i.name} ×${i.qty}</span></li>`,
+      ).join("");
+      return `<article class="copy-arsenal-item kugutsu-item">
+        <h3>${a.name}</h3>
+        <div class="copy-arsenal-tags">${tags.map((t) => `<span>${t}</span>`).join("")}</div>
+        <p>${a.description || ""}</p>
+        <div class="kugutsu-recipe" tabindex="0">
+          <span class="kugutsu-recipe-trigger">🛠️ Receita · Nv. ${a.reqLevel} · ${a.durationHours}h · 💴 ${a.ryo} Ryō</span>
+          <div class="kugutsu-recipe-tooltip" role="tooltip">
+            <span class="kugutsu-recipe-tooltip-title">Materiais para construir</span>
+            <ul>${ingredients}</ul>
+          </div>
+        </div>
+      </article>`;
+    }).join("");
+  }
+  showDialog("kugutsuArsenalModal");
+}
+
+function closeKugutsuArsenal() {
+  hideDialog("kugutsuArsenalModal");
 }
 
 // 1 casa do grid ≈ 1,5 m (escala tática usada só p/ exibir alcance no site).
@@ -1191,11 +1237,15 @@ $("modal").onclick = (e) => { if (e.target.id === "modal") closeModal(); };
 $("copyArsenalBtn").onclick = openCopyArsenal;
 $("copyArsenalClose").onclick = closeCopyArsenal;
 $("copyArsenalModal").onclick = (e) => { if (e.target.id === "copyArsenalModal") closeCopyArsenal(); };
+$("kugutsuArsenalBtn").onclick = openKugutsuArsenal;
+$("kugutsuArsenalClose").onclick = closeKugutsuArsenal;
+$("kugutsuArsenalModal").onclick = (e) => { if (e.target.id === "kugutsuArsenalModal") closeKugutsuArsenal(); };
 document.addEventListener("keydown", (event) => {
   if (!activeDialog) return;
   if (event.key === "Escape") {
     event.preventDefault();
     if (activeDialog.id === "modal") closeModal();
+    else if (activeDialog.id === "kugutsuArsenalModal") closeKugutsuArsenal();
     else closeCopyArsenal();
     return;
   }

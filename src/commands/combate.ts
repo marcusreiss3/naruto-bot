@@ -1092,9 +1092,15 @@ async function advanceTurn(
   return logs;
 }
 
-// True quando o participante nao tem mais nada a gastar na rodada.
-function turnExhausted(p: SessionFull["participants"][number]): boolean {
-  return p.actedMove && p.actedCommon && p.actedBonus;
+// True quando o participante nao tem mais nada a gastar na rodada. Marionete
+// nao tem acao comum/bonus propria (so' movimento): quem realmente esgota
+// essas duas e' o condutor, entao o turno dela so' fecha quando a economia
+// COMPARTILHADA do condutor tambem estiver zerada.
+function turnExhausted(p: SessionFull["participants"][number], session: SessionFull): boolean {
+  const economyOwner = p.flags.isPuppet
+    ? session.participants.find((x) => x.id === p.flags.controllerId) ?? p
+    : p;
+  return p.actedMove && economyOwner.actedCommon && economyOwner.actedBonus;
 }
 
 // Depois de qualquer acao, se o jogador gastou movimento + comum + bonus o
@@ -1109,7 +1115,7 @@ async function autoAdvanceIfDone(
   if (!s || s.status !== "ACTIVE") return [];
   const active = activeParticipant(s);
   // so' avanca se quem esgotou as acoes ainda e' quem esta na vez
-  if (!active || active.id !== participantId || !turnExhausted(active)) return [];
+  if (!active || active.id !== participantId || !turnExhausted(active, s)) return [];
   return advanceTurn(interaction, sessionId);
 }
 

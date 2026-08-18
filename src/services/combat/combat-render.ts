@@ -33,7 +33,9 @@ export async function buildSessionEntities(
       entity.chakra = p.chakra;
       entity.energia = p.energia;
     }
-    if (p.isNpc && p.npcTemplate) {
+    if (p.flags.isPuppet && typeof p.flags.puppetAppearanceUrl === "string") {
+      entity.imageUrl = p.flags.puppetAppearanceUrl;
+    } else if (p.isNpc && p.npcTemplate) {
       entity.imageFile = getNpc(p.npcTemplate)?.image;
     } else if (isPlayer && p.charId) {
       const uc = await prisma.userCharacter.findUnique({

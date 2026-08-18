@@ -18,7 +18,7 @@ import { PERSONAL_RECIPES } from "../data/recipes.js";
 import { getOrCreateCharacter } from "../services/characters/character-service.js";
 import { craftPersonal, describeRecipe } from "../services/economy/crafting.js";
 import { PUPPET_SHELLS, type PuppetShell } from "../data/puppet-upgrades.js";
-import { listPuppetWorkshop, startPuppetConstruction } from "../services/puppets/puppet-service.js";
+import { listPuppetWorkshop, PUPPET_OWNERSHIP_LIMIT, startPuppetConstruction } from "../services/puppets/puppet-service.js";
 import {
   button, buttonRow, divider, economyContainer, factsBlock, itemLabel, listBlock,
   noticeBlock, receiptBlock, ryo, selectRow, text, titleBlock, v2Edit, v2Payload,
@@ -45,11 +45,14 @@ function requirements(state: Workshop, shell: PuppetShell): string[] {
 function puppetCraftPanel(state: Workshop, shell: PuppetShell, feedback?: string): TopLevel[] {
   const recipe = PUPPET_SHELLS[shell];
   const unlocked = state.skillNodes.some((node) => node.nodeId === "kugutsu_oficina_inicial");
+  const puppetSlots = state.puppets.length + state.puppetOrders.filter((order) => order.kind === "PUPPET" && ["BUILDING", "READY"].includes(order.status)).length;
+  const hasPuppetSlot = puppetSlots < PUPPET_OWNERSHIP_LIMIT;
   const children: ContainerChild[] = [
-    titleBlock("marionete", "Oficina de Marionetes", "Escolha uma carapaça, confira a mochila e dê um nome à sua criação."),
+    titleBlock("marionete", "Oficina de Marionetes", "Escolha uma carapaça, confira a mochila e defina nome e aparência da sua criação."),
     factsBlock([
       { label: `${emoji("ryo")} Ryō`, value: String(state.ryo) },
       { label: `${emoji("carapaca")} Oficina`, value: unlocked ? "liberada" : "bloqueada" },
+      { label: `${emoji("marionete")} Slots`, value: `${puppetSlots}/${PUPPET_OWNERSHIP_LIMIT}` },
     ]),
     divider(),
     selectRow(new StringSelectMenuBuilder()
@@ -65,22 +68,23 @@ function puppetCraftPanel(state: Workshop, shell: PuppetShell, feedback?: string
     listBlock("Materiais necessários", requirements(state, shell), "Nenhum material."),
   ];
   if (!unlocked) children.push(noticeBlock("bloqueio", "Compre **Oficina de Marionetes** na árvore de Kugutsu antes de construir."));
+  if (!hasPuppetSlot) children.push(noticeBlock("bloqueio", `Você já ocupa os ${PUPPET_OWNERSHIP_LIMIT} slots de marionete. Descarte uma para construir outra.`));
   if (feedback) children.push(noticeBlock("erro", feedback));
   children.push(divider(), buttonRow(button({
     id: `${PUPPET_PREFIX}:nome:${shell}`,
     label: "Dar nome e iniciar construção",
     style: ButtonStyle.Primary,
     emojiKey: "marionete",
-    disabled: !unlocked,
+    disabled: !unlocked || !hasPuppetSlot,
   })));
   return [economyContainer("estoque", children)];
 }
 
-function constructionPanel(name: string, shell: PuppetShell): TopLevel[] {
+function constructionPanel(name: string, shell: PuppetShell, hasAppearance: boolean): TopLevel[] {
   const recipe = PUPPET_SHELLS[shell];
   return [economyContainer("estoque", [
     titleBlock("marionete", "Carapaça em construção", `${recipe.durationHours} hora(s) de oficina`),
-    receiptBlock(`**${name}** será montada com **${recipe.name}**.`),
+    receiptBlock(`**${name}** será montada com **${recipe.name}**.${hasAppearance ? " A aparência foi registrada para o mapa de combate." : ""}`),
     divider(),
     listBlock("Materiais reservados", [
       ryo(`${recipe.ryo} Ryō`),
@@ -153,6 +157,9 @@ export const craft: Command = {
     await interaction.showModal(new ModalBuilder().setCustomId(`${PUPPET_PREFIX}:confirmar:${shell}`).setTitle(`Nomear ${recipe.name}`.slice(0, 45))
       .addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(
         new TextInputBuilder().setCustomId("nome").setLabel("Nome da marionete").setStyle(TextInputStyle.Short).setMinLength(2).setMaxLength(32).setRequired(true),
+      ))
+      .addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(
+        new TextInputBuilder().setCustomId("aparencia").setLabel("Aparência (link direto da imagem)").setStyle(TextInputStyle.Short).setPlaceholder("https://.../marionete.png").setMaxLength(2000).setRequired(false),
       )));
   },
 
@@ -162,12 +169,13 @@ export const craft: Command = {
     const char = await getOrCreateCharacter(interaction.user.id, interaction.guildId ?? "global", interaction.user.username);
     const puppetShell = shell as PuppetShell;
     await interaction.deferReply({ ephemeral: true });
-    const outcome = await startPuppetConstruction(char.id, interaction.fields.getTextInputValue("nome"), puppetShell);
+    const appearanceUrl = interaction.fields.getTextInputValue("aparencia");
+    const outcome = await startPuppetConstruction(char.id, interaction.fields.getTextInputValue("nome"), puppetShell, appearanceUrl);
     if (!outcome.ok) {
       const workshop = await listPuppetWorkshop(char.id);
       await interaction.editReply(v2Edit(puppetCraftPanel(workshop!, puppetShell, outcome.error)));
       return;
     }
-    await interaction.editReply(v2Edit(constructionPanel(outcome.name, puppetShell)));
+    await interaction.editReply(v2Edit(constructionPanel(outcome.name, puppetShell, Boolean(appearanceUrl.trim()))));
   },
 };

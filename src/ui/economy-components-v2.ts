@@ -27,6 +27,7 @@ import {
   SeparatorSpacingSize,
   StringSelectMenuBuilder,
   TextDisplayBuilder,
+  ThumbnailBuilder,
   type APIMessageTopLevelComponent,
   type JSONEncodable,
   type MessageActionRowComponentBuilder,
@@ -171,6 +172,14 @@ export function spacer(): SeparatorBuilder {
 // Um Section aceita no maximo tres TextDisplay e exige um acessorio.
 export function primaryActionSection(texto: string, button: ButtonBuilder): SectionBuilder {
   return new SectionBuilder().addTextDisplayComponents(text(texto)).setButtonAccessory(button);
+}
+
+// Texto com uma imagem ao lado — usado quando o item tem aparencia propria
+// (marionete, cla) e o painel deve mostrar a fotinho junto do texto.
+export function thumbnailSection(markdown: string, url: string, description: string): SectionBuilder {
+  return new SectionBuilder()
+    .addTextDisplayComponents(text(markdown))
+    .setThumbnailAccessory(new ThumbnailBuilder().setURL(url).setDescription(description));
 }
 
 // ---------------- Botoes e linhas ----------------
