@@ -414,10 +414,20 @@ const PO = make("POEIRA");
 const POEIRA: SkillNodeDef[] = [
   PO.jutsu("poeira_desprendimento", "Desprendimento do Mundo Primitivo", "⚪", "C", "Colapso", 0, 0, [], 1, 4, "A estrutura se expande rapidamente em tamanho ao ser impulsionada contra o alvo, prendendo-o — a esfera então explode com uma força tremenda, desintegrando o que estiver por perto."),
   PO.pass("poeira_raiz", "Núcleo do Mundo Primitivo", "🌫️", "Colapso", 0, 1, ["poeira_desprendimento"], 5, 7, "Passiva sempre ativa: todos os seus jutsus de Poeira causam +40% de dano.", false),
-  PO.jutsu("poeira_pilar", "Desprendimento do Mundo Primitivo: Pilar", "➡️", "B", "Colapso", 0, 2, ["poeira_raiz"], 11, 11, "Variação da técnica padrão: a esfera se estende diretamente da mão do usuário até o oponente, um feixe contínuo rápido demais para desviar."),
-  PO.pass("poeira_estilhaco", "Fragmentação Progressiva", "💠", "Colapso", -1, 3, ["poeira_pilar"], 16, 14, "Passiva: cada acerto seu de Poeira crava 1 acúmulo de Desintegração a mais, acelerando o colapso da defesa do alvo."),
-  PO.pass("poeira_erosao", "Erosão Absoluta", "🧪", "Colapso", 1, 3, ["poeira_pilar"], 16, 14, "Passiva: seus jutsus de Poeira perfuram 25% da redução de quem bloqueia ou apara."),
-  PO.jutsu("poeira_conica", "Desprendimento do Mundo Primitivo: Cônica", "📐", "A", "Colapso", -1, 4, ["poeira_estilhaco"], 24, 20, "Variação em formato de cone da técnica padrão, cobrindo uma área muito mais ampla."),
+  // reqLevel de pilar/estilhaco/erosao/conica subiu (11/16/16/24 -> 22/27/27/32,
+  // 12/08/2026): pra quem funde por 100% das arvores basicas isso nao muda
+  // nada (o piso real ja' e' nivel 35, pra completar as arvores previas — ver
+  // capitulo de KKG do BALANCEAMENTO_FINAL.txt). Mas Onoki funde com so' 25%
+  // de cada arvore e pode chegar no nivel ~12 com o personagem — no reqLevel
+  // antigo, isso dava um golpe indefensavel (Pilar, undodgeable) de 44,8 de
+  // dano por volta do nivel 12, mais forte que a coluna nv20 inteira do
+  // balanceamento. Empurrar so' o gate de nivel (nao o dano) resolve: o
+  // mesmo golpe passa a abrir por volta do nivel 22, dentro da faixa normal
+  // pro bracket nv20-30.
+  PO.jutsu("poeira_pilar", "Desprendimento do Mundo Primitivo: Pilar", "➡️", "B", "Colapso", 0, 2, ["poeira_raiz"], 22, 18, "Variação da técnica padrão: a esfera se estende diretamente da mão do usuário até o oponente, um feixe contínuo rápido demais para desviar."),
+  PO.pass("poeira_estilhaco", "Fragmentação Progressiva", "💠", "Colapso", -1, 3, ["poeira_pilar"], 27, 21, "Passiva: cada acerto seu de Poeira crava 1 acúmulo de Desintegração a mais, acelerando o colapso da defesa do alvo."),
+  PO.pass("poeira_erosao", "Erosão Absoluta", "🧪", "Colapso", 1, 3, ["poeira_pilar"], 27, 21, "Passiva: seus jutsus de Poeira perfuram 25% da redução de quem bloqueia ou apara."),
+  PO.jutsu("poeira_conica", "Desprendimento do Mundo Primitivo: Cônica", "📐", "A", "Colapso", -1, 4, ["poeira_estilhaco"], 32, 25, "Variação em formato de cone da técnica padrão, cobrindo uma área muito mais ampla."),
   // Vazio Absoluto agora exige so' a Conica (nao mais as duas pontas): Projeteis
   // virou o apice de verdade (S), entao nao pode mais ser pre-requisito da
   // propria passiva que o precede. Erosao Absoluta (perfura 25%) continua de

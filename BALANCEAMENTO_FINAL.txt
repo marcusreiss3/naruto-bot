@@ -153,27 +153,45 @@ turno e pela impossibilidade de fechar ou trocar o Portão antes da morte.
 
 DANO REAL — arsenal médio com passivas próprias, sem transformação
 
-  Nível   Bukijutsu   Elemental   Clã   Estilo
-  nv 10      25,91       20,62    22,57   18,30
-  nv 20      33,54       30,86    32,16   22,70
-  nv 30      36,37       34,78    36,77   27,37
-  nv 45      36,37       37,96    37,17   32,85
+  Nível   Bukijutsu   Elemental   Clã   Estilo   Kekkei Genkai
+  nv 10      25,91       20,62    22,57   18,30         —
+  nv 20      33,54       30,86    32,16   22,70         —
+  nv 30      36,37       34,78    36,77   27,37         —
+  nv 45      36,37       37,96    37,17   32,85       63,40
 
 MELHOR GOLPE DISPONÍVEL — com passivas, sem transformação
 
-  Nível   Bukijutsu   Elemental   Clã   Estilo
-  nv 10      29,90       24,34    25,02   23,04
-  nv 20      38,09       41,51    40,35   29,84
-  nv 30      50,25       52,48    49,20   40,23
-  nv 45      50,25       63,07    50,20   48,27
+  Nível   Bukijutsu   Elemental   Clã   Estilo   Kekkei Genkai
+  nv 10      29,90       24,34    25,02   23,04         —
+  nv 20      38,09       41,51    40,35   29,84         —
+  nv 30      50,25       52,48    49,20   40,23         —
+  nv 45      50,25       63,07    50,20   48,27       91,79
 
 CUSTO / DANO REAL — menor é melhor
 
-  Nível   Bukijutsu   Elemental   Clã   Estilo
-  nv 10      0,92        0,99     0,91   1,03
-  nv 20      1,05        0,80     0,92   1,03
-  nv 30      1,08        0,81     0,90   1,00
-  nv 45      1,08        0,82     0,91   0,83
+  Nível   Bukijutsu   Elemental   Clã   Estilo   Kekkei Genkai
+  nv 10      0,92        0,99     0,91   1,03         —
+  nv 20      1,05        0,80     0,92   1,03         —
+  nv 30      1,08        0,81     0,90   1,00         —
+  nv 45      1,08        0,82     0,91   0,83        0,70
+
+Kekkei Genkai só aparece no nv45: nenhuma delas é alcançável antes do nível
+35 (o nó mais caro de QUALQUER árvore elemental básica está nesse nível, e
+todas as sete exigem completar pelo menos duas árvores básicas inteiras —
+ver capítulo 12 pro porquê e pros números por linhagem). nv10/20/30 não são
+"zero", são "não existe build nesse nível" — mesma lógica das tabelas de
+clã dos capítulos 3 a 5, que também só têm snapshot de nv45. A exceção são
+os 3 clãs com desconto de fusão (Bakurei/Explosão, Yuki/Gelo, Onoki/Poeira),
+que podem fundir bem mais cedo (~nível 12 no caso mais otimista) — checado
+linhagem por linhagem em 12/08/2026, e só Poeira precisou de ajuste (ver
+capítulo 12).
+
+Mesmo assim, no nv45 Kekkei Genkai já lidera as três métricas por boa
+margem: 63,40 de dano médio (67% acima do Elemental, a segunda coluna mais
+alta), 91,79 de melhor golpe (46% acima do Elemental) e 0,70 de custo/dano
+(o mais eficiente de todos, abaixo até do 0,82 do Elemental). Isso é
+esperado e intencional — é o "acima dos elementais" que o capítulo 12
+promete, pago com o método de obtenção mais caro do jogo.
 
 COMO AS TABELAS DE CLASSES SÃO CALCULADAS
 
@@ -189,9 +207,14 @@ considera modos, Portões ou outras transformações temporárias.
 
 Elemental: média dos 5 elementos básicos (Fogo, Água, Vento, Terra, Raio),
 alvo seco, só passivas próprias de cada elemento. Kekkei genkai NÃO entra
-(será revisada separadamente). Técnica de CLÃ com natureza de chakra também
-não entra aqui, mesmo tendo campo de elemento: ela é contada na coluna Clã.
-O escopo é o NÓ DA ÁRVORE, não a etiqueta de elemento da habilidade.
+aqui — tem coluna própria (ver capítulo 12). Técnica de CLÃ com natureza de
+chakra também não entra aqui, mesmo tendo campo de elemento: ela é contada
+na coluna Clã. O escopo é o NÓ DA ÁRVORE, não a etiqueta de elemento da
+habilidade.
+
+Kekkei Genkai: média das 7 linhagens (Cristal, Vapor, Calor, Lava, Explosão,
+Poeira, Gelo) no nível 45, só passivas próprias — mesmo cálculo do capítulo
+12. Sem afinidade externa nem modo/transformação, igual às outras colunas.
 
 O QUE FICA DE FORA DE TODAS AS TABELAS
 
@@ -211,7 +234,7 @@ HIERARQUIA POR FAIXA DE NÍVEL — dano real, sem modos ou afinidades externas
   Início (nv 10):  Bukijutsu > Clã > Elemental > Estilo
   Meio   (nv 20):  Bukijutsu > Clã > Elemental > Estilo
   Meio   (nv 30):  Clã > Bukijutsu > Elemental > Estilo
-  Final  (nv 45):  Elemental > Clã > Bukijutsu > Estilo
+  Final  (nv 45):  Kekkei Genkai > Elemental > Clã > Bukijutsu > Estilo
 
 Bukijutsu cumpre o objetivo de começar forte e perder eficiência depois (o
 custo/dano dele só piora nível a nível, o único assim) — inclusive lidera
@@ -275,7 +298,9 @@ Bukijutsu é melhor no começo e perde eficiência no final.
 Elementais comuns são a base de comparação.
 Clãs ofensivos ficam próximos ou acima dos elementais com afinidades.
 Estilos de luta ficam abaixo dos elementais sem modo e têm explosão temporária.
-Kekkei Genkai ficam acima de todo o resto — ver capítulo 12.
+Kekkei Genkai ficam acima de todo o resto no nv45 (dano médio 63,40 contra
+37,96 do Elemental, custo/dano 0,70) — o único grupo sem presença antes do
+nível 35, pago com o método de obtenção mais caro do jogo. Ver capítulo 12.
 
 
 12. KEKKEI GENKAI
@@ -322,9 +347,12 @@ fusão (capítulo 6) + PN da própria árvore de KKG. Sem afinidade de clã.
 Explosão (Bakurei), Gelo (Yuki) e Poeira (Onoki) fundem com 25% de cada
 árvore em vez de 100% pra quem já é do clã dono do kekkei genkai — um
 desconto de clã, não um problema de balanceamento (mesma lógica das
-afinidades naturais do capítulo 4).
+afinidades naturais do capítulo 4). Isso também abre um caminho de fusão
+bem mais cedo (~nível 12 no caso otimista, contra o piso de 35 de todo
+mundo), então o balanceamento nv45 do capítulo não é suficiente sozinho
+pra esses três — ver capítulo 8 pra checagem nível a nível.
 
-O QUE MUDOU NESTA REVISÃO (11/08/2026)
+O QUE MUDOU NESTA REVISÃO (11/08/2026, com ajuste em 12/08/2026)
 
 Antes desta revisão, o balanceamento de KKG nunca tinha sido conferido, e a
 comparação com o custo de obtenção real mostrava dois furos que o próprio
@@ -363,6 +391,19 @@ fica entre Gelo e Poeira — mas o melhor golpe dela fecha no mesmo teto
 padrão (93,15), não acima: o investimento extra compra versatilidade (15
 nós, 10 jutsus, controle e defesa) em vez de um teto de dano maior, o que
 também explica o pior custo/dano do grupo (0,86).
+
+AJUSTE DE 12/08/2026 — pico de poder cedo do Onoki
+
+A tabela do nv45 não capturava um problema: Onoki funde Poeira com só 25%
+de Fogo+Terra+Vento, o que pode acontecer por volta do nível 12 — bem antes
+do piso de 35 que vale pro resto. No reqLevel antigo, isso destravava
+Pilar (jinton_pilar, indefensável) com 44,8 de dano ainda nesse nível, mais
+forte que a coluna nv20 inteira do capítulo 8. Os reqLevel de Pilar,
+Fragmentação Progressiva, Erosão Absoluta e Cônica subiram (11/16/16/24 →
+22/27/27/32) sem tocar em dano, custo ou PN — o pico de 44,8 continua
+existindo, só abre por volta do nível 22 em vez de 12, dentro da faixa
+normal do bracket nv20-30. Não afeta quem funde por 100% (o piso real já
+era 35 antes disso).
 
 Domo de Iceberg (Gelo) foi corrigido separadamente: a Barreira usava só
 stacks fixo (16), o único efeito SHIELD do jogo inteiro sem o par
