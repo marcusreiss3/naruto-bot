@@ -17,9 +17,15 @@ export const KUGUTSU_ABILITIES: Ability[] = [
   // Moinho (16/18) × 1,35 = 22; o mecanismo ainda paga o mesmo custo-base.
   attack("kugutsu_tiro_mecanismo_destrutivo", "Tiro de Mecanismo Destrutivo", 22, 3, 18, "A marionete dispara kunais escondidas pela boca.", [{ effectId: "BLEED", stacks: 1, duration: 2 }]),
   { id: "kugutsu_capturar", name: "Capturar", category: "KUGUTSU", tier: 1, resource: "chakra", cost: 18, actionType: "COMUM", baseDamage: 0, scalingAttribute: "kugutsu", range: 1, shape: "SINGLE_TARGET", effects: [{ effectId: "ROOT", duration: 1 }], tags: ["kugutsu", "puppet-attack"], description: "Compartimentos da marionete se fecham sobre o alvo e o imobilizam." },
-  attack("kugutsu_lamina_agulha", "Lâmina Agulha", 22, 2, 18, "Uma agulha venenosa salta da cabeça da marionete.", [{ effectId: "POISON", stacks: 1, duration: 3 }]),
-  // Dragões Gêmeos (24/32) × 1,35 = 32; a área é menor, mas aplica veneno.
-  { id: "kugutsu_ataque_super_arma", name: "Ataque da Super Arma", category: "KUGUTSU", tier: 1, resource: "chakra", cost: 32, actionType: "COMUM", baseDamage: 32, scalingAttribute: "kugutsu", range: 3, shape: "RADIUS", effects: [{ effectId: "POISON", stacks: 1, duration: 3 }], tags: ["kugutsu", "puppet-attack"], description: "A marionete libera uma bomba de veneno em área curta." },
+  // Custo subiu de 18 pra 22 (audit: suggestedJutsuCost aponta 29 pro mesmo
+  // baseDamage/custo de Tiro de Mecanismo Destrutivo — o Veneno de 3 turnos
+  // pesa mais que o Sangramento de 2 turnos daquele).
+  attack("kugutsu_lamina_agulha", "Lâmina Agulha", 22, 2, 22, "Uma agulha venenosa salta da cabeça da marionete.", [{ effectId: "POISON", stacks: 1, duration: 3 }]),
+  // Dragões Gêmeos (24/32); sem o × 1,35 dos golpes single-target porque é
+  // RADIUS — acerta mais de um alvo pelo mesmo custo, então a área já é o
+  // ganho. baseDamage 32 (com o × 1,35) deixava o audit +18 acima do
+  // sugerido sem freio nenhum; em 24, fica em +4, dentro da faixa normal.
+  { id: "kugutsu_ataque_super_arma", name: "Ataque da Super Arma", category: "KUGUTSU", tier: 1, resource: "chakra", cost: 32, actionType: "COMUM", baseDamage: 24, scalingAttribute: "kugutsu", range: 3, shape: "RADIUS", effects: [{ effectId: "POISON", stacks: 1, duration: 3 }], tags: ["kugutsu", "puppet-attack"], description: "A marionete libera uma bomba de veneno em área curta." },
   // Meteoro Anexado (30/42) × 1,35 = 41.
   attack("kugutsu_multiplos_bracos", "Múltiplos Braços", 41, 1, 42, "Braços mecânicos envolvem o alvo e interrompem seus movimentos.", [{ effectId: "STUN", duration: 1, chance: 0.65 }]),
   { id: "kugutsu_escudo_luz_mecanica", name: "Escudo Luz Mecânica", category: "KUGUTSU", tier: 2, resource: "chakra", cost: 12, actionType: "COMUM", range: 0, shape: "SELF", selfEffects: [{ effectId: "SHIELD", stacks: 8, hpPercentStacks: 0.12, duration: 3 }], tags: ["kugutsu", "puppet-defense"], description: "Os braços da marionete se unem e formam uma barreira de chakra." },

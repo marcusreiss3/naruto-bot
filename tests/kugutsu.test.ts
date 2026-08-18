@@ -6,7 +6,10 @@ const ability = (id: string) => KUGUTSU_ABILITIES.find((entry) => entry.id === i
 describe("Kugutsu", () => {
   it("usa Bukijutsu como régua e premia mecanismos ofensivos em cerca de 35%", () => {
     expect(ability("kugutsu_tiro_mecanismo_destrutivo").baseDamage).toBe(Math.round(16 * 1.35));
-    expect(ability("kugutsu_ataque_super_arma").baseDamage).toBe(Math.round(24 * 1.35));
+    // Excecao: RADIUS acerta mais de um alvo pelo mesmo custo, entao nao leva
+    // o premio de +35% que os golpes single-target levam (audit apontava
+    // +18 de desvio sem freio nenhum com o premio aplicado aqui).
+    expect(ability("kugutsu_ataque_super_arma").baseDamage).toBe(24);
     expect(ability("kugutsu_multiplos_bracos").baseDamage).toBe(Math.round(30 * 1.35));
     expect(ability("kugutsu_lanca_chamas").baseDamage).toBe(Math.round(26 * 1.35));
     expect(ability("kugutsu_cauda_escorpiao").baseDamage).toBe(Math.round(30 * 1.35));
