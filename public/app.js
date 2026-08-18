@@ -9,12 +9,12 @@ const ELEMENTS = [
   { id: "BUKIJUTSU", name: "Bukijutsu", icon: "", img: "/assets/icons/footer/bukijutsu.png", color: "#b7a27a" },
   { id: "GENJUTSU", name: "Genjutsu", icon: "", img: "/assets/icons/footer/genjutsu.png", color: "#9b63c7" },
   { id: "FUINJUTSU", name: "Fuinjutsu", icon: "", img: "/assets/icons/footer/fuinjutsu.png", color: "#d6a13d" },
-  { id: "TAIJUTSU_PASSIVAS", name: "Taijutsu", icon: "", img: "/assets/icons/footer/taijutsu-geral.png", color: "#d8794f" },
+  { id: "TAIJUTSU_PASSIVAS", name: "Taijutsu", icon: "", img: "/assets/icons/footer/taijutsu-geral.png", color: "#e8631e" },
   { id: "ASSASSINATO_NINJA", name: "Assassinato Silencioso", icon: "", img: "/assets/icons/footer/assassinato-ninja.png", color: "#7f9ebf" },
-  { id: "TAIJUTSU_AGITACAO", name: "Taijutsu de Agitação", icon: "", img: "/assets/icons/footer/taijutsu-agitacao.png", color: "#d67e58" },
-  { id: "TAIJUTSU", name: "Punho Forte", icon: "", img: "/assets/icons/footer/taijutsu.png", color: "#d8794f" },
-  { id: "KUGUTSU", name: "Kugutsu", icon: "🪆", img: "/assets/icons/kugutsu/marionete-v2.png", color: "#a76545" },
-  { id: "ARHAT", name: "Punho Arhat", icon: "", img: "/assets/icons/footer/arhat.png", color: "#b8694f" },
+  { id: "TAIJUTSU_AGITACAO", name: "Taijutsu de Agitação", icon: "", img: "/assets/icons/footer/taijutsu-agitacao.png", color: "#9db3bd" },
+  { id: "TAIJUTSU", name: "Punho Forte", icon: "", img: "/assets/icons/footer/taijutsu.png", color: "#3fa34d" },
+  { id: "KUGUTSU", name: "Kugutsu", icon: "🪆", img: "/assets/icons/kugutsu/marionete-v2.png", color: "#6a5a92" },
+  { id: "ARHAT", name: "Punho Arhat", icon: "", img: "/assets/icons/footer/arhat.png", color: "#c0392b" },
   { id: "ADAMANTINO", name: "Punho Adamantino", icon: "", img: "/assets/icons/footer/adamantino.png", color: "#58b879" },
   { id: "FOGO", name: "Fogo", icon: "", img: "/assets/icons/footer/katon.png", color: "#e2492d" },
   { id: "AGUA", name: "Água", icon: "", img: "/assets/icons/footer/suiton.png", color: "#2b7fd4" },
@@ -46,6 +46,9 @@ const ELEMENTS = [
   { id: "YAMANAKA", name: "Yamanaka", icon: "🧠", color: "#c9a6d9", clanGate: "yamanaka" },
   // ---- Sunagakure ----
   { id: "KAMAITACHI", name: "Kamaitachi", icon: "🌪️", color: "#8fae8f", clanGate: "kamaitachi" },
+  // Sem nós ainda (arvore vazia em src/data/clans/index.ts) — so' icone e fundo.
+  { id: "KAZEKAGE", name: "Kazekage", icon: "🏜️", color: "#c9974f", clanGate: "kazekage" },
+  { id: "SHIROGANE", name: "Shirogane", icon: "🪆", color: "#9a8f7a", clanGate: "shirogane" },
   // ---- Kirigakure ----
   { id: "HOSHIGAKI", name: "Hoshigaki", icon: "🦈", color: "#4a7d8c", clanGate: "hoshigaki" },
   { id: "HOZUKI", name: "Hozuki", icon: "💧", color: "#3a8fbf", clanGate: "hozuki" },
@@ -233,6 +236,8 @@ const CLAN_FOOTER_ICONS = {
   lee: "/assets/icons/footer/Lee_Symbol.png",
   // ---- Sunagakure ----
   kamaitachi: "/assets/icons/footer/Kamaitachi_Symbol.png",
+  kazekage: "/assets/icons/footer/Kazekage_Symbol.png",
+  shirogane: "/assets/icons/footer/Shirogane_Symbol.png",
   // ---- Kirigakure ----
   hoshigaki: "/assets/icons/footer/Hoshigaki_Symbol.png",
   hozuki: "/assets/icons/footer/Hozuki_Symbol.png",
@@ -275,7 +280,7 @@ const ELEMENT_BG = {
   BUKIJUTSU: `url('/assets/bg/bukijutsu.webp?v=${BG_ASSET_VERSION}')`,
   GENJUTSU: `url('/assets/bg/genjutsu.webp?v=${BG_ASSET_VERSION}')`,
   FUINJUTSU: `url('/assets/bg/fuinjutsu.webp?v=${BG_ASSET_VERSION}')`,
-  KUGUTSU: "linear-gradient(135deg, rgba(66, 35, 26, .92), rgba(142, 75, 43, .72))",
+  KUGUTSU: `url('/assets/bg/kugutsu.webp?v=${BG_ASSET_VERSION}')`,
   // taijutsu passiva (arvore central) + os 4 estilos de luta especificos
   TAIJUTSU_PASSIVAS: `url('/assets/bg/taijutsu.webp?v=${BG_ASSET_VERSION}')`,
   TAIJUTSU: `url('/assets/bg/punho-forte.webp?v=${BG_ASSET_VERSION}')`,
@@ -312,6 +317,8 @@ const CLAN_BACKGROUNDS = {
   HATAKE: `url('/assets/bg/hatake.webp?v=${BG_ASSET_VERSION}')`,
   YAMANAKA: `url('/assets/bg/yamanaka.webp?v=${BG_ASSET_VERSION}')`,
   KAMAITACHI: `url('/assets/bg/kamaitachi.webp?v=${BG_ASSET_VERSION}')`,
+  KAZEKAGE: `url('/assets/bg/kazekage.webp?v=${BG_ASSET_VERSION}')`,
+  SHIROGANE: `url('/assets/bg/shirogane.webp?v=${BG_ASSET_VERSION}')`,
   HOSHIGAKI: `url('/assets/bg/hoshigaki.webp?v=${BG_ASSET_VERSION}')`,
   HOZUKI: `url('/assets/bg/hozuki.webp?v=${BG_ASSET_VERSION}')`,
   KAGUYA: `url('/assets/bg/kaguya.webp?v=${BG_ASSET_VERSION}')`,
@@ -326,8 +333,13 @@ const CLAN_BACKGROUNDS = {
 // Troca os caminhos locais acima pelas URLs do CDN de uma vez só, em vez de
 // embrulhar as ~48 entradas uma a uma. Quem não estiver no manifesto continua
 // apontando pro arquivo local (ver assetUrl).
-for (const key of Object.keys(ELEMENT_BG)) {
-  ELEMENT_BG[key] = ELEMENT_BG[key].replace(/\/assets\/[^?')]+/, assetUrl);
+// Cobre os dois mapas: CLAN_BACKGROUNDS ficava de fora e todo fundo de clã
+// caia direto no caminho local, que nao existe no deploy (bg/ so' sobe pro
+// Blob, e' git-ignored) — quebrado em produção sem dar erro nenhum aqui.
+for (const map of [ELEMENT_BG, CLAN_BACKGROUNDS]) {
+  for (const key of Object.keys(map)) {
+    map[key] = map[key].replace(/\/assets\/[^?')]+/, assetUrl);
+  }
 }
 // Glossário de efeitos: destaca o termo na descrição e explica no hover.
 // A descrição vem do servidor como texto puro; o realce é feito aqui por regex,

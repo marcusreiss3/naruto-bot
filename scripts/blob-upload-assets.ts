@@ -8,7 +8,7 @@
 //   npm run blob:upload -- --force  # sobe tudo de novo (arte trocada com o mesmo nome)
 //   npm run blob:upload -- --dry    # so mostra o plano, nao sobe nada
 //   npm run blob:upload -- --delay=6000  # 1 upload a cada 6s, um de cada vez
-//   npm run blob:upload -- --only=icons/interface/  # so' esse subcaminho
+//   npm run blob:upload -- --only=icons/interface/,bg/kugutsu  # varios fragmentos, separados por virgula
 //
 // --delay serve pra lote grande: forca concorrencia 1 e espera o intervalo
 // entre cada arquivo, pra ficar longe do teto de 300 req/min (que rende 30
@@ -174,11 +174,11 @@ async function main() {
   const dryRun = process.argv.includes("--dry");
   const delayMs = Number(process.argv.find((a) => a.startsWith("--delay="))?.slice(8) ?? 0);
   const concurrency = delayMs > 0 ? 1 : MAX_CONCURRENT_UPLOADS;
-  const only = process.argv.find((a) => a.startsWith("--only="))?.slice(7);
+  const only = process.argv.find((a) => a.startsWith("--only="))?.slice(7).split(",");
 
   const entries = collectEntries();
   const manifest = readExistingManifest();
-  const scoped = only ? entries.filter((e) => e.webPath.includes(only)) : entries;
+  const scoped = only ? entries.filter((e) => only.some((frag) => e.webPath.includes(frag))) : entries;
   const pending = force ? scoped : scoped.filter((e) => !manifest[e.webPath]);
   const totalMb = pending.reduce((sum, e) => sum + e.size, 0) / 1024 / 1024;
 
