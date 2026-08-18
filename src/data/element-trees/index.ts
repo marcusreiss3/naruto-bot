@@ -957,6 +957,30 @@ const NODE_ICONS: Record<string, string> = {
   tai_pass_reserva_profunda: "taijutsu/reserva-fisica-profunda.png",
   tai_pass_maestria: "taijutsu/maestria-marcial.png",
 
+  // ---- Ninjutsu (Fundamentos) ----
+  funda_reserva_chakra: "ninjutsu/reserva-de-chakra.png",
+  funda_reserva_chakra_profunda: "ninjutsu/reserva-de-chakra-profunda.png",
+
+  // ---- Kugutsu ----
+  kugutsu_oficina_inicial: "kugutsu/oficina-de-marionetes.png",
+  kugutsu_carapaca_ofensiva: "kugutsu/engrenagens-ofensivas.png",
+  kugutsu_carapaca_defensiva: "kugutsu/estrutura-reforcada.png",
+  kugutsu_carapaca_efeito: "kugutsu/mecanismos-toxicos.png",
+  kugutsu_alcance_fios_i: "kugutsu/fios-de-chakra-estendidos-i.png",
+  kugutsu_slot_2: "kugutsu/dupla-manipulacao.png",
+  kugutsu_craft_grau_ii: "kugutsu/oficina-de-precisao.png",
+  kugutsu_carapaca_ofensiva_ii: "kugutsu/mecanismo-de-assalto.png",
+  kugutsu_carapaca_defensiva_ii: "kugutsu/nucleo-blindado.png",
+  kugutsu_carapaca_efeito_ii: "kugutsu/reservatorio-de-veneno.png",
+  kugutsu_alcance_fios_ii: "kugutsu/fios-de-chakra-estendidos-ii.png",
+  kugutsu_acao_bonus: "kugutsu/ataque-descuidado.png",
+  kugutsu_craft_grau_iii: "kugutsu/arquiteto-de-marionetes.png",
+  kugutsu_slot_3: "kugutsu/triade-de-fios.png",
+  kugutsu_alcance_fios_iii: "kugutsu/fios-de-chakra-estendidos-iii.png",
+  kugutsu_carapaca_ofensiva_iii: "kugutsu/coracao-de-guerra.png",
+  kugutsu_carapaca_defensiva_iii: "kugutsu/fortaleza-mecanica.png",
+  kugutsu_carapaca_efeito_iii: "kugutsu/mestre-dos-dispositivos.png",
+
   // ---- Taijutsu de Agitação ----
   tai_agitacao_passos: "taijutsu-agitacao/passos-irregulares.png",
   tai_agitacao_finta: "taijutsu-agitacao/finta-instintiva.png",

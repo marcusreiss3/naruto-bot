@@ -607,6 +607,8 @@ export const PASSIVES: PassiveDef[] = [
   { nodeId: "tai_pass_recuperacao", hpRegenPerTurn: 3 },
   { nodeId: "tai_pass_reserva", maxEnergyBonus: 0.25 },
   { nodeId: "tai_pass_reserva_profunda", maxEnergyBonus: 0.25 },
+  { nodeId: "funda_reserva_chakra", maxChakraBonus: 0.25 },
+  { nodeId: "funda_reserva_chakra_profunda", maxChakraBonus: 0.25 },
   { nodeId: "tai_pass_maestria", crossCategory: "TAIJUTSU", damageMult: 1.20 },
   { nodeId: "tai_pass_passada", moveBonus: 1 },
   { nodeId: "tai_pass_passo_silencioso", moveBonus: 1 },
