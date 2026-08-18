@@ -64,10 +64,9 @@ describe("kekkei-genkai: eligibleKekkeiGenkai (fusao automatica)", () => {
     expect(eligibleKekkeiGenkai({ owned, elements: ["CRISTAL"], clanId: null })).toBeNull();
   });
 
-  it("Cristal nao tem receita — nunca funde por esta via", () => {
-    // nenhuma combinacao de arvores basicas produz CRISTAL
-    const owned = fullOwnership("FOGO", "AGUA", "VENTO", "TERRA", "RAIO");
-    expect(eligibleKekkeiGenkai({ owned, elements: [], clanId: null })).not.toBe("CRISTAL");
+  it("Terra+Agua completos fundem Cristal", () => {
+    const owned = fullOwnership("TERRA", "AGUA");
+    expect(eligibleKekkeiGenkai({ owned, elements: [], clanId: null })).toBe("CRISTAL");
   });
 
   it("Onoki funde Poeira com so 25% de Fogo+Terra+Vento", () => {

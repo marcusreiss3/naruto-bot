@@ -259,8 +259,9 @@ const RAIO: SkillNodeDef[] = [
 ];
 
 // ---------------------------------------------------------------- CRISTAL (KG)
-// Kekkei genkai: nao e' sorteado, so entra via /admin. Arvore mais cara em
-// nivel/Ninjutsu que as basicas (a linhagem cobra caro) e com dano ~2.03x em
+// Kekkei genkai: funde ao completar Terra+Agua (11/08/2026 — antes nao tinha
+// receita nenhuma, so' entrava via /admin). Arvore mais cara em nivel/
+// Ninjutsu que as basicas (a linhagem cobra caro) e com dano ~2.03x em
 // vez de ~2.015x. O tronco desce montando o plano de controle: cravar cristal
 // ate o casulo FECHAR. Os dois ramos sao as duas leituras do cristal —
 // Faceta corta (dano/indefensavel), Prisma refrata (defesa/luz).

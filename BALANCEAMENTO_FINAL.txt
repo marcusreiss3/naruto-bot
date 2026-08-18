@@ -283,7 +283,7 @@ Kekkei Genkai ficam acima de todo o resto — ver capítulo 12.
 
 Cristal, Vapor, Calor, Lava, Explosão, Poeira e Gelo. Diferente das árvores
 dos capítulos anteriores, aqui o "custo de entrada" não é só o PN da própria
-árvore: seis das sete só abrem depois de completar uma combinação de árvores
+árvore: todas as sete só abrem depois de completar uma combinação de árvores
 elementais básicas inteiras (ver `KEKKEI_GENKAI_RECIPES` em
 kekkei-genkai.ts) — o método de obtenção mais caro do jogo é o motivo pelo
 qual elas têm que bater mais forte que o elemental comum.
@@ -316,8 +316,8 @@ fusão (capítulo 6) + PN da própria árvore de KKG. Sem afinidade de clã.
   Explosão    Terra + Raio                     98          32      130
   Lava        Fogo + Terra                    104          32      136
   Gelo        Água + Vento                      99          53      152
+  Cristal     Terra + Água                     103          62      165
   Poeira      Fogo + Terra + Vento             151          31      182
-  Cristal     (sem receita de fusão ainda)        —          62        —
 
 Explosão (Bakurei), Gelo (Yuki) e Poeira (Onoki) fundem com 25% de cada
 árvore em vez de 100% pra quem já é do clã dono do kekkei genkai — um
@@ -356,11 +356,13 @@ S-rank/ápice, igual Cristal/Lava/Explosão/Gelo já faziam:
     extra do Estilhaço de Poeira pra colapsar a defesa do alvo num golpe
     só — mesmo padrão que o Cristal já usa no S-rank dele).
 
-Cristal continua sem receita de fusão (`kekkei-genkai.ts`: "fica de fora por
-enquanto", pedido explícito de quem pediu a árvore) — os números dela estão
-balanceados pro dia em que um caminho de obtenção for definido, mas hoje
-ninguém chega nela em jogo. Não é um problema de número; é uma peça de
-conteúdo/design que falta, fora do escopo desta revisão.
+Cristal ganhou receita de fusão nesta revisão (Terra + Água) — antes não
+tinha nenhuma ("fica de fora por enquanto"), então ninguém chegava nela em
+jogo apesar dos números já estarem balanceados. Com 165 PN de custo total,
+fica entre Gelo e Poeira — mas o melhor golpe dela fecha no mesmo teto
+padrão (93,15), não acima: o investimento extra compra versatilidade (15
+nós, 10 jutsus, controle e defesa) em vez de um teto de dano maior, o que
+também explica o pior custo/dano do grupo (0,86).
 
 Domo de Iceberg (Gelo) foi corrigido separadamente: a Barreira usava só
 stacks fixo (16), o único efeito SHIELD do jogo inteiro sem o par

@@ -5,7 +5,6 @@
 //
 // Regras:
 // - "Completar" uma árvore = possuir TODOS os nós dela (ELEMENT_TREES[el]).
-// - Cristal fica de fora por enquanto (pedido explícito).
 // - Ter QUALQUER kekkei genkai bloqueia ganhar outro por fusão, mesmo
 //   completando as árvores de outra combinação.
 // - Onoki (dono do Jinton — Poeira), Bakurei (dono do Bakuton — Explosão) e
@@ -16,8 +15,8 @@
 import { isKekkeiGenkai, type Element, type KekkeiGenkai } from "../../config/enums.js";
 import { ELEMENT_TREES } from "../../data/element-trees/index.js";
 
-// Cristal ausente de propósito ("não faz por enquanto").
 export const KEKKEI_GENKAI_RECIPES: Partial<Record<KekkeiGenkai, Element[]>> = {
+  CRISTAL: ["TERRA", "AGUA"],
   VAPOR: ["FOGO", "AGUA"],
   CALOR: ["FOGO", "VENTO"],
   LAVA: ["FOGO", "TERRA"],

@@ -355,6 +355,7 @@
           blocks: [
             { type: "paragraph", text: "Ao dominar as árvores básicas exigidas, certas combinações de natureza originam uma Kekkei Genkai Elemental. A fusão é concedida quando a progressão necessária é concluída." },
             { type: "cards", items: [
+              { title: "Cristal", text: "Terra + Água" },
               { title: "Vapor", text: "Fogo + Água" },
               { title: "Calor", text: "Fogo + Vento" },
               { title: "Lava", text: "Fogo + Terra" },

@@ -2,7 +2,10 @@
 
 // Os 5 elementos basicos + os kekkei genkai. Kekkei genkai e' um elemento como
 // qualquer outro para a engine (arvore, requisitos, passivas); a diferenca e'
-// que ele NAO e' sorteado: so entra via /admin. Ver KEKKEI_GENKAI abaixo.
+// que ele NAO e' sorteado: concedido por fusao automatica ao completar a
+// combinacao de arvores basicas certa (ver KEKKEI_GENKAI_RECIPES em
+// services/characters/kekkei-genkai.ts) ou manualmente via /admin. Ver
+// KEKKEI_GENKAI abaixo.
 export const ELEMENTS = ["FOGO", "AGUA", "VENTO", "TERRA", "RAIO", "CRISTAL", "VAPOR", "CALOR", "LAVA", "EXPLOSAO", "POEIRA", "GELO"] as const;
 export type Element = (typeof ELEMENTS)[number];
 
