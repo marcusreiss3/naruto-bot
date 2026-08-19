@@ -5535,7 +5535,7 @@ details.guide-faq > div {
   position: relative;
   display: flex;
   min-width: 0;
-  min-height: 254px;
+  min-height: 394px;
   flex-direction: column;
   align-items: flex-start;
   overflow: hidden;
@@ -5564,23 +5564,66 @@ details.guide-faq > div {
 }
 
 .ingot-package-art {
+  position: relative;
+  isolation: isolate;
   display: grid;
   width: 100%;
-  height: 94px;
+  height: 154px;
   place-items: center;
-  margin-top: 7px;
+  margin-top: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(230, 187, 96, .16);
+  border-radius: 14px;
+  background:
+    radial-gradient(120px 74px at 50% 92%, rgba(230, 187, 96, .25), transparent 72%),
+    radial-gradient(2px 2px at 18% 62%, rgba(255, 231, 163, .92) 0 65%, transparent 75%),
+    radial-gradient(2px 2px at 76% 22%, rgba(255, 231, 163, .86) 0 65%, transparent 75%),
+    radial-gradient(1.5px 1.5px at 84% 71%, rgba(230, 187, 96, .82) 0 65%, transparent 75%),
+    linear-gradient(145deg, rgba(59, 44, 18, .42), rgba(15, 17, 21, .1));
 }
 
+.ingot-package-art::before,
+.ingot-package-art::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #ffe7a3;
+  box-shadow: 30px -24px 0 -1px rgba(255, 231, 163, .9), 72px 13px 0 -1px rgba(230, 187, 96, .8), -61px -3px 0 -1px rgba(230, 187, 96, .72);
+  animation: ingot-particle-drift 4.8s ease-in-out infinite alternate;
+}
+
+.ingot-package-art::before { top: 84px; left: 28%; }
+.ingot-package-art::after { top: 43px; right: 25%; animation-delay: -2.2s; }
+
+.ingot-package-pile {
+  position: absolute;
+  z-index: 0;
+  bottom: 4px;
+  left: 50%;
+  width: 108px;
+  height: 62px;
+  color: rgba(239, 196, 92, .56);
+  filter: drop-shadow(0 0 12px rgba(230, 187, 96, .26));
+  transform: translateX(-50%);
+}
+
+.ingot-package-pile svg { width: 100%; height: 100%; }
+
 .ingot-package-art img {
+  position: relative;
+  z-index: 1;
   display: block;
-  width: min(124px, 100%);
-  height: 100%;
+  width: min(148px, 100%);
+  height: 142px;
   object-fit: contain;
-  filter: drop-shadow(0 9px 13px rgba(0, 0, 0, .38));
+  filter: drop-shadow(0 11px 15px rgba(0, 0, 0, .45));
 }
 
 .ingot-package h3 {
-  margin: 8px 0 11px;
+  margin: 14px 0 12px;
   color: var(--text-primary);
   font: 700 18px/1.2 var(--font-display);
 }
@@ -5589,7 +5632,7 @@ details.guide-faq > div {
   display: grid;
   width: 100%;
   grid-template-columns: 1fr;
-  gap: 8px;
+  gap: 7px;
   margin: 0;
 }
 
@@ -5598,27 +5641,31 @@ details.guide-faq > div {
   align-items: baseline;
   justify-content: space-between;
   gap: 8px;
+  padding: 8px 9px;
+  border: 1px solid rgba(230, 187, 96, .13);
+  border-radius: var(--radius-sm);
+  background: rgba(10, 12, 16, .26);
 }
 
 .ingot-package-facts dt {
-  color: var(--text-muted);
-  font: 700 9px var(--font-display);
+  color: var(--ingot-gold-bright);
+  font: 750 10px var(--font-display);
   letter-spacing: .09em;
   text-transform: uppercase;
 }
 
 .ingot-package-facts dd {
   margin: 0;
-  color: var(--text-secondary);
-  font-size: 12px;
-  font-weight: 650;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 750;
   text-align: right;
 }
 
 .ingot-package-buy {
   width: 100%;
   min-height: 42px;
-  margin-top: auto;
+  margin-top: 20px;
   padding: 9px 12px;
   border: 1px solid rgba(232, 191, 103, .55);
   border-radius: var(--radius-sm);
@@ -5628,6 +5675,11 @@ details.guide-faq > div {
   letter-spacing: .03em;
   cursor: pointer;
   transition: border-color 140ms ease, background 140ms ease, transform 140ms ease;
+}
+
+@keyframes ingot-particle-drift {
+  from { opacity: .36; transform: translateY(6px) scale(.8); }
+  to { opacity: .95; transform: translateY(-9px) scale(1.12); }
 }
 
 .ingot-package-buy:hover {
@@ -5914,5 +5966,7 @@ details.guide-faq > div {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ingot-card { transition: none !important; }
+  .ingot-card,
+  .ingot-package-art::before,
+  .ingot-package-art::after { transition: none !important; animation: none !important; }
 }

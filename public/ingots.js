@@ -134,7 +134,7 @@ window.INGOTS_PAGE = {
 };
 
 window.IngotsPage = (function () {
-  const INGOT_ICON_SPRITE = "/assets/guides/ingot-icons.svg";
+  const INGOT_ICON_SPRITE = "/assets/guides/ingot-icons.svg?v=ingot-packages-1";
   const assetUrl = (path) => (window.assetUrl ? window.assetUrl(path) : path);
 
   function escapeHtml(value) {
@@ -172,7 +172,10 @@ window.IngotsPage = (function () {
   function packageMarkup(pkg) {
     return `<article class="ingot-package">
       <span class="ingot-package-index">Pacote ${escapeHtml(pkg.id)}</span>
-      <div class="ingot-package-art"><img src="${escapeHtml(assetUrl(pkg.icon))}" alt="" loading="lazy" decoding="async"></div>
+      <div class="ingot-package-art">
+        <span class="ingot-package-pile" aria-hidden="true">${ingotIcon("stack")}</span>
+        <img src="${escapeHtml(assetUrl(pkg.icon))}" alt="" loading="lazy" decoding="async">
+      </div>
       <h3>${escapeHtml(pkg.title)}</h3>
       <dl class="ingot-package-facts">
         <div><dt>Ingots</dt><dd>${escapeHtml(pkg.ingots)}</dd></div>
