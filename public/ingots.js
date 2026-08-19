@@ -107,6 +107,12 @@ window.INGOTS_PAGE = {
           text: "Devolve os pontos investidos, zera os atributos e remove as habilidades aprendidas nas Árvores de Habilidade.",
           meta: "Custo: 100 Ingots",
         },
+        {
+          icon: "account",
+          title: "Reset premium de personagem",
+          text: "Permite refazer nome, idade, história e aparência; também devolve os pontos investidos e remove as habilidades aprendidas nas Árvores de Habilidade. Mantém nível, XP, Vila, Clã, Traço, inventário, Ryō, Ingots e Giros.",
+          meta: "Custo: 100 Ingots",
+        },
       ],
     },
     {
