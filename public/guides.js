@@ -402,7 +402,6 @@
               { title: "Abra a construção", text: "Use `/craft marionete` para escolher uma carapaça, informar o nome e iniciar a obra." },
               { title: "Acompanhe na oficina", text: "Use `/marionetes` para ver a construção e recolhê-la quando estiver pronta." },
             ] },
-            { type: "commands", groupIds: ["equipment"] },
           ],
         },
         {
