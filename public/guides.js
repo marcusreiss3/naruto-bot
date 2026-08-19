@@ -488,11 +488,11 @@
           title: "Mestres, locais e custos",
           blocks: [
             { type: "cards", items: [
-              { title: "Kaen — Punho Forte", text: "**Campo Aberto** · 900 Ryō, 1 Minério Raro e 3 Lámen.", image: "/assets/icons/footer/taijutsu.png", imageAlt: "Ícone do Punho Forte", contextImage: "/assets/icons/interface/campo_aberto.png", contextImageAlt: "Campo Aberto" },
-              { title: "Suzu — Punho Adamantino", text: "**Hospital de Konohagakure** · 700 Ryō, 3 Lingotes de Ferro e 2 Minérios de Ferro.", image: "/assets/icons/footer/adamantino.png", imageAlt: "Ícone do Punho Adamantino", contextImage: "/assets/icons/interface/konoha.png", contextImageAlt: "Konohagakure" },
-              { title: "Bantou — Punho Arhat", text: "**Caverna** · 450 Ryō, 4 Pedras e 2 Carvões.", image: "/assets/icons/footer/arhat.png", imageAlt: "Ícone do Punho Arhat", contextImage: "/assets/icons/interface/montanhas_caverna.png", contextImageAlt: "Caverna" },
-              { title: "Mizuo — Assassinato Silencioso", text: "**Centro Comercial de Kirigakure** · 500 Ryō, 3 Águas Limpas e 2 Peixes Crus. Exige afinidade Água e Vila Kirigakure.", image: "/assets/icons/footer/assassinato-ninja.png", imageAlt: "Ícone do Assassinato Silencioso", contextImage: "/assets/icons/interface/kiri.png", contextImageAlt: "Kirigakure" },
-              { title: "Souta — Taijutsu de Agitação", text: "**Centro Comercial de Kumogakure** · 300 Ryō.", image: "/assets/icons/footer/taijutsu-agitacao.png", imageAlt: "Ícone do Taijutsu de Agitação", contextImage: "/assets/icons/interface/kumo.png", contextImageAlt: "Kumogakure" },
+              { title: "Kaen — Punho Forte", text: "**Campo Aberto** · 900 Ryō, 1 Minério Raro e 3 Lámen.", image: "/assets/icons/footer/taijutsu.png", imageAlt: "Ícone do Punho Forte" },
+              { title: "Suzu — Punho Adamantino", text: "**Hospital de Konohagakure** · 700 Ryō, 3 Lingotes de Ferro e 2 Minérios de Ferro.", image: "/assets/icons/footer/adamantino.png", imageAlt: "Ícone do Punho Adamantino" },
+              { title: "Bantou — Punho Arhat", text: "**Caverna** · 450 Ryō, 4 Pedras e 2 Carvões.", image: "/assets/icons/footer/arhat.png", imageAlt: "Ícone do Punho Arhat" },
+              { title: "Mizuo — Assassinato Silencioso", text: "**Centro Comercial de Kirigakure** · 500 Ryō, 3 Águas Limpas e 2 Peixes Crus. Exige afinidade Água e Vila Kirigakure.", image: "/assets/icons/footer/assassinato-ninja.png", imageAlt: "Ícone do Assassinato Silencioso" },
+              { title: "Souta — Taijutsu de Agitação", text: "**Centro Comercial de Kumogakure** · 300 Ryō.", image: "/assets/icons/footer/taijutsu-agitacao.png", imageAlt: "Ícone do Taijutsu de Agitação" },
             ] },
             { type: "links", items: [
               { slug: "mundo-e-viagem", section: "destinos", title: "Chegar aos locais dos mestres", text: "Use o guia de viagem para localizar Vilas e áreas abertas." },
