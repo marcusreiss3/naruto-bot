@@ -475,11 +475,18 @@
       keywords: ["estilo de luta", "mestre", "Kaen", "Suzu", "Bantou", "Mizuo", "Souta", "Taijutsu"],
       sections: [
         {
+          id: "o-que-sao-estilos",
+          title: "O que são estilos de luta",
+          blocks: [
+            { type: "paragraph", text: "Estilos de luta são especializações aprendidas com mestres do mundo. Cada estilo libera uma árvore própria de técnicas e passivas, criando uma rota de combate além das habilidades gerais que você já pode desenvolver." },
+            { type: "callout", tone: "info", title: "Escolha suas rotas", text: "Você pode aprender até dois estilos de luta. Punho Forte e Punho Adamantino são rotas exclusivas entre si." },
+          ],
+        },
+        {
           id: "como-aprender",
           title: "Aprenda com um mestre",
           blocks: [
             { type: "paragraph", text: "A partir do nível 5, viaje até o local do mestre e use `/interagir npc`. Aceite o convite, entregue os recursos pedidos e vença o combate final para liberar o estilo na sua árvore." },
-            { type: "callout", tone: "info", title: "Limite de estilos", text: "Você pode aprender até dois estilos de luta. Punho Forte e Punho Adamantino são rotas exclusivas entre si." },
             { type: "commands", groupIds: ["missions", "world"] },
           ],
         },
