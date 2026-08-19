@@ -546,7 +546,7 @@ async function fetchGuideCatalog() {
   });
   if (!res.ok) throw new Error(`Catálogo de Guias indisponível (${res.status})`);
   const catalog = await res.json();
-  const valid = catalog?.schemaVersion === 18
+  const valid = catalog?.schemaVersion === 19
     && Array.isArray(catalog.traits) && catalog.traits.length > 0
     && Array.isArray(catalog.clanGroups) && catalog.clanGroups.some((group) => group.clans?.length)
     && Array.isArray(catalog.items) && catalog.items.length > 0
@@ -954,7 +954,11 @@ function renderTree(elId) {
   // e abriria encostada na esquerda, com a raiz fora do eixo do título. Abre
   // rolada até o meio, mostrando o mesmo tanto dos dois lados.
   const rolagem = document.querySelector(".stage-scroll");
-  if (rolagem) rolagem.scrollLeft = Math.max(0, (treeWidth - rolagem.clientWidth) / 2);
+  if (rolagem) {
+    rolagem.style.setProperty("--tree-canvas-width", `${treeWidth}px`);
+    rolagem.style.setProperty("--tree-canvas-height", `${height}px`);
+    rolagem.scrollLeft = Math.max(0, (treeWidth - rolagem.clientWidth) / 2);
+  }
 
   // Toda ramificação lateral usa a mesma distância do Bukijutsu. Alguns
   // arquivos antigos registram a coluna lateral como ±1 ou ±0.8; ambos são
@@ -1252,6 +1256,19 @@ $("copyArsenalModal").onclick = (e) => { if (e.target.id === "copyArsenalModal")
 $("kugutsuArsenalBtn").onclick = openKugutsuArsenal;
 $("kugutsuArsenalClose").onclick = closeKugutsuArsenal;
 $("kugutsuArsenalModal").onclick = (e) => { if (e.target.id === "kugutsuArsenalModal") closeKugutsuArsenal(); };
+const setDossierCollapsed = (collapsed) => {
+  const dossier = $("dossier");
+  const toggle = $("dossierToggle");
+  dossier.classList.toggle("is-collapsed", collapsed);
+  toggle.setAttribute("aria-expanded", String(!collapsed));
+  toggle.setAttribute("aria-label", collapsed ? "Expandir dossiê" : "Minimizar dossiê");
+  toggle.title = collapsed ? "Expandir dossiê" : "Minimizar dossiê";
+};
+$("dossierToggle").onclick = () => setDossierCollapsed(!$("dossier").classList.contains("is-collapsed"));
+const mobileDossier = window.matchMedia("(max-width: 760px)");
+mobileDossier.addEventListener("change", (event) => {
+  if (!event.matches) setDossierCollapsed(false);
+});
 document.addEventListener("keydown", (event) => {
   if (!activeDialog) return;
   if (event.key === "Escape") {

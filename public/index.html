@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="dark">
   <meta name="theme-color" content="#0d0f12">
   <title>Arquivo Shinobi — Árvores e Guias</title>
-  <link rel="stylesheet" href="/style.css?v=guide-catalog-18">
+  <link rel="stylesheet" href="/style.css?v=guide-catalog-19">
 </head>
 <body>
   <a class="skip-link hidden" id="skipLink" href="#mainContent">Pular para o conteúdo</a>
@@ -131,27 +131,33 @@
                 <span class="dossier-eyebrow">Dossiê shinobi</span>
                 <span class="dossier-name" id="dsName">—</span>
               </div>
+              <button class="dossier-toggle" id="dossierToggle" type="button" aria-controls="dossierDetails" aria-expanded="true" aria-label="Minimizar dossiê" title="Minimizar dossiê">
+                <span class="dossier-toggle-label">Ocultar</span>
+                <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></svg>
+              </button>
             </div>
 
-            <dl class="dossier-facts">
-              <div><dt>Clã</dt><dd id="dsClan">—</dd></div>
-              <div><dt>Nível</dt><dd id="dsLevel">—</dd></div>
-              <div><dt>Técnicas</dt><dd id="dsTechs">—</dd></div>
-              <div><dt>Traço</dt><dd id="dsTrait" title="">—</dd></div>
-            </dl>
+            <div class="dossier-details" id="dossierDetails">
+              <dl class="dossier-facts">
+                <div><dt>Clã</dt><dd id="dsClan">—</dd></div>
+                <div><dt>Nível</dt><dd id="dsLevel">—</dd></div>
+                <div><dt>Técnicas</dt><dd id="dsTechs">—</dd></div>
+                <div><dt>Traço</dt><dd id="dsTrait" title="">—</dd></div>
+              </dl>
 
-            <section class="dossier-block">
-              <span class="dossier-label">Naturezas de chakra</span>
-              <div class="nature-chips" id="dsNatures"></div>
-            </section>
+              <section class="dossier-block">
+                <span class="dossier-label">Naturezas de chakra</span>
+                <div class="nature-chips" id="dsNatures"></div>
+              </section>
 
-            <section class="dossier-block" id="dsPools"></section>
+              <section class="dossier-block" id="dsPools"></section>
 
-            <section class="dossier-block">
-              <span class="dossier-label"><span id="dsTreeName">—</span></span>
-              <div class="meter meter-el"><div class="meter-fill" id="dsTreeBar"></div></div>
-              <span class="meter-cap" id="dsTreeCap">—</span>
-            </section>
+              <section class="dossier-block">
+                <span class="dossier-label"><span id="dsTreeName">—</span></span>
+                <div class="meter meter-el"><div class="meter-fill" id="dsTreeBar"></div></div>
+                <span class="meter-cap" id="dsTreeCap">—</span>
+              </section>
+            </div>
           </aside>
 
           <!-- O palco ancora o fundo e a moldura; a rolagem acontece internamente. -->
@@ -231,10 +237,10 @@
 
   <!-- Mapa caminho local -> URL do CDN (Square Blob). Gerado por `npm run blob:upload`.
      Precisa vir antes de app.js: define window.__BLOB_ASSETS, que assetUrl() lê. -->
-<script src="/asset-manifest.js?v=guide-catalog-18"></script>
-<script src="/guides.js?v=guide-catalog-18"></script>
-  <script src="/guides-ui.js?v=guide-catalog-18"></script>
-  <script src="/ingots.js?v=guide-catalog-18"></script>
-  <script src="/app.js?v=guide-catalog-18"></script>
+<script src="/asset-manifest.js?v=guide-catalog-19"></script>
+<script src="/guides.js?v=guide-catalog-19"></script>
+  <script src="/guides-ui.js?v=guide-catalog-19"></script>
+  <script src="/ingots.js?v=guide-catalog-19"></script>
+  <script src="/app.js?v=guide-catalog-19"></script>
 </body>
 </html>
