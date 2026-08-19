@@ -6,8 +6,6 @@
 // Os 5 MissionDef (mesmo type "MESTRE_ESTILO") ficam em data/missions/index.ts;
 // aqui mora so' a logica, espelhando o padrao de purse-thief.ts.
 import {
-  ActionRowBuilder,
-  ButtonBuilder,
   ButtonStyle,
   ComponentType,
   type ButtonInteraction,
@@ -17,7 +15,7 @@ import {
 } from "discord.js";
 import { prisma } from "../../db/client.js";
 import { getMission } from "../../data/missions/index.js";
-import { FIGHTING_STYLE_LABELS, type FightingStyle } from "../../config/enums.js";
+import { FIGHTING_STYLE_LABELS } from "../../config/enums.js";
 import type { MissionDef } from "../../data/types.js";
 import { getItem } from "../../data/items.js";
 import {
@@ -44,21 +42,18 @@ import {
   setState,
 } from "./mission-service.js";
 import type { RenderEntity } from "../maps/renderer.js";
+import { dataOf, type MestreEstiloData, type MestreEstiloState } from "./mestre-estilo-types.js";
+import {
+  acceptedCard,
+  closedInviteCard,
+  combatStartCard,
+  declinedCard,
+  inviteCard,
+  stillMissingCard,
+} from "../../ui/mestre-estilo-container.js";
+import { button, buttonRow, v2Public } from "../../ui/economy-components-v2.js";
 
-export interface MestreEstiloState {
-  stage?: "INTRO" | "GATHER" | "CHALLENGE";
-  talk?: number;
-}
-
-export interface MestreEstiloData {
-  style: FightingStyle;
-  channelId: string;
-  scenarioId: string;
-  costRyo: number;
-  costItems: { itemId: string; qty: number }[];
-  introTurns: number;
-  challengeTurns: number;
-}
+export { dataOf, type MestreEstiloData, type MestreEstiloState };
 
 interface MasterInfo {
   npcKey: string;
@@ -77,10 +72,6 @@ const MASTERS: MasterInfo[] = [
   { npcKey: "mestre_mizuo", missionId: "mestre_assassinato_silencioso", name: "Mizuo", cell: "C5", color: "#2980b9" },
 ];
 const MASTER_BY_NPC = new Map(MASTERS.map((m) => [m.npcKey, m]));
-
-export function dataOf(def: MissionDef): MestreEstiloData {
-  return def.data as unknown as MestreEstiloData;
-}
 
 function masterByChannel(channelId: string): MasterInfo | null {
   for (const m of MASTERS) {
@@ -270,12 +261,7 @@ async function runDialogue(o: DialogueCtx): Promise<void> {
   if (state.stage === "CHALLENGE") return handleChallengeTurn(o, state);
 }
 
-async function speak(
-  o: DialogueCtx,
-  extra: string,
-  fallbackIndex: number,
-  components?: ActionRowBuilder<ButtonBuilder>[],
-): Promise<Message[] | false> {
+async function speak(o: DialogueCtx, extra: string, fallbackIndex: number): Promise<void> {
   const text = await NpcAiService.say(o.master.npcKey, o.playerMessage, extra, fallbackIndex);
   const persona = getPersona(o.master.npcKey);
   const sent = await sendAsPersona(o.channel, {
@@ -283,19 +269,10 @@ async function speak(
     name: persona?.displayName ?? o.master.name,
     avatarFile: persona?.avatarFile,
     lines: formatPersonaLines(text),
-    components,
   });
   if (!sent && o.channel && "send" in o.channel) {
-    await o.channel.send({ content: text.slice(0, 1900), components });
+    await o.channel.send(text.slice(0, 1900));
   }
-  return sent;
-}
-
-function inviteRow(instanceId: string): ActionRowBuilder<ButtonBuilder> {
-  return new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder().setCustomId(`mestre:aceitar:${instanceId}`).setLabel("Aceitar").setStyle(ButtonStyle.Success),
-    new ButtonBuilder().setCustomId(`mestre:recusar:${instanceId}`).setLabel("Recusar").setStyle(ButtonStyle.Danger),
-  );
 }
 
 // ---------------- INTRO: conversa ate' o convite formal ----------------
@@ -306,19 +283,24 @@ async function handleIntroTurn(o: DialogueCtx, state: MestreEstiloState): Promis
   const introTurns = o.data.introTurns;
   const done = turn >= introTurns;
 
-  const sent = await speak(
+  await speak(
     o,
     done
       ? "Esta e sua ultima fala antes do convite formal: encerre convidando o jogador pra ser seu aluno."
       : "Converse naturalmente sobre o seu estilo de luta e o que ele exige, mas ainda nao convide formalmente.",
     done ? 2 : Math.min(turn - 1, 1),
-    done ? [inviteRow(o.instanceId)] : undefined,
   );
   await setState(o.instanceId, state);
   if (!done) return;
+  if (!o.channel || !("send" in o.channel)) return;
 
-  const inviteMsg = Array.isArray(sent) ? sent.at(-1) : undefined;
-  if (!inviteMsg) return; // sem canal utilizavel: o jogador precisa reagir por outro meio (nao ha' collector pra anexar)
+  // Convite formal vira um carta zinho a parte (nao anexado na fala do
+  // webhook): titulo curto + os 2 botoes, cabe sem rolar a tela.
+  const buttons = buttonRow(
+    button({ id: `mestre:aceitar:${o.instanceId}`, label: "Aceitar", style: ButtonStyle.Success, emojiKey: "sucesso" }),
+    button({ id: `mestre:recusar:${o.instanceId}`, label: "Recusar", style: ButtonStyle.Danger, emojiKey: "erro" }),
+  );
+  const inviteMsg = await o.channel.send(v2Public(inviteCard(o.master.name, FIGHTING_STYLE_LABELS[o.data.style], buttons)));
   void awaitInviteResponse(o, inviteMsg).catch(() => undefined);
 }
 
@@ -334,19 +316,20 @@ async function awaitInviteResponse(o: DialogueCtx, inviteMsg: Message): Promise<
     return; // ninguem clicou a tempo — a instancia fica ACTIVE em INTRO, o jogador pode voltar a falar
   }
 
+  const styleLabel = FIGHTING_STYLE_LABELS[o.data.style];
   const accepted = click.customId.startsWith("mestre:aceitar:");
   if (!accepted) {
     await prisma.missionInstance.update({ where: { id: o.instanceId }, data: { status: "FAILED" } });
-    await click.update({ components: [] });
+    await click.update(v2Public(closedInviteCard(o.master.name, styleLabel)));
     if (o.channel && "send" in o.channel) {
-      await o.channel.send(`Você recusou o convite de **${o.master.name}**. Pode voltar a falar com ele quando mudar de ideia.`);
+      await o.channel.send(v2Public(declinedCard(o.master.name)));
     }
     return;
   }
 
   const perm = await canLearnFightingStyle(o.charId, o.data.style);
   if (!perm.ok) {
-    await click.update({ components: [] });
+    await click.update(v2Public(closedInviteCard(o.master.name, styleLabel)));
     await click.followUp({ content: perm.error ?? "Você não pode mais aprender esse estilo.", ephemeral: true });
     return;
   }
@@ -355,14 +338,10 @@ async function awaitInviteResponse(o: DialogueCtx, inviteMsg: Message): Promise<
   const state = ensureState((await getInstance(o.instanceId))!.stateJson);
   state.stage = "GATHER";
   await setState(o.instanceId, state);
-  await click.update({ components: [] });
+  await click.update(v2Public(closedInviteCard(o.master.name, styleLabel)));
 
-  const itemNames = o.data.costItems
-    .map((it) => `${it.qty}x ${getItem(it.itemId)?.name ?? it.itemId}`)
-    .join(", ");
-  const need = itemNames ? `${o.data.costRyo} ryo e ${itemNames}` : `${o.data.costRyo} ryo`;
   if (o.channel && "send" in o.channel) {
-    await o.channel.send(`**${o.master.name}** aceitou te treinar. Traga **${need}** e use \`/interagir\` de novo quando tiver tudo.`);
+    await o.channel.send(v2Public(await acceptedCard(o.master.name, o.def, o.charId)));
   }
 }
 
@@ -380,6 +359,9 @@ async function handleGatherCheck(o: DialogueCtx, state: MestreEstiloState): Prom
 
   if (missing.length > 0) {
     await speak(o, `O jogador ainda não trouxe tudo. Cobre educadamente, mencionando que falta: ${missing.join(", ")}.`, 2);
+    if (o.channel && "send" in o.channel) {
+      await o.channel.send(v2Public(await stillMissingCard(o.def, o.charId)));
+    }
     return;
   }
 
@@ -460,7 +442,7 @@ async function startMasterCombat(o: DialogueCtx): Promise<void> {
   });
   await cacheAttrs(session, attrsById);
   if (o.channel && "send" in o.channel) {
-    await o.channel.send(`Combate final iniciado contra **${o.master.name}**! Use \`/mapa\`.`);
+    await o.channel.send(v2Public(combatStartCard(o.master.name)));
   }
 }
 

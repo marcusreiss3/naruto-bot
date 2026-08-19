@@ -36,6 +36,8 @@ import { onCorpsePulseCombatWon } from "./corpse-pulse.js";
 import { onEliteMaskCombatWon } from "./elite-mask.js";
 import { onForbiddenBellCombatWon } from "./forbidden-bell.js";
 import { onMestreEstiloCombatWon } from "./mestre-estilo.js";
+import { combatLostCard } from "../../ui/mestre-estilo-container.js";
+import { v2Public } from "../../ui/economy-components-v2.js";
 import {
   buildMissionCompleteEmbed,
   completeMission,
@@ -448,7 +450,7 @@ export async function onCombatLost(
   // mestre de novo cria uma instancia nova (assignMission so' bloqueia por
   // instancia ACTIVE). As outras ~40 missoes ainda dependem de um admin.
   if (def?.type === "MESTRE_ESTILO") {
-    await interaction.followUp(`❌ **Você perdeu o combate final.** Volte a falar com o mestre quando quiser tentar de novo.`);
+    await interaction.followUp(v2Public(combatLostCard()));
     return;
   }
   await interaction.followUp(
