@@ -15,15 +15,18 @@ import {
   setResource,
   setElement,
   setFightingStyle,
+  removeFightingStyle,
+  canLearnFightingStyle,
   setClan,
   addJutsu,
   removeJutsu,
 } from "../services/characters/character-service.js";
-import { CLANS, getAbility, ALL_ABILITIES, MISSIONS } from "../data/index.js";
+import { CLANS, getAbility, ALL_ABILITIES, MISSIONS, getMission } from "../data/index.js";
 import { allNodes } from "../data/element-trees/index.js";
 import { ITEMS, getItem } from "../data/items.js";
 import { addInventoryItem, removeInventoryItem, setInventoryItem } from "../services/characters/inventory.js";
 import { EconomyError } from "../services/economy/errors.js";
+import { dataOf } from "../services/missions/mestre-estilo-types.js";
 import { assignMission, removeMission, completeMission, buildMissionCompleteEmbed } from "../services/missions/mission-service.js";
 import { getActiveSession, getSessionById, endCombat, type SessionFull } from "../services/combat/combat-engine.js";
 import { onCombatEnded } from "../services/missions/mission-runtime.js";
@@ -216,6 +219,13 @@ export const admin: Command = {
       s
         .setName("estilo-luta-set")
         .setDescription("Ensina um estilo de luta (Punho Forte, Arhat, Adamantino, Agitação, Assassinato)")
+        .addUserOption((o) => o.setName("usuario").setDescription("Usuário").setRequired(true))
+        .addStringOption((o) => o.setName("estilo").setDescription("Estilo de luta").addChoices(...fightingStyleChoices).setRequired(true)),
+    )
+    .addSubcommand((s) =>
+      s
+        .setName("estilo-luta-remover")
+        .setDescription("Remove um estilo de luta aprendido")
         .addUserOption((o) => o.setName("usuario").setDescription("Usuário").setRequired(true))
         .addStringOption((o) => o.setName("estilo").setDescription("Estilo de luta").addChoices(...fightingStyleChoices).setRequired(true)),
     )
@@ -462,6 +472,18 @@ export const admin: Command = {
       const char = await getChar();
       const missao = interaction.options.getString("missao", true);
       if (sub === "adicionar") {
+        const missaoDef = getMission(missao);
+        if (missaoDef?.type === "MESTRE_ESTILO") {
+          // Mestre de estilo de luta nao pode ser reatribuido por admin se o
+          // personagem ja tem o estilo — a mesma regra que /interagir aplica
+          // pro fluxo normal (canLearnFightingStyle), senao dava pra "treinar"
+          // com o mesmo mestre indefinidamente so' forcando pelo admin.
+          const perm = await canLearnFightingStyle(char.id, dataOf(missaoDef).style);
+          if (!perm.ok) {
+            await interaction.editReply(`❌ ${perm.error}`);
+            return;
+          }
+        }
         let initialState: Record<string, unknown> | undefined;
         if (missao === "herdeiro_cla_yuki") {
           const user = interaction.options.getUser("usuario", true);
@@ -556,6 +578,13 @@ export const admin: Command = {
         const estilo = interaction.options.getString("estilo", true) as FightingStyle;
         await setFightingStyle(char.id, estilo);
         await interaction.editReply(`✅ Estilo de luta ${FIGHTING_STYLE_LABELS[estilo]} ensinado a **${char.name}**.`);
+        return;
+      }
+      case "estilo-luta-remover": {
+        const char = await getChar();
+        const estilo = interaction.options.getString("estilo", true) as FightingStyle;
+        await removeFightingStyle(char.id, estilo);
+        await interaction.editReply(`✅ Estilo de luta ${FIGHTING_STYLE_LABELS[estilo]} removido de **${char.name}**.`);
         return;
       }
       case "cla-set": {
