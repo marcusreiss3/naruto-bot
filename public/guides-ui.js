@@ -198,9 +198,9 @@
               <span><b>${completeCount}</b> concluídos</span>
             </div>
           </div>
-          <div class="guides-hero-emblem" aria-hidden="true">
-            <span class="hero-orbit orbit-one"></span><span class="hero-orbit orbit-two"></span>
-            ${guideIcon("guide-skills", "guide-icon hero-emblem-icon")}
+          <div class="guides-hero-visual" aria-hidden="true">
+            <img src="/assets/guides/guides-banner.svg" alt="" decoding="async">
+            <span class="guides-hero-visual-caption">Conhecimento<br><b>em movimento</b></span>
           </div>
           <form class="guide-search-form" role="search" id="guideSearchForm">
             <label class="sr-only" for="guideSearch">Pesquisar nos guias</label>

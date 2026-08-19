@@ -196,8 +196,11 @@ window.IngotsPage = (function () {
           <p>${escapeHtml(data.lead)}</p>
           <dl class="ingot-facts">${(data.facts || []).map(factMarkup).join("")}</dl>
         </div>
-        <div class="ingot-hero-emblem" aria-hidden="true">
-          <img src="${escapeHtml(assetUrl(data.icon))}" alt="" loading="lazy" decoding="async">
+        <div class="ingot-hero-visual" aria-hidden="true">
+          <img class="ingot-hero-banner" src="/assets/guides/ingots-banner.svg" alt="" decoding="async">
+          <div class="ingot-hero-emblem">
+            <img src="${escapeHtml(assetUrl(data.icon))}" alt="" loading="lazy" decoding="async">
+          </div>
         </div>
       </header>
 
