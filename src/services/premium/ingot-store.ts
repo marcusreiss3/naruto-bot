@@ -3,8 +3,10 @@ import { getPremiumProduct, type PremiumProductId } from "../../data/premium-pro
 import { CLANS_BY_VILLAGE, rollClanVillageOptions, rollTrait } from "../../data/sheet-creation.js";
 import { CLANS } from "../../data/clans/index.js";
 import { getTrait, type TraitDef } from "../../data/traits.js";
-import { setClan } from "../characters/character-service.js";
+import { refreshDerived, setClan } from "../characters/character-service.js";
 import { setCharacterTrait } from "../characters/trait-service.js";
+import { ATTRIBUTES, type Attribute } from "../../config/enums.js";
+import { getNode } from "../../data/element-trees/index.js";
 
 const TRAIT_SESSION_TTL_MS = 15 * 60_000;
 
@@ -21,24 +23,56 @@ export async function getPremiumWallet(discordId: string, guildId: string): Prom
   });
 }
 
-export async function buyPremiumProduct(walletId: string, productId: PremiumProductId, interactionId: string) {
+export type PremiumPurchaseResult = { product: ReturnType<typeof getPremiumProduct>; refundedPoints?: number };
+
+export async function buyPremiumProduct(walletId: string, charId: string, productId: PremiumProductId, interactionId: string): Promise<PremiumPurchaseResult> {
   const product = getPremiumProduct(productId);
   if (!product) throw new PremiumStoreError("Produto premium desconhecido.");
+  let refundedPoints: number | undefined;
   try {
     await prisma.$transaction(async (tx) => {
       await tx.premiumPurchase.create({ data: { walletId, interactionId, productId: product.id, cost: product.cost } });
       const paid = await tx.premiumWallet.updateMany({
         where: { id: walletId, ingots: { gte: product.cost } },
-        data: { ingots: { decrement: product.cost }, [product.spinField]: { increment: 1 } },
+        data: { ingots: { decrement: product.cost } },
       });
       if (paid.count !== 1) throw new PremiumStoreError("Ingots insuficientes para esta compra.");
+
+      if (product.kind === "SPIN") {
+        await tx.premiumWallet.update({ where: { id: walletId }, data: { [product.spinField]: { increment: 1 } } });
+      } else if (product.kind === "RYO") {
+        await tx.userCharacter.update({ where: { id: charId }, data: { ryo: { increment: product.ryo } } });
+      } else {
+        const char = await tx.userCharacter.findUnique({
+          where: { id: charId },
+          include: { attributes: true, skillNodes: true },
+        });
+        if (!char?.attributes) throw new PremiumStoreError("Personagem sem atributos.");
+
+        refundedPoints = ATTRIBUTES.reduce(
+          (total, attribute) => total + Number((char.attributes as unknown as Record<Attribute, number>)[attribute] ?? 0),
+          0,
+        );
+        const resetAttributes: Record<string, number> = {};
+        for (const attribute of ATTRIBUTES) resetAttributes[attribute] = 0;
+        const skillTreeJutsus = [...new Set(char.skillNodes
+          .map(({ nodeId }) => getNode(nodeId))
+          .filter((node) => node?.kind === "JUTSU" && node.grantsAbilityId)
+          .map((node) => node!.grantsAbilityId!))];
+
+        await tx.characterAttributes.update({ where: { charId }, data: resetAttributes });
+        await tx.userCharacter.update({ where: { id: charId }, data: { attributePoints: { increment: refundedPoints } } });
+        await tx.characterSkillNode.deleteMany({ where: { charId } });
+        if (skillTreeJutsus.length) await tx.characterJutsu.deleteMany({ where: { charId, jutsuId: { in: skillTreeJutsus } } });
+      }
     });
   } catch (error) {
     if (error instanceof PremiumStoreError) throw error;
     if ((error as { code?: string }).code === "P2002") throw new PremiumStoreError("Esta compra jÃ¡ foi processada.");
     throw error;
   }
-  return product;
+  if (product.kind === "RESPEC") await refreshDerived(charId);
+  return { product, refundedPoints };
 }
 
 export async function useClanSpin(charId: string, walletId: string) {

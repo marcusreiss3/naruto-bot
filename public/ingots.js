@@ -81,7 +81,7 @@ window.INGOTS_PAGE = {
     {
       id: "no-que-gastar",
       title: "No que gastar",
-      intro: "Use `/loja-premium` para comprar e usar Giros. Um Giro não permite escolher diretamente um Clã ou Traço específico.",
+      intro: "Use `/loja-premium` para comprar e usar Giros, receber Ryō ou reorganizar sua progressão. Um Giro não permite escolher diretamente um Clã ou Traço específico.",
       cards: [
         {
           icon: "clan",
@@ -93,6 +93,18 @@ window.INGOTS_PAGE = {
           icon: "trait",
           title: "Giro de Traço",
           text: "Permite obter um novo Traço usando as probabilidades normais. Um resultado Mítico deixa você escolher entre as opções sorteadas.",
+          meta: "Custo: 100 Ingots",
+        },
+        {
+          icon: "economy",
+          title: "10.000 Ryō",
+          text: "Adiciona 10.000 Ryō diretamente ao saldo do personagem.",
+          meta: "Custo: 100 Ingots",
+        },
+        {
+          icon: "account",
+          title: "Reset de atributos",
+          text: "Devolve os pontos investidos, zera os atributos e remove as habilidades aprendidas nas Árvores de Habilidade.",
           meta: "Custo: 100 Ingots",
         },
       ],

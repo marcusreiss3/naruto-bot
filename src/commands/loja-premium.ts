@@ -30,6 +30,21 @@ function panel(wallet: PremiumWallet, feedback?: string): TopLevel[] {
   return [economyContainer("cofre", children)];
 }
 
+function respecConfirmationPanel(wallet: PremiumWallet): TopLevel[] {
+  return [economyContainer("cofre", [
+    titleBlock("ingots", "Confirmar reset de atributos", "Esta ação usa Ingots e altera sua ficha"),
+    factsBlock([{ label: "Ingots", value: String(wallet.ingots) }, { label: "Custo", value: "100" }]),
+    divider(),
+    noticeBlock("aviso", "Todos os atributos serão zerados, os pontos investidos voltarão ao saldo e as habilidades aprendidas nas Árvores de Habilidade serão removidas."),
+    text("Você poderá redistribuir os pontos com `/atributos` depois do reset."),
+    divider(),
+    buttonRow(
+      button({ id: cid("confirm-respec"), label: "Confirmar reset por 100 Ingots", style: ButtonStyle.Danger }),
+      button({ id: cid("cancel-respec"), label: "Cancelar", style: ButtonStyle.Secondary }),
+    ),
+  ])];
+}
+
 function traitChoicePanel(wallet: PremiumWallet, sessionId: string, options: ReadonlyArray<{ id: string; name: string; description: string }>): TopLevel[] {
   const children: ContainerChild[] = [
     titleBlock("ingots", "Escolha seu Traço Mítico", "O Giro só será consumido quando você confirmar uma opção."),
@@ -51,7 +66,7 @@ async function stateFor(interaction: ChatInputCommandInteraction | ButtonInterac
 }
 
 export const lojaPremium: Command = {
-  data: new SlashCommandBuilder().setName("loja-premium").setDescription("Compra Giros usando Ingots"),
+  data: new SlashCommandBuilder().setName("loja-premium").setDescription("Compra produtos usando Ingots"),
 
   async execute(interaction: ChatInputCommandInteraction) {
     try {
@@ -71,8 +86,18 @@ export const lojaPremium: Command = {
       if (action === "buy") {
         const product = getPremiumProduct(value ?? "");
         if (!product) throw new PremiumStoreError("Produto premium desconhecido.");
-        await buyPremiumProduct(wallet.id, product.id as PremiumProductId, interaction.id);
-        feedback = `✅ ${product.name} adquirido.`;
+        if (product.kind === "RESPEC") {
+          await interaction.update(v2Edit(respecConfirmationPanel(wallet)));
+          return;
+        }
+        await buyPremiumProduct(wallet.id, char.id, product.id as PremiumProductId, interaction.id);
+        feedback = product.kind === "RYO" ? `✅ ${product.ryo.toLocaleString("pt-BR")} Ryō adicionados ao seu saldo.` : `✅ ${product.name} adquirido.`;
+      } else if (action === "confirm-respec") {
+        const result = await buyPremiumProduct(wallet.id, char.id, "attribute_respec", interaction.id);
+        feedback = `✅ Reset concluído. ${result.refundedPoints ?? 0} ponto(s) devolvido(s); atributos e habilidades das Árvores de Habilidade foram removidos.`;
+      } else if (action === "cancel-respec") {
+        await interaction.update(v2Edit(panel(wallet)));
+        return;
       } else if (action === "use-clan") {
         const clanName = await useClanSpin(char.id, wallet.id);
         feedback = `✅ Giro de Clã usado: agora você é do Clã ${clanName}.`;
