@@ -21,8 +21,9 @@ import {
 } from "../services/characters/character-service.js";
 import { CLANS, getAbility, ALL_ABILITIES, MISSIONS } from "../data/index.js";
 import { allNodes } from "../data/element-trees/index.js";
-import { ITEMS } from "../data/items.js";
-import { addInventoryItem } from "../services/characters/inventory.js";
+import { ITEMS, getItem } from "../data/items.js";
+import { addInventoryItem, removeInventoryItem, setInventoryItem } from "../services/characters/inventory.js";
+import { EconomyError } from "../services/economy/errors.js";
 import { assignMission, removeMission, completeMission, buildMissionCompleteEmbed } from "../services/missions/mission-service.js";
 import { getActiveSession, getSessionById, endCombat, type SessionFull } from "../services/combat/combat-engine.js";
 import { onCombatEnded } from "../services/missions/mission-runtime.js";
@@ -105,6 +106,35 @@ export const admin: Command = {
             .setName("matar-inimigos")
             .setDescription("Jutsu admin: derrota todos os inimigos do combate")
             .addChannelOption((o) => o.setName("canal").setDescription("Canal (padrao: atual)").setRequired(false)),
+        ),
+    )
+    .addSubcommandGroup((g) =>
+      g
+        .setName("item")
+        .setDescription("Itens de inventário")
+        .addSubcommand((s) =>
+          s
+            .setName("adicionar")
+            .setDescription("Soma uma quantidade de um item ao inventário")
+            .addUserOption((o) => o.setName("usuario").setDescription("Usuário").setRequired(true))
+            .addStringOption((o) => o.setName("item").setDescription("Item").setAutocomplete(true).setRequired(true))
+            .addIntegerOption((o) => o.setName("quantidade").setDescription("Quantidade").setMinValue(1).setRequired(true)),
+        )
+        .addSubcommand((s) =>
+          s
+            .setName("remover")
+            .setDescription("Retira uma quantidade de um item do inventário")
+            .addUserOption((o) => o.setName("usuario").setDescription("Usuário").setRequired(true))
+            .addStringOption((o) => o.setName("item").setDescription("Item").setAutocomplete(true).setRequired(true))
+            .addIntegerOption((o) => o.setName("quantidade").setDescription("Quantidade").setMinValue(1).setRequired(true)),
+        )
+        .addSubcommand((s) =>
+          s
+            .setName("definir")
+            .setDescription("Fixa o inventário nesse item numa quantidade exata")
+            .addUserOption((o) => o.setName("usuario").setDescription("Usuário").setRequired(true))
+            .addStringOption((o) => o.setName("item").setDescription("Item").setAutocomplete(true).setRequired(true))
+            .addIntegerOption((o) => o.setName("quantidade").setDescription("Quantidade exata (0 zera)").setMinValue(0).setRequired(true)),
         ),
     )
     .addSubcommandGroup((g) =>
@@ -285,6 +315,8 @@ export const admin: Command = {
       );
     } else if (focused.name === "efeito") {
       choices = EFFECT_IDS.map((e) => ({ name: effectLabel(e), value: e }));
+    } else if (focused.name === "item") {
+      choices = ITEMS.map((i) => ({ name: `${i.name} (${i.id})`.slice(0, 100), value: i.id }));
     }
     const filtered = choices
       .filter((c) => c.name.toLowerCase().includes(q) || c.value.toLowerCase().includes(q))
@@ -393,6 +425,36 @@ export const admin: Command = {
       if (sub === "adicionar") await addJutsu(char.id, jutsu);
       else await removeJutsu(char.id, jutsu);
       await interaction.editReply(`✅ Jutsu \`${jutsu}\` ${sub === "adicionar" ? "concedido a" : "removido de"} **${char.name}**.`);
+      return;
+    }
+
+    if (group === "item") {
+      const char = await getChar();
+      const itemId = interaction.options.getString("item", true);
+      const item = getItem(itemId);
+      if (!item) {
+        await interaction.editReply(`❌ Item desconhecido: \`${itemId}\`.`);
+        return;
+      }
+      const quantidade = interaction.options.getInteger("quantidade", true);
+      try {
+        if (sub === "adicionar") {
+          const total = await prisma.$transaction((tx) => addInventoryItem(tx, char.id, itemId, quantidade));
+          await interaction.editReply(`✅ +${quantidade}x **${item.name}** para **${char.name}** (agora tem ${total}).`);
+        } else if (sub === "remover") {
+          const total = await prisma.$transaction((tx) => removeInventoryItem(tx, char.id, itemId, quantidade));
+          await interaction.editReply(`✅ -${quantidade}x **${item.name}** de **${char.name}** (restou ${total}).`);
+        } else {
+          const total = await prisma.$transaction((tx) => setInventoryItem(tx, char.id, itemId, quantidade));
+          await interaction.editReply(`✅ **${item.name}** de **${char.name}** definido em ${total}.`);
+        }
+      } catch (err) {
+        if (err instanceof EconomyError) {
+          await interaction.editReply(`❌ ${err.message}`);
+          return;
+        }
+        throw err;
+      }
       return;
     }
 

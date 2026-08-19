@@ -124,6 +124,32 @@ export async function removeInventoryItem(
   return remaining;
 }
 
+// Fixa a pilha num valor exato (nao soma/subtrai) — usado pelo /admin item
+// definir, quando o pedido e' "quero exatamente X unidades", nao um delta.
+export async function setInventoryItem(
+  tx: Tx,
+  charId: string,
+  itemId: string,
+  qty: number,
+  nameHint?: string,
+): Promise<number> {
+  if (!Number.isInteger(qty) || qty < 0) throw new EconomyError("Quantidade inválida.");
+  const name = getItem(itemId)?.name ?? nameHint ?? itemId;
+  const row = await tx.inventoryItem.upsert({
+    where: { charId_itemId: { charId, itemId } },
+    create: { charId, itemId, name, qty },
+    update: { qty, name },
+    select: { qty: true },
+  });
+  if (qty === 0) {
+    await tx.userCharacter.updateMany({
+      where: { id: charId, equippedItemId: itemId },
+      data: { equippedItemId: null },
+    });
+  }
+  return row.qty;
+}
+
 export async function equipInventoryItem(
   charId: string,
   itemId: string,
