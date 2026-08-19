@@ -1,6 +1,7 @@
 import { Client, GatewayIntentBits, Events, MessageFlags, type GuildMember } from "discord.js";
 import { ENV } from "./config/env.js";
 import { commandMap } from "./commands/index.js";
+import { registerSlashCommands } from "./register-commands.js";
 import { log } from "./utils/logger.js";
 import { disconnect } from "./db/client.js";
 import { startWebServer } from "./server/index.js";
@@ -36,6 +37,14 @@ const client = new Client({
 
 client.once(Events.ClientReady, async (c) => {
   log.info(`Bot online como ${c.user.tag}`);
+
+  // Reregistra os slash commands a cada boot: hosts sem shell/exec (ex.:
+  // Square Cloud, que so' inicia/para o processo) nunca teriam como rodar
+  // `npm run register` manualmente depois de um deploy — sem isso, o
+  // Discord fica preso na definicao de comando registrada da ultima vez
+  // que alguem rodou o script a mao.
+  await registerSlashCommands().catch((err) => log.error("Falha ao registrar slash commands:", err));
+
   await restoreTrainingExpirations(async (channelId) => {
     const channel = await c.channels.fetch(channelId).catch(() => null);
     if (channel?.isTextBased() && "send" in channel) {
