@@ -5374,21 +5374,16 @@ details.guide-faq > div {
 
 .ingot-hero {
   position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 1.12fr) minmax(264px, .88fr);
-  align-items: center;
-  gap: clamp(20px, 4vw, 48px);
+  min-height: 292px;
   overflow: hidden;
   padding: clamp(24px, 4vw, 40px);
   border: 1px solid var(--border);
   border-radius: var(--radius-xl);
-  background:
-    radial-gradient(560px 250px at 100% 0%, rgba(214, 168, 79, 0.15), transparent 72%),
-    linear-gradient(145deg, var(--surface-raised), var(--surface));
+  background: #171108;
   box-shadow: var(--shadow-md), inset 0 1px rgba(255, 255, 255, .035);
 }
 
-.ingot-hero-copy { position: relative; z-index: 1; min-width: 0; }
+.ingot-hero-copy { position: relative; z-index: 1; min-width: 0; max-width: 64ch; }
 
 .ingot-hero h1 {
   margin: 0 0 10px;
@@ -5408,48 +5403,31 @@ details.guide-faq > div {
 }
 
 .ingot-hero-visual {
-  position: relative;
-  min-height: 218px;
+  position: absolute;
+  z-index: 0;
+  inset: 0;
   overflow: hidden;
-  border: 1px solid rgba(230, 187, 96, .24);
-  border-radius: var(--radius-md);
-  background:
-    radial-gradient(circle at 50% 42%, rgba(214, 168, 79, .22), transparent 38%),
-    linear-gradient(145deg, #242015, #11120f 72%);
-  box-shadow: inset 0 1px rgba(255, 255, 255, .04), 0 14px 28px rgba(0, 0, 0, .22);
+  pointer-events: none;
 }
 
 .ingot-hero-visual::before {
   content: "";
   position: absolute;
-  inset: 16px;
-  border: 1px solid rgba(238, 196, 104, .13);
-  background:
-    linear-gradient(90deg, transparent 49.5%, rgba(238, 196, 104, .12) 50%, transparent 50.5%),
-    linear-gradient(transparent 49.5%, rgba(238, 196, 104, .12) 50%, transparent 50.5%);
-  background-size: 56px 56px;
-  transform: rotate(8deg) scale(1.15);
-  pointer-events: none;
-}
-
-.ingot-hero-visual::after {
-  content: "";
-  position: absolute;
+  z-index: 1;
   inset: 0;
-  background: linear-gradient(90deg, rgba(17, 14, 8, .1), rgba(17, 14, 8, .44));
+  background:
+    linear-gradient(90deg, rgba(16, 12, 7, .96) 0%, rgba(16, 12, 7, .8) 39%, rgba(16, 12, 7, .36) 68%, rgba(16, 12, 7, .08) 100%),
+    linear-gradient(180deg, rgba(8, 7, 5, .14), rgba(8, 7, 5, .58));
   pointer-events: none;
 }
 
-.ingot-hero-mark {
-  position: absolute;
-  z-index: 2;
-  top: 50%;
-  left: 50%;
-  width: clamp(88px, 11vw, 126px);
-  height: clamp(88px, 11vw, 126px);
-  color: #f0c96f;
-  filter: drop-shadow(0 0 22px rgba(214, 168, 79, .36)) drop-shadow(0 14px 20px rgba(0, 0, 0, .4));
-  transform: translate(-50%, -50%);
+.ingot-hero-visual img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  opacity: .9;
 }
 
 .ingot-facts {
@@ -5651,8 +5629,7 @@ details.guide-faq > div {
 }
 
 @media (max-width: 720px) {
-  .ingot-hero { grid-template-columns: minmax(0, 1fr); }
-  .ingot-hero-visual { min-height: 184px; }
+  .ingot-hero { min-height: 320px; }
   .ingot-grid { grid-template-columns: 1fr; }
   .ingot-rules { grid-template-columns: 1fr; }
 }

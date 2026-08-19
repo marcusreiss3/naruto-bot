@@ -200,7 +200,7 @@ window.IngotsPage = (function () {
           <dl class="ingot-facts">${(data.facts || []).map(factMarkup).join("")}</dl>
         </div>
         <div class="ingot-hero-visual" aria-hidden="true">
-          <svg class="ingot-hero-mark" aria-hidden="true" viewBox="0 0 48 48"><use href="${INGOT_ICON_SPRITE}#ingot-economy"></use></svg>
+          <img src="/assets/guides/ingots-hero-market.webp" alt="" decoding="async">
         </div>
       </header>
 
