@@ -481,11 +481,17 @@
     }
 
     function cardsMarkup(block) {
-      return `<div class="guide-info-grid">${(block.items || []).map((item) => `<article class="guide-info-card">
+      return `<div class="guide-info-grid">${(block.items || []).map((item) => {
+        const image = typeof item.image === "string" && item.image.startsWith("/assets/icons/") ? item.image : "";
+        const contextImage = typeof item.contextImage === "string" && item.contextImage.startsWith("/assets/icons/") ? item.contextImage : "";
+        const visual = image ? `<div class="guide-info-visual"><img src="${escapeHtml(assetUrl(image))}" alt="${escapeHtml(item.imageAlt || "")}" loading="lazy">${contextImage ? `<img class="guide-info-context-icon" src="${escapeHtml(assetUrl(contextImage))}" alt="${escapeHtml(item.contextImageAlt || "")}" loading="lazy">` : ""}</div>` : "";
+        return `<article class="guide-info-card${visual ? " has-visual" : ""}">
+        ${visual}
         ${item.meta ? `<small>${escapeHtml(item.meta)}</small>` : ""}
         <h3>${escapeHtml(item.title)}</h3>
         <p>${inline(item.text)}</p>
-      </article>`).join("")}</div>`;
+      </article>`;
+      }).join("")}</div>`;
     }
 
     function flowMarkup(block) {

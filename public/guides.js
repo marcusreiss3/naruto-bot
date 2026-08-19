@@ -488,11 +488,11 @@
           title: "Mestres, locais e custos",
           blocks: [
             { type: "cards", items: [
-              { title: "Kaen — Punho Forte", text: "**Campo Aberto** · 900 Ryō, 1 Minério Raro e 3 Lámen." },
-              { title: "Suzu — Punho Adamantino", text: "**Hospital de Konohagakure** · 700 Ryō, 3 Lingotes de Ferro e 2 Minérios de Ferro." },
-              { title: "Bantou — Punho Arhat", text: "**Caverna** · 450 Ryō, 4 Pedras e 2 Carvões." },
-              { title: "Mizuo — Assassinato Silencioso", text: "**Centro Comercial de Kirigakure** · 500 Ryō, 3 Águas Limpas e 2 Peixes Crus. Exige afinidade Água e Vila Kirigakure." },
-              { title: "Souta — Taijutsu de Agitação", text: "**Centro Comercial de Kumogakure** · 300 Ryō." },
+              { title: "Kaen — Punho Forte", text: "**Campo Aberto** · 900 Ryō, 1 Minério Raro e 3 Lámen.", image: "/assets/icons/footer/taijutsu.png", imageAlt: "Ícone do Punho Forte", contextImage: "/assets/icons/interface/campo_aberto.png", contextImageAlt: "Campo Aberto" },
+              { title: "Suzu — Punho Adamantino", text: "**Hospital de Konohagakure** · 700 Ryō, 3 Lingotes de Ferro e 2 Minérios de Ferro.", image: "/assets/icons/footer/adamantino.png", imageAlt: "Ícone do Punho Adamantino", contextImage: "/assets/icons/interface/konoha.png", contextImageAlt: "Konohagakure" },
+              { title: "Bantou — Punho Arhat", text: "**Caverna** · 450 Ryō, 4 Pedras e 2 Carvões.", image: "/assets/icons/footer/arhat.png", imageAlt: "Ícone do Punho Arhat", contextImage: "/assets/icons/interface/montanhas_caverna.png", contextImageAlt: "Caverna" },
+              { title: "Mizuo — Assassinato Silencioso", text: "**Centro Comercial de Kirigakure** · 500 Ryō, 3 Águas Limpas e 2 Peixes Crus. Exige afinidade Água e Vila Kirigakure.", image: "/assets/icons/footer/assassinato-ninja.png", imageAlt: "Ícone do Assassinato Silencioso", contextImage: "/assets/icons/interface/kiri.png", contextImageAlt: "Kirigakure" },
+              { title: "Souta — Taijutsu de Agitação", text: "**Centro Comercial de Kumogakure** · 300 Ryō.", image: "/assets/icons/footer/taijutsu-agitacao.png", imageAlt: "Ícone do Taijutsu de Agitação", contextImage: "/assets/icons/interface/kumo.png", contextImageAlt: "Kumogakure" },
             ] },
             { type: "links", items: [
               { slug: "mundo-e-viagem", section: "destinos", title: "Chegar aos locais dos mestres", text: "Use o guia de viagem para localizar Vilas e áreas abertas." },
@@ -773,11 +773,15 @@
           title: "Vilas e áreas abertas",
           blocks: [
             { type: "cards", items: [
-              { title: "Vilas Ocultas", text: "Konohagakure, Sunagakure, Kirigakure, Kumogakure e Iwagakure." },
-              { title: "Floresta e Rio", text: "Região aberta ligada ao Caminho da Floresta." },
-              { title: "Montanhas e Caverna", text: "Região aberta ligada ao Caminho da Montanha." },
-              { title: "Campo Aberto", text: "Área de passagem cuja rota depende da origem ou do destino." },
-              { title: "Deserto", text: "Região aberta ligada ao Caminho do Deserto." },
+              { title: "Konohagakure", text: "Vila Oculta ligada ao Caminho da Floresta.", image: "/assets/icons/interface/konoha.png", imageAlt: "Konohagakure" },
+              { title: "Sunagakure", text: "Vila Oculta ligada ao Caminho do Deserto.", image: "/assets/icons/interface/suna.png", imageAlt: "Sunagakure" },
+              { title: "Kirigakure", text: "Vila Oculta ligada ao Caminho da Floresta.", image: "/assets/icons/interface/kiri.png", imageAlt: "Kirigakure" },
+              { title: "Kumogakure", text: "Vila Oculta ligada ao Caminho da Montanha.", image: "/assets/icons/interface/kumo.png", imageAlt: "Kumogakure" },
+              { title: "Iwagakure", text: "Vila Oculta ligada ao Caminho da Montanha.", image: "/assets/icons/interface/iwagakure.png", imageAlt: "Iwagakure" },
+              { title: "Floresta e Rio", text: "Região aberta ligada ao Caminho da Floresta.", image: "/assets/icons/interface/floresta_rio.png", imageAlt: "Floresta e Rio" },
+              { title: "Montanhas e Caverna", text: "Região aberta ligada ao Caminho da Montanha.", image: "/assets/icons/interface/montanhas_caverna.png", imageAlt: "Montanhas e Caverna" },
+              { title: "Campo Aberto", text: "Área de passagem cuja rota depende da origem ou do destino.", image: "/assets/icons/interface/campo_aberto.png", imageAlt: "Campo Aberto" },
+              { title: "Deserto", text: "Região aberta ligada ao Caminho do Deserto.", image: "/assets/icons/interface/deserto.png", imageAlt: "Deserto" },
             ] },
             { type: "callout", tone: "info", title: "Como saber onde você está", text: "Ao abrir `/viajar` em um ponto válido, o painel mostra **Local atual** e desativa o botão desse mesmo destino." },
           ],

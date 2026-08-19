@@ -4896,6 +4896,42 @@ details.guide-faq > div {
   background: var(--surface);
 }
 
+.guide-info-card.has-visual {
+  position: relative;
+  padding-left: 78px;
+}
+
+.guide-info-visual {
+  position: absolute;
+  top: 17px;
+  left: 17px;
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--accent-hover) 30%, var(--border));
+  border-radius: 12px;
+  background: var(--surface-raised);
+}
+
+.guide-info-visual > img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.guide-info-visual > .guide-info-context-icon {
+  position: absolute;
+  right: -7px;
+  bottom: -7px;
+  width: 21px;
+  height: 21px;
+  padding: 2px;
+  border: 1px solid var(--border-strong);
+  border-radius: 7px;
+  background: var(--surface);
+}
+
 .guide-info-card small,
 .clan-card small {
   display: block;
@@ -5312,6 +5348,15 @@ details.guide-faq > div {
 
 @media (max-width: 520px) {
   .guide-info-card { padding: 15px; }
+
+  .guide-info-card.has-visual { padding-left: 70px; }
+
+  .guide-info-visual {
+    top: 14px;
+    left: 14px;
+    width: 42px;
+    height: 42px;
+  }
 
   .trait-card,
   .clan-card {

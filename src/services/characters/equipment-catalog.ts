@@ -41,7 +41,7 @@ import { buildEffectCatalog } from "./effect-catalog.js";
 // tests/guides-runtime.test.ts trava os tres. O 6 foi pulado: o index.html ja
 // estava em "guide-catalog-6" com esta constante em 5, e responder 6 quebraria
 // justamente o app.js cacheado sob essa URL, que compara contra 5.
-export const GUIDE_CATALOG_SCHEMA_VERSION = 34;
+export const GUIDE_CATALOG_SCHEMA_VERSION = 35;
 
 function abilityView(abilityId: string | undefined) {
   if (!abilityId) return null;
