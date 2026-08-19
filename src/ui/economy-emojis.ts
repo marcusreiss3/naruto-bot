@@ -123,6 +123,7 @@ export const ECONOMY_EMOJI_PLACEHOLDERS = {
   erro: "❌",
   bloqueio: "🔒",
   recibo: "🧾",
+  respec: "🔄",
   saciedade: "🍙",
   mochila: "🎒",
   caravana: "🐫",

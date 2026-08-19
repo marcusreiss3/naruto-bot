@@ -182,6 +182,11 @@ export function thumbnailSection(markdown: string, url: string, description: str
     .setThumbnailAccessory(new ThumbnailBuilder().setURL(url).setDescription(description));
 }
 
+/** Imagem de destaque para revelações, como a definição de Clã ou Traço. */
+export function mediaGallery(url: string, description: string): MediaGalleryBuilder {
+  return new MediaGalleryBuilder().addItems({ media: { url }, description });
+}
+
 // ---------------- Botoes e linhas ----------------
 
 export interface ButtonSpec {

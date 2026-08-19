@@ -75,7 +75,7 @@ export async function buyPremiumProduct(walletId: string, charId: string, produc
   return { product, refundedPoints };
 }
 
-export async function useClanSpin(charId: string, walletId: string) {
+export async function useClanSpin(charId: string, walletId: string): Promise<{ id: string; name: string }> {
   const char = await prisma.userCharacter.findUnique({ where: { id: charId }, include: { clan: true } });
   if (!char) throw new PremiumStoreError("Personagem nÃ£o encontrado.");
   if (char.ninjaRank !== "ACADEMIA") throw new PremiumStoreError("Depois de se tornar Genin, outro ClÃ£ sÃ³ pode ser obtido ao resetar o personagem.");
@@ -85,7 +85,8 @@ export async function useClanSpin(charId: string, walletId: string) {
   const consumed = await prisma.premiumWallet.updateMany({ where: { id: walletId, clanSpins: { gt: 0 } }, data: { clanSpins: { decrement: 1 } } });
   if (consumed.count !== 1) throw new PremiumStoreError("VocÃª nÃ£o possui Giro de ClÃ£ disponÃ­vel.");
   await setClan(charId, option.clanId);
-  return CLANS.find((clan) => clan.id === option.clanId)?.name ?? option.clanId;
+  const clan = CLANS.find((entry) => entry.id === option.clanId);
+  return { id: option.clanId, name: clan?.name ?? option.clanId };
 }
 
 export async function startTraitSpin(charId: string, walletId: string): Promise<TraitSpinResult> {
