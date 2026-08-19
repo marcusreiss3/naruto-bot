@@ -16,7 +16,7 @@
   };
   const ACTION_LABELS = { COMUM: "Ação comum", BONUS: "Ação bônus", MOVIMENTO: "Movimento", REACAO: "Reação" };
   const RESOURCE_LABELS = { chakra: "Chakra", energia: "Energia" };
-  const GUIDE_ICON_SPRITE = "/assets/guides/guide-icons.svg?v=2";
+  const GUIDE_ICON_SPRITE = "/assets/guides/guide-icons.svg?v=3";
   const COMMAND_GROUP_ICONS = {
     creation: "guide-creation",
     character: "guide-attributes",
