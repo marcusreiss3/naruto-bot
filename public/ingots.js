@@ -21,6 +21,15 @@ window.INGOTS_PAGE = {
     { label: "Expira", value: "Nunca" },
   ],
 
+  packages: [
+    { id: "01", title: "Pacote I", ingots: "Quantidade a definir", price: "R$ —" },
+    { id: "02", title: "Pacote II", ingots: "Quantidade a definir", price: "R$ —" },
+    { id: "03", title: "Pacote III", ingots: "Quantidade a definir", price: "R$ —" },
+    { id: "04", title: "Pacote IV", ingots: "Quantidade a definir", price: "R$ —" },
+    { id: "05", title: "Pacote V", ingots: "Quantidade a definir", price: "R$ —" },
+    { id: "06", title: "Pacote VI", ingots: "Quantidade a definir", price: "R$ —" },
+  ],
+
   sections: [
     {
       id: "o-que-e",
@@ -62,7 +71,7 @@ window.INGOTS_PAGE = {
           meta: "Quantidade: a definir",
         },
         {
-          icon: "daily",
+          icon: "content",
           title: "Missões Diárias",
           text: "Complete as Missões Diárias para receber Ingots gratuitamente. As condições e a quantidade são exibidas no painel da missão.",
           meta: "Quantidade: a definir",
@@ -159,6 +168,46 @@ window.IngotsPage = (function () {
     </article>`;
   }
 
+  function packageMarkup(pkg) {
+    return `<article class="ingot-package">
+      <span class="ingot-package-index">Pacote ${escapeHtml(pkg.id)}</span>
+      <div class="ingot-package-icon">${ingotIcon("economy")}</div>
+      <h3>${escapeHtml(pkg.title)}</h3>
+      <dl class="ingot-package-facts">
+        <div><dt>Ingots</dt><dd>${escapeHtml(pkg.ingots)}</dd></div>
+        <div><dt>Valor</dt><dd>${escapeHtml(pkg.price)}</dd></div>
+      </dl>
+      <button class="ingot-package-buy" type="button" data-package-id="${escapeHtml(pkg.id)}">Comprar via PIX</button>
+    </article>`;
+  }
+
+  function packagesMarkup(packages) {
+    if (!packages?.length) return "";
+    return `<section class="ingot-section ingot-packages-section" aria-labelledby="ingotPackagesTitle">
+      <div class="section-heading">
+        <div><span class="guides-eyebrow">Loja premium</span><h2 id="ingotPackagesTitle">Pacotes de Ingots</h2></div>
+        <p>Os valores e as quantidades serão divulgados antes da abertura. O botão já mostra como funcionará o pagamento por PIX.</p>
+      </div>
+      <div class="ingot-packages-grid">${packages.map(packageMarkup).join("")}</div>
+    </section>`;
+  }
+
+  function paymentModalMarkup() {
+    return `<div class="ingot-payment-modal hidden" id="ingotPaymentModal" role="dialog" aria-modal="true" aria-labelledby="ingotPaymentTitle">
+      <div class="ingot-payment-card" tabindex="-1">
+        <button class="ingot-payment-close" type="button" data-close-payment aria-label="Fechar pagamento">×</button>
+        <span class="ingot-payment-kicker">Pagamento por PIX</span>
+        <h2 id="ingotPaymentTitle">Pacote</h2>
+        <p id="ingotPaymentPrice">Valor a definir</p>
+        <div class="pix-placeholder" role="img" aria-label="QR Code PIX em preparação">
+          <span>PIX</span><small>em breve</small>
+        </div>
+        <p class="ingot-payment-note">O QR Code e a chave PIX serão disponibilizados quando os pacotes forem definidos. Nenhum pagamento é solicitado nesta etapa.</p>
+        <button class="btn-secondary" type="button" data-close-payment>Entendi</button>
+      </div>
+    </div>`;
+  }
+
   function sectionMarkup(section) {
     const body = section.list
       ? `<ul class="ingot-rules">${section.list.map((rule) => `<li>${escapeHtml(rule)}</li>`).join("")}</ul>`
@@ -208,8 +257,10 @@ window.IngotsPage = (function () {
         Sistema em preparação. Os valores marcados como <strong>a definir</strong> ainda não foram fechados — as regras abaixo já valem.
       </p>
 
+      ${packagesMarkup(data.packages)}
       ${(data.sections || []).map(sectionMarkup).join("")}
       ${faqMarkup(data.faq)}
+      ${paymentModalMarkup()}
     </div>`;
   }
 
@@ -218,9 +269,54 @@ window.IngotsPage = (function () {
 
     function show() {
       root.innerHTML = pageMarkup(page);
+      bindPaymentModal();
       document.title = `${page.title} — Arquivo Shinobi`;
       if (scrollContainer) scrollContainer.scrollTop = 0;
       root.querySelector("h1")?.focus({ preventScroll: true });
+    }
+
+    let paymentReturnFocus = null;
+
+    function bindPaymentModal() {
+      const modal = root.querySelector("#ingotPaymentModal");
+      const closePayment = () => {
+        modal.classList.add("hidden");
+        paymentReturnFocus?.focus();
+        paymentReturnFocus = null;
+      };
+      root.onclick = (event) => {
+        const buy = event.target.closest("[data-package-id]");
+        if (buy) {
+          const pkg = page.packages?.find((entry) => entry.id === buy.dataset.packageId);
+          if (!pkg) return;
+          paymentReturnFocus = buy;
+          root.querySelector("#ingotPaymentTitle").textContent = pkg.title;
+          root.querySelector("#ingotPaymentPrice").textContent = `${pkg.ingots} · ${pkg.price}`;
+          modal.classList.remove("hidden");
+          requestAnimationFrame(() => modal.querySelector(".ingot-payment-card")?.focus());
+          return;
+        }
+        if (event.target === modal || event.target.closest("[data-close-payment]")) closePayment();
+      };
+      root.onkeydown = (event) => {
+        if (modal.classList.contains("hidden")) return;
+        if (event.key === "Escape") {
+          event.preventDefault();
+          closePayment();
+          return;
+        }
+        if (event.key !== "Tab") return;
+        const focusable = [...modal.querySelectorAll("button:not([disabled]), [tabindex]:not([tabindex='-1'])")];
+        const first = focusable[0];
+        const last = focusable.at(-1);
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last?.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first?.focus();
+        }
+      };
     }
 
     return { show };
