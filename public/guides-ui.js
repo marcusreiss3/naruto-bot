@@ -483,7 +483,7 @@
     function cardsMarkup(block) {
       return `<div class="guide-info-grid">${(block.items || []).map((item) => {
         const image = typeof item.image === "string" && item.image.startsWith("/assets/icons/") ? item.image : "";
-        const visual = image ? `<div class="guide-info-visual${item.imageOpticalCenter ? " is-optically-centered" : ""}"><img src="${escapeHtml(assetUrl(image))}" alt="${escapeHtml(item.imageAlt || "")}" loading="lazy"></div>` : "";
+        const visual = image ? `<div class="guide-info-visual"><img src="${escapeHtml(assetUrl(image))}" alt="${escapeHtml(item.imageAlt || "")}" loading="lazy"></div>` : "";
         return `<article class="guide-info-card${visual ? " has-visual" : ""}">
         ${visual}
         ${item.meta ? `<small>${escapeHtml(item.meta)}</small>` : ""}
