@@ -2140,6 +2140,7 @@ svg {
   grid-template-rows: minmax(170px, 1fr) auto;
   align-items: stretch;
   gap: clamp(24px, 4vw, 54px);
+  min-height: 292px;
   overflow: hidden;
   padding: clamp(26px, 4vw, 42px);
   border: 1px solid var(--border);
@@ -2157,22 +2158,19 @@ svg {
 }
 
 .guide-search-form {
+  position: relative;
+  z-index: 1;
   grid-column: 2;
   grid-row: 2;
   align-self: end;
 }
 
 .guides-hero-visual {
-  position: relative;
-  z-index: 1;
-  grid-column: 2;
-  grid-row: 1;
-  min-height: 176px;
+  position: absolute;
+  z-index: 0;
+  inset: 0;
   overflow: hidden;
-  border: 1px solid rgba(111, 176, 249, .2);
-  border-radius: var(--radius-md);
-  background: #0b1119;
-  box-shadow: inset 0 1px rgba(255, 255, 255, .035), 0 12px 28px rgba(0, 0, 0, .2);
+  pointer-events: none;
 }
 
 .guides-hero-visual::before {
@@ -2180,9 +2178,9 @@ svg {
   position: absolute;
   z-index: 1;
   inset: 0;
-  border: 1px solid rgba(255, 255, 255, .025);
-  border-radius: inherit;
-  background: linear-gradient(90deg, rgba(8, 12, 18, .16), rgba(8, 12, 18, .54));
+  background:
+    linear-gradient(90deg, rgba(11, 15, 21, .94) 0%, rgba(11, 15, 21, .8) 37%, rgba(11, 15, 21, .35) 68%, rgba(11, 15, 21, .08) 100%),
+    linear-gradient(180deg, rgba(7, 10, 14, .14), rgba(7, 10, 14, .58));
   pointer-events: none;
 }
 
@@ -2192,7 +2190,7 @@ svg {
   height: 100%;
   object-fit: cover;
   object-position: center;
-  opacity: .95;
+  opacity: .9;
 }
 
 .guides-hero-visual-caption {
@@ -2324,16 +2322,7 @@ svg {
 @keyframes guide-orbit { to { transform: rotate(360deg); } }
 
 .guides-hero::after {
-  content: "";
-  position: absolute;
-  top: -90px;
-  right: -58px;
-  width: 260px;
-  height: 260px;
-  border: 1px solid rgba(255, 255, 255, 0.035);
-  border-radius: 50%;
-  box-shadow: 0 0 0 38px rgba(255, 255, 255, 0.012), 0 0 0 76px rgba(255, 255, 255, 0.008);
-  pointer-events: none;
+  display: none;
 }
 
 .guides-eyebrow {
@@ -4189,7 +4178,8 @@ details.guide-faq > div {
 
   .guides-hero {
     grid-template-columns: 1fr;
-    grid-template-rows: auto minmax(154px, 1fr) auto;
+    grid-template-rows: auto auto;
+    min-height: 330px;
     align-items: start;
   }
 
@@ -4198,15 +4188,9 @@ details.guide-faq > div {
     grid-row: 1;
   }
 
-  .guides-hero-visual {
-    grid-column: 1;
-    grid-row: 2;
-    min-height: 154px;
-  }
-
   .guide-search-form {
     grid-column: 1;
-    grid-row: 3;
+    grid-row: 2;
     width: min(100%, 680px);
   }
 
@@ -4395,10 +4379,6 @@ details.guide-faq > div {
 
   .guides-hero {
     padding: 25px 22px;
-  }
-
-  .guides-hero-visual {
-    min-height: 142px;
   }
 
   .guides-hero-emblem {
@@ -4702,12 +4682,9 @@ details.guide-faq > div {
   }
 
   .guides-hero {
+    min-height: 306px;
     padding: 22px 16px;
     border-radius: var(--radius-md);
-  }
-
-  .guides-hero-visual {
-    min-height: 126px;
   }
 
   .guides-hero h1 {
@@ -5436,8 +5413,23 @@ details.guide-faq > div {
   overflow: hidden;
   border: 1px solid rgba(230, 187, 96, .24);
   border-radius: var(--radius-md);
-  background: #151209;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(214, 168, 79, .22), transparent 38%),
+    linear-gradient(145deg, #242015, #11120f 72%);
   box-shadow: inset 0 1px rgba(255, 255, 255, .04), 0 14px 28px rgba(0, 0, 0, .22);
+}
+
+.ingot-hero-visual::before {
+  content: "";
+  position: absolute;
+  inset: 16px;
+  border: 1px solid rgba(238, 196, 104, .13);
+  background:
+    linear-gradient(90deg, transparent 49.5%, rgba(238, 196, 104, .12) 50%, transparent 50.5%),
+    linear-gradient(transparent 49.5%, rgba(238, 196, 104, .12) 50%, transparent 50.5%);
+  background-size: 56px 56px;
+  transform: rotate(8deg) scale(1.15);
+  pointer-events: none;
 }
 
 .ingot-hero-visual::after {
@@ -5448,30 +5440,17 @@ details.guide-faq > div {
   pointer-events: none;
 }
 
-.ingot-hero-banner {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.ingot-hero-emblem {
+.ingot-hero-mark {
   position: absolute;
-  z-index: 1;
+  z-index: 2;
   top: 50%;
   left: 50%;
-  display: grid;
-  place-items: center;
   width: clamp(88px, 11vw, 126px);
-  aspect-ratio: 1;
-  border-radius: 50%;
-  border: 1px solid rgba(246, 208, 122, .36);
-  background: radial-gradient(circle at 50% 40%, rgba(255, 227, 158, .3), rgba(103, 68, 20, .48));
-  box-shadow: 0 0 0 10px rgba(214, 168, 79, .08), 0 14px 32px rgba(0, 0, 0, .38);
+  height: clamp(88px, 11vw, 126px);
+  color: #f0c96f;
+  filter: drop-shadow(0 0 22px rgba(214, 168, 79, .36)) drop-shadow(0 14px 20px rgba(0, 0, 0, .4));
   transform: translate(-50%, -50%);
 }
-
-.ingot-hero-emblem img { width: 68%; height: auto; filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.5)); }
 
 .ingot-facts {
   display: flex;
@@ -5582,7 +5561,12 @@ details.guide-faq > div {
   background: radial-gradient(circle at 35% 28%, rgba(214, 168, 79, .16), var(--surface-inset) 72%);
 }
 
-.ingot-card-icon img { width: 34px; height: 34px; object-fit: contain; }
+.ingot-card-icon svg {
+  width: 34px;
+  height: 34px;
+  color: var(--rank-s);
+  filter: drop-shadow(0 0 7px rgba(214, 168, 79, .25));
+}
 
 .ingot-card-body { position: relative; z-index: 1; min-width: 0; }
 

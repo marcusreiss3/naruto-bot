@@ -12,8 +12,6 @@ window.INGOTS_PAGE = {
   eyebrow: "Economia premium",
   title: "Ingots",
   lead: "A moeda de apoio do servidor. Separada do Ryo, nunca cai de missão nem de drop — e não compra poder de combate.",
-  icon: "/assets/icons/items/ingots.png",
-
   // Resumo rapido no topo, em tres numeros. Valor "—" aparece como
   // pendente na tela, entao da' pra publicar a pagina antes de fechar
   // os numeros sem que ela pareca quebrada.
@@ -30,17 +28,17 @@ window.INGOTS_PAGE = {
       intro: "Ingot é a moeda de apoio ao servidor. Ela existe fora da economia do jogo: não entra em loja de vila, não paga imposto e não é afetada por taxa nem por confisco.",
       cards: [
         {
-          icon: "/assets/icons/items/ingots.png",
+          icon: "economy",
           title: "Fora da economia de Ryo",
           text: "Ryo circula entre jogadores, sofre imposto e some quando você morre. Ingot fica preso à sua conta do Discord e sobrevive a qualquer reset de personagem.",
         },
         {
-          icon: "/assets/icons/items/minerio_raro.png",
+          icon: "fair",
           title: "Nunca compra vantagem",
           text: "Nada que altere dano, atributo, jutsu ou resultado de combate é vendido por Ingot. A regra é dura de propósito: quem não gasta não fica para trás.",
         },
         {
-          icon: "/assets/icons/items/pergaminho_ninja.png",
+          icon: "account",
           title: "Vinculado à conta",
           text: "Não dá para transferir, doar nem vender Ingot para outro jogador. Isso mata mercado paralelo e golpe de troca antes de existir.",
         },
@@ -52,19 +50,19 @@ window.INGOTS_PAGE = {
       intro: "Ingot entra na sua conta por apoio direto ou por reconhecimento do staff. Não existe farm.",
       cards: [
         {
-          icon: "/assets/icons/items/carvao.png",
+          icon: "support",
           title: "Apoiar o servidor",
           text: "Contribuições mantêm a hospedagem e o banco de dados no ar. O pacote e o valor são anunciados no canal de apoio.",
           meta: "Quantidade: a definir",
         },
         {
-          icon: "/assets/icons/items/aco.png",
+          icon: "event",
           title: "Eventos e torneios",
           text: "Premiação de eventos oficiais conduzidos pelo staff. Distribuído manualmente ao fim do evento.",
           meta: "Quantidade: a definir",
         },
         {
-          icon: "/assets/icons/items/papel.png",
+          icon: "content",
           title: "Contribuição de conteúdo",
           text: "Arte, lore aproveitada, correção de bug reportada com repro. Avaliado caso a caso pelo staff.",
           meta: "Quantidade: a definir",
@@ -77,13 +75,13 @@ window.INGOTS_PAGE = {
       intro: "Use `/loja-premium` para comprar e usar Giros. Nada é vendido com efeito de combate.",
       cards: [
         {
-          icon: "/assets/icons/items/ingots.png",
+          icon: "clan",
           title: "Giro de Clã",
           text: "Permite sortear outro Clã da Vila de origem enquanto o personagem ainda for da Academia.",
           meta: "Custo: 100 Ingots",
         },
         {
-          icon: "/assets/icons/items/ingots.png",
+          icon: "trait",
           title: "Giro de Traço",
           text: "Permite obter um novo Traço usando as probabilidades normais. Um resultado Mítico deixa você escolher entre as opções sorteadas.",
           meta: "Custo: 100 Ingots",
@@ -127,7 +125,7 @@ window.INGOTS_PAGE = {
 };
 
 window.IngotsPage = (function () {
-  const assetUrl = (path) => (window.assetUrl ? window.assetUrl(path) : path);
+  const INGOT_ICON_SPRITE = "/assets/guides/ingot-icons.svg";
 
   function escapeHtml(value) {
     return String(value ?? "").replace(/[&<>"']/g, (char) => (
@@ -145,9 +143,14 @@ window.IngotsPage = (function () {
     </div>`;
   }
 
+  function ingotIcon(icon) {
+    const safeIcon = /^[a-z0-9-]+$/i.test(String(icon || "")) ? icon : "economy";
+    return `<svg aria-hidden="true" viewBox="0 0 48 48"><use href="${INGOT_ICON_SPRITE}#ingot-${escapeHtml(safeIcon)}"></use></svg>`;
+  }
+
   function cardMarkup(card) {
     return `<article class="ingot-card">
-      <div class="ingot-card-icon"><img src="${escapeHtml(assetUrl(card.icon))}" alt="" loading="lazy" decoding="async"></div>
+      <div class="ingot-card-icon">${ingotIcon(card.icon)}</div>
       <div class="ingot-card-body">
         <h3>${escapeHtml(card.title)}</h3>
         <p>${escapeHtml(card.text)}</p>
@@ -197,10 +200,7 @@ window.IngotsPage = (function () {
           <dl class="ingot-facts">${(data.facts || []).map(factMarkup).join("")}</dl>
         </div>
         <div class="ingot-hero-visual" aria-hidden="true">
-          <img class="ingot-hero-banner" src="/assets/guides/ingots-banner.svg" alt="" decoding="async">
-          <div class="ingot-hero-emblem">
-            <img src="${escapeHtml(assetUrl(data.icon))}" alt="" loading="lazy" decoding="async">
-          </div>
+          <svg class="ingot-hero-mark" aria-hidden="true" viewBox="0 0 48 48"><use href="${INGOT_ICON_SPRITE}#ingot-economy"></use></svg>
         </div>
       </header>
 
