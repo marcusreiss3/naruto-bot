@@ -113,6 +113,25 @@ export const admin: Command = {
     )
     .addSubcommandGroup((g) =>
       g
+        .setName("estilo")
+        .setDescription("Estilos de luta")
+        .addSubcommand((s) =>
+          s
+            .setName("adicionar")
+            .setDescription("Ensina um estilo de luta (Punho Forte, Arhat, Adamantino, Agitação, Assassinato)")
+            .addUserOption((o) => o.setName("usuario").setDescription("Usuário").setRequired(true))
+            .addStringOption((o) => o.setName("estilo").setDescription("Estilo de luta").addChoices(...fightingStyleChoices).setRequired(true)),
+        )
+        .addSubcommand((s) =>
+          s
+            .setName("remover")
+            .setDescription("Remove um estilo de luta aprendido")
+            .addUserOption((o) => o.setName("usuario").setDescription("Usuário").setRequired(true))
+            .addStringOption((o) => o.setName("estilo").setDescription("Estilo de luta").addChoices(...fightingStyleChoices).setRequired(true)),
+        ),
+    )
+    .addSubcommandGroup((g) =>
+      g
         .setName("item")
         .setDescription("Itens de inventário")
         .addSubcommand((s) =>
@@ -214,20 +233,6 @@ export const admin: Command = {
         .setDescription("Concede um elemento")
         .addUserOption((o) => o.setName("usuario").setDescription("Usuário").setRequired(true))
         .addStringOption((o) => o.setName("elemento").setDescription("Elemento").addChoices(...elementChoices).setRequired(true)),
-    )
-    .addSubcommand((s) =>
-      s
-        .setName("estilo-luta-set")
-        .setDescription("Ensina um estilo de luta (Punho Forte, Arhat, Adamantino, Agitação, Assassinato)")
-        .addUserOption((o) => o.setName("usuario").setDescription("Usuário").setRequired(true))
-        .addStringOption((o) => o.setName("estilo").setDescription("Estilo de luta").addChoices(...fightingStyleChoices).setRequired(true)),
-    )
-    .addSubcommand((s) =>
-      s
-        .setName("estilo-luta-remover")
-        .setDescription("Remove um estilo de luta aprendido")
-        .addUserOption((o) => o.setName("usuario").setDescription("Usuário").setRequired(true))
-        .addStringOption((o) => o.setName("estilo").setDescription("Estilo de luta").addChoices(...fightingStyleChoices).setRequired(true)),
     )
     .addSubcommand((s) =>
       s
@@ -438,6 +443,19 @@ export const admin: Command = {
       return;
     }
 
+    if (group === "estilo") {
+      const char = await getChar();
+      const estilo = interaction.options.getString("estilo", true) as FightingStyle;
+      if (sub === "adicionar") {
+        await setFightingStyle(char.id, estilo);
+        await interaction.editReply(`✅ Estilo de luta ${FIGHTING_STYLE_LABELS[estilo]} ensinado a **${char.name}**.`);
+      } else {
+        await removeFightingStyle(char.id, estilo);
+        await interaction.editReply(`✅ Estilo de luta ${FIGHTING_STYLE_LABELS[estilo]} removido de **${char.name}**.`);
+      }
+      return;
+    }
+
     if (group === "item") {
       const char = await getChar();
       const itemId = interaction.options.getString("item", true);
@@ -571,20 +589,6 @@ export const admin: Command = {
         const elemento = interaction.options.getString("elemento", true) as Element;
         await setElement(char.id, elemento);
         await interaction.editReply(`✅ Elemento ${elemento} concedido a **${char.name}**.`);
-        return;
-      }
-      case "estilo-luta-set": {
-        const char = await getChar();
-        const estilo = interaction.options.getString("estilo", true) as FightingStyle;
-        await setFightingStyle(char.id, estilo);
-        await interaction.editReply(`✅ Estilo de luta ${FIGHTING_STYLE_LABELS[estilo]} ensinado a **${char.name}**.`);
-        return;
-      }
-      case "estilo-luta-remover": {
-        const char = await getChar();
-        const estilo = interaction.options.getString("estilo", true) as FightingStyle;
-        await removeFightingStyle(char.id, estilo);
-        await interaction.editReply(`✅ Estilo de luta ${FIGHTING_STYLE_LABELS[estilo]} removido de **${char.name}**.`);
         return;
       }
       case "cla-set": {
