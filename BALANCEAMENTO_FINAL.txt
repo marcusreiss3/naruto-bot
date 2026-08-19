@@ -170,10 +170,10 @@ MELHOR GOLPE DISPONÍVEL — com passivas, sem transformação
 CUSTO / DANO REAL — menor é melhor
 
   Nível   Bukijutsu   Elemental   Clã   Estilo   Kekkei Genkai*
-  nv 10      0,92        0,99     0,91   1,03        1,21
-  nv 20      1,05        0,80     0,92   1,03        1,08
-  nv 30      1,08        0,81     0,90   1,00        0,84
-  nv 45      1,08        0,82     0,91   0,83        0,77
+  nv 10      0,92        0,99     0,91   1,03        1,36
+  nv 20      1,05        0,80     0,92   1,03        1,21
+  nv 30      1,08        0,81     0,90   1,00        0,94
+  nv 45      1,08        0,82     0,91   0,83        0,87
 
 * NÚMEROS TEÓRICOS — nenhum personagem tem esse dano de verdade nesses
 níveis. A coluna usa a mesma fórmula das outras (nó com reqLevel ≤ N,
@@ -193,11 +193,15 @@ porque essa coluna inclui Água e Raio medidos em alvo seco. Contra o Fogo
 (47,35 / 80,60), que é o elemental no teto, a diferença real é +20% no dano
 médio e +2% no melhor golpe — que é o "um pouco mais forte" pretendido.
 
-Em custo/dano, Kekkei Genkai (0,77) é PIOR que o Fogo (0,59) e que a média
-elemental (0,82) é apenas marginalmente melhor: o grupo bate mais forte por
-golpe, mas não é mais eficiente por chakra gasto. Isso é deliberado — antes
-de 12/08/2026 o grupo liderava as três métricas ao mesmo tempo (0,70 de
-custo/dano), o que era dominância estrita e foi corrigido (ver capítulo 12).
+Em custo/dano, Kekkei Genkai (0,87) fica ATRÁS de Elemental (0,82) e Estilo
+(0,83), perto de Clã (0,91) e só à frente de Bukijutsu (1,08): o grupo bate
+mais forte por golpe, mas gasta mais chakra por ponto de dano que o
+elemental comum. Não vence mais nenhuma coluna nas três métricas ao mesmo
+tempo — antes de 12/08/2026 vencia todas as três (0,70 de custo/dano
+incluído), o que era dominância estrita e foi corrigido em duas rodadas: a
+primeira cortou o multiplicador de dano (2,025x → 1,82x); a segunda, no
+mesmo dia, subiu o custo de chakra em +12% pra fechar a lacuna que ainda
+sobrava em custo/dano mesmo depois do corte de dano (ver capítulo 12).
 
 A curva teórica (linhas com *) reforça que não sobrou dominância constante:
 no nv20, o melhor golpe teórico de KKG (39,56) fica ABAIXO do Elemental
@@ -311,9 +315,9 @@ Clãs ofensivos ficam próximos ou acima dos elementais com afinidades.
 Estilos de luta ficam abaixo dos elementais sem modo e têm explosão temporária.
 Kekkei Genkai ficam acima do resto em dano no nv45 (médio 57,02 contra 47,35
 do Fogo, o elemental no teto), mas NÃO em eficiência: o custo/dano delas
-(0,77) é pior que o do Fogo (0,59). Batem mais forte por golpe, gastando
-mais por golpe — e são o único grupo sem presença nenhuma antes do nível 35.
-Ver capítulo 12.
+(0,87) fica atrás de Elemental (0,82) e Estilo (0,83), perto de Clã (0,91).
+Batem mais forte por golpe, gastando mais chakra por golpe — e são o único
+grupo sem presença nenhuma antes do nível 35. Ver capítulo 12.
 
 
 12. KEKKEI GENKAI
@@ -331,13 +335,13 @@ COMPARATIVO NO NÍVEL 45, com as passivas próprias (script:
 
 Linhagem    PN   nós  passivas  jutsus  Dano médio  Melhor golpe  Custo/dano  Pico/PN  nvS
 --------------------------------------------------------------------------------------------
-Explosão    32     9      5        4       65,52        69,16        0,89      2,16    38
-Poeira      31     8      4        4       63,62        90,05        0,91      2,90    38
-Lava        32     9      5        4       57,33        83,72        0,73      2,62    38
-Cristal     62    15      5       10       54,60        83,72        0,96      1,35    38
-Vapor       26     8      5        3       54,60        83,72        0,62      3,22    38
-Calor       26     8      5        3       53,39        83,72        0,68      3,22    38
-Gelo        53    14      5        9       50,05        83,72        0,64      1,58    38
+Explosão    32     9      5        4       65,52        69,16        1,00      2,16    38
+Poeira      31     8      4        4       63,62        90,05        1,02      2,90    38
+Lava        32     9      5        4       57,33        83,72        0,81      2,62    38
+Cristal     62    15      5       10       54,60        83,72        1,07      1,35    38
+Vapor       26     8      5        3       54,60        83,72        0,70      3,22    38
+Calor       26     8      5        3       53,39        83,72        0,75      3,22    38
+Gelo        53    14      5        9       50,05        83,72        0,71      1,58    38
 
 COMO COMPARAR COM O ELEMENTAL — a média do capítulo 6 (dano médio 37,96,
 melhor golpe 63,07) é enganosa pra esta conta, porque inclui Água (28,43) e
@@ -435,16 +439,32 @@ fundem cedo com desconto.
 O multiplicador de passiva de todo KKG caiu de 2,025x (1,35 raiz × 1,50
 ápice) pra 1,82x (1,30 × 1,40) — ficando ABAIXO do elemental básico
 (2,015x), não acima. Poeira caiu de 2,17x pra 1,9575x (1,35 × 1,45),
-continuando a mais alta do grupo. Nenhum baseDamage, custo, nível ou PN foi
-tocado: a vantagem de KKG passa a vir de onde sempre devia ter vindo — os
-efeitos exclusivos (Cristalizado, Corrosão, Desidratação, Magma, Minado,
-Desintegração, Congelamento), o baseDamage mais alto por golpe e a
-eficiência de custo — não do multiplicador bruto empilhado.
+continuando a mais alta do grupo. baseDamage, nível e PN não foram tocados
+nesta etapa: melhor golpe caiu pra 82,54 (contra 80,60 do Fogo — +2%), dano
+médio pra 57,02 (contra 47,35 — +20%). O teto de 93,15 que todas as
+linhagens compartilhavam virou 83,72.
 
-Resultado: melhor golpe 82,54 (contra 80,60 do Fogo — +2%), dano médio
-57,02 (contra 47,35 — +20%), custo/dano 0,77 (contra 0,59 do Fogo — agora
-PIOR que o do elemento mais eficiente, não melhor). O teto de 93,15 que
-todas as linhagens compartilhavam virou 83,72.
+Isso resolveu dano médio e melhor golpe, mas não bastou sozinho: custo/dano
+caiu junto com o dano (o multiplicador de passiva afeta os dois, e custo em
+chakra não mudou), fechando em 0,77 — comparado contra o Fogo (0,59) isso
+parecia pior, mas comparado contra a MÉDIA da coluna Elemental do capítulo 8
+(0,82) o KKG ainda vencia. Ou seja: mesmo depois do corte, Kekkei Genkai
+continuava batendo Bukijutsu, Elemental, Clã E Estilo nas três métricas ao
+mesmo tempo — só que por uma margem menor. Ainda era dominância estrita.
+
+AJUSTE DE 12/08/2026 (parte 2) — custo de chakra
+
+O custo em chakra de todo jutsu de dano das 7 linhagens subiu +12% (só o
+`cost`, sem tocar baseDamage/dano/PN/nível) — a régua foi trazer o
+custo/dano de volta pra cima da média Elemental (0,82), tirando a
+dominância que sobrava sem desfazer o corte de dano da parte 1.
+
+Resultado final: custo/dano 0,87 — atrás de Elemental (0,82) e Estilo
+(0,83), perto de Clã (0,91), só à frente de Bukijutsu (1,08). Kekkei Genkai
+não vence mais nenhuma métrica contra TODAS as outras colunas ao mesmo
+tempo: lidera dano médio e melhor golpe, mas é a segunda pior eficiência de
+chakra do jogo. O teto de melhor golpe (83,72 / 90,05 pra Poeira) e o dano
+médio (57,02) continuam os da parte 1 — só o custo de usar mudou.
 
 AJUSTE DE 12/08/2026 — pico de poder cedo do Onoki
 
