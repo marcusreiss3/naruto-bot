@@ -199,7 +199,7 @@
             </div>
           </div>
           <div class="guides-hero-visual" aria-hidden="true">
-            <img src="/assets/guides/guides-hero-team.webp" alt="" decoding="async">
+            <img src="${escapeHtml(assetUrl("/assets/guides/guides-hero-team.webp"))}" alt="" decoding="async">
             <span class="guides-hero-visual-caption">Conhecimento<br><b>em movimento</b></span>
           </div>
           <form class="guide-search-form" role="search" id="guideSearchForm">

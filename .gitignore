@@ -26,6 +26,8 @@ public/assets/**
 !public/assets/bg/login.webp
 !public/assets/guides/
 !public/assets/guides/**
+# Banners rasterizados da Central ficam exclusivamente no Square Blob.
+public/assets/guides/*.webp
 !public/assets/icons/
 !public/assets/icons/brand/
 !public/assets/icons/brand/**

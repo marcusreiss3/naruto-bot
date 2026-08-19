@@ -22,12 +22,12 @@ window.INGOTS_PAGE = {
   ],
 
   packages: [
-    { id: "01", title: "Pacote I", ingots: "Quantidade a definir", price: "R$ —" },
-    { id: "02", title: "Pacote II", ingots: "Quantidade a definir", price: "R$ —" },
-    { id: "03", title: "Pacote III", ingots: "Quantidade a definir", price: "R$ —" },
-    { id: "04", title: "Pacote IV", ingots: "Quantidade a definir", price: "R$ —" },
-    { id: "05", title: "Pacote V", ingots: "Quantidade a definir", price: "R$ —" },
-    { id: "06", title: "Pacote VI", ingots: "Quantidade a definir", price: "R$ —" },
+    { id: "01", title: "Pequeno Cofre", icon: "/assets/ingots/packages/pequeno-cofre.png", ingots: "Quantidade a definir", price: "R$ —" },
+    { id: "02", title: "Bolsa de Ryo", icon: "/assets/ingots/packages/bolsa-ryo.png", ingots: "Quantidade a definir", price: "R$ —" },
+    { id: "03", title: "Caixa de Suprimentos", icon: "/assets/ingots/packages/caixa-suprimentos.png", ingots: "Quantidade a definir", price: "R$ —" },
+    { id: "04", title: "Baú do Mercador", icon: "/assets/ingots/packages/bau-mercador.png", ingots: "Quantidade a definir", price: "R$ —" },
+    { id: "05", title: "Tesouro do Daimyō", icon: "/assets/ingots/packages/tesouro-daimyo.png", ingots: "Quantidade a definir", price: "R$ —" },
+    { id: "06", title: "Reserva do Hokage", icon: "/assets/ingots/packages/reserva-hokage.png", ingots: "Quantidade a definir", price: "R$ —" },
   ],
 
   sections: [
@@ -135,6 +135,7 @@ window.INGOTS_PAGE = {
 
 window.IngotsPage = (function () {
   const INGOT_ICON_SPRITE = "/assets/guides/ingot-icons.svg";
+  const assetUrl = (path) => (window.assetUrl ? window.assetUrl(path) : path);
 
   function escapeHtml(value) {
     return String(value ?? "").replace(/[&<>"']/g, (char) => (
@@ -171,7 +172,7 @@ window.IngotsPage = (function () {
   function packageMarkup(pkg) {
     return `<article class="ingot-package">
       <span class="ingot-package-index">Pacote ${escapeHtml(pkg.id)}</span>
-      <div class="ingot-package-icon">${ingotIcon("economy")}</div>
+      <div class="ingot-package-art"><img src="${escapeHtml(assetUrl(pkg.icon))}" alt="" loading="lazy" decoding="async"></div>
       <h3>${escapeHtml(pkg.title)}</h3>
       <dl class="ingot-package-facts">
         <div><dt>Ingots</dt><dd>${escapeHtml(pkg.ingots)}</dd></div>
@@ -249,7 +250,7 @@ window.IngotsPage = (function () {
           <dl class="ingot-facts">${(data.facts || []).map(factMarkup).join("")}</dl>
         </div>
         <div class="ingot-hero-visual" aria-hidden="true">
-          <img src="/assets/guides/ingots-hero-market.webp" alt="" decoding="async">
+          <img src="${escapeHtml(assetUrl("/assets/guides/ingots-hero-market.webp"))}" alt="" decoding="async">
         </div>
       </header>
 

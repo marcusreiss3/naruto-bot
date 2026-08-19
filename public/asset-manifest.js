@@ -52,6 +52,8 @@ window.__BLOB_ASSETS = {
   "/assets/bg/yamanaka.webp": "https://public-blob.squarecloud.dev/7d832704f601b901e94bbc61ac38256dcbc8439d/bg_/yamanaka.webp",
   "/assets/bg/yotsuki.webp": "https://public-blob.squarecloud.dev/7d832704f601b901e94bbc61ac38256dcbc8439d/bg_/yotsuki.webp",
   "/assets/bg/yuki.webp": "https://public-blob.squarecloud.dev/7d832704f601b901e94bbc61ac38256dcbc8439d/bg_/yuki.webp",
+  "/assets/guides/guides-hero-team.webp": "https://public-blob.squarecloud.dev/7d832704f601b901e94bbc61ac38256dcbc8439d/guides/guides_hero_team.webp",
+  "/assets/guides/ingots-hero-market.webp": "https://public-blob.squarecloud.dev/7d832704f601b901e94bbc61ac38256dcbc8439d/guides/ingots_hero_market.webp",
   "/assets/icons/aburame/casulo-de-insetos.png": "https://public-blob.squarecloud.dev/7d832704f601b901e94bbc61ac38256dcbc8439d/icons_aburame/casulo_de_insetos.png",
   "/assets/icons/aburame/colmeia-completa.png": "https://public-blob.squarecloud.dev/7d832704f601b901e94bbc61ac38256dcbc8439d/icons_aburame/colmeia_completa.png",
   "/assets/icons/aburame/colonia-ancestral.png": "https://public-blob.squarecloud.dev/7d832704f601b901e94bbc61ac38256dcbc8439d/icons_aburame/colonia_ancestral.png",
@@ -711,5 +713,11 @@ window.__BLOB_ASSETS = {
   "/assets/icons/yuki/dragao-ampliado.png": "https://public-blob.squarecloud.dev/7d832704f601b901e94bbc61ac38256dcbc8439d/icons_yuki/dragao_ampliado.png",
   "/assets/icons/yuki/espelho-amplificado.png": "https://public-blob.squarecloud.dev/7d832704f601b901e94bbc61ac38256dcbc8439d/icons_yuki/espelho_amplificado.png",
   "/assets/icons/yuki/nevasca-amplificada.png": "https://public-blob.squarecloud.dev/7d832704f601b901e94bbc61ac38256dcbc8439d/icons_yuki/nevasca_amplificada.png",
-  "/assets/icons/yuki/prisao-persistente.png": "https://public-blob.squarecloud.dev/7d832704f601b901e94bbc61ac38256dcbc8439d/icons_yuki/prisao_persistente.png"
+  "/assets/icons/yuki/prisao-persistente.png": "https://public-blob.squarecloud.dev/7d832704f601b901e94bbc61ac38256dcbc8439d/icons_yuki/prisao_persistente.png",
+  "/assets/ingots/packages/bau-mercador.png": "https://public-blob.squarecloud.dev/7d832704f601b901e94bbc61ac38256dcbc8439d/ingots_packages/bau_mercador.png",
+  "/assets/ingots/packages/bolsa-ryo.png": "https://public-blob.squarecloud.dev/7d832704f601b901e94bbc61ac38256dcbc8439d/ingots_packages/bolsa_ryo.png",
+  "/assets/ingots/packages/caixa-suprimentos.png": "https://public-blob.squarecloud.dev/7d832704f601b901e94bbc61ac38256dcbc8439d/ingots_packages/caixa_suprimentos.png",
+  "/assets/ingots/packages/pequeno-cofre.png": "https://public-blob.squarecloud.dev/7d832704f601b901e94bbc61ac38256dcbc8439d/ingots_packages/pequeno_cofre.png",
+  "/assets/ingots/packages/reserva-hokage.png": "https://public-blob.squarecloud.dev/7d832704f601b901e94bbc61ac38256dcbc8439d/ingots_packages/reserva_hokage.png",
+  "/assets/ingots/packages/tesouro-daimyo.png": "https://public-blob.squarecloud.dev/7d832704f601b901e94bbc61ac38256dcbc8439d/ingots_packages/tesouro_daimyo.png"
 };

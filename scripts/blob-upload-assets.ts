@@ -39,7 +39,7 @@ const MANIFEST_PATH = join(process.cwd(), "public", "asset-manifest.js");
 //     que nao passam por nenhum helper de JS e portanto nao leem o manifesto.
 // Junto tudo isso da 0,21 MB — nao vale complicar por causa deles.
 const SKIP_EXTENSIONS = new Set([".svg", ".md"]);
-const SKIP_PATHS = ["icons/ui/", "icons/header/", "icons/brand/", "guides/", "bg/login.webp"];
+const SKIP_PATHS = ["icons/ui/", "icons/header/", "icons/brand/", "bg/login.webp"];
 
 const MIME_BY_EXT: Record<string, string> = {
   ".png": "image/png",
