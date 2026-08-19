@@ -125,7 +125,7 @@ function characterResetConfirmationPanel(wallet: PremiumWallet): TopLevel[] {
     titleBlock("reset_personagem", "Confirmar reset premium", "Esta ação usa Ingots e prepara uma nova ficha"),
     factsBlock([{ label: "Ingots", value: String(wallet.ingots) }, { label: "Custo", value: "100" }]),
     divider(),
-    noticeBlock("aviso", "Nome, rank, idade, aparência e história serão resetados. Os pontos investidos voltarão ao saldo e as habilidades aprendidas nas Árvores de Habilidade serão removidas."),
+    noticeBlock("aviso", "Nome, rank, idade, aparência e história serão resetados. O rank volta para Academia, permitindo usar Giros de Clã novamente. Os pontos investidos voltarão ao saldo e as habilidades aprendidas nas Árvores de Habilidade serão removidas."),
     text("Você manterá nível, XP, Vila, Clã, Traço, inventário, Ryō, Ingots e Giros disponíveis."),
     text("Depois, use `/ficha` para preencher novamente os dados narrativos do personagem."),
     divider(),
