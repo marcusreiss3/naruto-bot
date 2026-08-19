@@ -257,8 +257,7 @@ window.IngotsPage = (function () {
         Sistema em preparação. Os valores marcados como <strong>a definir</strong> ainda não foram fechados — as regras abaixo já valem.
       </p>
 
-      ${packagesMarkup(data.packages)}
-      ${(data.sections || []).map(sectionMarkup).join("")}
+      ${(data.sections || []).map((section) => `${sectionMarkup(section)}${section.id === "no-que-gastar" ? packagesMarkup(data.packages) : ""}`).join("")}
       ${faqMarkup(data.faq)}
       ${paymentModalMarkup()}
     </div>`;

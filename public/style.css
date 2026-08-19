@@ -5368,9 +5368,24 @@ details.guide-faq > div {
 
 .ingots-shell {
   width: min(100%, var(--content-width));
+  --ingot-gold: #e6bb60;
+  --ingot-gold-bright: #f4d58f;
+  --ingot-gold-glow: rgba(230, 187, 96, .3);
 }
 
-.ingots-shell .guides-eyebrow::before { background: var(--rank-s); box-shadow: 0 0 8px rgba(214, 168, 79, 0.35); }
+.ingots-shell .guides-eyebrow {
+  color: var(--ingot-gold-bright);
+}
+
+.ingots-shell .guides-eyebrow::before {
+  background: var(--ingot-gold);
+  box-shadow: 0 0 8px var(--ingot-gold-glow);
+}
+
+.ingots-shell :focus-visible {
+  outline-color: var(--ingot-gold-bright);
+  box-shadow: 0 0 0 3px var(--ingot-gold-glow);
+}
 
 .ingot-hero {
   position: relative;
@@ -5655,6 +5670,18 @@ details.guide-faq > div {
 }
 
 .ingot-payment-card:focus { outline: none; }
+
+.ingot-payment-card .btn-secondary {
+  border-color: rgba(230, 187, 96, .42);
+  background: rgba(176, 124, 40, .16);
+  color: var(--ingot-gold-bright);
+}
+
+.ingot-payment-card .btn-secondary:hover {
+  border-color: rgba(244, 213, 143, .78);
+  background: rgba(176, 124, 40, .28);
+  color: #fff1cf;
+}
 
 .ingot-payment-close {
   position: absolute;
