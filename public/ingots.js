@@ -11,7 +11,7 @@
 window.INGOTS_PAGE = {
   eyebrow: "Economia premium",
   title: "Ingots",
-  lead: "A moeda de apoio do servidor. Separada do Ryo, nunca cai de missão nem de drop — e não compra poder de combate.",
+  lead: "A moeda de apoio do servidor. Separada do Ryo, nunca cai de missão nem de drop — e não compra dano, atributo ou jutsu diretamente.",
   // Resumo rapido no topo, em tres numeros. Valor "—" aparece como
   // pendente na tela, entao da' pra publicar a pagina antes de fechar
   // os numeros sem que ela pareca quebrada.
@@ -34,8 +34,8 @@ window.INGOTS_PAGE = {
         },
         {
           icon: "fair",
-          title: "Nunca compra vantagem",
-          text: "Nada que altere dano, atributo, jutsu ou resultado de combate é vendido por Ingot. A regra é dura de propósito: quem não gasta não fica para trás.",
+          title: "Sem compra direta de poder",
+          text: "Ingots não vendem dano, atributo ou jutsu específicos. Giros de Clã e de Traço seguem as probabilidades normais: eles podem influenciar sua progressão, mas não permitem comprar um resultado garantido.",
         },
         {
           icon: "account",
@@ -47,7 +47,7 @@ window.INGOTS_PAGE = {
     {
       id: "como-conseguir",
       title: "Como conseguir",
-      intro: "Ingot entra na sua conta por apoio direto ou por reconhecimento do staff. Não existe farm.",
+      intro: "Ingot entra na sua conta por apoio direto, Missões Diárias e premiações oficiais. Não existe farm livre e infinito.",
       cards: [
         {
           icon: "support",
@@ -62,9 +62,9 @@ window.INGOTS_PAGE = {
           meta: "Quantidade: a definir",
         },
         {
-          icon: "content",
-          title: "Contribuição de conteúdo",
-          text: "Arte, lore aproveitada, correção de bug reportada com repro. Avaliado caso a caso pelo staff.",
+          icon: "daily",
+          title: "Missões Diárias",
+          text: "Complete as Missões Diárias para receber Ingots gratuitamente. As condições e a quantidade são exibidas no painel da missão.",
           meta: "Quantidade: a definir",
         },
       ],
@@ -72,7 +72,7 @@ window.INGOTS_PAGE = {
     {
       id: "no-que-gastar",
       title: "No que gastar",
-      intro: "Use `/loja-premium` para comprar e usar Giros. Nada é vendido com efeito de combate.",
+      intro: "Use `/loja-premium` para comprar e usar Giros. Um Giro não permite escolher diretamente um Clã ou Traço específico.",
       cards: [
         {
           icon: "clan",
@@ -107,7 +107,7 @@ window.INGOTS_PAGE = {
   faq: [
     {
       question: "Ingot deixa meu personagem mais forte?",
-      answer: "Não. Nenhum item comprável com Ingot altera atributo, dano, jutsu, recurso ou resultado de combate. Essa é a regra central da moeda.",
+      answer: "Pode influenciar sua progressão de forma indireta: Ingots compram Giros de Clã e de Traço, e um Traço pode ter efeito mecânico. Não existe compra direta ou garantida de atributo, dano, jutsu, Clã ou Traço específico; os Giros usam as probabilidades normais.",
     },
     {
       question: "Perdi meu personagem na morte permanente. Perdi os Ingots?",

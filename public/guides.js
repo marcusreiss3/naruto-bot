@@ -828,7 +828,7 @@
             { question: "O que faço se o espaço da ficha expirar?", answer: "Use `/ficha` novamente no local de criação. O bot abre outro espaço privado e retoma a etapa salva." },
             { question: "Posso combinar qualquer clã com qualquer Vila?", answer: "Não. Cada clã pertence a uma Vila e os três Giros de origem entregam somente combinações válidas." },
             { question: "Posso escolher meu Traço?", answer: "Nas raridades Comum, Rara, Épica e Lendária, o resultado é automático. Se a raridade Mítica for sorteada, você escolhe um dos três Traços Míticos." },
-            { question: "Como consigo novos Giros?", answer: "Giros de Clã e de Traço usam Ingots, obtidos na loja, em eventos, sorteios, códigos promocionais, passes ou pelo Boost do servidor." },
+            { question: "Como consigo novos Giros?", answer: "Giros de Clã e de Traço usam Ingots. Você pode obter Ingots por apoio ao servidor, Missões Diárias, eventos e torneios; o Boost do servidor concede Giros diretamente." },
             { question: "Posso trocar de Clã depois de criar a ficha?", answer: "Antes de se tornar Genin, a troca é normal. Depois de alcançar Genin, é preciso resetar o personagem para escolher outro Clã." },
           ] },
         ] },
