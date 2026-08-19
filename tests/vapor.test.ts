@@ -71,13 +71,13 @@ describe("Vapor: integridade da arvore", () => {
 describe("Vapor: passiva de dano", () => {
   const nevoa = getAbility("vapor_nevoa_qualificada")!;
 
-  it("Ponto de Ebulição (raiz) sozinha dá só +35%", () => {
-    expect(passiveMods(["vapor_raiz"], nevoa).damageMult).toBeCloseTo(1.35, 3);
+  it("Ponto de Ebulição (raiz) sozinha dá só +30%", () => {
+    expect(passiveMods(["vapor_raiz"], nevoa).damageMult).toBeCloseTo(1.3, 3);
   });
 
-  it("raiz + Ebulição Total (ápice) fecham em 2.025x — mesmo nível do Cristal", () => {
+  it("raiz + Ebulição Total (ápice) fecham em 1.82x — mesmo nível do Cristal", () => {
     const mods = passiveMods(["vapor_raiz", "vapor_ebulicao_total"], nevoa);
-    expect(mods.damageMult).toBeCloseTo(2.025, 3);
+    expect(mods.damageMult).toBeCloseTo(1.82, 3);
     const cristal = passiveMods(
       ["cristal_raiz", "cristal_faceta"],
       getAbility("shouton_shuriken_cristal")!,

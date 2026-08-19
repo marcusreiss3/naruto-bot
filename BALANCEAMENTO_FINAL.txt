@@ -157,7 +157,7 @@ DANO REAL — arsenal médio com passivas próprias, sem transformação
   nv 10      25,91       20,62    22,57   18,30         —
   nv 20      33,54       30,86    32,16   22,70         —
   nv 30      36,37       34,78    36,77   27,37         —
-  nv 45      36,37       37,96    37,17   32,85       63,40
+  nv 45      36,37       37,96    37,17   32,85       57,02
 
 MELHOR GOLPE DISPONÍVEL — com passivas, sem transformação
 
@@ -165,7 +165,7 @@ MELHOR GOLPE DISPONÍVEL — com passivas, sem transformação
   nv 10      29,90       24,34    25,02   23,04         —
   nv 20      38,09       41,51    40,35   29,84         —
   nv 30      50,25       52,48    49,20   40,23         —
-  nv 45      50,25       63,07    50,20   48,27       91,79
+  nv 45      50,25       63,07    50,20   48,27       82,54
 
 CUSTO / DANO REAL — menor é melhor
 
@@ -173,7 +173,7 @@ CUSTO / DANO REAL — menor é melhor
   nv 10      0,92        0,99     0,91   1,03         —
   nv 20      1,05        0,80     0,92   1,03         —
   nv 30      1,08        0,81     0,90   1,00         —
-  nv 45      1,08        0,82     0,91   0,83        0,70
+  nv 45      1,08        0,82     0,91   0,83        0,77
 
 Kekkei Genkai só aparece no nv45: nenhuma delas é alcançável antes do nível
 35 (o nó mais caro de QUALQUER árvore elemental básica está nesse nível, e
@@ -186,12 +186,17 @@ que podem fundir bem mais cedo (~nível 12 no caso mais otimista) — checado
 linhagem por linhagem em 12/08/2026, e só Poeira precisou de ajuste (ver
 capítulo 12).
 
-Mesmo assim, no nv45 Kekkei Genkai já lidera as três métricas por boa
-margem: 63,40 de dano médio (67% acima do Elemental, a segunda coluna mais
-alta), 91,79 de melhor golpe (46% acima do Elemental) e 0,70 de custo/dano
-(o mais eficiente de todos, abaixo até do 0,82 do Elemental). Isso é
-esperado e intencional — é o "acima dos elementais" que o capítulo 12
-promete, pago com o método de obtenção mais caro do jogo.
+No nv45 Kekkei Genkai lidera dano médio (57,02) e melhor golpe (82,54), mas
+a margem contra a coluna Elemental (37,96 / 63,07) é maior do que parece
+porque essa coluna inclui Água e Raio medidos em alvo seco. Contra o Fogo
+(47,35 / 80,60), que é o elemental no teto, a diferença real é +20% no dano
+médio e +2% no melhor golpe — que é o "um pouco mais forte" pretendido.
+
+Em custo/dano, Kekkei Genkai (0,77) é PIOR que o Fogo (0,59) e que a média
+elemental (0,82) é apenas marginalmente melhor: o grupo bate mais forte por
+golpe, mas não é mais eficiente por chakra gasto. Isso é deliberado — antes
+de 12/08/2026 o grupo liderava as três métricas ao mesmo tempo (0,70 de
+custo/dano), o que era dominância estrita e foi corrigido (ver capítulo 12).
 
 COMO AS TABELAS DE CLASSES SÃO CALCULADAS
 
@@ -298,9 +303,11 @@ Bukijutsu é melhor no começo e perde eficiência no final.
 Elementais comuns são a base de comparação.
 Clãs ofensivos ficam próximos ou acima dos elementais com afinidades.
 Estilos de luta ficam abaixo dos elementais sem modo e têm explosão temporária.
-Kekkei Genkai ficam acima de todo o resto no nv45 (dano médio 63,40 contra
-37,96 do Elemental, custo/dano 0,70) — o único grupo sem presença antes do
-nível 35, pago com o método de obtenção mais caro do jogo. Ver capítulo 12.
+Kekkei Genkai ficam acima do resto em dano no nv45 (médio 57,02 contra 47,35
+do Fogo, o elemental no teto), mas NÃO em eficiência: o custo/dano delas
+(0,77) é pior que o do Fogo (0,59). Batem mais forte por golpe, gastando
+mais por golpe — e são o único grupo sem presença nenhuma antes do nível 35.
+Ver capítulo 12.
 
 
 12. KEKKEI GENKAI
@@ -318,19 +325,37 @@ COMPARATIVO NO NÍVEL 45, com as passivas próprias (script:
 
 Linhagem    PN   nós  passivas  jutsus  Dano médio  Melhor golpe  Custo/dano  Pico/PN  nvS
 --------------------------------------------------------------------------------------------
-Explosão    32     9      5        4       72,90        76,95        0,80      2,40    38
-Poeira      31     8      4        4       70,53        99,82        0,82      3,22    38
-Lava        32     9      5        4       63,79        93,15        0,65      2,91    38
-Vapor       26     8      5        3       60,75        93,15        0,56      3,58    38
-Cristal     62    15      5       10       60,75        93,15        0,86      1,50    38
-Calor       26     8      5        3       59,40        93,15        0,61      3,58    38
-Gelo        53    14      5        9       55,69        93,15        0,58      1,76    38
+Explosão    32     9      5        4       65,52        69,16        0,89      2,16    38
+Poeira      31     8      4        4       63,62        90,05        0,91      2,90    38
+Lava        32     9      5        4       57,33        83,72        0,73      2,62    38
+Cristal     62    15      5       10       54,60        83,72        0,96      1,35    38
+Vapor       26     8      5        3       54,60        83,72        0,62      3,22    38
+Calor       26     8      5        3       53,39        83,72        0,68      3,22    38
+Gelo        53    14      5        9       50,05        83,72        0,64      1,58    38
 
-Pra comparar: Elemental (capítulo 6) fecha o nível 45 em dano médio 37,96,
-melhor golpe 63,07, custo/dano 0,82. Toda Kekkei Genkai bate mais forte que
-isso — a mais fraca da tabela (Gelo, 55,69 de dano médio) ainda está 47%
-acima do elemental comum, e o pior custo/dano do grupo (Cristal, 0,86) seria
-mediano numa árvore elemental normal.
+COMO COMPARAR COM O ELEMENTAL — a média do capítulo 6 (dano médio 37,96,
+melhor golpe 63,07) é enganosa pra esta conta, porque inclui Água (28,43) e
+Raio (29,52) medidos em ALVO SECO, que é o estado em que os dois são fracos
+de propósito. A comparação honesta usa os elementos que já estão no teto:
+
+  Referência                     Dano médio   Melhor golpe
+  Fogo (elemental mais forte)        47,35        80,60
+  Vento                              49,37        68,51
+  Elemental com setup feito*         45,23        76,82
+  MÉDIA KEKKEI GENKAI                57,02        82,54
+  * Água e Raio contados em alvo Encharcado (Água 2 / Raio 2 do capítulo 6)
+
+Contra essa régua, Kekkei Genkai fica ~15-26% acima em dano médio e ~2-8%
+acima no melhor golpe — "um pouco mais forte", que é o alvo. Contra a média
+crua do capítulo 6 o número parece +50%, mas isso mede KKG contra Água e
+Raio desmontados, não contra o que o elemental realmente entrega jogando bem.
+
+Uma ressalva estrutural que nenhum ajuste de número resolve: "dano médio"
+premia árvore CURTA. Vapor tem 3 jutsus (16/28/46 de base) e Fogo tem 8
+(12/16/18/20/22/28/32/40) — os golpes fracos de rank baixo do Fogo entram na
+média e puxam pra baixo, enquanto o Vapor não tem nenhum. Parte da diferença
+que sobra é isso, não poder real: na prática os dois usam o melhor golpe
+disponível, e aí a distância é de 2-8%, não de 20%.
 
 CUSTO TOTAL DE OBTENÇÃO — PN da(s) árvore(s) elemental(is) exigida(s) pela
 fusão (capítulo 6) + PN da própria árvore de KKG. Sem afinidade de clã.
@@ -359,8 +384,8 @@ comparação com o custo de obtenção real mostrava dois furos que o próprio
 código já sinalizava em comentário mas nunca tinha corrigido:
 
   - Poeira (Jinton) tem no `enums.ts` o rótulo explícito de "kekkei genkai
-    mais forte do jogo" e a passiva certa pra isso (2,17x contra o 2,025x
-    padrão dos outros KKG, em `passives.ts`) — mas as 4 técnicas da árvore
+    mais forte do jogo" e a passiva certa pra isso (na época 2,17x contra o
+    2,025x padrão dos outros KKG, em `passives.ts`) — mas as 4 técnicas
     nunca passavam de rank A. Era, na prática, a PENÚLTIMA linhagem em dano
     (64,02 de médio) apesar de ser a MAIS CARA de obter (151 PN só nas
     árvores elementais prévias — mais que qualquer outra).
@@ -388,9 +413,32 @@ Cristal ganhou receita de fusão nesta revisão (Terra + Água) — antes não
 tinha nenhuma ("fica de fora por enquanto"), então ninguém chegava nela em
 jogo apesar dos números já estarem balanceados. Com 165 PN de custo total,
 fica entre Gelo e Poeira — mas o melhor golpe dela fecha no mesmo teto
-padrão (93,15), não acima: o investimento extra compra versatilidade (15
+padrão (83,72), não acima: o investimento extra compra versatilidade (15
 nós, 10 jutsus, controle e defesa) em vez de um teto de dano maior, o que
-também explica o pior custo/dano do grupo (0,86).
+também explica o pior custo/dano do grupo (0,96).
+
+AJUSTE DE 12/08/2026 — multiplicador bruto cortado
+
+A revisão de 11/08 corrigiu os furos internos (Poeira/Vapor/Calor sem ápice)
+mas deixou o grupo forte demais em relação ao resto do jogo: dano médio
+63,40 e melhor golpe 91,79, contra 47,35/80,60 do Fogo — E ainda com o
+melhor custo/dano do jogo (0,70 contra 0,82 do elemental). Isso é dominância
+estrita, não "um pouco mais forte", e pesava especialmente nos 3 clãs que
+fundem cedo com desconto.
+
+O multiplicador de passiva de todo KKG caiu de 2,025x (1,35 raiz × 1,50
+ápice) pra 1,82x (1,30 × 1,40) — ficando ABAIXO do elemental básico
+(2,015x), não acima. Poeira caiu de 2,17x pra 1,9575x (1,35 × 1,45),
+continuando a mais alta do grupo. Nenhum baseDamage, custo, nível ou PN foi
+tocado: a vantagem de KKG passa a vir de onde sempre devia ter vindo — os
+efeitos exclusivos (Cristalizado, Corrosão, Desidratação, Magma, Minado,
+Desintegração, Congelamento), o baseDamage mais alto por golpe e a
+eficiência de custo — não do multiplicador bruto empilhado.
+
+Resultado: melhor golpe 82,54 (contra 80,60 do Fogo — +2%), dano médio
+57,02 (contra 47,35 — +20%), custo/dano 0,77 (contra 0,59 do Fogo — agora
+PIOR que o do elemento mais eficiente, não melhor). O teto de 93,15 que
+todas as linhagens compartilhavam virou 83,72.
 
 AJUSTE DE 12/08/2026 — pico de poder cedo do Onoki
 

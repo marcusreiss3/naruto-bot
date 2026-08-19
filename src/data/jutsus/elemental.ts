@@ -1228,7 +1228,7 @@ export const ELEMENTAL: Ability[] = [
   },
   // S-rank/apice (11/08/2026, era A): balanceamento de KKG promoveu a
   // tecnica de ponta em vez de inventar golpe novo. baseDamage 40->46 e
-  // custo 48->58 pra fechar no mesmo teto (×2,025x = 93,15) do resto dos
+  // custo 48->58 pra fechar no mesmo teto (×1,82x = 83,72) do resto dos
   // KKG; Corrosao escala 2->3 acumulos e 3->4 rodadas, mesmo salto que o
   // Magma leva no S-rank do Lava.
   {
@@ -1296,7 +1296,7 @@ export const ELEMENTAL: Ability[] = [
   },
   // S-rank/apice (11/08/2026, era A): balanceamento de KKG promoveu a
   // tecnica de ponta em vez de inventar golpe novo. baseDamage 34->46 e
-  // custo 48->62 pra fechar no mesmo teto (×2,025x = 93,15) do resto dos
+  // custo 48->62 pra fechar no mesmo teto (×1,82x = 83,72) do resto dos
   // KKG. Troca BURN por DEHYDRATION (a identidade propria do Calor, ausente
   // do golpe mais forte ate aqui) escalado igual ao Magma do Lava.
   {
@@ -1560,7 +1560,7 @@ export const ELEMENTAL: Ability[] = [
   },
   // S-rank/apice de verdade (11/08/2026, era A): balanceamento de KKG
   // promoveu a tecnica de ponta em vez de inventar golpe novo. baseDamage
-  // 34->46 e custo 60->68 — com o 2.17x de Poeira (acima do 2.025x padrao),
+  // 34->46 e custo 60->68 — com o 1.9575x de Poeira (acima do 1.82x padrao),
   // o teto sobe pra 99,82, ACIMA do resto dos KKG, do jeito que enums.ts
   // sempre disse que devia ser.
   //
@@ -1597,7 +1597,7 @@ export const ELEMENTAL: Ability[] = [
   // explicito do usuario) — mesmos ids de sempre (yuki_agulhas virou
   // gelo_agulhas etc., ver element-trees/index.ts), so' o `element` e o
   // `requirements` que trocam de clanId pra element. Balanceado no mesmo
-  // nivel de Vapor/Calor/Lava (2.025x = 1.35 * 1.50, ver
+  // nivel de Vapor/Calor/Lava (1.82x = 1.30 * 1.40, ver
   // element-trees/passives.ts).
   {
     id: "gelo_agulhas",

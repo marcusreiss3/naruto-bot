@@ -42,6 +42,17 @@ describe("passivas: integridade do registro", () => {
   // Conta o dano CONDICIONAL junto: Agua tem so 1.15x fixo, mas chega a 2.01x
   // contra alvo Encharcado. Isso e' de proposito — ela ganha por montar a jogada.
   // O teto medido e' o do elemento com o setup feito.
+  //
+  // Kekkei genkai (12/08/2026): o multiplicador bruto caiu de ~2.025x pra
+  // ~1.82x (1.30 * 1.40) — ficando ABAIXO do elemental basico, nao acima.
+  // O motivo: multiplicador igual ou maior + arvore mais curta (3-8 jutsus
+  // contra 6-9, sem os golpes fracos de rank baixo que puxam a media do
+  // elemental pra baixo) fazia todo KKG bater ~50-70% mais forte que o
+  // elemental no nv45 — muito acima do "um pouco mais forte" pretendido. A
+  // vantagem de KKG fica onde sempre devia ter ficado: nos efeitos exclusivos
+  // (Cristalizado, Magma, Desintegracao...) e na eficiencia de custo/dano,
+  // nao no multiplicador bruto. Poeira continua o mais alto do grupo
+  // (1.9575x = 1.35 * 1.45), mas dentro da faixa saudavel, nao acima dela.
   it("o dano total das passivas de cada elemento fica perto de 2x", () => {
     const porElemento = new Map<string, number>();
     for (const p of PASSIVES) {
@@ -50,13 +61,7 @@ describe("passivas: integridade do registro", () => {
       porElemento.set(p.element, (porElemento.get(p.element) ?? 1) * mult);
     }
     for (const [element, mult] of porElemento) {
-      // Kekkei genkai fecha perto de 2.025x. O teto bruto fica controlado;
-      // sua vantagem adicional vem dos efeitos e utilidades exclusivos.
-      // Poeira e' excecao deliberada: pedido explicito do usuario pra ser o
-      // KKG MAIS FORTE (2.17x = 1.40 * 1.55, ver element-trees/passives.ts),
-      // por isso tem a propria faixa, acima da dos outros KKG.
-      const [min, max] =
-        element === "POEIRA" ? [2.1, 2.25] : isKekkeiGenkai(element as Element) ? [2, 2.1] : [1.8, 2.2];
+      const [min, max] = isKekkeiGenkai(element as Element) ? [1.75, 2.0] : [1.8, 2.2];
       expect(mult, `${element} está em ${mult.toFixed(2)}x`).toBeGreaterThanOrEqual(min);
       expect(mult, `${element} está em ${mult.toFixed(2)}x`).toBeLessThanOrEqual(max);
     }

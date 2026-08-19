@@ -286,7 +286,7 @@ const CRISTAL: SkillNodeDef[] = [
 
 // ----------------------------------------------------------------- VAPOR (KG)
 // Kekkei genkai: nao e' sorteado, so entra via /admin, igual Cristal. Arvore
-// com os 3 jutsus oficiais de Vapor — raiz (1,35x) + ápice (1,50x) = 2,025x,
+// com os 3 jutsus oficiais de Vapor — raiz (1,30x) + ápice (1,40x) = 1,82x,
 // idêntico ao resto dos KKG (26 PN). As passivas de dano vem so das duas
 // (raiz+apice); as outras tres sao utilidade pura, espalhadas pela arvore
 // (nao mais tudo numa raiz so). Identidade mantida: Corrosao derrete a
@@ -311,7 +311,7 @@ const VAPOR: SkillNodeDef[] = [
 
 // ----------------------------------------------------------------- CALOR (KG)
 // Kekkei genkai, mesmo nivel do Vapor/Cristal: raiz (1,35x) + ápice (1,50x)
-// = 2,025x, idêntico ao resto dos KKG (26 PN). Passivas de dano so nas duas
+// = 1,82x, idêntico ao resto dos KKG (26 PN). Passivas de dano so nas duas
 // pontas; as outras tres sao utilidade, espalhadas pela arvore. Identidade
 // mantida: Desidratacao corta TODO o dano que o alvo causa (nao so
 // TAI/BUKI). Assassinato de Calor Extremo (11/08/2026) virou o S-rank/apice
@@ -340,7 +340,7 @@ const CALOR: SkillNodeDef[] = [
 // abaixo do custo do Cristal, no mesmo patamar de dano — Vapor e Calor
 // alcancaram em 11/08/2026, promovendo a tecnica de ponta que ja existia em
 // cada uma pro posto de S-rank/apice em vez de golpe novo). Arvore com 9
-// nós: raiz (1,35x) + Coração do Vulcão (1,50x) = 2,025x, identico ao
+// nós: raiz (1,30x) + Coração do Vulcão (1,40x) = 1,82x, identico ao
 // Cristal, custando bem menos (32 PN contra 62). Passivas de dano so nas
 // duas pontas; as outras tres sao utilidade, espalhadas pela arvore em vez
 // de concentradas. Identidade mantida: Magma acumula e
@@ -360,7 +360,7 @@ const LAVA: SkillNodeDef[] = [
 
 // -------------------------------------------------------------- EXPLOSAO (KG)
 // Mesmo nivel do Lava/Cristal agora (pedido explicito do usuario). Arvore
-// expandida (13 nós): raiz (1,35x) + Estilo Explosão Pleno (1,50x) = 2,025x,
+// expandida (13 nós): raiz (1,30x) + Estilo Explosão Pleno (1,40x) = 1,82x,
 // identico ao Cristal, custando um pouco menos (52 PN contra 62). Passivas
 // de dano so nas duas pontas; as outras tres sao utilidade, espalhadas pela
 // arvore. A ordem de rank continua NAO seguindo a ordem em que o usuario
@@ -386,8 +386,8 @@ const EXPLOSAO: SkillNodeDef[] = [
 // batem separado (corroi Barreira por turno como Vapor/Corrosao E acumula
 // ate um gatilho como Cristal/Lava), mas o gatilho nao Atordoa/Enraiza: ele
 // COLAPSA a defesa por completo (zera toda a Barreira restante de uma vez +
-// Defesa Reduzida). Teto de dano 1.40 * 1.55 = 2.17x (poeira_raiz + apice em
-// element-trees/passives.ts), ACIMA do 2.025 padrao dos outros KKG.
+// Defesa Reduzida). Teto de dano 1.35 * 1.45 = 1.9575x (poeira_raiz + apice em
+// element-trees/passives.ts), ACIMA do 1.82 padrao dos outros KKG.
 //
 // As 4 tecnicas pedidas viram os 4 nos de JUTSU. Pedido explicito: a arvore
 // NAO abre com a passiva de dano (diferente de todo outro elemento/cla) — o
@@ -436,7 +436,7 @@ const POEIRA: SkillNodeDef[] = [
   // Projeteis virou o apice (S) em vez de A, mesmo motivo do Chute/Assassinato:
   // sem golpe canonico novo, promove a tecnica de ponta que ja existe — e Poeira
   // e' o KKG mais forte do jogo (ver enums.ts), entao o teto dela fica ACIMA do
-  // resto (2.17x em vez de 2.025x).
+  // resto (1.9575x em vez de 1.82x).
   PO.jutsu("poeira_projeteis", "Desprendimento do Mundo Primitivo: Projéteis", "✴️", "S", "Ápice", 0, 6, ["poeira_apice"], 38, 28, "Lança pequenos projéteis da técnica consecutivamente contra o alvo, desintegrando proporcionalmente o que tocam. Defender é impossível, e a velocidade extrema torna a esquiva muito difícil."),
 ];
 
@@ -446,7 +446,7 @@ const POEIRA: SkillNodeDef[] = [
 // de yuki_* pra gelo_* (evita colisão com os novos nós do clã Yuki
 // reconstruido, ver clan-trees/index.ts), mesma forma de árvore (tronco +
 // ramo de defesa isolado Domo/Reflexos, igual Hoshigaki/Hozuki). Balanceado
-// no MESMO nível de Vapor/Calor/Lava: raiz 1.35x + ápice 1.50x = 2.025x — a
+// no MESMO nível de Vapor/Calor/Lava: raiz 1.30x + ápice 1.40x = 1.82x — a
 // raiz e o ápice agora são dano PURO (formato padrão dos outros KKG); o
 // desconto de custo que estava na raiz foi pra Reflexos Gélidos, e o bônus
 // de Defesa Reduzida/Lentidão que estava no ápice ficou só na Presença

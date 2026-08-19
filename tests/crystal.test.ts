@@ -72,10 +72,15 @@ describe("Cristal: passivas", () => {
   const nodes = ["cristal_raiz", "cristal_faceta", "cristal_estilhaco", "cristal_rede"];
   const shuriken = getAbility("shouton_shuriken_cristal")!;
 
-  it("raiz e Faceta Perfeita fecham em 2.025x", () => {
+  // O multiplicador bruto de KKG ficou ABAIXO do elemental basico (1.82x
+  // contra 2.015x) em 12/08/2026, de proposito: multiplicador maior + arvore
+  // curta (sem os golpes fracos de rank baixo que puxam a media do elemental
+  // pra baixo) fazia KKG bater ~50-70% mais forte no nv45. A vantagem de KKG
+  // vem dos efeitos exclusivos e do baseDamage mais alto, nao daqui.
+  it("raiz e Faceta Perfeita fecham em 1.82x, abaixo do elemental basico", () => {
     const mods = passiveMods(["cristal_raiz", "cristal_faceta"], shuriken);
-    expect(mods.damageMult).toBeCloseTo(2.025, 3);
-    expect(mods.damageMult).toBeGreaterThan(2.015);
+    expect(mods.damageMult).toBeCloseTo(1.82, 3);
+    expect(mods.damageMult).toBeLessThan(2.015);
   });
 
   it("Faceta Cortante crava 1 acumulo a mais", () => {

@@ -14,7 +14,7 @@ export type Element = (typeof ELEMENTS)[number];
 // KG bate mais forte que elemento basico de proposito. Poeira (Jinton) e' o
 // mais forte de todos os KKG — ver comentario no topo da secao POEIRA em
 // element-trees/index.ts. Gelo (Hyoton, ex-arvore de clã do Yuki) fica no
-// mesmo nível de Vapor/Calor/Lava (2.025x), ver secao GELO no mesmo arquivo.
+// mesmo nível de Vapor/Calor/Lava (1.82x), ver secao GELO no mesmo arquivo.
 export const KEKKEI_GENKAI = ["CRISTAL", "VAPOR", "CALOR", "LAVA", "EXPLOSAO", "POEIRA", "GELO"] as const;
 export type KekkeiGenkai = (typeof KEKKEI_GENKAI)[number];
 

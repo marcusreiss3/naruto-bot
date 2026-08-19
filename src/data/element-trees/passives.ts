@@ -335,18 +335,18 @@ export const PASSIVES: PassiveDef[] = [
   },
 
   // ------------------------------------------------- CRISTAL (kekkei genkai)
-  // KEKKEI GENKAI: raiz 1.35x + ápice 1.50x fecham em 2.025x.
+  // KEKKEI GENKAI: raiz 1.30x + ápice 1.40x fecham em 1.82x.
   // Vapor, Calor, Lava e Explosão usam o mesmo teto. A vantagem adicional
   // vem do kit exclusivo de efeitos, controle e utilidade de cada linhagem.
   {
     nodeId: "cristal_raiz",
     element: "CRISTAL",
-    damageMult: 1.35,
+    damageMult: 1.3,
   },
   {
     nodeId: "cristal_faceta",
     element: "CRISTAL",
-    damageMult: 1.5, // 1.35 * 1.50 = 2.025
+    damageMult: 1.4, // 1.30 * 1.40 = 1.82
   },
   {
     // Faceta Cortante: cada acerto crava um cristal a mais, entao o casulo
@@ -370,13 +370,13 @@ export const PASSIVES: PassiveDef[] = [
   },
 
   // --------------------------------------------------- VAPOR (kekkei genkai)
-  // Árvore expandida: mesmo teto do Cristal (2.025x = 1.35 * 1.50),
+  // Árvore expandida: mesmo teto do Cristal (1.82x = 1.30 * 1.40),
   // em vez do multiplicador todo morar numa raiz so. As tres passivas do meio
   // sao utilidade pura (duracao/custo/perfuracao de guarda), nao dano.
   {
     nodeId: "vapor_raiz",
     element: "VAPOR",
-    damageMult: 1.35,
+    damageMult: 1.3,
   },
   {
     nodeId: "vapor_condensacao",
@@ -397,16 +397,16 @@ export const PASSIVES: PassiveDef[] = [
   {
     nodeId: "vapor_ebulicao_total",
     element: "VAPOR",
-    damageMult: 1.5, // 1.35 * 1.50 = 2.025, idêntico ao Cristal
+    damageMult: 1.4, // 1.30 * 1.40 = 1.82
   },
 
   // ---------------------------------------------------- CALOR (kekkei genkai)
-  // Mesmo formato do Vapor: raiz + ápice fecham 2.025x, as três do meio são
+  // Mesmo formato do Vapor: raiz + ápice fecham 1.82x, as três do meio são
   // utilidade.
   {
     nodeId: "calor_raiz",
     element: "CALOR",
-    damageMult: 1.35,
+    damageMult: 1.3,
   },
   {
     nodeId: "calor_ressecamento",
@@ -427,17 +427,17 @@ export const PASSIVES: PassiveDef[] = [
   {
     nodeId: "calor_combustao_interna",
     element: "CALOR",
-    damageMult: 1.5, // 1.35 * 1.50 = 2.025, idêntico ao Cristal
+    damageMult: 1.4, // 1.30 * 1.40 = 1.82
   },
 
   // ----------------------------------------------------- LAVA (kekkei genkai)
   // Pedido explicito do usuario: Lava/Explosao/Vapor/Calor no MESMO nivel do
-  // Cristal agora (2.025x = 1.35 * 1.50), custando um pouco menos (52 PN
+  // Cristal agora (1.82x = 1.30 * 1.40), custando um pouco menos (52 PN
   // contra 62). As tres passivas do meio sao utilidade.
   {
     nodeId: "lava_raiz",
     element: "LAVA",
-    damageMult: 1.35,
+    damageMult: 1.3,
   },
   {
     nodeId: "lava_calor_residual",
@@ -458,15 +458,15 @@ export const PASSIVES: PassiveDef[] = [
   {
     nodeId: "lava_apice",
     element: "LAVA",
-    damageMult: 1.5, // 1.35 * 1.50 = 2.025, idêntico ao Cristal
+    damageMult: 1.4, // 1.30 * 1.40 = 1.82
   },
 
   // ------------------------------------------------- EXPLOSAO (kekkei genkai)
-  // Mesmo formato do Lava: 2.025x = 1.35 * 1.50.
+  // Mesmo formato do Lava: 1.82x = 1.30 * 1.40.
   {
     nodeId: "explosao_raiz",
     element: "EXPLOSAO",
-    damageMult: 1.35,
+    damageMult: 1.3,
   },
   {
     nodeId: "explosao_polvora",
@@ -487,7 +487,7 @@ export const PASSIVES: PassiveDef[] = [
   {
     nodeId: "explosao_apice",
     element: "EXPLOSAO",
-    damageMult: 1.5, // 1.35 * 1.50 = 2.025, idêntico ao Cristal
+    damageMult: 1.4, // 1.30 * 1.40 = 1.82
   },
 
   // ---------------------------------------------------------------- GENJUTSU
@@ -532,7 +532,7 @@ export const PASSIVES: PassiveDef[] = [
 
   // --------------------------------------------------- POEIRA (kekkei genkai)
   // O KKG MAIS FORTE do jogo (pedido explicito do usuario) — teto de dano
-  // 1.40 * 1.55 = 2.17x, ACIMA do 2.025x que todo outro KKG (Cristal/Vapor/
+  // 1.35 * 1.45 = 1.9575x, ACIMA do 1.82x que todo outro KKG (Cristal/Vapor/
   // Calor/Lava/Explosao) compartilha. As duas passivas do meio nao sao dano:
   // uma crava Desintegracao a mais por acerto (acelera o colapso — mesmo
   // papel que Faceta Cortante cumpre pro Cristal, so' que via
@@ -542,7 +542,7 @@ export const PASSIVES: PassiveDef[] = [
   {
     nodeId: "poeira_raiz",
     element: "POEIRA",
-    damageMult: 1.4,
+    damageMult: 1.35,
   },
   {
     nodeId: "poeira_estilhaco",
@@ -557,20 +557,20 @@ export const PASSIVES: PassiveDef[] = [
   {
     nodeId: "poeira_apice",
     element: "POEIRA",
-    damageMult: 1.55, // 1.40 * 1.55 = 2.17 — acima do teto 2.025 dos outros KKG de proposito
+    damageMult: 1.45, // 1.35 * 1.45 = 1.9575 — o mais alto dos KKG, de proposito
   },
 
   // ------------------------------------------------------ GELO (kekkei genkai)
   // Hyoton: ex-arvore de clã do Yuki, migrada pra kekkei genkai (pedido
   // explicito do usuario) — balanceada no MESMO nivel de Vapor/Calor/Lava:
-  // raiz 1.35x + ápice 1.50x = 2.025x, o formato padrao (raiz/apice so' dano,
+  // raiz 1.30x + ápice 1.40x = 1.82x, o formato padrao (raiz/apice so' dano,
   // as passivas do meio so' utilidade). O desconto de custo que estava na
   // raiz original foi pra Reflexos Gélidos; o bonus de Defesa Reduzida extra
   // + Lentidão do ápice original ficou concentrado na Presença Silenciosa.
   {
     nodeId: "gelo_raiz",
     element: "GELO",
-    damageMult: 1.35,
+    damageMult: 1.3,
   },
   {
     nodeId: "gelo_presenca",
@@ -597,7 +597,7 @@ export const PASSIVES: PassiveDef[] = [
   {
     nodeId: "gelo_apice",
     element: "GELO",
-    damageMult: 1.5, // 1.35 * 1.50 = 2.025, identico a Vapor/Calor/Lava
+    damageMult: 1.4, // 1.30 * 1.40 = 1.82
   },
 
   // ------------------------------------------------ TAIIJUTSU (arvore geral)

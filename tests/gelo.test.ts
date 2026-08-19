@@ -86,16 +86,16 @@ describe("Gelo: integridade da arvore (ex-clã Yuki, migrado pra kekkei genkai)"
 describe("Gelo: passiva de dano — balanceado no nível de Vapor/Calor/Lava", () => {
   const agulhas = getAbility("gelo_agulhas")!;
 
-  it("Sangue de Gelo (raiz) sozinha dá +35% — mesmo nível do Vapor/Calor/Lava", () => {
+  it("Sangue de Gelo (raiz) sozinha dá +30% — mesmo nível do Vapor/Calor/Lava", () => {
     const gelo = passiveMods(["gelo_raiz"], agulhas).damageMult;
     const vapor = passiveMods(["vapor_raiz"], getAbility("vapor_nevoa_qualificada")!).damageMult;
     expect(gelo).toBeCloseTo(vapor, 5);
-    expect(gelo).toBeCloseTo(1.35, 3);
+    expect(gelo).toBeCloseTo(1.3, 3);
   });
 
-  it("raiz + Domínio do Espelho de Gelo (ápice) fecham em 2.025x", () => {
+  it("raiz + Domínio do Espelho de Gelo (ápice) fecham em 1.82x", () => {
     const mods = passiveMods(["gelo_raiz", "gelo_apice"], agulhas);
-    expect(mods.damageMult).toBeCloseTo(2.025, 3);
+    expect(mods.damageMult).toBeCloseTo(1.82, 3);
   });
 
   it("ápice é só dano (formato padrão dos outros KKG) — utilidade ficou na Presença", () => {
