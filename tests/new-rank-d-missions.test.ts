@@ -22,7 +22,7 @@ describe("new rank D missions", () => {
     expect(getPersona("delivery_sayuri")).toBeDefined();
   });
 
-  it("keeps eighteen rank D missions in the catalog", () => {
-    expect(MISSIONS.filter((mission) => mission.rank === "D")).toHaveLength(18);
+  it("keeps nineteen rank D missions in the catalog", () => {
+    expect(MISSIONS.filter((mission) => mission.rank === "D")).toHaveLength(19);
   });
 });

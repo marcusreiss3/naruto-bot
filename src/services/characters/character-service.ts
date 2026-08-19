@@ -1,6 +1,6 @@
 import { prisma } from "../../db/client.js";
 import { BALANCE } from "../../config/balance.js";
-import { ATTRIBUTES, type Attribute, type Element, type FightingStyle } from "../../config/enums.js";
+import { ATTRIBUTES, FIGHTING_STYLE_LABELS, type Attribute, type Element, type FightingStyle } from "../../config/enums.js";
 import { ALL_ABILITIES, getClan } from "../../data/index.js";
 import { getNode } from "../../data/element-trees/index.js";
 import { ensureEconomyState } from "../economy/character-economy.js";
@@ -188,8 +188,8 @@ export async function removeElement(charId: string, element: Element): Promise<v
 }
 
 // Ensina um estilo de luta ao personagem (ver FightingStyle em config/
-// enums.ts). Hoje so' concedido via /admin — a via narrativa (NPC em RP)
-// ainda nao existe.
+// enums.ts). Concedido via /admin ou pelo fluxo narrativo dos mestres
+// (services/missions/mestre-estilo.ts) apos vencer o combate final.
 export async function setFightingStyle(charId: string, style: FightingStyle): Promise<void> {
   await prisma.characterFightingStyle.upsert({
     where: { charId_style: { charId, style } },
@@ -202,6 +202,53 @@ export async function removeFightingStyle(charId: string, style: FightingStyle):
   await prisma.characterFightingStyle
     .delete({ where: { charId_style: { charId, style } } })
     .catch(() => undefined);
+}
+
+// Punho Forte e Punho Adamantino sao mutuamente exclusivos: quem pega um dos
+// dois nao pode pegar o outro como o 1o ou o 2o estilo.
+const EXCLUSIVE_FIGHTING_STYLES: Partial<Record<FightingStyle, FightingStyle>> = {
+  PUNHO_FORTE: "PUNHO_ADAMANTINO",
+  PUNHO_ADAMANTINO: "PUNHO_FORTE",
+};
+
+// Regras pra aprender um estilo pelo caminho narrativo (mestre em RP, ver
+// services/missions/mestre-estilo.ts): nivel minimo, no maximo 2 estilos por
+// personagem, a exclusao Forte/Adamantino acima, e o requisito de Assassinato
+// Silencioso (elemento AGUA + vila Kiri) ja documentado em enums.ts. Chamada
+// tanto pro autocomplete do /interagir (esconde o mestre se o jogador nao
+// pode aprender) quanto de novo no botao de Aceitar, como defesa contra
+// corrida entre o convite e o clique.
+export async function canLearnFightingStyle(
+  charId: string,
+  style: FightingStyle,
+): Promise<{ ok: boolean; error?: string }> {
+  const char = await prisma.userCharacter.findUnique({
+    where: { id: charId },
+    include: { fightingStyles: true, elements: true },
+  });
+  if (!char) return { ok: false, error: "Personagem não encontrado." };
+  if (char.level < 5) return { ok: false, error: "Precisa ser nível 5 ou mais pra aprender um estilo de luta." };
+
+  const owned = new Set(char.fightingStyles.map((s) => s.style as FightingStyle));
+  if (owned.has(style)) return { ok: false, error: "Você já aprendeu esse estilo de luta." };
+  if (owned.size >= 2) return { ok: false, error: "Você já aprendeu os 2 estilos de luta permitidos." };
+
+  const exclusive = EXCLUSIVE_FIGHTING_STYLES[style];
+  if (exclusive && owned.has(exclusive)) {
+    return {
+      ok: false,
+      error: `Quem aprende ${FIGHTING_STYLE_LABELS[exclusive]} não pode aprender ${FIGHTING_STYLE_LABELS[style]}.`,
+    };
+  }
+
+  if (style === "ASSASSINATO_SILENCIOSO") {
+    const hasAgua = char.elements.some((e) => e.element === "AGUA");
+    if (!hasAgua || char.villageId !== "KIRI") {
+      return { ok: false, error: "Assassinato Silencioso exige elemento Água e vila Kirigakure." };
+    }
+  }
+
+  return { ok: true };
 }
 
 export async function setClan(charId: string, clanId: string): Promise<void> {

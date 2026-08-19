@@ -65,6 +65,7 @@ import { resolveYukiHeir, yukiHeirMapHandle } from "../services/missions/yuki-he
 import { corpsePulseMapHandle, resolveCorpsePulse } from "../services/missions/corpse-pulse.js";
 import { eliteMaskMapHandle, resolveEliteMask } from "../services/missions/elite-mask.js";
 import { forbiddenBellMapHandle, resolveForbiddenBell } from "../services/missions/forbidden-bell.js";
+import { mestreEstiloStaticEntities } from "../services/missions/mestre-estilo.js";
 import { emoji } from "../ui/economy-emojis.js";
 
 export const mapa: Command = {
@@ -92,6 +93,12 @@ export const mapa: Command = {
       round = session.round;
       entities.push(...(await buildSessionEntities(session, guildId)));
       session.drops.forEach((d) => drops.push({ cell: d.cell }));
+    } else {
+      // Mestres de estilo de luta sao fixos no cenario — aparecem pra
+      // qualquer jogador que visite o local, tenha ou nao comecado a missao
+      // de aprender com eles (diferente do padrao ephemeral das outras
+      // missoes, que so' mostram NPC com instancia ja ativa).
+      entities.push(...mestreEstiloStaticEntities(channelId));
     }
 
     // missao de gato no canal

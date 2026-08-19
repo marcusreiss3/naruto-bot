@@ -586,6 +586,55 @@ export const NPCS: NpcTemplate[] = [
     attributes: { taijutsu: 8, ninjutsu: 6 },
     abilityIds: ["abelha_gigante_ferroada", "abelha_gigante_mel"],
   },
+
+  // ---------------- Mestres de estilo de luta (services/missions/mestre-estilo.ts) ----------------
+  // Calibrados pra ficar vencivel por um ninja nivel 5 solo (referencia: bandit_leader,
+  // hpMax 160, taijutsu 14/bukijutsu 16/ninjutsu 8, e' o teto "duro mas justo" dessa
+  // faixa). Cada um usa so' os nos INICIAIS (D/C-rank) da propria arvore — nunca as
+  // tecnicas de nivel alto (Portoes, Cem Forcas etc.), que alem de overpower exigem
+  // nivel muito maior que 5 pros proprios nos.
+  {
+    id: "mestre_kaen",
+    name: "Kaen",
+    hpMax: 190,
+    attributes: { taijutsu: 18 },
+    abilityIds: ["tai_furacao_folha", "tai_entrada_dinamica", "tai_vendaval_folha"],
+    aiPersona: "mestre_kaen",
+  },
+  {
+    id: "mestre_suzu",
+    name: "Suzu",
+    hpMax: 180,
+    attributes: { taijutsu: 14, iryoNinjutsu: 12 },
+    abilityIds: ["adamantino_super_peteleco", "adamantino_pe_dor_celestial"],
+    aiPersona: "mestre_suzu",
+  },
+  {
+    id: "mestre_bantou",
+    name: "Bantou",
+    hpMax: 170,
+    attributes: { taijutsu: 15 },
+    abilityIds: ["arhat_palmada_colapso", "arhat_ombro", "arhat_joelhada"],
+    aiPersona: "mestre_bantou",
+  },
+  {
+    // Punho de Agitacao e' so' passiva (sem jutsu ativo proprio) — usa o kit
+    // generico de NPC (ver jutsus/npc.ts) como golpe basico.
+    id: "mestre_souta",
+    name: "Souta",
+    hpMax: 150,
+    attributes: { taijutsu: 12 },
+    abilityIds: ["npc_soco"],
+    aiPersona: "mestre_souta",
+  },
+  {
+    id: "mestre_mizuo",
+    name: "Mizuo",
+    hpMax: 175,
+    attributes: { taijutsu: 13 },
+    abilityIds: ["tai_ocultacao_nevoa", "npc_soco"],
+    aiPersona: "mestre_mizuo",
+  },
 ];
 
 const NPC_MAP = new Map<string, NpcTemplate>(NPCS.map((n) => [n.id, n]));

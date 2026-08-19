@@ -233,6 +233,7 @@ import {
   availableForbiddenBellNpcs,
   type ForbiddenBellState,
 } from "../services/missions/forbidden-bell.js";
+import { interactMestreEstilo, availableMestreEstiloNpcs } from "../services/missions/mestre-estilo.js";
 
 export const interagir: Command = {
   data: new SlashCommandBuilder()
@@ -244,6 +245,7 @@ export const interagir: Command = {
 
   execute(interaction: ChatInputCommandInteraction) {
     const npc = interaction.options.getString("npc", true);
+    if (npc.startsWith("mestre_")) return interactMestreEstilo(interaction, npc);
     if (npc.startsWith("forbidden_bell_")) return interactForbiddenBell(interaction, npc);
     if (npc.startsWith("elite_mask_")) return interactEliteMask(interaction, npc);
     if (npc.startsWith("corpse_")) return interactCorpsePulse(interaction, npc);
@@ -560,6 +562,13 @@ export const interagir: Command = {
       const state = readState<ForbiddenBellState>(forbiddenBell.inst.stateJson);
       choices.push(...availableForbiddenBellNpcs(state, interaction.channelId).map((n) => ({ name: n.name, value: n.key })));
     }
+
+    choices.push(
+      ...(await availableMestreEstiloNpcs(interaction.user.id, guildId, interaction.channelId)).map((n) => ({
+        name: n.name,
+        value: n.key,
+      })),
+    );
 
     await interaction.respond(
       choices.filter((c) => c.name.toLowerCase().includes(focused)).slice(0, 25),

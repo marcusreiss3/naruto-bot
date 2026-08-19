@@ -370,7 +370,8 @@ export interface MissionDef {
     | "YUKI_HEIR"
     | "CORPSE_PULSE"
     | "ELITE_MASK"
-    | "FORBIDDEN_BELL";
+    | "FORBIDDEN_BELL"
+    | "MESTRE_ESTILO";
   data?: Record<string, unknown>;
 }
 

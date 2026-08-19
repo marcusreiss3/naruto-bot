@@ -2,7 +2,18 @@
 import type { Command } from "./types.js";
 import { getMission, MISSIONS } from "../data/index.js";
 import { getOrCreateCharacter } from "../services/characters/character-service.js";
-import { getActiveMissions } from "../services/missions/mission-service.js";
+import { getActiveMissions, readState } from "../services/missions/mission-service.js";
+import type { MestreEstiloState } from "../services/missions/mestre-estilo.js";
+import { mestreEstiloExtraBlock } from "../ui/mestre-estilo-container.js";
+import {
+  divider,
+  listBlock,
+  singleCard,
+  text,
+  titleBlock,
+  v2Payload,
+  type ContainerChild,
+} from "../ui/economy-components-v2.js";
 import { emoji } from "../ui/economy-emojis.js";
 
 export const missoes: Command = {
@@ -31,7 +42,8 @@ async function minhas(interaction: ChatInputCommandInteraction): Promise<void> {
     return;
   }
 
-  const embed = new EmbedBuilder().setTitle(`${emoji("missoes")} Suas missões`).setColor(0x3498db);
+  const children: ContainerChild[] = [titleBlock("missoes", "Suas missões", `${insts.length} ativa(s)`)];
+
   for (const inst of insts) {
     const def = getMission(inst.missionId);
     if (!def) continue;
@@ -40,18 +52,25 @@ async function minhas(interaction: ChatInputCommandInteraction): Promise<void> {
     const visibleObjectives: string[] = [];
     for (const objective of def.objectives) {
       const done = objectiveStates.get(objective.id) ?? false;
-      if (done) {
-        visibleObjectives.push(`${emoji("sucesso")} ${objective.description}`);
-        continue;
-      }
-      visibleObjectives.push(`${emoji("pendente")} ${objective.description}`);
-      break;
+      visibleObjectives.push(`${done ? emoji("sucesso") : emoji("pendente")} ${objective.description}`);
+      if (!done) break;
     }
-    const objs = visibleObjectives.join("\n");
 
-    embed.addFields({ name: `[${def.rank}] ${def.name}`, value: `${def.description}\n${objs}` });
+    children.push(divider());
+    children.push(text(`**[${def.rank}] ${def.name}**\n-# ${def.description}`));
+    children.push(listBlock(null, visibleObjectives, "Sem objetivos."));
+
+    // Mestre de estilo de luta ganha um bloco a mais durante GATHER: o
+    // checklist ao vivo de ryo/itens que ainda falta trazer. Todo o resto
+    // (INTRO/CHALLENGE) já fica claro pelos objetivos genéricos acima —
+    // fica tudo no MESMO container, no mesmo estilo das outras missões.
+    if (def.type === "MESTRE_ESTILO") {
+      const state = readState<MestreEstiloState>(inst.stateJson);
+      children.push(...(await mestreEstiloExtraBlock(def, state, char.id)));
+    }
   }
-  await interaction.reply({ embeds: [embed], ephemeral: true });
+
+  await interaction.reply(v2Payload(singleCard("vila", children), true));
 }
 
 async function ativas(interaction: ChatInputCommandInteraction): Promise<void> {

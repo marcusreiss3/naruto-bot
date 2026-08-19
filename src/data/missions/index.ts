@@ -1263,6 +1263,143 @@ export const MISSIONS: MissionDef[] = [
       weakenedBossTemplate: "forbidden_bell_reika_weakened",
     },
   },
+
+  // ---------------- Mestres de estilo de luta (services/missions/mestre-estilo.ts) ----------------
+  // Cada um: convite (2-3 falas) -> Aceitar/Recusar -> reunir ryo+itens reais de
+  // inventario -> combate final -> setFightingStyle(). objectives identicos de
+  // proposito (cada instancia e' independente por missionId).
+  {
+    id: "mestre_taijutsu_agitacao",
+    name: "O Ritmo Torto de Souta",
+    rank: "D",
+    description:
+      "Souta ensina o Taijutsu de Agitação no meio do Centro Comercial de Konoha, brigando de brincadeira com quem passa. Fale com ele, pague o combinado e prove que aguenta o ritmo dele.",
+    channelId: CENTRO_COMERCIAL_CHANNEL_ID,
+    type: "MESTRE_ESTILO",
+    objectives: [
+      { id: "aceitar_convite", description: "Aceitar o convite de Souta" },
+      { id: "reunir_recursos", description: "Reunir o ryo pedido por Souta" },
+      { id: "vencer_mestre", description: "Vencer Souta em combate" },
+    ],
+    rewards: { xp: 120, ryo: 0 },
+    data: {
+      style: "TAIJUTSU_AGITACAO",
+      channelId: CENTRO_COMERCIAL_CHANNEL_ID,
+      scenarioId: "centro_comercial",
+      costRyo: 300,
+      costItems: [],
+      introTurns: 3,
+      challengeTurns: 3,
+    },
+  },
+  {
+    id: "mestre_punho_arhat",
+    name: "A Paciência de Bantou",
+    rank: "C",
+    description:
+      "Bantou treina sozinho há anos na Caverna e ensina o Punho Arhat a quem provar disposição pra esperar e sofrer pelo treino.",
+    channelId: CAVERNA_CHANNEL_ID,
+    type: "MESTRE_ESTILO",
+    objectives: [
+      { id: "aceitar_convite", description: "Aceitar o convite de Bantou" },
+      { id: "reunir_recursos", description: "Reunir o que Bantou pediu" },
+      { id: "vencer_mestre", description: "Vencer Bantou em combate" },
+    ],
+    rewards: { xp: 150, ryo: 0 },
+    data: {
+      style: "PUNHO_ARHAT",
+      channelId: CAVERNA_CHANNEL_ID,
+      scenarioId: "caverna",
+      costRyo: 450,
+      costItems: [
+        { itemId: "pedra", qty: 4 },
+        { itemId: "carvao", qty: 2 },
+      ],
+      introTurns: 3,
+      challengeTurns: 3,
+    },
+  },
+  {
+    id: "mestre_assassinato_silencioso",
+    name: "A Névoa de Mizuo",
+    rank: "C",
+    description:
+      "Mizuo ensina o Assassinato Silencioso de Kirigakure no Centro Comercial de Kiri — só a quem já domina Água e serve à vila. Fale com ele, pague o combinado e prove que sabe se mover no silêncio.",
+    channelId: CENTRO_COMERCIAL_KIRI_CHANNEL_ID,
+    type: "MESTRE_ESTILO",
+    objectives: [
+      { id: "aceitar_convite", description: "Aceitar o convite de Mizuo" },
+      { id: "reunir_recursos", description: "Reunir o que Mizuo pediu" },
+      { id: "vencer_mestre", description: "Vencer Mizuo em combate" },
+    ],
+    rewards: { xp: 160, ryo: 0 },
+    data: {
+      style: "ASSASSINATO_SILENCIOSO",
+      channelId: CENTRO_COMERCIAL_KIRI_CHANNEL_ID,
+      scenarioId: "centro_comercial_kiri",
+      costRyo: 500,
+      costItems: [
+        { itemId: "agua_limpa", qty: 3 },
+        { itemId: "peixe_cru", qty: 2 },
+      ],
+      introTurns: 3,
+      challengeTurns: 3,
+    },
+  },
+  {
+    id: "mestre_punho_adamantino",
+    name: "A Precisão de Suzu",
+    rank: "C",
+    description:
+      "Suzu, ex-médica-nin, ensina o Punho Adamantino no Hospital de Konoha — força bruta guiada por controle preciso de chakra. Fale com ela, pague o combinado e prove que seu corpo aguenta a precisão que ela exige.",
+    channelId: HOSPITAL_KONOHA_CHANNEL_ID,
+    type: "MESTRE_ESTILO",
+    objectives: [
+      { id: "aceitar_convite", description: "Aceitar o convite de Suzu" },
+      { id: "reunir_recursos", description: "Reunir o que Suzu pediu" },
+      { id: "vencer_mestre", description: "Vencer Suzu em combate" },
+    ],
+    rewards: { xp: 180, ryo: 0 },
+    data: {
+      style: "PUNHO_ADAMANTINO",
+      channelId: HOSPITAL_KONOHA_CHANNEL_ID,
+      scenarioId: "hospital_konoha",
+      costRyo: 700,
+      costItems: [
+        { itemId: "lingote_ferro", qty: 3 },
+        { itemId: "minerio_ferro", qty: 2 },
+      ],
+      introTurns: 3,
+      challengeTurns: 3,
+    },
+  },
+  {
+    id: "mestre_punho_forte",
+    name: "A Chama de Kaen",
+    rank: "B",
+    description:
+      "Kaen treina sozinho no Campo Aberto e ensina o Punho Forte — o caminho dos Oito Portões — só a quem prova disposição pra sofrer pelo treino. É o estilo mais exigente entre os mestres.",
+    channelId: CAMPO_ABERTO_CHANNEL_ID,
+    type: "MESTRE_ESTILO",
+    objectives: [
+      { id: "aceitar_convite", description: "Aceitar o convite de Kaen" },
+      { id: "reunir_recursos", description: "Reunir o que Kaen pediu" },
+      { id: "vencer_mestre", description: "Vencer Kaen em combate" },
+    ],
+    rewards: { xp: 220, ryo: 0 },
+    data: {
+      style: "PUNHO_FORTE",
+      channelId: CAMPO_ABERTO_CHANNEL_ID,
+      scenarioId: "campo_aberto",
+      costRyo: 900,
+      costItems: [
+        { itemId: "minerio_raro", qty: 1 },
+        { itemId: "lamen", qty: 3 },
+      ],
+      introTurns: 3,
+      challengeTurns: 3,
+    },
+  },
 ];
 
 const MISSION_MAP = new Map<string, MissionDef>(MISSIONS.map((m) => [m.id, m]));

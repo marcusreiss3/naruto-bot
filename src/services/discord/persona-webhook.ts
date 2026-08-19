@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import type { TextBasedChannel, Webhook } from "discord.js";
+import type { ActionRowBuilder, ButtonBuilder, Message, TextBasedChannel, Webhook } from "discord.js";
 import { log } from "../../utils/logger.js";
 
 const WEBHOOK_NAME = "RP Personas";
@@ -12,14 +12,19 @@ interface PersonaMessage {
   name: string; // nome exibido
   avatarFile?: string; // caminho relativo dentro de assets/ (ex: enemies/x.png, npcs/y.png)
   lines: string[]; // linhas a enviar
+  // Anexados so' na ultima linha enviada (ex: convite Aceitar/Recusar de um
+  // mestre de estilo de luta — ver services/missions/mestre-estilo.ts).
+  components?: ActionRowBuilder<ButtonBuilder>[];
 }
 
 // Envia mensagens como uma "persona" (estilo Tupperbox) via webhook do canal.
-// Retorna false se não der (sem permissão/canal inválido) p/ o chamador fazer fallback.
+// Retorna false se não der (sem permissão/canal inválido) p/ o chamador fazer
+// fallback; senão as Message enviadas (util pra anexar um awaitMessageComponent
+// na ultima, quando `components` foi passado).
 export async function sendAsPersona(
   channel: TextBasedChannel | null,
   msg: PersonaMessage,
-): Promise<boolean> {
+): Promise<Message[] | false> {
   try {
     if (!channel || !("fetchWebhooks" in channel) || typeof channel.fetchWebhooks !== "function") {
       return false;
@@ -47,11 +52,20 @@ export async function sendAsPersona(
       lastPersona.set(hook.id, msg.key);
     }
 
-    for (const line of msg.lines) {
-      const content = line.trim();
-      if (content) await hook.send({ content: content.slice(0, 1900), username: msg.name });
+    const sent: Message[] = [];
+    for (let i = 0; i < msg.lines.length; i++) {
+      const content = msg.lines[i]!.trim();
+      if (!content) continue;
+      const isLast = i === msg.lines.length - 1;
+      sent.push(
+        await hook.send({
+          content: content.slice(0, 1900),
+          username: msg.name,
+          components: isLast ? msg.components : undefined,
+        }),
+      );
     }
-    return true;
+    return sent;
   } catch (err) {
     log.warn("[persona-webhook] falhou:", (err as Error).message);
     return false;

@@ -280,6 +280,9 @@ export const LEDGER_TYPES = [
   // contador) deixar rastro em vez de acontecer em silencio.
   "SHOP_DAILY_RESET",
   "MISSION_REWARD",
+  // Pagamento ao mestre de estilo de luta ao reunir os recursos pedidos
+  // (services/missions/mestre-estilo.ts) — nao e' loja nem missao comum.
+  "MESTRE_ESTILO_PAGAMENTO",
   // Ordem de coleta: reserva na criacao, pagamento por entrega, devolucao do
   // que sobrou no fechamento. As tres somadas sempre zeram a reserva.
   "COLLECTION_ORDER_RESERVE",

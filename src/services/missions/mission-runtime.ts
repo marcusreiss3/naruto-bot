@@ -35,6 +35,7 @@ import { onYukiHeirCombatWon } from "./yuki-heir.js";
 import { onCorpsePulseCombatWon } from "./corpse-pulse.js";
 import { onEliteMaskCombatWon } from "./elite-mask.js";
 import { onForbiddenBellCombatWon } from "./forbidden-bell.js";
+import { onMestreEstiloCombatWon } from "./mestre-estilo.js";
 import {
   buildMissionCompleteEmbed,
   completeMission,
@@ -420,6 +421,11 @@ export async function onCombatEnded(
     return;
   }
 
+  if (def.type === "MESTRE_ESTILO") {
+    await onMestreEstiloCombatWon(interaction, inst.id);
+    return;
+  }
+
   // bandidos: derrotar o líder + capangas conclui a missão
   await markObjective(inst.id, "derrotar_lider");
   const result = await completeMission(inst.charId, inst.missionId);
@@ -438,6 +444,13 @@ export async function onCombatLost(
   if (!inst || inst.status !== "ACTIVE") return;
   await prisma.missionInstance.update({ where: { id: inst.id }, data: { status: "FAILED" } });
   const def = getMission(inst.missionId);
+  // Mestre de estilo de luta e' repetivel por conta propria: falar com o
+  // mestre de novo cria uma instancia nova (assignMission so' bloqueia por
+  // instancia ACTIVE). As outras ~40 missoes ainda dependem de um admin.
+  if (def?.type === "MESTRE_ESTILO") {
+    await interaction.followUp(`❌ **Você perdeu o combate final.** Volte a falar com o mestre quando quiser tentar de novo.`);
+    return;
+  }
   await interaction.followUp(
     `❌ **Missão falhou:** ${def?.name ?? inst.missionId}. Peça a um admin para reatribuir com \`/admin missao adicionar\`.`,
   );

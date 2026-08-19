@@ -40,6 +40,7 @@ import { continueYukiHeirMessage } from "./yuki-heir.js";
 import { continueCorpsePulseMessage } from "./corpse-pulse.js";
 import { continueEliteMaskMessage } from "./elite-mask.js";
 import { continueForbiddenBellMessage } from "./forbidden-bell.js";
+import { continueMestreEstiloMessage } from "./mestre-estilo.js";
 import { runBanditMessage } from "./mission-runtime.js";
 import { getActiveMissionTypesForDiscord } from "./mission-service.js";
 import { PERFORMANCE_LIMITS, warnIfSlow } from "../../utils/performance.js";
@@ -69,6 +70,7 @@ const HANDLERS: ReadonlyArray<readonly [MissionDef["type"], MessageHandler]> = [
   ["BANDANA_COLLECTOR", continueBandanaCollectorMessage], ["YUKI_HEIR", continueYukiHeirMessage],
   ["CORPSE_PULSE", continueCorpsePulseMessage], ["ELITE_MASK", continueEliteMaskMessage],
   ["FORBIDDEN_BELL", continueForbiddenBellMessage], ["DUMMY_SUBSTITUTION", continueDummySubstitutionMessage],
+  ["MESTRE_ESTILO", continueMestreEstiloMessage],
   ["BANDIT_FIGHT", continueInvestigationMessage], ["ESCORT", continueEscortMessage],
   ["BANDIT_FIGHT", async (message) => {
     await runBanditMessage(message);
