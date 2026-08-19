@@ -197,13 +197,19 @@ export async function completeMission(charId: string, missionId: string): Promis
   // desconta no fechamento de domingo. Ryo e acumulador tributavel entram na
   // mesma transacao: ou os dois, ou nenhum.
   await prisma.$transaction(async (tx) => {
-    await grantCharacterRyo(tx, {
-      charId,
-      amount: def.rewards.ryo,
-      type: "MISSION_REWARD",
-      reason: `Missão ${def.name}`,
-      meta: { missionId, rank: def.rank },
-    });
+    // grantCharacterRyo rejeita amount <= 0 (EconomyError) — missao com
+    // recompensa so' em XP (ex.: mestre de estilo, que ja cobrou ryo como
+    // custo) tem rewards.ryo = 0 de proposito, entao pula o grant em vez de
+    // deixar a transacao inteira estourar.
+    if (def.rewards.ryo > 0) {
+      await grantCharacterRyo(tx, {
+        charId,
+        amount: def.rewards.ryo,
+        type: "MISSION_REWARD",
+        reason: `Missão ${def.name}`,
+        meta: { missionId, rank: def.rank },
+      });
+    }
     await accumulateMissionActivity(tx, {
       charId,
       ninjaRank: snapshot?.ninjaRank ?? "ACADEMIA",
