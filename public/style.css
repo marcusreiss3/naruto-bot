@@ -4920,8 +4920,9 @@ details.guide-faq > div {
   object-fit: contain;
 }
 
-.guide-info-visual.is-optically-centered > img {
-  transform: translateY(-2px);
+.guide-info-visual.is-optically-centered {
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .guide-info-card small,
