@@ -2,26 +2,30 @@ import { describe, expect, it } from "vitest";
 import { getAbility } from "../src/data/index.js";
 
 // Valores recalculados por suggestedJutsuCost() (services/characters/
-// jutsu-balance.ts) — ver tests/jutsu-balance.test.ts pra formula em si —
-// e DEPOIS subidos +12% em 12/08/2026 (ver "AJUSTE DE 12/08/2026 (parte 2)"
-// no capitulo 12 do BALANCEAMENTO_FINAL.txt). A formula preca cada ability
-// pelo proprio baseDamage/efeitos, sem saber que o multiplicador de passiva
-// da arvore (1,82x/1,9575x) some por cima depois — e como as arvores de KKG
-// sao curtas (sem golpe fraco de rank baixo pra puxar a media pra baixo,
-// diferente do elemental), o custo/dano agregado batia o do Elemental mesmo
-// com cada ability individualmente bem precificada. O +12% e' deliberado e
-// uniforme nas 7 linhagens, nao debito de formula — este teste so' trava o
-// numero ATUAL de cada ability, nao a formula.
+// jutsu-balance.ts) — ver tests/jutsu-balance.test.ts pra formula em si.
+//
+// 12/08/2026: um +12% uniforme nas 7 linhagens tirou a dominancia de
+// custo/dano de KKG contra a media da coluna Elemental — mas era injusto:
+// Cristal/Poeira/Explosao ja' tinham custo/dano (0.96/0.91/0.89) igual ou
+// acima da propria media do grupo, e nao eram a causa do problema. Voltaram
+// pro custo ORIGINAL calibrado pela formula (linha "revert" abaixo). So'
+// Vapor/Calor/Lava/Gelo (0.62-0.73, os 4 que realmente puxavam a media pra
+// baixo) levam o aumento — agora +24,7%, nao +12% — pra fechar a MESMA
+// media de grupo (~0.87, ver capitulo 12 do BALANCEAMENTO_FINAL.txt)
+// taxando so' quem causou o problema. Este teste so' trava o numero ATUAL
+// de cada ability, nao a formula.
 const EXPECTED_COSTS: Record<string, number> = {
-  shouton_barragem_jade: 46,
-  shouton_danca_hexagonal: 75,
-  shouton_shuriken_gigante: 76,
-  shouton_dragao_cadente: 76,
-  vapor_punho_propulsao: 36,
-  calor_esfera: 40, // cleanses:WET fora do escopo da formula, mas ainda leva o +12%
-  lava_solucao_misteriosa: 40,
-  lava_rio_rochas: 62,
-  explosao_impacto: 56,
+  // revertidos ao original (nao causavam o problema de custo/dano)
+  shouton_barragem_jade: 41,
+  shouton_danca_hexagonal: 67,
+  shouton_shuriken_gigante: 68,
+  shouton_dragao_cadente: 68,
+  explosao_impacto: 50,
+  // +24,7% (causavam o problema)
+  vapor_punho_propulsao: 40,
+  calor_esfera: 45, // cleanses:WET fora do escopo da formula, mas ainda leva o +24,7%
+  lava_solucao_misteriosa: 45,
+  lava_rio_rochas: 69,
 };
 
 describe("custos das técnicas intermediárias de Kekkei Genkai", () => {
@@ -36,11 +40,11 @@ describe("custos das técnicas intermediárias de Kekkei Genkai", () => {
   // "intermediarios" acima, foram promovidos a S-rank/apice — saem da lista
   // de cima e entram aqui, junto com os apices que ja existiam.
   it("mantém os ápices caros", () => {
-    expect(getAbility("shouton_oito_paredes")?.cost).toBe(73);
-    expect(getAbility("lava_monte_huaguo")?.cost).toBe(67);
-    expect(getAbility("explosao_punho_mina")?.cost).toBe(83);
-    expect(getAbility("vapor_chute_propulsao")?.cost).toBe(65);
-    expect(getAbility("calor_assassinato_extremo")?.cost).toBe(69);
-    expect(getAbility("jinton_projeteis")?.cost).toBe(76);
+    expect(getAbility("shouton_oito_paredes")?.cost).toBe(65); // revertido
+    expect(getAbility("lava_monte_huaguo")?.cost).toBe(75); // +24,7%
+    expect(getAbility("explosao_punho_mina")?.cost).toBe(74); // revertido
+    expect(getAbility("vapor_chute_propulsao")?.cost).toBe(72); // +24,7%
+    expect(getAbility("calor_assassinato_extremo")?.cost).toBe(77); // +24,7%
+    expect(getAbility("jinton_projeteis")?.cost).toBe(68); // revertido
   });
 });

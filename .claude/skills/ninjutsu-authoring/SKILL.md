@@ -150,7 +150,7 @@ garantido (omitir `chance`).
 | C | 3 | 16–22 | 14–22 | 10–26 |
 | B | 4 | 24–32 | 22–32 | 10–32 |
 | A | 6 | 36–48 | 20–40 | 10–40 |
-| S | 10 | **70–78** | 34–48 | 34–48³ |
+| S | 10 | **50–83** | 34–48 | 34–48³ |
 
 ¹ "Núcleo" exclui jutsu de puro controle (ver bullet abaixo) — é a faixa útil pra calibrar um jutsu de dano novo.
 ² Faixa completa inclui os de controle, que puxam o piso pra baixo.
@@ -163,7 +163,14 @@ Rank D tem amostra única (Choro Celestial, Água, 14) — não dá pra confiar
 numa faixa com 1 dado só, trate como estimativa.
 
 Proporções:
-- Rank S é freado **economicamente**: 70–80% do pool de 100. Pode ter trava extra (Kirin: `requiresStorm` + `oncePerCombat`).
+- Rank S é freado **economicamente**: 50–83% do pool de 100, remedido em
+  12/08/2026 contra as 12 linhagens reais (5 básicos + 7 KKG) —
+  `Água 50, Fogo 52, Gelo 59, Vento 67, Lava 67, Vapor 65, Calor 69, Terra 70,
+  Raio 70, Cristal 73, Poeira 76, Explosão 83`, média 67%. O "70–80" antigo
+  já estava errado quando foi escrito (a nota logo acima já dizia que só o
+  Kirin chegava perto de 45 de baseDamage, mas ninguém conferiu o `cost` na
+  época) e ficou mais errado ainda depois do corte de Fogo/Água pra 50–52.
+  Pode ter trava extra (Kirin: `requiresStorm` + `oncePerCombat`).
 - Área (CONE/RADIUS/LINE) paga com `baseDamage` menor que single-target do mesmo rank.
 - Jutsu de puro controle troca dano por efeito, e é isso que puxa o piso da faixa completa pra baixo do núcleo: Corrida de Fogo (B) tem 12 de dano e entrega `FLEE_LOCK`; Prisão dos Quatro Pilares (A) tem 12 e entrega STUN 2 + ROOT 2 + FLEE_LOCK 2 + terreno; Prisão de Água/Prisão Cristal de Jade (B, 10) e Prisão Cúpula de Terra/Pântano do Submundo (A, 10–14) seguem o mesmo padrão.
 
