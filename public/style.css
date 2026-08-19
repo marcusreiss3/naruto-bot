@@ -4920,6 +4920,10 @@ details.guide-faq > div {
   object-fit: contain;
 }
 
+.guide-info-visual.is-optically-centered > img {
+  transform: translateY(-2px);
+}
+
 .guide-info-card small,
 .clan-card small {
   display: block;
