@@ -94,6 +94,9 @@ type Stage =
 interface SheetData {
   firstSheet: boolean;
   clanOptions: ClanVillageRoll[];
+  // O Reset Premium permite refazer os dados narrativos sem trocar a origem
+  // nem o traço já conquistado. A ficha retoma direto no nome.
+  preserveIdentity?: boolean;
   villageId?: VillageId;
   clanId?: string;
   givenName?: string;
@@ -283,14 +286,16 @@ async function createPrivateSheetChannel(guild: Guild, member: GuildMember): Pro
   });
 }
 
-async function sendSheetIntroduction(channel: TextChannel, memberId: string, resumed: boolean) {
+async function sendSheetIntroduction(channel: TextChannel, memberId: string, resumed: boolean, preserveIdentity = false) {
   await channel.send(v2Public(card([
     heading(resumed ? "Ficha retomada" : "Criação de ficha", "Este canal é privado e ficará ativo por uma hora"),
     text(`<@${memberId}>, responda somente ao que for pedido em cada etapa.`),
     divider(),
     text(resumed
       ? "Seu progresso anterior foi recuperado. A ficha continuará exatamente da etapa em que parou."
-      : "O primeiro sorteio combina uma vila de origem com um clã pertencente a ela. Sua primeira ficha recebe três opções."),
+      : preserveIdentity
+        ? "Seu Reset Premium mantém Vila, Clã e Traço. Refaça agora os dados narrativos da sua ficha."
+        : "O primeiro sorteio combina uma vila de origem com um clã pertencente a ela. Sua primeira ficha recebe três opções."),
     text("-# Se este canal expirar ou for apagado, use /ficha novamente. O bot abrirá outro canal sem trocar sua origem nem apagar o progresso."),
   ])));
 }
@@ -298,7 +303,7 @@ async function sendSheetIntroduction(channel: TextChannel, memberId: string, res
 export async function openSheetChannel(guild: Guild, member: GuildMember): Promise<OpenSheetResult> {
   const character = await prisma.userCharacter.findUnique({
     where: { discordId_guildId: { discordId: member.id, guildId: guild.id } },
-    include: { profile: true },
+    include: { profile: true, clan: true, trait: true },
   });
   if (character?.profile?.completedAt) return { status: "COMPLETED" };
 
@@ -348,8 +353,9 @@ export async function openSheetChannel(guild: Guild, member: GuildMember): Promi
     return { status: "RESUMED", channelId: channel.id };
   }
 
-  const firstSheet = !character?.profile?.completedAt;
-  const clanOptions = rollClanVillageOptions(firstSheet ? 3 : 1);
+  const preserveIdentity = Boolean(character?.villageId && character.clan?.clanId && character.trait?.traitId);
+  const firstSheet = !character?.profile?.completedAt && !preserveIdentity;
+  const clanOptions = preserveIdentity ? [] : rollClanVillageOptions(firstSheet ? 3 : 1);
   let session;
   try {
     session = await prisma.sheetCreationSession.create({
@@ -357,8 +363,17 @@ export async function openSheetChannel(guild: Guild, member: GuildMember): Promi
         guildId: guild.id,
         discordId: member.id,
         channelId: channel.id,
-        stage: "CLAN_CHOICE",
-        dataJson: JSON.stringify({ firstSheet, clanOptions } satisfies SheetData),
+        stage: preserveIdentity ? "NAME" : "CLAN_CHOICE",
+        dataJson: JSON.stringify({
+          firstSheet,
+          clanOptions,
+          preserveIdentity,
+          ...(preserveIdentity ? {
+            villageId: character!.villageId as VillageId,
+            clanId: character!.clan!.clanId,
+            traitId: character!.trait!.traitId,
+          } : {}),
+        } satisfies SheetData),
         channelExpiresAt: new Date(Date.now() + SHEET_CHANNEL_TTL_MS),
         clanChoiceExpiresAt: null,
       },
@@ -368,8 +383,9 @@ export async function openSheetChannel(guild: Guild, member: GuildMember): Promi
     throw error;
   }
 
-  await sendSheetIntroduction(channel, member.id, false);
-  await runClanAnimation(channel, session.id, clanOptions);
+  await sendSheetIntroduction(channel, member.id, false, preserveIdentity);
+  if (preserveIdentity) await promptName(channel, parseData(session.dataJson));
+  else await runClanAnimation(channel, session.id, clanOptions);
   await armSheetScheduler(guild.client);
   return { status: "CREATED", channelId: channel.id };
 }
@@ -762,6 +778,11 @@ export async function handleSheetMessage(message: Message): Promise<boolean> {
       return true;
     }
     data.givenName = name;
+    if (data.preserveIdentity) {
+      if (!await transitionSession(session.id, "NAME", "AGE", data)) return true;
+      await promptAge(channel, data);
+      return true;
+    }
     if (!await transitionSession(session.id, "NAME", "TRAIT_ROLL", data)) return true;
     await runTraitAnimation(channel, session.id, data);
     return true;

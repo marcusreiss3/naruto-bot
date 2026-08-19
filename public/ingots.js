@@ -176,7 +176,7 @@ window.IngotsPage = (function () {
       <div class="ingot-card-body">
         <h3>${escapeHtml(card.title)}</h3>
         <p>${escapeHtml(card.text)}</p>
-        ${card.meta ? `<span class="ingot-card-meta">${escapeHtml(card.meta)}</span>` : ""}
+        ${card.meta && card.meta !== "Quantidade: a definir" ? `<span class="ingot-card-meta">${escapeHtml(card.meta)}</span>` : ""}
       </div>
     </article>`;
   }

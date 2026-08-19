@@ -1,4 +1,5 @@
 import { prisma } from "../../db/client.js";
+import type { Prisma } from "@prisma/client";
 import { getPremiumProduct, type PremiumProductId } from "../../data/premium-products.js";
 import { CLANS_BY_VILLAGE, rollClanVillageOptions, rollTrait } from "../../data/sheet-creation.js";
 import { CLANS } from "../../data/clans/index.js";
@@ -7,6 +8,7 @@ import { refreshDerived, setClan } from "../characters/character-service.js";
 import { setCharacterTrait } from "../characters/trait-service.js";
 import { ATTRIBUTES, type Attribute } from "../../config/enums.js";
 import { getNode } from "../../data/element-trees/index.js";
+import { releaseAppearance } from "../appearance/appearance-service.js";
 
 const TRAIT_SESSION_TTL_MS = 15 * 60_000;
 
@@ -23,12 +25,49 @@ export async function getPremiumWallet(discordId: string, guildId: string): Prom
   });
 }
 
-export type PremiumPurchaseResult = { product: ReturnType<typeof getPremiumProduct>; refundedPoints?: number };
+export type PremiumPurchaseResult = {
+  product: ReturnType<typeof getPremiumProduct>;
+  refundedPoints?: number;
+  characterReset?: boolean;
+};
+
+async function resetSkillTreeProgression(tx: Prisma.TransactionClient, charId: string): Promise<number> {
+  const char = await tx.userCharacter.findUnique({
+    where: { id: charId },
+    include: { attributes: true, skillNodes: true },
+  });
+  if (!char?.attributes) throw new PremiumStoreError("Personagem sem atributos.");
+
+  const refundedPoints = ATTRIBUTES.reduce(
+    (total, attribute) => total + Number((char.attributes as unknown as Record<Attribute, number>)[attribute] ?? 0),
+    0,
+  );
+  const resetAttributes: Record<string, number> = {};
+  for (const attribute of ATTRIBUTES) resetAttributes[attribute] = 0;
+  const skillTreeJutsus = [...new Set(char.skillNodes
+    .map(({ nodeId }) => getNode(nodeId))
+    .filter((node) => node?.kind === "JUTSU" && node.grantsAbilityId)
+    .map((node) => node!.grantsAbilityId!))];
+
+  await tx.characterAttributes.update({ where: { charId }, data: resetAttributes });
+  await tx.userCharacter.update({ where: { id: charId }, data: { attributePoints: { increment: refundedPoints } } });
+  await tx.characterSkillNode.deleteMany({ where: { charId } });
+  if (skillTreeJutsus.length) await tx.characterJutsu.deleteMany({ where: { charId, jutsuId: { in: skillTreeJutsus } } });
+  return refundedPoints;
+}
 
 export async function buyPremiumProduct(walletId: string, charId: string, productId: PremiumProductId, interactionId: string): Promise<PremiumPurchaseResult> {
   const product = getPremiumProduct(productId);
   if (!product) throw new PremiumStoreError("Produto premium desconhecido.");
+  if (product.kind === "CHARACTER_RESET") {
+    const activeCombat = await prisma.combatParticipant.findFirst({
+      where: { charId, session: { status: "ACTIVE" } },
+      select: { id: true },
+    });
+    if (activeCombat) throw new PremiumStoreError("Encerre o combate em andamento antes de resetar o personagem.");
+  }
   let refundedPoints: number | undefined;
+  let resetIdentity: { discordId: string; guildId: string } | undefined;
   try {
     await prisma.$transaction(async (tx) => {
       await tx.premiumPurchase.create({ data: { walletId, interactionId, productId: product.id, cost: product.cost } });
@@ -42,28 +81,20 @@ export async function buyPremiumProduct(walletId: string, charId: string, produc
         await tx.premiumWallet.update({ where: { id: walletId }, data: { [product.spinField]: { increment: 1 } } });
       } else if (product.kind === "RYO") {
         await tx.userCharacter.update({ where: { id: charId }, data: { ryo: { increment: product.ryo } } });
+      } else if (product.kind === "RESPEC") {
+        refundedPoints = await resetSkillTreeProgression(tx, charId);
       } else {
-        const char = await tx.userCharacter.findUnique({
+        const char = await tx.userCharacter.findUnique({ where: { id: charId }, select: { discordId: true, guildId: true } });
+        if (!char) throw new PremiumStoreError("Personagem não encontrado.");
+        refundedPoints = await resetSkillTreeProgression(tx, charId);
+        await tx.userCharacter.update({
           where: { id: charId },
-          include: { attributes: true, skillNodes: true },
+          data: { displayName: null, ninjaRank: "ACADEMIA" },
         });
-        if (!char?.attributes) throw new PremiumStoreError("Personagem sem atributos.");
-
-        refundedPoints = ATTRIBUTES.reduce(
-          (total, attribute) => total + Number((char.attributes as unknown as Record<Attribute, number>)[attribute] ?? 0),
-          0,
-        );
-        const resetAttributes: Record<string, number> = {};
-        for (const attribute of ATTRIBUTES) resetAttributes[attribute] = 0;
-        const skillTreeJutsus = [...new Set(char.skillNodes
-          .map(({ nodeId }) => getNode(nodeId))
-          .filter((node) => node?.kind === "JUTSU" && node.grantsAbilityId)
-          .map((node) => node!.grantsAbilityId!))];
-
-        await tx.characterAttributes.update({ where: { charId }, data: resetAttributes });
-        await tx.userCharacter.update({ where: { id: charId }, data: { attributePoints: { increment: refundedPoints } } });
-        await tx.characterSkillNode.deleteMany({ where: { charId } });
-        if (skillTreeJutsus.length) await tx.characterJutsu.deleteMany({ where: { charId, jutsuId: { in: skillTreeJutsus } } });
+        await tx.characterProfile.deleteMany({ where: { charId } });
+        await tx.sheetCreationSession.deleteMany({ where: { guildId: char.guildId, discordId: char.discordId } });
+        await tx.premiumSpinSession.deleteMany({ where: { walletId, usedAt: null } });
+        resetIdentity = char;
       }
     });
   } catch (error) {
@@ -71,8 +102,9 @@ export async function buyPremiumProduct(walletId: string, charId: string, produc
     if ((error as { code?: string }).code === "P2002") throw new PremiumStoreError("Esta compra jÃ¡ foi processada.");
     throw error;
   }
-  if (product.kind === "RESPEC") await refreshDerived(charId);
-  return { product, refundedPoints };
+  if (product.kind === "RESPEC" || product.kind === "CHARACTER_RESET") await refreshDerived(charId);
+  if (resetIdentity) await releaseAppearance(resetIdentity.discordId, resetIdentity.guildId).catch(() => undefined);
+  return { product, refundedPoints, characterReset: product.kind === "CHARACTER_RESET" };
 }
 
 export async function useClanSpin(charId: string, walletId: string): Promise<{ id: string; name: string }> {

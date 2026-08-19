@@ -3,7 +3,7 @@ import { PREMIUM_PRODUCTS, getPremiumProduct } from "../src/data/premium-product
 
 describe("catálogo da Loja Premium", () => {
   it("expõe os produtos premium com custos válidos", () => {
-    expect(PREMIUM_PRODUCTS.map((product) => product.id)).toEqual(["clan_spin", "trait_spin", "ryo_10000", "attribute_respec"]);
+    expect(PREMIUM_PRODUCTS.map((product) => product.id)).toEqual(["clan_spin", "trait_spin", "ryo_10000", "attribute_respec", "character_reset"]);
     for (const product of PREMIUM_PRODUCTS) expect(product.cost).toBeGreaterThan(0);
   });
 
@@ -12,6 +12,7 @@ describe("catálogo da Loja Premium", () => {
     expect(getPremiumProduct("trait_spin")).toMatchObject({ spinField: "traitSpins" });
     expect(getPremiumProduct("ryo_10000")).toMatchObject({ ryo: 10_000 });
     expect(getPremiumProduct("attribute_respec")).toMatchObject({ kind: "RESPEC" });
+    expect(getPremiumProduct("character_reset")).toMatchObject({ kind: "CHARACTER_RESET", cost: 100 });
     expect(getPremiumProduct("outro")).toBeUndefined();
   });
 });

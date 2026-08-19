@@ -30,6 +30,13 @@ export const PREMIUM_PRODUCTS = [
     cost: 100,
     kind: "RESPEC",
   },
+  {
+    id: "character_reset",
+    name: "Reset premium de personagem",
+    description: "Permite refazer nome, idade, história e aparência; devolve os pontos investidos e remove as habilidades aprendidas nas Árvores de Habilidade.",
+    cost: 100,
+    kind: "CHARACTER_RESET",
+  },
 ] as const;
 
 export type PremiumProductId = (typeof PREMIUM_PRODUCTS)[number]["id"];

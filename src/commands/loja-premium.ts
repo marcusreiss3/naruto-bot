@@ -19,10 +19,11 @@ const cid = (action: string, value?: string) => `${PREFIX}:${action}${value ? `:
 const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 const RARITY_LABEL: Record<string, string> = { COMUM: "Comum", RARA: "Rara", EPICA: "Épica", LENDARIA: "Lendária", MITICA: "Mítica" };
 const PRODUCT_EMOJI: Record<PremiumProductId, EmojiKey> = {
-  clan_spin: "descoberta",
-  trait_spin: "descoberta",
+  clan_spin: "giro_cla",
+  trait_spin: "giro_traco",
   ryo_10000: "ryo",
-  attribute_respec: "respec",
+  attribute_respec: "reset_atributos",
+  character_reset: "reset_personagem",
 };
 
 function assetUrl(webPath: string): string {
@@ -48,12 +49,12 @@ function panel(wallet: PremiumWallet, feedback?: string): TopLevel[] {
     titleBlock("ingots", "Loja Premium", "Produtos adquiridos com Ingots"),
     factsBlock([
       { label: "Ingots", value: String(wallet.ingots) },
-      { label: "Giros de Clã", value: String(wallet.clanSpins) },
-      { label: "Giros de Traço", value: String(wallet.traitSpins) },
+      { label: `${emoji("giro_cla")} Giros de Clã`, value: String(wallet.clanSpins) },
+      { label: `${emoji("giro_traco")} Giros de Traço`, value: String(wallet.traitSpins) },
     ]),
   ];
   if (feedback) children.push(noticeBlock(feedback.startsWith("✅") ? "sucesso" : "erro", feedback.replace(/^[✅❌]\s*/, "")));
-  children.push(divider(), text("## Giros\nUse um Giro para revelar uma nova possibilidade de Clã ou Traço."));
+  children.push(divider(), text(`## Giros\nUse ${emoji("giro_cla")} para revelar uma nova possibilidade de Clã ou ${emoji("giro_traco")} para um novo Traço.`));
   for (const product of spins) children.push(...productOffer(product));
   children.push(divider(), text("## Recursos e reorganização\nOpções diretas para o saldo e para reorganizar sua progressão."));
   for (const product of extras) children.push(...productOffer(product));
@@ -61,8 +62,8 @@ function panel(wallet: PremiumWallet, feedback?: string): TopLevel[] {
     divider(),
     text("## Giros disponíveis\nUse os Giros que você já possui."),
     buttonRow(
-      button({ id: cid("use-clan"), label: "Usar Giro de Clã", emojiKey: "descoberta", disabled: wallet.clanSpins < 1 }),
-      button({ id: cid("use-trait"), label: "Usar Giro de Traço", emojiKey: "descoberta", disabled: wallet.traitSpins < 1 }),
+      button({ id: cid("use-clan"), label: "Usar Giro de Clã", emojiKey: "giro_cla", disabled: wallet.clanSpins < 1 }),
+      button({ id: cid("use-trait"), label: "Usar Giro de Traço", emojiKey: "giro_traco", disabled: wallet.traitSpins < 1 }),
     ),
     text("-# Giros de Clã só podem ser usados enquanto o personagem ainda for da Academia."),
     divider(),
@@ -71,10 +72,10 @@ function panel(wallet: PremiumWallet, feedback?: string): TopLevel[] {
   return [economyContainer("obras", children)];
 }
 
-function spinAnimationPanel(title: string, stage: string, step: number, total: number): TopLevel[] {
+function spinAnimationPanel(title: string, icon: EmojiKey, stage: string, step: number, total: number): TopLevel[] {
   const progress = "■".repeat(step + 1) + "□".repeat(total - step - 1);
   return [economyContainer("obras", [
-    titleBlock("descoberta", title, "Sorteio em andamento"),
+    titleBlock(icon, title, "Sorteio em andamento"),
     text(`**${stage}**\n[${progress}]`),
     text("-# O resultado é definido pelas probabilidades normais."),
   ])];
@@ -82,7 +83,7 @@ function spinAnimationPanel(title: string, stage: string, step: number, total: n
 
 function traitRevealPanel(trait: TraitDef): TopLevel[] {
   return [economyContainer("obras", [
-    titleBlock("descoberta", "Traço definido", `Faixa ${RARITY_LABEL[trait.rarity] ?? trait.rarity}`),
+    titleBlock("giro_traco", "Traço definido", `Faixa ${RARITY_LABEL[trait.rarity] ?? trait.rarity}`),
     mediaGallery(assetUrl(traitIconUrl(trait)), `Ícone do Traço ${trait.name}`),
     text(`## ${trait.name}\n${trait.description}`),
     text(`[Conheça os Traços no site](${SITE_URL}/#/guias/traits)`),
@@ -95,7 +96,7 @@ function clanRevealPanel(clanId: string, villageId: VillageId): TopLevel[] {
   const clan = getClan(clanId);
   if (!clan) throw new PremiumStoreError("Clã sorteado não encontrado.");
   return [economyContainer("obras", [
-    titleBlock("descoberta", "Origem definida", `${VILLAGE_NAMES[villageId]} · Clã ${clan.name}`),
+    titleBlock("giro_cla", "Origem definida", `${VILLAGE_NAMES[villageId]} · Clã ${clan.name}`),
     mediaGallery(assetUrl(clanIconUrl(clan.id)), `Símbolo do Clã ${clan.name}`),
     text(`## ${clan.name}\n${clan.description}`),
     text(`[Conheça os Clãs no site](${SITE_URL}/#/guias/clas-e-spins)`),
@@ -106,40 +107,56 @@ function clanRevealPanel(clanId: string, villageId: VillageId): TopLevel[] {
 
 function respecConfirmationPanel(wallet: PremiumWallet): TopLevel[] {
   return [economyContainer("obras", [
-    titleBlock("respec", "Confirmar reset de atributos", "Esta ação usa Ingots e altera sua ficha"),
+    titleBlock("reset_atributos", "Confirmar reset de atributos", "Esta ação usa Ingots e altera sua ficha"),
     factsBlock([{ label: "Ingots", value: String(wallet.ingots) }, { label: "Custo", value: "100" }]),
     divider(),
     noticeBlock("aviso", "Todos os atributos serão zerados, os pontos investidos voltarão ao saldo e as habilidades aprendidas nas Árvores de Habilidade serão removidas."),
     text("Você poderá redistribuir os pontos com `/atributos` depois do reset."),
     divider(),
     buttonRow(
-      button({ id: cid("confirm-respec"), label: "Confirmar reset por 100 Ingots", style: ButtonStyle.Danger, emojiKey: "respec" }),
+      button({ id: cid("confirm-respec"), label: "Confirmar reset por 100 Ingots", style: ButtonStyle.Danger, emojiKey: "reset_atributos" }),
       button({ id: cid("cancel-respec"), label: "Cancelar", style: ButtonStyle.Secondary }),
+    ),
+  ])];
+}
+
+function characterResetConfirmationPanel(wallet: PremiumWallet): TopLevel[] {
+  return [economyContainer("obras", [
+    titleBlock("reset_personagem", "Confirmar reset premium", "Esta ação usa Ingots e prepara uma nova ficha"),
+    factsBlock([{ label: "Ingots", value: String(wallet.ingots) }, { label: "Custo", value: "100" }]),
+    divider(),
+    noticeBlock("aviso", "Nome, rank, idade, aparência e história serão resetados. Os pontos investidos voltarão ao saldo e as habilidades aprendidas nas Árvores de Habilidade serão removidas."),
+    text("Você manterá nível, XP, Vila, Clã, Traço, inventário, Ryō, Ingots e Giros disponíveis."),
+    text("Depois, use `/ficha` para preencher novamente os dados narrativos do personagem."),
+    divider(),
+    buttonRow(
+      button({ id: cid("confirm-character-reset"), label: "Confirmar reset por 100 Ingots", style: ButtonStyle.Danger, emojiKey: "reset_personagem" }),
+      button({ id: cid("cancel-character-reset"), label: "Cancelar", style: ButtonStyle.Secondary }),
     ),
   ])];
 }
 
 function traitChoicePanel(wallet: PremiumWallet, sessionId: string, options: ReadonlyArray<TraitDef>): TopLevel[] {
   const children: ContainerChild[] = [
-    titleBlock("descoberta", "Uma assinatura mítica foi encontrada", "Escolha um dos Traços revelados"),
-    factsBlock([{ label: "Giros de Traço", value: String(wallet.traitSpins) }]),
+    titleBlock("giro_traco", "Uma assinatura mítica foi encontrada", "Escolha um dos Traços revelados"),
+    factsBlock([{ label: `${emoji("giro_traco")} Giros de Traço`, value: String(wallet.traitSpins) }]),
     divider(),
   ];
   for (const trait of options) {
     children.push(
       thumbnailSection(`**${trait.name}**\nFaixa: **${RARITY_LABEL[trait.rarity] ?? trait.rarity}**\n${trait.description}`, assetUrl(traitIconUrl(trait)), `Ícone do Traço ${trait.name}`),
-      buttonRow(button({ id: cid("trait-choice", `${sessionId}:${trait.id}`), label: `Escolher ${trait.name}`, style: ButtonStyle.Primary, emojiKey: "descoberta" })),
+      buttonRow(button({ id: cid("trait-choice", `${sessionId}:${trait.id}`), label: `Escolher ${trait.name}`, style: ButtonStyle.Primary, emojiKey: "giro_traco" })),
     );
   }
   children.push(text(`[Conheça os Traços no site](${SITE_URL}/#/guias/traits)`));
   return [economyContainer("obras", children)];
 }
 
-async function revealSpin(interaction: ButtonInteraction, title: string, stages: readonly string[], reveal: TopLevel[]): Promise<void> {
-  await interaction.update(v2Edit(spinAnimationPanel(title, stages[0]!, 0, stages.length)));
+async function revealSpin(interaction: ButtonInteraction, title: string, icon: EmojiKey, stages: readonly string[], reveal: TopLevel[]): Promise<void> {
+  await interaction.update(v2Edit(spinAnimationPanel(title, icon, stages[0]!, 0, stages.length)));
   for (let index = 1; index < stages.length; index += 1) {
     await wait(520);
-    await interaction.editReply(v2Edit(spinAnimationPanel(title, stages[index]!, index, stages.length)));
+    await interaction.editReply(v2Edit(spinAnimationPanel(title, icon, stages[index]!, index, stages.length)));
   }
   await wait(520);
   await interaction.editReply(v2Edit(reveal));
@@ -178,18 +195,25 @@ export const lojaPremium: Command = {
           await interaction.update(v2Edit(respecConfirmationPanel(wallet)));
           return;
         }
+        if (product.kind === "CHARACTER_RESET") {
+          await interaction.update(v2Edit(characterResetConfirmationPanel(wallet)));
+          return;
+        }
         await buyPremiumProduct(wallet.id, char.id, product.id as PremiumProductId, interaction.id);
         feedback = product.kind === "RYO" ? `✅ ${product.ryo.toLocaleString("pt-BR")} Ryō adicionados ao seu saldo.` : `✅ ${product.name} adquirido.`;
       } else if (action === "confirm-respec") {
         const result = await buyPremiumProduct(wallet.id, char.id, "attribute_respec", interaction.id);
         feedback = `✅ Reset concluído. ${result.refundedPoints ?? 0} ponto(s) devolvido(s); atributos e habilidades das Árvores de Habilidade foram removidos.`;
-      } else if (action === "cancel-respec" || action === "back") {
+      } else if (action === "confirm-character-reset") {
+        const result = await buyPremiumProduct(wallet.id, char.id, "character_reset", interaction.id);
+        feedback = `✅ Reset concluído. ${result.refundedPoints ?? 0} ponto(s) devolvido(s). Use /ficha para registrar o novo nome, idade, história e aparência.`;
+      } else if (action === "cancel-respec" || action === "cancel-character-reset" || action === "back") {
         await interaction.update(v2Edit(panel(wallet)));
         return;
       } else if (action === "use-clan") {
         const clan = await useClanSpin(char.id, wallet.id);
         if (!char.villageId || !(char.villageId in VILLAGE_NAMES)) throw new PremiumStoreError("Sua Vila de origem não está definida.");
-        await revealSpin(interaction, "Sorteio de origem", ["Consultando sua Vila", "Lendo as possibilidades", "Confirmando Clã"], clanRevealPanel(clan.id, char.villageId as VillageId));
+        await revealSpin(interaction, "Sorteio de origem", "giro_cla", ["Consultando sua Vila", "Lendo as possibilidades", "Confirmando Clã"], clanRevealPanel(clan.id, char.villageId as VillageId));
         return;
       } else if (action === "use-trait") {
         const result = await startTraitSpin(char.id, wallet.id);
@@ -197,7 +221,7 @@ export const lojaPremium: Command = {
         const reveal = result.state === "choice"
           ? traitChoicePanel(updated, result.sessionId, result.options)
           : traitRevealPanel(result.trait);
-        await revealSpin(interaction, "Sorteio de Traço", ["Lendo probabilidades", "Definindo faixa", "Identificando assinatura"], reveal);
+        await revealSpin(interaction, "Sorteio de Traço", "giro_traco", ["Lendo probabilidades", "Definindo faixa", "Identificando assinatura"], reveal);
         return;
       } else if (action === "trait-choice") {
         const trait = await chooseTraitSpin(char.id, wallet.id, value ?? "", traitId ?? "");
