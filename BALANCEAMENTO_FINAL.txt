@@ -153,38 +153,39 @@ turno e pela impossibilidade de fechar ou trocar o Portão antes da morte.
 
 DANO REAL — arsenal médio com passivas próprias, sem transformação
 
-  Nível   Bukijutsu   Elemental   Clã   Estilo   Kekkei Genkai
-  nv 10      25,91       20,62    22,57   18,30         —
-  nv 20      33,54       30,86    32,16   22,70         —
-  nv 30      36,37       34,78    36,77   27,37         —
+  Nível   Bukijutsu   Elemental   Clã   Estilo   Kekkei Genkai*
+  nv 10      25,91       20,62    22,57   18,30       23,71
+  nv 20      33,54       30,86    32,16   22,70       32,70
+  nv 30      36,37       34,78    36,77   27,37       47,25
   nv 45      36,37       37,96    37,17   32,85       57,02
 
 MELHOR GOLPE DISPONÍVEL — com passivas, sem transformação
 
-  Nível   Bukijutsu   Elemental   Clã   Estilo   Kekkei Genkai
-  nv 10      29,90       24,34    25,02   23,04         —
-  nv 20      38,09       41,51    40,35   29,84         —
-  nv 30      50,25       52,48    49,20   40,23         —
+  Nível   Bukijutsu   Elemental   Clã   Estilo   Kekkei Genkai*
+  nv 10      29,90       24,34    25,02   23,04       28,41
+  nv 20      38,09       41,51    40,35   29,84       39,56
+  nv 30      50,25       52,48    49,20   40,23       60,25
   nv 45      50,25       63,07    50,20   48,27       82,54
 
 CUSTO / DANO REAL — menor é melhor
 
-  Nível   Bukijutsu   Elemental   Clã   Estilo   Kekkei Genkai
-  nv 10      0,92        0,99     0,91   1,03         —
-  nv 20      1,05        0,80     0,92   1,03         —
-  nv 30      1,08        0,81     0,90   1,00         —
+  Nível   Bukijutsu   Elemental   Clã   Estilo   Kekkei Genkai*
+  nv 10      0,92        0,99     0,91   1,03        1,21
+  nv 20      1,05        0,80     0,92   1,03        1,08
+  nv 30      1,08        0,81     0,90   1,00        0,84
   nv 45      1,08        0,82     0,91   0,83        0,77
 
-Kekkei Genkai só aparece no nv45: nenhuma delas é alcançável antes do nível
-35 (o nó mais caro de QUALQUER árvore elemental básica está nesse nível, e
-todas as sete exigem completar pelo menos duas árvores básicas inteiras —
-ver capítulo 12 pro porquê e pros números por linhagem). nv10/20/30 não são
-"zero", são "não existe build nesse nível" — mesma lógica das tabelas de
-clã dos capítulos 3 a 5, que também só têm snapshot de nv45. A exceção são
-os 3 clãs com desconto de fusão (Bakurei/Explosão, Yuki/Gelo, Onoki/Poeira),
-que podem fundir bem mais cedo (~nível 12 no caso mais otimista) — checado
-linhagem por linhagem em 12/08/2026, e só Poeira precisou de ajuste (ver
-capítulo 12).
+* NÚMEROS TEÓRICOS — nenhum personagem tem esse dano de verdade nesses
+níveis. A coluna usa a mesma fórmula das outras (nó com reqLevel ≤ N,
+ignorando de onde o personagem tirou o nó), mas Kekkei Genkai tem um gate
+que as outras não têm: nenhuma das sete é alcançável antes do nível 35 sem
+desconto de clã (ver capítulo 12), e mesmo com desconto (Bakurei/Explosão,
+Yuki/Gelo, Onoki/Poeira) o mínimo real fica perto do nível 12-22, não 10.
+No nv10 da tabela, Explosão nem entra na média (não tem golpe de dano
+liberado nesse ponto da própria árvore) — dividido pelas 6 linhagens que
+têm. Trate estas três linhas como "se a linhagem existisse desde o nível 1,
+crescendo do próprio começo da árvore" — útil pra comparar a FORMA da curva
+com as outras classes, não pra afirmar que alguém bate isso nesse nível.
 
 No nv45 Kekkei Genkai lidera dano médio (57,02) e melhor golpe (82,54), mas
 a margem contra a coluna Elemental (37,96 / 63,07) é maior do que parece
@@ -197,6 +198,11 @@ elemental (0,82) é apenas marginalmente melhor: o grupo bate mais forte por
 golpe, mas não é mais eficiente por chakra gasto. Isso é deliberado — antes
 de 12/08/2026 o grupo liderava as três métricas ao mesmo tempo (0,70 de
 custo/dano), o que era dominância estrita e foi corrigido (ver capítulo 12).
+
+A curva teórica (linhas com *) reforça que não sobrou dominância constante:
+no nv20, o melhor golpe teórico de KKG (39,56) fica ABAIXO do Elemental
+(41,51) — a única faixa em que isso acontece. KKG só volta a liderar a
+partir do nv30, quando os ápices das árvores (nível 30+) começam a entrar.
 
 COMO AS TABELAS DE CLASSES SÃO CALCULADAS
 
