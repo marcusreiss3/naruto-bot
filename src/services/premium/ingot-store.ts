@@ -107,18 +107,25 @@ export async function buyPremiumProduct(walletId: string, charId: string, produc
   return { product, refundedPoints, characterReset: product.kind === "CHARACTER_RESET" };
 }
 
-export async function useClanSpin(charId: string, walletId: string): Promise<{ id: string; name: string }> {
-  const char = await prisma.userCharacter.findUnique({ where: { id: charId }, include: { clan: true } });
+export async function useClanSpin(charId: string, walletId: string): Promise<{ id: string; name: string; villageId: string }> {
+  const char = await prisma.userCharacter.findUnique({ where: { id: charId }, include: { clan: true, profile: true } });
   if (!char) throw new PremiumStoreError("Personagem nÃ£o encontrado.");
   if (char.ninjaRank !== "ACADEMIA") throw new PremiumStoreError("Depois de se tornar Genin, outro ClÃ£ sÃ³ pode ser obtido ao resetar o personagem.");
   if (!char.villageId || !(char.villageId in CLANS_BY_VILLAGE)) throw new PremiumStoreError("Sua Vila de origem nÃ£o estÃ¡ definida para realizar um Giro de ClÃ£.");
-  const option = rollClanVillageOptions(25).find((entry) => entry.villageId === char.villageId && entry.clanId !== char.clan?.clanId);
+  const option = rollClanVillageOptions(25).find((entry) => entry.villageId !== char.villageId || entry.clanId !== char.clan?.clanId);
   if (!option) throw new PremiumStoreError("NÃ£o foi possÃ­vel encontrar outro ClÃ£ para sua Vila.");
   const consumed = await prisma.premiumWallet.updateMany({ where: { id: walletId, clanSpins: { gt: 0 } }, data: { clanSpins: { decrement: 1 } } });
   if (consumed.count !== 1) throw new PremiumStoreError("VocÃª nÃ£o possui Giro de ClÃ£ disponÃ­vel.");
-  await setClan(charId, option.clanId);
   const clan = CLANS.find((entry) => entry.id === option.clanId);
-  return { id: option.clanId, name: clan?.name ?? option.clanId };
+  await prisma.userCharacter.update({
+    where: { id: charId },
+    data: {
+      villageId: option.villageId,
+      ...(char.profile?.givenName && clan ? { displayName: `${char.profile.givenName} ${clan.name}` } : {}),
+    },
+  });
+  await setClan(charId, option.clanId);
+  return { id: option.clanId, name: clan?.name ?? option.clanId, villageId: option.villageId };
 }
 
 export async function startTraitSpin(charId: string, walletId: string): Promise<TraitSpinResult> {

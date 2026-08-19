@@ -15,6 +15,7 @@ export const CAVERNA_CHANNEL_ID = "1521879431168131132";
 export const CAMPO_ABERTO_CHANNEL_ID = "1522249926845923339";
 export const CENTRO_COMERCIAL_SUNA_CHANNEL_ID = "1523372488292302958";
 export const CENTRO_COMERCIAL_KIRI_CHANNEL_ID = "1523372437398487151";
+export const CENTRO_COMERCIAL_KUMO_CHANNEL_ID = "1523372472223793254";
 export const PRACA_SUNA_CHANNEL_ID = "1523370437919244309";
 export const MANSAO_KAZEKAGE_CHANNEL_ID = "1523371643102167234";
 export const MANSAO_RAIKAGE_CHANNEL_ID = "1523371661074763850";
@@ -222,6 +223,19 @@ export const SCENARIOS: ScenarioDef[] = [
     },
     elementModifiers: {
       AGUA: { costMult: 0.8, dmgMult: 1.15 },
+    },
+  },
+  {
+    id: "centro_comercial_kumo",
+    name: "Centro Comercial de Kumogakure",
+    channelId: CENTRO_COMERCIAL_KUMO_CHANNEL_ID,
+    rows: 6,
+    cols: 10,
+    description: "Lojas e bancas em uma avenida montanhosa de Kumogakure, com mercadores e ninjas em movimento.",
+    terrain: "grass",
+    cells: {
+      obstacles: ["C4", "C5", "D6", "D7"],
+      height: ["A1", "A10", "F1", "F10"],
     },
   },
   {

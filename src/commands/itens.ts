@@ -268,11 +268,7 @@ export const atacar: Command = {
     } else if (char.equippedItemId === "lamina_chakra") {
       abilityId = "item_lamina_chakra_cortar";
     } else if (char.equippedItemId === "katana") {
-      await interaction.reply({
-        content: "❌ A Katana ainda não possui um ataque básico definido.",
-        ephemeral: true,
-      });
-      return;
+      abilityId = "item_katana_cortar";
     } else if (char.equippedItemId) {
       const equippedName = getItem(char.equippedItemId)?.name ?? char.equippedItemId;
       await interaction.reply({

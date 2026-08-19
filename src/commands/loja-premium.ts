@@ -1,7 +1,8 @@
 import { ButtonStyle, MessageFlags, SlashCommandBuilder, type ButtonInteraction, type ChatInputCommandInteraction } from "discord.js";
 import type { Command } from "./types.js";
 import { PREMIUM_PRODUCTS, getPremiumProduct, type PremiumProductId } from "../data/premium-products.js";
-import { clanIconUrl, traitIconUrl } from "../data/sheet-creation.js";
+import { clanIconUrl, SHEET_LOCATION_ROLES, SHEET_VILLAGE_ROLES, traitIconUrl } from "../data/sheet-creation.js";
+import { ALL_TRAVEL_ROLE_IDS, TRAVEL_LOCATION_ROLE_IDS } from "../data/travel.js";
 import { getClan } from "../data/index.js";
 import { type TraitDef } from "../data/traits.js";
 import { VILLAGE_NAMES, type VillageId } from "../data/villages.js";
@@ -49,12 +50,12 @@ function panel(wallet: PremiumWallet, feedback?: string): TopLevel[] {
     titleBlock("ingots", "Loja Premium", "Produtos adquiridos com Ingots"),
     factsBlock([
       { label: "Ingots", value: String(wallet.ingots) },
-      { label: `${emoji("giro_cla")} Giros de Clã`, value: String(wallet.clanSpins) },
+      { label: `${emoji("giro_cla")} Giros de Vila + Clã`, value: String(wallet.clanSpins) },
       { label: `${emoji("giro_traco")} Giros de Traço`, value: String(wallet.traitSpins) },
     ]),
   ];
   if (feedback) children.push(noticeBlock(feedback.startsWith("✅") ? "sucesso" : "erro", feedback.replace(/^[✅❌]\s*/, "")));
-  children.push(divider(), text(`## Giros\nUse ${emoji("giro_cla")} para revelar uma nova possibilidade de Clã ou ${emoji("giro_traco")} para um novo Traço.`));
+  children.push(divider(), text(`## Giros\nUse ${emoji("giro_cla")} para revelar uma nova possibilidade de Vila + Clã ou ${emoji("giro_traco")} para um novo Traço.`));
   for (const product of spins) children.push(...productOffer(product));
   children.push(divider(), text("## Recursos e reorganização\nOpções diretas para o saldo e para reorganizar sua progressão."));
   for (const product of extras) children.push(...productOffer(product));
@@ -62,10 +63,10 @@ function panel(wallet: PremiumWallet, feedback?: string): TopLevel[] {
     divider(),
     text("## Giros disponíveis\nUse os Giros que você já possui."),
     buttonRow(
-      button({ id: cid("use-clan"), label: "Usar Giro de Clã", emojiKey: "giro_cla", disabled: wallet.clanSpins < 1 }),
+      button({ id: cid("use-clan"), label: "Usar Giro de Vila + Clã", emojiKey: "giro_cla", disabled: wallet.clanSpins < 1 }),
       button({ id: cid("use-trait"), label: "Usar Giro de Traço", emojiKey: "giro_traco", disabled: wallet.traitSpins < 1 }),
     ),
-    text("-# Giros de Clã só podem ser usados enquanto o personagem ainda for da Academia."),
+    text("-# Giros de Vila + Clã sorteiam uma nova origem válida e só podem ser usados enquanto o personagem ainda for da Academia."),
     divider(),
     text(`### ${emoji("ingots")} Sobre Ingots\n[Abra a aba de Ingots no site](${INGOTS_URL}) para ver como conseguir e no que gastar.`),
   );
@@ -105,6 +106,23 @@ function clanRevealPanel(clanId: string, villageId: VillageId): TopLevel[] {
   ])];
 }
 
+async function syncOriginRoles(interaction: ButtonInteraction, villageId: VillageId): Promise<void> {
+  const guild = interaction.guild;
+  if (!guild) throw new PremiumStoreError("Este Giro precisa ser usado dentro do servidor.");
+  const member = await guild.members.fetch(interaction.user.id);
+  const villageRole = SHEET_VILLAGE_ROLES[villageId];
+  const locationRole = SHEET_LOCATION_ROLES[villageId];
+  const reason = "Giro Premium de Vila + Clã";
+  if (!member.roles.cache.has(villageRole)) await member.roles.add(villageRole, reason);
+  if (!member.roles.cache.has(locationRole)) await member.roles.add(locationRole, reason);
+  for (const roleId of Object.values(SHEET_VILLAGE_ROLES)) {
+    if (roleId !== villageRole && member.roles.cache.has(roleId)) await member.roles.remove(roleId, reason);
+  }
+  for (const roleId of new Set([...TRAVEL_LOCATION_ROLE_IDS, ...ALL_TRAVEL_ROLE_IDS])) {
+    if (roleId !== locationRole && member.roles.cache.has(roleId)) await member.roles.remove(roleId, reason);
+  }
+}
+
 function respecConfirmationPanel(wallet: PremiumWallet): TopLevel[] {
   return [economyContainer("obras", [
     titleBlock("reset_atributos", "Confirmar reset de atributos", "Esta ação usa Ingots e altera sua ficha"),
@@ -125,7 +143,7 @@ function characterResetConfirmationPanel(wallet: PremiumWallet): TopLevel[] {
     titleBlock("reset_personagem", "Confirmar reset premium", "Esta ação usa Ingots e prepara uma nova ficha"),
     factsBlock([{ label: "Ingots", value: String(wallet.ingots) }, { label: "Custo", value: "100" }]),
     divider(),
-    noticeBlock("aviso", "Nome, rank, idade, aparência e história serão resetados. O rank volta para Academia, permitindo usar Giros de Clã novamente. Os pontos investidos voltarão ao saldo e as habilidades aprendidas nas Árvores de Habilidade serão removidas."),
+    noticeBlock("aviso", "Nome, rank, idade, aparência e história serão resetados. O rank volta para Academia, permitindo usar Giros de Vila + Clã novamente. Os pontos investidos voltarão ao saldo e as habilidades aprendidas nas Árvores de Habilidade serão removidas."),
     text("Você manterá nível, XP, Vila, Clã, Traço, inventário, Ryō, Ingots e Giros disponíveis."),
     text("Depois, use `/ficha` para preencher novamente os dados narrativos do personagem."),
     divider(),
@@ -212,8 +230,9 @@ export const lojaPremium: Command = {
         return;
       } else if (action === "use-clan") {
         const clan = await useClanSpin(char.id, wallet.id);
-        if (!char.villageId || !(char.villageId in VILLAGE_NAMES)) throw new PremiumStoreError("Sua Vila de origem não está definida.");
-        await revealSpin(interaction, "Sorteio de origem", "giro_cla", ["Consultando sua Vila", "Lendo as possibilidades", "Confirmando Clã"], clanRevealPanel(clan.id, char.villageId as VillageId));
+        if (!(clan.villageId in VILLAGE_NAMES)) throw new PremiumStoreError("A Vila sorteada não está definida.");
+        await syncOriginRoles(interaction, clan.villageId as VillageId);
+        await revealSpin(interaction, "Sorteio de origem", "giro_cla", ["Consultando as Vilas", "Lendo as possibilidades", "Confirmando Vila + Clã"], clanRevealPanel(clan.id, clan.villageId as VillageId));
         return;
       } else if (action === "use-trait") {
         const result = await startTraitSpin(char.id, wallet.id);

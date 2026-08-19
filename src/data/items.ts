@@ -171,6 +171,7 @@ export const ITEMS: ItemDef[] = [
     category: "WEAPON",
     stackable: false,
     actions: ["EQUIP"],
+    basicAbilityId: "item_katana_cortar",
   },
   {
     id: "lamina_chakra",

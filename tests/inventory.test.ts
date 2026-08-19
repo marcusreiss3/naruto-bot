@@ -67,7 +67,7 @@ describe("catálogo de itens", () => {
           actionType: "COMUM",
         });
       }
-      if (item.basicAbilityId && item.id !== "papel_bomba") {
+      if (item.basicAbilityId && item.id !== "papel_bomba" && item.id !== "katana") {
         expect(getAbility(item.basicAbilityId), `${item.name}: uso`).toMatchObject({
           category: "BUKIJUTSU",
         });
@@ -75,11 +75,18 @@ describe("catálogo de itens", () => {
     }
   });
 
-  it("mantém Katana somente como equipamento por enquanto", () => {
+  it("registra o corte de Katana como ataque básico de Kenjutsu", () => {
     const katana = getItem("katana")!;
     expect(katana.actions).toEqual(["EQUIP"]);
-    expect(katana.basicAbilityId).toBeUndefined();
+    expect(katana.basicAbilityId).toBe("item_katana_cortar");
     expect(katana.throwAbilityId).toBeUndefined();
+    expect(getAbility(katana.basicAbilityId!)).toMatchObject({
+      category: "KENJUTSU",
+      scalingAttribute: "kenjutsu",
+      shape: "MELEE",
+      baseDamage: 13,
+      cost: 14,
+    });
   });
 
   it("registra Soco como ataque universal sem arma", () => {

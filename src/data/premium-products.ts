@@ -1,8 +1,8 @@
 export const PREMIUM_PRODUCTS = [
   {
     id: "clan_spin",
-    name: "Giro de Clã",
-    description: "Libera uma nova rolagem de Clã enquanto o personagem ainda for da Academia.",
+    name: "Giro de Vila + Clã",
+    description: "Libera uma nova rolagem de Vila + Clã enquanto o personagem ainda for da Academia.",
     cost: 100,
     kind: "SPIN",
     spinField: "clanSpins",
@@ -33,7 +33,7 @@ export const PREMIUM_PRODUCTS = [
   {
     id: "character_reset",
     name: "Reset premium de personagem",
-    description: "Permite refazer nome, rank, idade, história e aparência; devolve os pontos investidos, remove as habilidades aprendidas nas Árvores de Habilidade e libera novamente o uso de Giros de Clã.",
+    description: "Permite refazer nome, rank, idade, história e aparência; devolve os pontos investidos, remove as habilidades aprendidas nas Árvores de Habilidade e libera novamente o uso de Giros de Vila + Clã.",
     cost: 100,
     kind: "CHARACTER_RESET",
   },

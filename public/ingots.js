@@ -44,7 +44,7 @@ window.INGOTS_PAGE = {
         {
           icon: "fair",
           title: "Sem compra direta de poder",
-          text: "Ingots não vendem dano, atributo ou jutsu específicos. Giros de Clã e de Traço seguem as probabilidades normais: eles podem influenciar sua progressão, mas não permitem comprar um resultado garantido.",
+          text: "Ingots não vendem dano, atributo ou jutsu específicos. Giros de Vila + Clã e de Traço seguem as probabilidades normais: eles podem influenciar sua progressão, mas não permitem comprar um resultado garantido.",
         },
         {
           icon: "account",
@@ -81,12 +81,12 @@ window.INGOTS_PAGE = {
     {
       id: "no-que-gastar",
       title: "No que gastar",
-      intro: "Use `/loja-premium` para comprar e usar Giros, receber Ryō ou reorganizar sua progressão. Um Giro não permite escolher diretamente um Clã ou Traço específico.",
+      intro: "Use `/loja-premium` para comprar e usar Giros, receber Ryō ou reorganizar sua progressão. Um Giro não permite escolher diretamente uma Vila, Clã ou Traço específico.",
       cards: [
         {
           icon: "clan",
-          title: "Giro de Clã",
-          text: "Permite sortear outro Clã da Vila de origem enquanto o personagem ainda for da Academia.",
+          title: "Giro de Vila + Clã",
+          text: "Sorteia uma nova combinação válida de Vila + Clã enquanto o personagem ainda for da Academia.",
           meta: "Custo: 100 Ingots",
         },
         {
@@ -110,7 +110,7 @@ window.INGOTS_PAGE = {
         {
           icon: "account",
           title: "Reset premium de personagem",
-          text: "Permite refazer nome, rank, idade, história e aparência; também devolve os pontos investidos e remove as habilidades aprendidas nas Árvores de Habilidade. O rank volta para Academia, permitindo usar Giros de Clã novamente. Mantém nível, XP, Vila, Clã, Traço, inventário, Ryō, Ingots e Giros.",
+          text: "Permite refazer nome, rank, idade, história e aparência; também devolve os pontos investidos e remove as habilidades aprendidas nas Árvores de Habilidade. O rank volta para Academia, permitindo usar Giros de Vila + Clã novamente. Mantém nível, XP, Vila, Clã, Traço, inventário, Ryō, Ingots e Giros.",
           meta: "Custo: 100 Ingots",
         },
       ],
@@ -134,7 +134,7 @@ window.INGOTS_PAGE = {
   faq: [
     {
       question: "Ingot deixa meu personagem mais forte?",
-      answer: "Pode influenciar sua progressão de forma indireta: Ingots compram Giros de Clã e de Traço, e um Traço pode ter efeito mecânico. Não existe compra direta ou garantida de atributo, dano, jutsu, Clã ou Traço específico; os Giros usam as probabilidades normais.",
+      answer: "Pode influenciar sua progressão de forma indireta: Ingots compram Giros de Vila + Clã e de Traço, e um Traço pode ter efeito mecânico. Não existe compra direta ou garantida de atributo, dano, jutsu, Vila, Clã ou Traço específico; os Giros usam as probabilidades normais.",
     },
     {
       question: "Perdi meu personagem na morte permanente. Perdi os Ingots?",

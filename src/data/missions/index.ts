@@ -14,6 +14,7 @@ import {
   CAMPO_ABERTO_CHANNEL_ID,
   CENTRO_COMERCIAL_SUNA_CHANNEL_ID,
   CENTRO_COMERCIAL_KIRI_CHANNEL_ID,
+  CENTRO_COMERCIAL_KUMO_CHANNEL_ID,
   PRACA_SUNA_CHANNEL_ID,
 } from "../scenarios/index.js";
 
@@ -1273,8 +1274,8 @@ export const MISSIONS: MissionDef[] = [
     name: "O Ritmo Torto de Souta",
     rank: "D",
     description:
-      "Souta ensina o Taijutsu de Agitação no meio do Centro Comercial de Konoha, brigando de brincadeira com quem passa. Fale com ele, pague o combinado e prove que aguenta o ritmo dele.",
-    channelId: CENTRO_COMERCIAL_CHANNEL_ID,
+      "Souta ensina o Taijutsu de Agitação no meio do Centro Comercial de Kumogakure, brigando de brincadeira com quem passa. Fale com ele, pague o combinado e prove que aguenta o ritmo dele.",
+    channelId: CENTRO_COMERCIAL_KUMO_CHANNEL_ID,
     type: "MESTRE_ESTILO",
     objectives: [
       { id: "aceitar_convite", description: "Aceitar o convite de Souta" },
@@ -1284,8 +1285,8 @@ export const MISSIONS: MissionDef[] = [
     rewards: { xp: 120, ryo: 0 },
     data: {
       style: "TAIJUTSU_AGITACAO",
-      channelId: CENTRO_COMERCIAL_CHANNEL_ID,
-      scenarioId: "centro_comercial",
+      channelId: CENTRO_COMERCIAL_KUMO_CHANNEL_ID,
+      scenarioId: "centro_comercial_kumo",
       costRyo: 300,
       costItems: [],
       introTurns: 3,
