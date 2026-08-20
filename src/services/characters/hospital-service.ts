@@ -1,6 +1,7 @@
 import { prisma } from "../../db/client.js";
 import { EconomyError } from "../economy/errors.js";
 import { spendCharacterRyo } from "../economy/character-economy.js";
+import { isCharacterInCombat } from "../combat/combat-engine.js";
 import {
   HOSPITAL_IWA_CHANNEL_ID,
   HOSPITAL_KIRI_CHANNEL_ID,
@@ -38,6 +39,12 @@ export interface TreatmentResult {
 // avancado cura tudo. Mesma convencao aditiva-com-teto da cura em combate
 // (ver applyDamage/heal em combat-engine.ts) — nao "define" a vida, "soma".
 export async function treatCharacter(charId: string, kind: TreatmentKind): Promise<TreatmentResult> {
+  // Checado fora da transacao: combate acontece em outro canal (o mapa da
+  // luta), entao o hospital nao pode confiar em "ha' sessao ativa neste
+  // canal" — precisa saber se o PERSONAGEM esta lutando em algum lugar.
+  if (await isCharacterInCombat(charId)) {
+    throw new EconomyError("Você não pode receber tratamento enquanto está em combate.");
+  }
   return prisma.$transaction(async (tx) => {
     const char = await tx.userCharacter.findUniqueOrThrow({ where: { id: charId } });
     if (char.hpCurrent >= char.hpMax) {

@@ -134,6 +134,16 @@ export async function getActiveSession(channelId: string): Promise<SessionFull |
   return mapSession(s);
 }
 
+// Independe de canal: usado por regeneracao passiva e hospital, que precisam
+// saber se o PERSONAGEM esta lutando em algum lugar, nao so' no canal atual.
+export async function isCharacterInCombat(charId: string): Promise<boolean> {
+  const p = await prisma.combatParticipant.findFirst({
+    where: { charId, session: { status: "ACTIVE" } },
+    select: { id: true },
+  });
+  return p !== null;
+}
+
 export async function getSessionById(id: string): Promise<SessionFull | null> {
   const s = await prisma.combatSession.findUnique({
     where: { id },
