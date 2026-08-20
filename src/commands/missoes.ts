@@ -8,9 +8,8 @@
 import type { Command } from "./types.js";
 import { getMission, MISSIONS } from "../data/index.js";
 import { getOrCreateCharacter } from "../services/characters/character-service.js";
-import { getActiveMissions, readState } from "../services/missions/mission-service.js";
+import { abandonMission, getActiveMissions, readState } from "../services/missions/mission-service.js";
 import {
-  abandonBoardMission,
   getDailyMissionBoardDay,
   getDailyMissionClaimedMissionIds,
   sweepExpiredBoardMissions,
@@ -56,7 +55,7 @@ export const missoes: Command = {
     if (action !== "abandonar" || !instanceId) return;
     const guildId = interaction.guildId ?? "global";
     const char = await getOrCreateCharacter(interaction.user.id, guildId, interaction.user.username);
-    const result = await abandonBoardMission(char.id, instanceId);
+    const result = await abandonMission(char.id, instanceId);
     if (!result.ok) {
       await interaction.reply({ content: `❌ ${result.error ?? "Não foi possível abandonar esta missão."}`, ephemeral: true });
       return;
@@ -66,8 +65,9 @@ export const missoes: Command = {
   },
 };
 
-// Instancias que vieram do mural (tem claim hoje) ganham botao de abandonar;
-// missoes de historia (gato, bandidos, escolta...) nao passam por aqui.
+// Botao de abandonar: instancias que vieram do mural (tem claim hoje) e
+// mestre de estilo de luta. As demais missoes de historia (gato, bandidos,
+// escolta...) tem estado proprio demais pra abandonar com seguranca aqui.
 async function buildMinhasCard(charId: string): Promise<TopLevel[]> {
   const dayKey = getDailyMissionBoardDay();
   await sweepExpiredBoardMissions(charId, dayKey);
@@ -104,7 +104,7 @@ async function buildMinhasCard(charId: string): Promise<TopLevel[]> {
       children.push(...(await mestreEstiloExtraBlock(def, state, charId)));
     }
 
-    if (claimedMissionIds.has(inst.missionId)) {
+    if (claimedMissionIds.has(inst.missionId) || def.type === "MESTRE_ESTILO") {
       children.push(
         buttonRow(
           button({ id: cid("abandonar", inst.id), label: "Abandonar missão", style: ButtonStyle.Danger, emojiKey: "erro" }),

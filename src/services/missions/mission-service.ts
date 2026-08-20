@@ -5,6 +5,7 @@ import { addXp } from "../characters/character-service.js";
 import { grantCharacterRyo } from "../economy/character-economy.js";
 import { accumulateMissionActivity } from "../economy/weekly-tax.js";
 import { PERFORMANCE_LIMITS, warnIfSlow } from "../../utils/performance.js";
+import { clearBoardClaim } from "./daily-mission-board.js";
 import { emoji } from "../../ui/economy-emojis.js";
 import { divider, ryo, singleCard, text, titleBlock, v2Public, type TopLevel } from "../../ui/economy-components-v2.js";
 
@@ -249,4 +250,32 @@ export async function completeMission(charId: string, missionId: string): Promis
   // e' o WeeklyTaxActivity acima, com rewards.xp cru.
   await addXp(charId, rewards.xp);
   return { rewards, halved };
+}
+
+// Abandonar: sem recompensa (nem devolucao do que ja' foi gasto — ex: ryo e
+// itens ja entregues ao mestre de estilo em GATHER continuam gastos). A
+// instancia some do /missoes minhas; se ela tinha um claim do mural pra hoje,
+// clearBoardClaim libera o rank de novo. Bloqueado durante combate vinculado
+// a esta missao pelo mesmo motivo que o hospital: nao da pra desistir no
+// meio da luta.
+export async function abandonMission(
+  charId: string,
+  instanceId: string,
+): Promise<{ ok: boolean; error?: string; missionName?: string }> {
+  const inst = await prisma.missionInstance.findUnique({ where: { id: instanceId } });
+  if (!inst || inst.charId !== charId || inst.status !== "ACTIVE") {
+    return { ok: false, error: "Esta missão não está mais ativa." };
+  }
+  const def = getMission(inst.missionId);
+  if (!def) return { ok: false, error: "Missão desconhecida." };
+
+  const liveCombat = await prisma.combatSession.findFirst({
+    where: { missionInstanceId: inst.id, status: "ACTIVE" },
+    select: { id: true },
+  });
+  if (liveCombat) return { ok: false, error: "Você não pode abandonar esta missão durante o combate." };
+
+  await prisma.missionInstance.update({ where: { id: inst.id }, data: { status: "ABANDONED" } });
+  await clearBoardClaim(charId, inst.missionId);
+  return { ok: true, missionName: def.name };
 }

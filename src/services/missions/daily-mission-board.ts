@@ -1,5 +1,5 @@
 import { prisma } from "../../db/client.js";
-import { getMission, MISSIONS } from "../../data/missions/index.js";
+import { MISSIONS } from "../../data/missions/index.js";
 import type { MissionDef } from "../../data/types.js";
 import { NINJA_RANK_LABELS, type NinjaRank, type Rank } from "../../config/enums.js";
 import { getMyParty } from "../party/party-service.js";
@@ -286,33 +286,13 @@ export async function claimDailyMission(
   return { ok: true, mission };
 }
 
-// Abandonar: sem recompensa, a instancia sai de ACTIVE (some do /missoes
-// minhas) e o claim do dia e' apagado (libera o rank pra pegar de novo no
-// mural). So' funciona pra missao que veio do mural — historia usa outro fluxo.
-export async function abandonBoardMission(
-  charId: string,
-  instanceId: string,
-): Promise<{ ok: boolean; error?: string; missionName?: string }> {
-  const inst = await prisma.missionInstance.findUnique({ where: { id: instanceId } });
-  if (!inst || inst.charId !== charId || inst.status !== "ACTIVE") {
-    return { ok: false, error: "Esta missão não está mais ativa." };
-  }
-  const def = getMission(inst.missionId);
-  if (!def || !isBoardMission(def)) {
-    return { ok: false, error: "Esta missão não pode ser abandonada por aqui." };
-  }
+// Chamado por abandonMission() (mission-service.ts) pra qualquer instancia
+// abandonada: se ela tinha um claim do mural hoje, apaga (libera o rank pra
+// pegar de novo). Pra missao que nunca veio do mural (mestre de estilo,
+// historia...) e' um no-op silencioso — nao existe claim pra apagar.
+export async function clearBoardClaim(charId: string, missionId: string): Promise<void> {
   const dayKey = boardDayKey();
-  const claim = await prisma.dailyMissionClaim.findUnique({
-    where: { charId_dayKey_rank: { charId, dayKey, rank: def.rank } },
-  });
-  if (!claim || claim.missionId !== inst.missionId) {
-    return { ok: false, error: "Esta missão não pode ser abandonada por aqui." };
-  }
-  await prisma.$transaction([
-    prisma.missionInstance.update({ where: { id: inst.id }, data: { status: "ABANDONED" } }),
-    prisma.dailyMissionClaim.delete({ where: { id: claim.id } }),
-  ]);
-  return { ok: true, missionName: def.name };
+  await prisma.dailyMissionClaim.deleteMany({ where: { charId, dayKey, missionId } });
 }
 
 // null = sem oferta disponivel pra esse rank (personagem ja concluiu todas).
