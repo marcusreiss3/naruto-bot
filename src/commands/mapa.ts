@@ -107,6 +107,7 @@ import {
 import { renderMissionBoardCard } from "../ui/mission-board-card.js";
 import { isVillageMansionChannel } from "../services/village-service.js";
 import { villageFromMemberStrict } from "../services/economy/village-sync.js";
+import { missionBoardSummary } from "../data/missions/board-summaries.js";
 
 const PREFIX = "mapa:v1";
 const cid = (action: string) => `${PREFIX}:${action}`;
@@ -178,7 +179,7 @@ async function buildDailyMissionBoard(char: { id: string; ninjaRank: string }, f
     return {
       rank,
       name: mission.name,
-      description: mission.description,
+      description: missionBoardSummary(mission),
       locked: !canClaimDailyMissionRank(ninjaRank, rank),
       claimed: claims.has(rank),
     };

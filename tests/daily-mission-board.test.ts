@@ -3,12 +3,14 @@ import { MISSIONS } from "../src/data/missions/index.js";
 import { canClaimDailyMissionRank } from "../src/services/missions/daily-mission-board.js";
 import { renderMissionBoardCard } from "../src/ui/mission-board-card.js";
 import { isVillageMansionChannel, VILLAGE_MANSIONS } from "../src/services/village-service.js";
+import { hasMissionBoardSummary } from "../src/data/missions/board-summaries.js";
 
 describe("mural diário de missões", () => {
   it("não oferece mestres de artes marciais", () => {
     const missionBoardMissions = MISSIONS.filter((mission) => ["D", "C", "B"].includes(mission.rank) && mission.type !== "MESTRE_ESTILO");
     expect(missionBoardMissions).not.toHaveLength(0);
     expect(missionBoardMissions.some((mission) => mission.type === "MESTRE_ESTILO")).toBe(false);
+    expect(missionBoardMissions.every((mission) => hasMissionBoardSummary(mission.id))).toBe(true);
   });
 
   it("respeita os ranks permitidos para as ofertas", () => {

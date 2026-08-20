@@ -24,7 +24,7 @@ export const MISSIONS: MissionDef[] = [
     name: "Recuperar o Gato (Tora)",
     rank: "D",
     description:
-      "A esposa do Daimyo perdeu o gato Tora. Encontre-o na Praça da Vila da Folha e capture-o.",
+      "Takamaru, uma criança da Vila da Folha, perdeu o gato Tora. Encontre-o na Praça e capture-o.",
     channelId: PRACA_VILA_DA_FOLHA_CHANNEL_ID,
     type: "FETCH_CAT",
     objectives: [{ id: "capturar_gato", description: "Capturar o gato Tora" }],
