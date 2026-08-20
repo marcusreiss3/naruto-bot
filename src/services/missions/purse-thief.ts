@@ -330,7 +330,7 @@ async function runDialogue(o: {
       await setState(inst.id, state);
       const result = await completeMission(inst.charId, inst.missionId);
       if (result && o.channel && "send" in o.channel) {
-        await o.channel.send({ embeds: [buildMissionCompleteEmbed(def.name, result.rewards)] });
+        await o.channel.send(buildMissionCompleteEmbed(def.name, result));
       }
       return;
     }

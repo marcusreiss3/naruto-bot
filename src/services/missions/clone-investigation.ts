@@ -426,7 +426,7 @@ async function startAccusation(
       );
       const result = await completeMission(inst.charId, inst.missionId);
       if (result) {
-        await channel.send({ embeds: [buildMissionCompleteEmbed(def.name, result.rewards)] });
+        await channel.send(buildMissionCompleteEmbed(def.name, result));
       }
       return;
     } catch {

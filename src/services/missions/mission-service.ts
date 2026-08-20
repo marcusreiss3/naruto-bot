@@ -1,4 +1,3 @@
-import { EmbedBuilder } from "discord.js";
 import { prisma } from "../../db/client.js";
 import { getMission } from "../../data/missions/index.js";
 import type { MissionDef } from "../../data/types.js";
@@ -6,20 +5,38 @@ import { addXp } from "../characters/character-service.js";
 import { grantCharacterRyo } from "../economy/character-economy.js";
 import { accumulateMissionActivity } from "../economy/weekly-tax.js";
 import { PERFORMANCE_LIMITS, warnIfSlow } from "../../utils/performance.js";
+import { emoji } from "../../ui/economy-emojis.js";
+import { divider, ryo, singleCard, text, titleBlock, v2Public, type TopLevel } from "../../ui/economy-components-v2.js";
 
-const CHECK_EMOJI = "<:check:1517556025614532658>";
+// Emoji de XP e' proprio da tela de missao (nao faz parte do mapa geral de
+// economy-emojis.ts). Ryo usa o helper compartilhado — o id fixo que morava
+// aqui antes era o emoji ERRADO, divergente do usado no resto do bot.
 const EXP_EMOJI = "<:exp:1523544859103854712>";
-const RYO_EMOJI = "<:ryo:1523544228536516698>";
-const COMPLETE_COLOR = "#2ECC71";
 
-export function buildMissionCompleteEmbed(missionName: string, rewards: MissionDef["rewards"]): EmbedBuilder {
-  const rewardLines = [`> ${EXP_EMOJI} **${rewards.xp} XP**`, `> ${RYO_EMOJI} **${rewards.ryo} ryo**`];
+export interface MissionCompleteResult {
+  rewards: MissionDef["rewards"];
+  halved?: boolean;
+}
 
-  return new EmbedBuilder()
-    .setColor(COMPLETE_COLOR)
-    .setTitle(`${CHECK_EMOJI} Missão concluída`)
-    .setDescription(`> **${missionName}** foi concluída com sucesso.`)
-    .addFields({ name: "Recompensas", value: rewardLines.join("\n") });
+// `extraNote` e' pra contexto adicional que nao depende do resultado (ex.:
+// /admin dizendo pra quem a missao foi concluida). O aviso de recompensa pela
+// metade e' automatico: aparece sozinho quando result.halved vem true, sem
+// nenhum dos ~45 chamadores precisar saber que esse caso existe.
+export function buildMissionCompleteEmbed(
+  missionName: string,
+  result: MissionCompleteResult,
+  extraNote?: string,
+): { components: TopLevel[]; flags: number } {
+  const notes: string[] = [];
+  if (result.halved) notes.push("Recompensa reduzida pela metade: você já tinha concluído esta missão antes.");
+  if (extraNote) notes.push(extraNote);
+
+  const children = [
+    titleBlock("sucesso", "Missão concluída", `${missionName} foi concluída com sucesso.`),
+    text(`${EXP_EMOJI} **${result.rewards.xp.toLocaleString("pt-BR")} XP**\n${ryo(`**${result.rewards.ryo.toLocaleString("pt-BR")} Ryō**`)}`),
+    ...(notes.length ? [divider(), ...notes.map((note) => text(`-# ${emoji("aviso")} ${note}`))] : []),
+  ];
+  return v2Public(singleCard("cofre", children));
 }
 
 export async function assignMission(
@@ -180,11 +197,19 @@ export async function markObjective(instanceId: string, objectiveId: string): Pr
   });
 }
 
-export async function completeMission(charId: string, missionId: string): Promise<{ rewards: MissionDef["rewards"] } | null> {
+export async function completeMission(charId: string, missionId: string): Promise<MissionCompleteResult | null> {
   const def = getMission(missionId);
   const inst = await prisma.missionInstance.findFirst({ where: { charId, missionId, status: "ACTIVE" } });
   if (!def || !inst) return null;
   await prisma.missionInstance.update({ where: { id: inst.id }, data: { status: "COMPLETED" } });
+
+  // halfReward e' marcado na criacao da instancia (ver claimDailyMission em
+  // daily-mission-board.ts): um integrante de party que entra numa missao do
+  // mural que ele mesmo ja tinha concluido antes recebe metade.
+  const halved = inst.halfReward === true;
+  const rewards: MissionDef["rewards"] = halved
+    ? { xp: Math.round(def.rewards.xp / 2), ryo: Math.round(def.rewards.ryo / 2) }
+    : def.rewards;
 
   // Rank e vila do INSTANTE da conclusao: subir de rank ou trocar de cargo
   // depois nao pode mexer no que ja foi acumulado (sem imposto retroativo).
@@ -193,18 +218,18 @@ export async function completeMission(charId: string, missionId: string): Promis
     select: { ninjaRank: true, villageId: true },
   });
 
-  // A recompensa e' SEMPRE integral e imediata; o imposto e' semanal e so'
-  // desconta no fechamento de domingo. Ryo e acumulador tributavel entram na
-  // mesma transacao: ou os dois, ou nenhum.
+  // A recompensa e' SEMPRE integral (ou metade, se halved) e imediata; o
+  // imposto e' semanal e so' desconta no fechamento de domingo. Ryo e
+  // acumulador tributavel entram na mesma transacao: ou os dois, ou nenhum.
   await prisma.$transaction(async (tx) => {
     // grantCharacterRyo rejeita amount <= 0 (EconomyError) — missao com
     // recompensa so' em XP (ex.: mestre de estilo, que ja cobrou ryo como
     // custo) tem rewards.ryo = 0 de proposito, entao pula o grant em vez de
     // deixar a transacao inteira estourar.
-    if (def.rewards.ryo > 0) {
+    if (rewards.ryo > 0) {
       await grantCharacterRyo(tx, {
         charId,
-        amount: def.rewards.ryo,
+        amount: rewards.ryo,
         type: "MISSION_REWARD",
         reason: `Missão ${def.name}`,
         meta: { missionId, rank: def.rank },
@@ -214,14 +239,14 @@ export async function completeMission(charId: string, missionId: string): Promis
       charId,
       ninjaRank: snapshot?.ninjaRank ?? "ACADEMIA",
       villageId: snapshot?.villageId ?? null,
-      xp: def.rewards.xp,
-      ryo: def.rewards.ryo,
+      xp: rewards.xp,
+      ryo: rewards.ryo,
     });
   });
 
   // addXp por ultimo: ele consome XP ao subir de nivel, entao UserCharacter.xp
   // e' residual e nunca serve de base para a meta semanal — quem guarda a base
-  // e' o WeeklyTaxActivity acima, com def.rewards.xp cru.
-  await addXp(charId, def.rewards.xp);
-  return { rewards: def.rewards };
+  // e' o WeeklyTaxActivity acima, com rewards.xp cru.
+  await addXp(charId, rewards.xp);
+  return { rewards, halved };
 }

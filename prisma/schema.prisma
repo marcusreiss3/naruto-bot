@@ -443,10 +443,19 @@ model MissionInstance {
   character UserCharacter @relation(fields: [charId], references: [id], onDelete: Cascade)
   charId    String
   missionId String
-  status    String        @default("ACTIVE") // ACTIVE | COMPLETED | FAILED
+  status    String        @default("ACTIVE") // ACTIVE | COMPLETED | FAILED | ABANDONED
   stateJson String        @default("{}")
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
+  // Prazo de 3h para missoes aceitas no mural (ver daily-mission-board.ts).
+  // Nulo para missoes que nao vem do mural (gato, bandidos, etc.) — essas nao
+  // expiram. Checado preguicosamente (sweepExpiredBoardMissions), sem job.
+  expiresAt DateTime?
+  // Marca uma missao de mural aceita via party de alguem que ja tinha
+  // concluido essa missao antes (nao apareceria mais na propria oferta dela,
+  // mas ainda pode entrar na leva do colega). completeMission() ve isto e
+  // paga so' metade (ver daily-mission-board.ts claimDailyMission).
+  halfReward Boolean @default(false)
 
   objectives MissionObjectiveState[]
 

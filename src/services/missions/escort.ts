@@ -305,7 +305,7 @@ async function escortDialogue(
         );
         const result = await completeMission(inst.charId, inst.missionId);
         if (result && channel && "send" in channel) {
-          await channel.send({ embeds: [buildMissionCompleteEmbed(def.name, result.rewards)] });
+          await channel.send(buildMissionCompleteEmbed(def.name, result));
         }
         return;
       }

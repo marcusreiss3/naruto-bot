@@ -510,6 +510,6 @@ export async function onWaspNestsCombatWon(
   await setState(inst.id, state);
   const result = await completeMission(inst.charId, inst.missionId);
   if (result) {
-    await interaction.followUp({ embeds: [buildMissionCompleteEmbed(def.name, result.rewards)] });
+    await interaction.followUp(buildMissionCompleteEmbed(def.name, result));
   }
 }

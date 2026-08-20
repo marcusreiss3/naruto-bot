@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { MISSIONS } from "../src/data/missions/index.js";
-import { canClaimDailyMissionRank } from "../src/services/missions/daily-mission-board.js";
+import { canClaimDailyMissionRank, partnerRankRequirement } from "../src/services/missions/daily-mission-board.js";
 import { renderMissionBoardCard } from "../src/ui/mission-board-card.js";
 import { isVillageMansionChannel, VILLAGE_MANSIONS } from "../src/services/village-service.js";
 import { hasMissionBoardSummary } from "../src/data/missions/board-summaries.js";
@@ -21,6 +21,15 @@ describe("mural diário de missões", () => {
     expect(canClaimDailyMissionRank("JONIN", "B")).toBe(true);
   });
 
+  it("exige parceiro de rank maior só nos combos Genin+C e Chūnin+B", () => {
+    expect(partnerRankRequirement("GENIN", "D")).toBeNull();
+    expect(partnerRankRequirement("GENIN", "C")).toEqual(["CHUNIN", "JONIN", "KAGE"]);
+    expect(partnerRankRequirement("CHUNIN", "C")).toBeNull();
+    expect(partnerRankRequirement("CHUNIN", "B")).toEqual(["CHUNIN", "JONIN", "KAGE"]);
+    expect(partnerRankRequirement("JONIN", "B")).toBeNull();
+    expect(partnerRankRequirement("KAGE", "B")).toBeNull();
+  });
+
   it("reconhece somente a mansão da vila do personagem", () => {
     expect(isVillageMansionChannel("KONOHA", VILLAGE_MANSIONS.KONOHA)).toBe(true);
     expect(isVillageMansionChannel("KONOHA", VILLAGE_MANSIONS.SUNA)).toBe(false);
@@ -31,9 +40,9 @@ describe("mural diário de missões", () => {
     const card = await renderMissionBoardCard({
       dayKey: "2026-08-20",
       offers: [
-        { rank: "D", name: "Entrega de teste", description: "Leve o relatório ao mensageiro da vila.", locked: false, claimed: false },
-        { rank: "C", name: "Patrulha de teste", description: "Investigue os ruídos da rota comercial.", locked: false, claimed: false },
-        { rank: "B", name: "Resgate de teste", description: "Proteja a equipe durante uma missão difícil.", locked: true, claimed: false },
+        { rank: "D", name: "Entrega de teste", description: "Leve o relatório ao mensageiro da vila.", locked: false, claimed: false, unavailable: false },
+        { rank: "C", name: "Patrulha de teste", description: "Investigue os ruídos da rota comercial.", locked: false, claimed: false, unavailable: false },
+        { rank: "B", name: "Resgate de teste", description: "Proteja a equipe durante uma missão difícil.", locked: true, claimed: false, unavailable: false },
       ],
     });
     expect(card.subarray(1, 4).toString()).toBe("PNG");

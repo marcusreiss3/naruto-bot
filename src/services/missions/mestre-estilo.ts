@@ -465,7 +465,9 @@ export async function onMestreEstiloCombatWon(
   if (result) {
     await interaction.followUp({
       content: `🥋 **${master?.name ?? "O mestre"}** reconhece seu esforço — você aprendeu **${FIGHTING_STYLE_LABELS[data.style]}**! O estilo já aparece no seu \`/perfil\` e a árvore está liberada no site.`,
-      embeds: [buildMissionCompleteEmbed(def.name, result.rewards)],
     });
+    // Components V2 nao pode conviver no mesmo payload com `content` — vai
+    // como mensagem separada.
+    await interaction.followUp(buildMissionCompleteEmbed(def.name, result));
   }
 }

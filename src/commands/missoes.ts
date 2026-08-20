@@ -1,20 +1,39 @@
-﻿import { EmbedBuilder, SlashCommandBuilder, type ChatInputCommandInteraction } from "discord.js";
+﻿import {
+  ButtonStyle,
+  EmbedBuilder,
+  SlashCommandBuilder,
+  type ButtonInteraction,
+  type ChatInputCommandInteraction,
+} from "discord.js";
 import type { Command } from "./types.js";
 import { getMission, MISSIONS } from "../data/index.js";
 import { getOrCreateCharacter } from "../services/characters/character-service.js";
 import { getActiveMissions, readState } from "../services/missions/mission-service.js";
+import {
+  abandonBoardMission,
+  getDailyMissionBoardDay,
+  getDailyMissionClaimedMissionIds,
+  sweepExpiredBoardMissions,
+} from "../services/missions/daily-mission-board.js";
 import type { MestreEstiloState } from "../services/missions/mestre-estilo.js";
 import { mestreEstiloExtraBlock } from "../ui/mestre-estilo-container.js";
 import {
+  button,
+  buttonRow,
   divider,
   listBlock,
   singleCard,
   text,
   titleBlock,
+  v2Edit,
   v2Payload,
   type ContainerChild,
+  type TopLevel,
 } from "../ui/economy-components-v2.js";
 import { emoji } from "../ui/economy-emojis.js";
+
+const PREFIX = "missoes:v1";
+const cid = (action: string, arg: string) => `${PREFIX}:${action}:${arg}`;
 
 export const missoes: Command = {
   data: new SlashCommandBuilder()
@@ -31,16 +50,32 @@ export const missoes: Command = {
         return ativas(interaction);
     }
   },
+
+  async handleButton(interaction: ButtonInteraction) {
+    const [, , action, instanceId] = interaction.customId.split(":");
+    if (action !== "abandonar" || !instanceId) return;
+    const guildId = interaction.guildId ?? "global";
+    const char = await getOrCreateCharacter(interaction.user.id, guildId, interaction.user.username);
+    const result = await abandonBoardMission(char.id, instanceId);
+    if (!result.ok) {
+      await interaction.reply({ content: `❌ ${result.error ?? "Não foi possível abandonar esta missão."}`, ephemeral: true });
+      return;
+    }
+    const card = await buildMinhasCard(char.id);
+    await interaction.update(v2Edit(card));
+  },
 };
 
-async function minhas(interaction: ChatInputCommandInteraction): Promise<void> {
-  const guildId = interaction.guildId ?? "global";
-  const char = await getOrCreateCharacter(interaction.user.id, guildId, interaction.user.username);
-  const insts = await getActiveMissions(char.id);
+// Instancias que vieram do mural (tem claim hoje) ganham botao de abandonar;
+// missoes de historia (gato, bandidos, escolta...) nao passam por aqui.
+async function buildMinhasCard(charId: string): Promise<TopLevel[]> {
+  const dayKey = getDailyMissionBoardDay();
+  await sweepExpiredBoardMissions(charId, dayKey);
+  const insts = await getActiveMissions(charId);
   if (insts.length === 0) {
-    await interaction.reply({ content: "Você não tem missões ativas.", ephemeral: true });
-    return;
+    return singleCard("vila", [titleBlock("missoes", "Suas missões", "0 ativa(s)"), text("Você não tem missões ativas.")]);
   }
+  const claimedMissionIds = await getDailyMissionClaimedMissionIds(charId, dayKey);
 
   const children: ContainerChild[] = [titleBlock("missoes", "Suas missões", `${insts.length} ativa(s)`)];
 
@@ -66,11 +101,25 @@ async function minhas(interaction: ChatInputCommandInteraction): Promise<void> {
     // fica tudo no MESMO container, no mesmo estilo das outras missões.
     if (def.type === "MESTRE_ESTILO") {
       const state = readState<MestreEstiloState>(inst.stateJson);
-      children.push(...(await mestreEstiloExtraBlock(def, state, char.id)));
+      children.push(...(await mestreEstiloExtraBlock(def, state, charId)));
+    }
+
+    if (claimedMissionIds.has(inst.missionId)) {
+      children.push(
+        buttonRow(
+          button({ id: cid("abandonar", inst.id), label: "Abandonar missão", style: ButtonStyle.Danger, emojiKey: "erro" }),
+        ),
+      );
     }
   }
 
-  await interaction.reply(v2Payload(singleCard("vila", children), true));
+  return singleCard("vila", children);
+}
+
+async function minhas(interaction: ChatInputCommandInteraction): Promise<void> {
+  const guildId = interaction.guildId ?? "global";
+  const char = await getOrCreateCharacter(interaction.user.id, guildId, interaction.user.username);
+  await interaction.reply(v2Payload(await buildMinhasCard(char.id), true));
 }
 
 async function ativas(interaction: ChatInputCommandInteraction): Promise<void> {

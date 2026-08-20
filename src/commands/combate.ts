@@ -665,10 +665,9 @@ async function moverMissaoGato(interaction: ChatInputCommandInteraction, dest: s
   await setState(ctx.inst.id, step.state);
 
   const logs = [`🏃 **${char.name}** foi para **${dest}**.`, ...step.logs];
-  let missionCompleteEmbed: EmbedBuilder | null = null;
+  let missionResult: Awaited<ReturnType<typeof completeMission>> = null;
   if (step.captured) {
-    const result = await completeMission(char.id, ctx.def.id);
-    if (result) missionCompleteEmbed = buildMissionCompleteEmbed(ctx.def.name, result.rewards);
+    missionResult = await completeMission(char.id, ctx.def.id);
   }
 
   const png = await renderCatMission(scenario, step.state, char, guildId);
@@ -677,7 +676,10 @@ async function moverMissaoGato(interaction: ChatInputCommandInteraction, dest: s
     .setColor(0x2ecc71)
     .setDescription(logs.join("\n").slice(0, 4000))
     .setImage("attachment://gato.png");
-  await interaction.reply({ embeds: missionCompleteEmbed ? [embed, missionCompleteEmbed] : [embed], files: [file] });
+  await interaction.reply({ embeds: [embed], files: [file] });
+  // Components V2 nao pode conviver no mesmo payload com o embed do gato —
+  // vai como mensagem separada, igual as ~45 missoes de historia.
+  if (missionResult) await interaction.followUp(buildMissionCompleteEmbed(ctx.def.name, missionResult));
 
   // criança agradece (webhook), aguarda 1 resposta do jogador
   if (step.captured) {

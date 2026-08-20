@@ -178,23 +178,31 @@ async function buildDailyMissionBoard(char: { id: string; ninjaRank: string }, f
     const mission = getDailyMissionOffer(board.offers, rank);
     return {
       rank,
-      name: mission.name,
-      description: missionBoardSummary(mission),
-      locked: !canClaimDailyMissionRank(ninjaRank, rank),
-      claimed: claims.has(rank),
+      name: mission?.name ?? null,
+      description: mission ? missionBoardSummary(mission) : null,
+      locked: mission ? !canClaimDailyMissionRank(ninjaRank, rank) : false,
+      claimed: mission ? claims.has(rank) : false,
+      unavailable: mission === null,
     };
   });
   const image = await renderMissionBoardCard({ dayKey: board.dayKey, offers });
   const buttons = offers.map((offer) => button({
     id: cid(`mission:${offer.rank}`),
-    label: offer.claimed ? `Rank ${offer.rank}: aceita` : `Pegar missão ${offer.rank}`,
+    label: offer.unavailable
+      ? `Rank ${offer.rank}: sem missões`
+      : offer.claimed
+        ? `Rank ${offer.rank}: aceita`
+        : `Pegar missão ${offer.rank}`,
     style: offer.claimed ? ButtonStyle.Success : ButtonStyle.Primary,
     emojiKey: "missoes",
-    disabled: offer.claimed || offer.locked,
+    disabled: offer.unavailable || offer.claimed || offer.locked,
   }));
   const children: ContainerChild[] = [
     titleBlock("missoes", "Mural de missões", "Ofertas pessoais renovadas diariamente à 00:00 (Brasília)"),
-    text(`${emoji("informacao")} Você pode aceitar uma missão por rank a cada dia. Genin: D e C · Chūnin, Jōnin e Kage: D, C e B.`),
+    text(
+      `${emoji("informacao")} Você pode aceitar uma missão por rank a cada dia, com 3h para concluir. ` +
+        `Genin: D sozinho, C só em party com um(a) Chūnin ou Jōnin. Chūnin: D e C sozinho, B só em party com outro(a) Chūnin ou Jōnin. Jōnin e Kage: D, C e B livre.`,
+    ),
     mediaGallery("attachment://mural-missoes.png", "Mural diário de missões"),
   ];
   if (feedback) children.push(feedbackBlock(feedback));
@@ -653,7 +661,7 @@ export const mapa: Command = {
         await interaction.reply({ content: `${emoji("erro")} Você só pode aceitar missões na mansão do Kage da sua vila.`, ephemeral: true });
         return;
       }
-      const result = await claimDailyMission(char.id, char.ninjaRank as NinjaRank, actionArg);
+      const result = await claimDailyMission(char.id, interaction.user.id, guildId, char.ninjaRank as NinjaRank, actionArg);
       const mural = await buildDailyMissionBoard(
         char,
         result.ok

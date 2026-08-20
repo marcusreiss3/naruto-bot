@@ -354,7 +354,7 @@ async function maybeComplete(channel: TextBasedChannel | null, ctx: GeninComedyC
   }
   const result = await completeMission(ctx.ownerCharId, ctx.def.id);
   if (result && channel && "send" in channel) {
-    await channel.send({ embeds: [buildMissionCompleteEmbed(ctx.def.name, result.rewards)] });
+    await channel.send(buildMissionCompleteEmbed(ctx.def.name, result));
   }
 }
 

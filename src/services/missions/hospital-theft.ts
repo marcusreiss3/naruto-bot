@@ -621,10 +621,12 @@ async function startDecisionPanel(
           .setColor(ending.id === "arrest" ? 0xe74c3c : ending.id === "convince" ? 0x2ecc71 : 0x3498db)
           .setTitle(ending.title)
           .setDescription(ending.text),
-        ...(result ? [buildMissionCompleteEmbed(def.name, result.rewards)] : []),
       ],
       components: [],
     });
+    // Components V2 nao pode conviver no mesmo payload com o embed do final —
+    // vai como mensagem separada.
+    if (result) await btn.followUp(buildMissionCompleteEmbed(def.name, result));
   } catch {
     const state = ensureState((await getInstance(instanceId))?.stateJson ?? inst.stateJson);
     state.running = false;

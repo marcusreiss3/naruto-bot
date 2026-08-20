@@ -239,7 +239,7 @@ async function maybeComplete(
   if (!allClean(state) || !state.teenGone) return;
   const result = await completeMission(charId, missionId);
   if (!result || !channel || !("send" in channel)) return;
-  await channel.send({ embeds: [buildMissionCompleteEmbed("Limpar a Vila", result.rewards)] });
+  await channel.send(buildMissionCompleteEmbed("Limpar a Vila", result));
 }
 
 export async function moverCleanVillage(interaction: ChatInputCommandInteraction, dest: string): Promise<boolean> {

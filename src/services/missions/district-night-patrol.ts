@@ -565,6 +565,6 @@ export async function onDistrictNightPatrolCombatWon(
 
   const result = await completeMission(inst.charId, inst.missionId);
   if (result) {
-    await interaction.followUp({ embeds: [buildMissionCompleteEmbed(def.name, result.rewards)] });
+    await interaction.followUp(buildMissionCompleteEmbed(def.name, result));
   }
 }

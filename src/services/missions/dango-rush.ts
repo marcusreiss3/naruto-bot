@@ -270,7 +270,7 @@ async function startCookingChallenge(
   await speak(channel, "(os bolinhos ficaram prontos)", "Agradeca ao ninja: as tres levas ficaram prontas no horario de pico.", 3);
   const result = await completeMission(inst.charId, inst.missionId);
   if (result) {
-    await channel.send({ embeds: [buildMissionCompleteEmbed(def.name, result.rewards)] });
+    await channel.send(buildMissionCompleteEmbed(def.name, result));
   }
 }
 

@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, type ChatInputCommandInteraction, type AutocompleteInteraction } from "discord.js";
+import { MessageFlags, SlashCommandBuilder, type ChatInputCommandInteraction, type AutocompleteInteraction } from "discord.js";
 import type { Command } from "./types.js";
 import { prisma } from "../db/client.js";
 import { isAdmin } from "../utils/permissions.js";
@@ -527,11 +527,16 @@ export const admin: Command = {
       } else {
         const r = await completeMission(char.id, missao);
         const def = MISSIONS.find((m) => m.id === missao);
-        await interaction.editReply(
-          r
-            ? { embeds: [buildMissionCompleteEmbed(def?.name ?? missao, r.rewards).setFooter({ text: `Concluída para ${char.name}` })] }
-            : "❌ Missão ativa não encontrada.",
-        );
+        if (r) {
+          // O defer deste comando e' texto puro; components V2 nao pode ser
+          // adicionado numa edicao depois disso (ver economy-components-v2.ts).
+          // Confirma em texto e manda o card de recompensa como mensagem separada.
+          await interaction.editReply(`✅ Missão \`${missao}\` concluída para **${char.name}**.`);
+          const card = buildMissionCompleteEmbed(def?.name ?? missao, r);
+          await interaction.followUp({ ...card, flags: card.flags | MessageFlags.Ephemeral });
+        } else {
+          await interaction.editReply("❌ Missão ativa não encontrada.");
+        }
       }
       return;
     }
