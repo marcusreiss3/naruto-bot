@@ -106,6 +106,7 @@ import {
 } from "../services/missions/daily-mission-board.js";
 import { renderMissionBoardCard } from "../ui/mission-board-card.js";
 import { isVillageMansionChannel } from "../services/village-service.js";
+import { villageFromMemberStrict } from "../services/economy/village-sync.js";
 
 const PREFIX = "mapa:v1";
 const cid = (action: string) => `${PREFIX}:${action}`;
@@ -618,11 +619,14 @@ export const mapa: Command = {
     await interaction.editReply({ ...v2Edit(singleCard("vila", children)), files: [mapFile] });
     // O mural é uma resposta efêmera própria: o mapa continua visível no
     // canal, enquanto as missões diárias de cada jogador permanecem privadas.
-    if (
-      !session
-      && char.ninjaRank !== "ACADEMIA"
-      && isVillageMansionChannel(char.villageId, channelId)
-    ) {
+    // Busca o membro de propósito, em vez de depender do objeto parcial que
+    // acompanha a interação. Assim o gate lê o cargo real no Discord mesmo
+    // quando o cache local ainda não refletiu uma troca de vila.
+    const memberForMissionBoard = interaction.guild
+      ? await interaction.guild.members.fetch(interaction.user.id).catch(() => null)
+      : null;
+    const atOwnVillageMansion = isVillageMansionChannel(villageFromMemberStrict(memberForMissionBoard), channelId);
+    if (!session && char.ninjaRank !== "ACADEMIA" && atOwnVillageMansion) {
       const mural = await buildDailyMissionBoard(char);
       await interaction.followUp({ ...mural.payload, files: [mural.file] });
     }
@@ -641,7 +645,10 @@ export const mapa: Command = {
       if (!isDailyMissionRank(actionArg)) return;
       const guildId = interaction.guildId ?? "global";
       const char = await getOrCreateCharacter(interaction.user.id, guildId, interaction.user.username);
-      if (!isVillageMansionChannel(char.villageId, interaction.channelId)) {
+      const memberForMissionBoard = interaction.guild
+        ? await interaction.guild.members.fetch(interaction.user.id).catch(() => null)
+        : null;
+      if (!isVillageMansionChannel(villageFromMemberStrict(memberForMissionBoard), interaction.channelId)) {
         await interaction.reply({ content: `${emoji("erro")} Você só pode aceitar missões na mansão do Kage da sua vila.`, ephemeral: true });
         return;
       }
