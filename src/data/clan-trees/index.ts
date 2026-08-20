@@ -2380,6 +2380,30 @@ const BAKUREI: SkillNodeDef[] = [
   BK.pass("bakurei_cupula", "Cúpula Sufocante", "🛖", "Terra", -1, 4, ["bakurei_dragao_terra"], 20, 18, "Passiva: a Prisão Cúpula de Terra custa 10% menos chakra e o Dreno de Chakra que ela aplica dura 1 rodada a mais."),
 ];
 
+// -------------------------------------------------------------- SHIROGANE
+// Clã dos marionetistas de Suna (Kankuro). Kugutsu já existe como disciplina
+// INDEPENDENTE de clã (kugutsu_oficina_inicial, ver data/kugutsu-tree.ts) —
+// qualquer personagem pode construir marionetes. Shirogane não dá jutsu
+// próprio (mesmo padrão do Onoki/Yotsuki/Bakurei): a árvore inteira é
+// passiva e empurra o sistema de Kugutsu pra frente — dano e alcance dos
+// mecanismos (crossCategory: "KUGUTSU" em clan-trees/passives.ts, o mesmo
+// escape hatch que o Chinoike usa pra Genjutsu), chance de Veneno/Sangramento,
+// e desconto no craft (Ryō + materiais) de criar/reformar marionetes — esse
+// último não passa por passiveMods(), é lido direto em
+// services/puppets/puppet-service.ts. Pool = "kugutsu": o mesmo atributo que
+// banca a árvore base de Kugutsu banca esta também (sem cap, attributeCap=0),
+// então investir em Kugutsu desbloqueia as duas árvores juntas.
+const SG = makeClan("shirogane", "kugutsu");
+const SHIROGANE: SkillNodeDef[] = [
+  SG.pass("shirogane_raiz", "Domínio dos Fios", "🪆", "Raiz", 0, 0, [], 1, 1, "Passiva sempre ativa: o domínio clássico da manipulação de fios. Suas técnicas de marionete custam 10% menos chakra, e a criação e a reforma de marionetes custam 10% menos Ryō e materiais.", true),
+  SG.pass("shirogane_engenharia_letal", "Engenharia Letal", "⚙️", "Ofensiva", -1, 1, ["shirogane_raiz"], 6, 8, "Passiva: as técnicas ofensivas das suas marionetes causam +10% de dano."),
+  SG.pass("shirogane_fios_precisos", "Fios Precisos", "🧵", "Controle", 1, 1, ["shirogane_raiz"], 6, 8, "Passiva: o controle refinado dos fios de chakra estende o alcance de qualquer técnica de marionete em 1 casa."),
+  SG.pass("shirogane_venenos_calibrados", "Venenos Calibrados", "🧪", "Ofensiva", -1, 2, ["shirogane_engenharia_letal"], 12, 14, "Passiva: suas marionetes ganham +15 pontos percentuais de chance de aplicar Veneno e +10 pontos percentuais de aplicar Sangramento."),
+  SG.pass("shirogane_oficina_mestra", "Oficina Mestra", "🛠️", "Controle", 1, 2, ["shirogane_fios_precisos"], 12, 14, "Passiva: domínio de oficina avançado. A criação e a reforma de marionetes custam mais 12% menos Ryō e materiais (acumula com o Domínio dos Fios, ~21% de desconto total)."),
+  SG.pass("shirogane_braco_extra", "Braço Extra", "🦾", "Braço Extra", 0, 3, ["shirogane_venenos_calibrados", "shirogane_oficina_mestra"], 18, 20, "Passiva: escolha uma das suas marionetes para receber um terceiro mecanismo, além dos dois padrão. A escolha é permanente — nenhuma outra marionete pode reivindicar essa vaga extra depois, a menos que esta seja descartada."),
+  SG.pass("shirogane_apice", "Mestre Marionetista", "🎯", "Ápice", 0, 4, ["shirogane_braco_extra"], 22, 24, "Passiva: o auge da engenharia Shirogane. Suas técnicas ofensivas de marionete causam mais 15% de dano (~26% de dano total com a Engenharia Letal) e ignoram a Barreira do alvo."),
+];
+
 export const CLAN_TREES: Record<string, SkillNodeDef[]> = {
   uchiha: UCHIHA,
   nara: NARA,
@@ -2404,4 +2428,5 @@ export const CLAN_TREES: Record<string, SkillNodeDef[]> = {
   onoki: ONOKI,
   yotsuki: YOTSUKI,
   bakurei: BAKUREI,
+  shirogane: SHIROGANE,
 };

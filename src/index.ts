@@ -25,6 +25,7 @@ import {
   startAppearanceCleanupScheduler,
   stopAppearanceCleanupScheduler,
 } from "./services/appearance/appearance-service.js";
+import { startHpRegenScheduler, stopHpRegenScheduler } from "./services/characters/hp-regen-service.js";
 
 const client = new Client({
   intents: [
@@ -96,6 +97,7 @@ client.once(Events.ClientReady, async (c) => {
   await startAppearanceCleanupScheduler().catch((err) =>
     log.error("Falha ao iniciar a limpeza de aparências:", err),
   );
+  startHpRegenScheduler();
 });
 
 // Sobe o site da árvore de habilidades no mesmo processo (no-op se nao configurado).
@@ -213,6 +215,7 @@ async function shutdown(): Promise<void> {
   stopTravelScheduler();
   stopSheetScheduler();
   stopAppearanceCleanupScheduler();
+  stopHpRegenScheduler();
   await disconnect();
   client.destroy();
   process.exit(0);

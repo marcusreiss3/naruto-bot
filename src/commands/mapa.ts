@@ -1,16 +1,44 @@
 import {
   AttachmentBuilder,
-  EmbedBuilder,
+  ButtonStyle,
   SlashCommandBuilder,
+  type ButtonInteraction,
   type ChatInputCommandInteraction,
 } from "discord.js";
 import type { Command } from "./types.js";
-import { getScenarioByChannel, getScenarioById } from "../data/index.js";
+import { getScenarioByChannel, getScenarioById, KAGE_MANSION_CHANNEL_IDS } from "../data/index.js";
+import type { ScenarioDef } from "../data/types.js";
+import type { NinjaRank } from "../config/enums.js";
 import { MapRenderer, type RenderEntity } from "../services/maps/renderer.js";
 import { getActiveSession } from "../services/combat/combat-engine.js";
 import { buildSessionEntities } from "../services/combat/combat-render.js";
 import { getOrCreateCharacter } from "../services/characters/character-service.js";
 import { getAppearance } from "../services/appearance/appearance-service.js";
+import { formatRyo } from "../services/economy/character-economy.js";
+import { EconomyError } from "../services/economy/errors.js";
+import {
+  isHospitalChannel,
+  treatCharacter,
+  TREATMENT_COST,
+  type TreatmentKind,
+} from "../services/characters/hospital-service.js";
+import {
+  button,
+  buttonRow,
+  divider,
+  factsBlock,
+  feedbackBlock,
+  mediaGallery,
+  ryo,
+  singleCard,
+  text,
+  titleBlock,
+  v2Edit,
+  v2Payload,
+  v2Public,
+  type ContainerChild,
+  type TopLevel,
+} from "../ui/economy-components-v2.js";
 import {
   getActiveInstanceForChannel,
   readState,
@@ -67,6 +95,112 @@ import { eliteMaskMapHandle, resolveEliteMask } from "../services/missions/elite
 import { forbiddenBellMapHandle, resolveForbiddenBell } from "../services/missions/forbidden-bell.js";
 import { mestreEstiloStaticEntities } from "../services/missions/mestre-estilo.js";
 import { emoji } from "../ui/economy-emojis.js";
+import {
+  canClaimDailyMissionRank,
+  claimDailyMission,
+  DAILY_MISSION_RANKS,
+  getDailyMissionBoard,
+  getDailyMissionClaims,
+  getDailyMissionOffer,
+  type DailyMissionRank,
+} from "../services/missions/daily-mission-board.js";
+import { renderMissionBoardCard } from "../ui/mission-board-card.js";
+
+const PREFIX = "mapa:v1";
+const cid = (action: string) => `${PREFIX}:${action}`;
+
+interface HospitalCharState {
+  hpCurrent: number;
+  hpMax: number;
+  ryo: number;
+}
+
+// Bloco de tratamento pago, mostrado dentro do mesmo container so' quando o
+// canal e' um hospital e nao ha' combate ativo nele (checado por quem chama).
+function buildHospitalSection(char: HospitalCharState, feedback?: string): ContainerChild[] {
+  const cheia = char.hpCurrent >= char.hpMax;
+  const children: ContainerChild[] = [
+    divider(),
+    titleBlock("hospital", "Tratamento médico", "Cura paga em Ryō"),
+    factsBlock([
+      { label: "Vida", value: `${emoji("vida")} ${char.hpCurrent}/${char.hpMax}` },
+      { label: "Ryō", value: ryo(formatRyo(char.ryo)) },
+    ]),
+  ];
+  if (feedback) children.push(feedbackBlock(feedback));
+  children.push(
+    buttonRow(
+      button({
+        id: cid("heal-basic"),
+        label: `Tratamento básico (${TREATMENT_COST.basic} Ryō)`,
+        emojiKey: "vida",
+        disabled: cheia,
+      }),
+      button({
+        id: cid("heal-advanced"),
+        label: `Tratamento avançado (${TREATMENT_COST.advanced} Ryō)`,
+        style: ButtonStyle.Primary,
+        emojiKey: "vida",
+        disabled: cheia,
+      }),
+    ),
+  );
+  return children;
+}
+
+// Reconstroi o container so' com o essencial (titulo/descricao estaticos do
+// cenario + mapa ja anexado + secao de hospital) apos um clique de cura. Nao
+// refaz o pipeline de ~40 missoes do execute(): a nota de missao eventual so'
+// volta a aparecer quando o jogador roda /mapa de novo, o que e' aceitavel
+// para uma acao que so' mexe em vida/Ryo.
+function rebuildContainerAfterHeal(scenario: ScenarioDef, char: HospitalCharState, feedback: string): TopLevel[] {
+  const children: ContainerChild[] = [
+    titleBlock("mapa", scenario.name),
+    text(scenario.description),
+    mediaGallery("attachment://mapa.png", `Mapa de ${scenario.name}`),
+    ...buildHospitalSection(char, feedback),
+  ];
+  return singleCard("vila", children);
+}
+
+function isDailyMissionRank(value: string | undefined): value is DailyMissionRank {
+  return DAILY_MISSION_RANKS.includes(value as DailyMissionRank);
+}
+
+async function buildDailyMissionBoard(char: { id: string; ninjaRank: string }, feedback?: string) {
+  const ninjaRank = char.ninjaRank as NinjaRank;
+  const board = await getDailyMissionBoard(char.id);
+  const claims = await getDailyMissionClaims(char.id, board.dayKey);
+  const offers = DAILY_MISSION_RANKS.map((rank) => {
+    const mission = getDailyMissionOffer(board.offers, rank);
+    return {
+      rank,
+      name: mission.name,
+      description: mission.description,
+      locked: !canClaimDailyMissionRank(ninjaRank, rank),
+      claimed: claims.has(rank),
+    };
+  });
+  const image = await renderMissionBoardCard({ dayKey: board.dayKey, offers });
+  const buttons = offers.map((offer) => button({
+    id: cid(`mission:${offer.rank}`),
+    label: offer.claimed ? `Rank ${offer.rank}: aceita` : `Pegar missão ${offer.rank}`,
+    style: offer.claimed ? ButtonStyle.Success : ButtonStyle.Primary,
+    emojiKey: "missoes",
+    disabled: offer.claimed || offer.locked,
+  }));
+  const children: ContainerChild[] = [
+    titleBlock("missoes", "Mural de missões", "Ofertas pessoais renovadas diariamente à 00:00 (Brasília)"),
+    text(`${emoji("informacao")} Você pode aceitar uma missão por rank a cada dia. Genin: D e C · Chūnin, Jōnin e Kage: D, C e B.`),
+    mediaGallery("attachment://mural-missoes.png", "Mural diário de missões"),
+  ];
+  if (feedback) children.push(feedbackBlock(feedback));
+  children.push(divider(), buttonRow(...buttons));
+  return {
+    payload: v2Payload(singleCard("vila", children), true),
+    file: new AttachmentBuilder(image, { name: "mural-missoes.png" }),
+  };
+}
 
 export const mapa: Command = {
   data: new SlashCommandBuilder().setName("mapa").setDescription("Mostra o mapa do cenário deste canal"),
@@ -471,19 +605,85 @@ export const mapa: Command = {
     const mapFile = new AttachmentBuilder(png, { name: "mapa.png" });
     const statusPng = await MapRenderer.renderStatusPanel(entities);
 
-    const embed = new EmbedBuilder()
-      .setTitle(`${emoji("mapa")} ${renderScenario.name}`)
-      .setDescription(`${renderScenario.description}${missionNote}`)
-      .setColor(0x2ecc71)
-      .setImage("attachment://mapa.png");
+    const children: ContainerChild[] = [
+      titleBlock("mapa", renderScenario.name),
+      text(`${renderScenario.description}${missionNote}`),
+      mediaGallery("attachment://mapa.png", `Mapa de ${renderScenario.name}`),
+    ];
+    if (!session && isHospitalChannel(channelId)) {
+      children.push(...buildHospitalSection(char));
+    }
 
-    await interaction.editReply({ embeds: [embed], files: [mapFile] });
+    await interaction.editReply({ ...v2Edit(singleCard("vila", children)), files: [mapFile] });
+    // O mural é uma resposta efêmera própria: o mapa continua visível no
+    // canal, enquanto as missões diárias de cada jogador permanecem privadas.
+    if (
+      !session
+      && char.ninjaRank !== "ACADEMIA"
+      && (KAGE_MANSION_CHANNEL_IDS as readonly string[]).includes(channelId)
+    ) {
+      const mural = await buildDailyMissionBoard(char);
+      await interaction.followUp({ ...mural.payload, files: [mural.file] });
+    }
     // O Discord coloca imagens da mesma mensagem em grade. O painel segue em
     // uma mensagem própria para ficar sempre abaixo do mapa, sem recortes.
     if (statusPng && interaction.channel?.isTextBased() && "send" in interaction.channel) {
       const statusFile = new AttachmentBuilder(statusPng, { name: "status.png" });
-      const statusEmbed = new EmbedBuilder().setColor(0x2ecc71).setImage("attachment://status.png");
-      await interaction.channel.send({ embeds: [statusEmbed], files: [statusFile] });
+      const statusChildren: ContainerChild[] = [mediaGallery("attachment://status.png", "Painel de status")];
+      await interaction.channel.send({ ...v2Public(singleCard("vila", statusChildren)), files: [statusFile] });
     }
+  },
+
+  async handleButton(interaction: ButtonInteraction) {
+    const [, , action, actionArg] = interaction.customId.split(":");
+    if (action === "mission") {
+      if (!isDailyMissionRank(actionArg)) return;
+      const guildId = interaction.guildId ?? "global";
+      const char = await getOrCreateCharacter(interaction.user.id, guildId, interaction.user.username);
+      const result = await claimDailyMission(char.id, char.ninjaRank as NinjaRank, actionArg);
+      const mural = await buildDailyMissionBoard(
+        char,
+        result.ok
+          ? `✅ Missão aceita: **[${result.mission!.rank}] ${result.mission!.name}**. Use \`/missoes minhas\` para acompanhar os objetivos.`
+          : `❌ ${result.error ?? "Não foi possível aceitar esta missão."}`,
+      );
+      await interaction.update({ ...v2Edit(mural.payload.components), files: [mural.file] });
+      return;
+    }
+    if (action !== "heal-basic" && action !== "heal-advanced") return;
+
+    const channelId = interaction.channelId;
+    const guildId = interaction.guildId ?? "global";
+    const scenario = getScenarioByChannel(channelId);
+    const char = await getOrCreateCharacter(interaction.user.id, guildId, interaction.user.username);
+
+    let hpCurrent = char.hpCurrent;
+    let hpMax = char.hpMax;
+    let ryoAtual = char.ryo;
+    let feedback: string;
+    try {
+      if (!scenario || !isHospitalChannel(channelId)) {
+        throw new EconomyError("Isto só funciona dentro de um hospital.");
+      }
+      const session = await getActiveSession(channelId);
+      if (session) {
+        throw new EconomyError("Não é possível receber tratamento durante um combate ativo neste canal.");
+      }
+      const kind: TreatmentKind = action === "heal-basic" ? "basic" : "advanced";
+      const result = await treatCharacter(char.id, kind);
+      hpCurrent = result.hpCurrent;
+      hpMax = result.hpMax;
+      ryoAtual = char.ryo - TREATMENT_COST[kind];
+      feedback = `✅ Tratamento concluído: +${result.healed} de vida (${hpCurrent}/${hpMax}).`;
+    } catch (error) {
+      feedback = `❌ ${error instanceof Error ? error.message : "Não foi possível concluir o tratamento."}`;
+    }
+
+    if (!scenario) {
+      await interaction.reply({ content: feedback, ephemeral: true });
+      return;
+    }
+    const payload = v2Edit(rebuildContainerAfterHeal(scenario, { hpCurrent, hpMax, ryo: ryoAtual }, feedback));
+    await interaction.update(payload);
   },
 };

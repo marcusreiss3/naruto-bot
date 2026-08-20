@@ -323,6 +323,10 @@ export interface CharacterPassiveMods {
   freeAttributePoints: number;
   offClanNodeCostPenalty: number;
   clanPassiveAmplifier: number;
+  // multiplica o custo (Ryō + ingredientes) de criar/reformar marionetes —
+  // ver ClanPassiveDef.puppetCraftCostMult (Shirogane). Consumido em
+  // services/puppets/puppet-service.ts, nao na engine de combate.
+  puppetCraftCostMult: number;
 }
 
 // Modificadores que pertencem ao personagem, e nao a um jutsu especifico.
@@ -358,6 +362,7 @@ export function characterPassiveMods(ownedNodeIds: string[]): CharacterPassiveMo
   let freeAttributePoints = 0;
   let offClanNodeCostPenalty = 0;
   let clanPassiveAmplifier = 0;
+  let puppetCraftCostMult = 1;
   for (const nodeId of owned) {
     const p: (Partial<PassiveDef> & Partial<ClanPassiveDef>) | undefined =
       getPassive(nodeId) ?? getClanPassive(nodeId) ?? getTraitPassive(nodeId);
@@ -386,6 +391,7 @@ export function characterPassiveMods(ownedNodeIds: string[]): CharacterPassiveMo
     meleeCounterDamage += p.meleeCounterDamage ?? 0;
     mindControlUpkeepMult *= p.mindControlUpkeepMult ?? 1;
     sharinganUpkeepMult *= p.sharinganUpkeepMult ?? 1;
+    puppetCraftCostMult *= p.puppetCraftCostMult ?? 1;
     mindControlNinjutsuBonus += p.mindControlNinjutsuBonus ?? 0;
     maxEnergyBonus += p.maxEnergyBonus ?? 0;
     moveBonus += p.moveBonus ?? 0;
@@ -418,6 +424,7 @@ export function characterPassiveMods(ownedNodeIds: string[]): CharacterPassiveMo
     freeAttributePoints,
     offClanNodeCostPenalty,
     clanPassiveAmplifier,
+    puppetCraftCostMult,
   };
 }
 

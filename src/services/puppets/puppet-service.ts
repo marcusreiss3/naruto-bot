@@ -13,6 +13,11 @@ import { PUPPET_UPGRADE_ABILITY } from "../../data/jutsus/kugutsu.js";
 import { removeInventoryItem } from "../characters/inventory.js";
 import { EconomyError, runEconomy } from "../economy/errors.js";
 import type { Tx } from "../economy/ledger.js";
+import { characterPassiveMods } from "../combat/passives.js";
+
+// no' do cla Shirogane que libera a 3a vaga de mecanismo — permanente, so'
+// uma marionete por personagem (ver puppetMechanismCap abaixo).
+const EXTRA_SLOT_NODE_ID = "shirogane_braco_extra";
 
 const HOUR = 60 * 60 * 1000;
 const REBUILD_DURATION_HOURS = 2;
@@ -27,6 +32,9 @@ export interface PuppetCapabilities {
   shellShieldBonus: number;
   shellEffectTurns: number;
   shellChakraDrainBonus: number;
+  // Braço Extra (Shirogane): personagem pode reservar a 3a vaga de mecanismo
+  // numa marionete. Nao decide sozinho o teto — ver puppetMechanismCap.
+  extraAbilitySlot: boolean;
 }
 
 export function puppetCapabilities(owned: Iterable<string>): PuppetCapabilities {
@@ -40,6 +48,31 @@ export function puppetCapabilities(owned: Iterable<string>): PuppetCapabilities 
     shellShieldBonus: nodes.has("kugutsu_carapaca_defensiva_iii") ? 0.45 : nodes.has("kugutsu_carapaca_defensiva_ii") ? 0.30 : nodes.has("kugutsu_carapaca_defensiva") ? 0.15 : 0,
     shellEffectTurns: nodes.has("kugutsu_carapaca_efeito_iii") ? 3 : nodes.has("kugutsu_carapaca_efeito_ii") ? 2 : nodes.has("kugutsu_carapaca_efeito") ? 1 : 0,
     shellChakraDrainBonus: nodes.has("kugutsu_carapaca_efeito_iii") ? 0.15 : nodes.has("kugutsu_carapaca_efeito_ii") ? 0.10 : nodes.has("kugutsu_carapaca_efeito") ? 0.05 : 0,
+    extraAbilitySlot: nodes.has(EXTRA_SLOT_NODE_ID),
+  };
+}
+
+// Teto de mecanismos instalaveis numa marionete. Padrao e' 2; o cla Shirogane
+// (Braço Extra) libera uma 3a vaga, mas so' numa marionete por personagem —
+// permanente uma vez reivindicada (puppet.extraSlot), nunca revertida ao
+// desinstalar um mecanismo (so' descartar a marionete libera a vaga de novo).
+export function puppetMechanismCap(hasExtraSlotNode: boolean, puppetExtraSlot: boolean, anotherPuppetHasExtraSlot: boolean): number {
+  if (puppetExtraSlot) return 3;
+  if (hasExtraSlotNode && !anotherPuppetHasExtraSlot) return 3;
+  return 2;
+}
+
+// Desconto Shirogane (puppetCraftCostMult) aplicado ao Ryo e aos ingredientes
+// de criar/reformar uma marionete. Piso de 1 unidade por ingrediente — o
+// desconto nunca zera um material.
+export function applyCraftDiscount(
+  ryo: number,
+  ingredients: { itemId: string; qty: number }[],
+  mult: number,
+): { ryo: number; ingredients: { itemId: string; qty: number }[] } {
+  return {
+    ryo: Math.max(0, Math.round(ryo * mult)),
+    ingredients: ingredients.map((ingredient) => ({ ...ingredient, qty: Math.max(1, Math.round(ingredient.qty * mult)) })),
   };
 }
 
@@ -176,7 +209,8 @@ export async function startPuppetConstruction(charId: string, name: string, shel
 
   return runEconomy(async () => prisma.$transaction(async (tx) => {
     const char = await tx.userCharacter.findUnique({ where: { id: charId }, select: { level: true, skillNodes: { select: { nodeId: true } } } });
-    if (!char?.skillNodes.some((node) => node.nodeId === "kugutsu_oficina_inicial")) {
+    if (!char) throw new EconomyError("Personagem não encontrado.");
+    if (!char.skillNodes.some((node) => node.nodeId === "kugutsu_oficina_inicial")) {
       throw new EconomyError("Compre **Oficina de Marionetes** na árvore de Kugutsu antes de construir uma marionete.");
     }
     const [owned, pending] = await Promise.all([
@@ -187,7 +221,9 @@ export async function startPuppetConstruction(charId: string, name: string, shel
       throw new EconomyError(`Você já ocupa os ${PUPPET_OWNERSHIP_LIMIT} slots de marionete. Descarte uma para construir outra.`);
     }
     const spec = PUPPET_SHELLS[shell];
-    await debitRecipe(tx, charId, spec.ryo, spec.ingredients);
+    const craftMult = characterPassiveMods(char.skillNodes.map((node) => node.nodeId)).puppetCraftCostMult;
+    const { ryo, ingredients } = applyCraftDiscount(spec.ryo, spec.ingredients, craftMult);
+    await debitRecipe(tx, charId, ryo, ingredients);
     const order = await tx.puppetCraftOrder.create({
       data: { charId, kind: "PUPPET", optionId: shell, puppetName: normalizedName, appearanceUrl: normalizedAppearanceUrl, shell, finishesAt: new Date(Date.now() + spec.durationHours * HOUR) },
     });
@@ -211,6 +247,16 @@ export async function startPuppetUpgradeConstruction(charId: string, puppetId: s
       throw new EconomyError(`${upgrade.name} exige a Oficina de Grau ${upgrade.grade}.`);
     }
     if (puppet.upgrades.some((part) => part.upgradeId === upgrade.id)) throw new EconomyError("Essa evolução já está instalada nesta marionete.");
+    const hasExtraSlotNode = char.skillNodes.some((node) => node.nodeId === EXTRA_SLOT_NODE_ID);
+    const anotherPuppetHasExtraSlot = await tx.puppet.findFirst({ where: { charId, extraSlot: true, NOT: { id: puppet.id } } });
+    const cap = puppetMechanismCap(hasExtraSlotNode, puppet.extraSlot, Boolean(anotherPuppetHasExtraSlot));
+    if (puppet.upgrades.length >= cap) {
+      throw new EconomyError(
+        cap >= 3
+          ? "Essa marionete já atingiu o limite de 3 mecanismos (Braço Extra)."
+          : "Essa marionete já possui os 2 mecanismos padrão. O Braço Extra do clã Shirogane libera uma 3ª vaga, mas só numa marionete por vez.",
+      );
+    }
     await debitRecipe(tx, charId, upgrade.ryo, upgrade.ingredients);
     const order = await tx.puppetCraftOrder.create({
       data: { charId, puppetId, kind: "UPGRADE", optionId: upgrade.id, finishesAt: new Date(Date.now() + upgrade.durationHours * HOUR) },
@@ -240,8 +286,19 @@ export async function claimPuppetConstruction(charId: string, orderId: string) {
       return { kind: "REBUILD" as const, puppet };
     }
     if (!order.puppetId || !getPuppetUpgrade(order.optionId)) throw new EconomyError("Dados da evolução inválidos.");
+    const puppet = await tx.puppet.findFirst({ where: { id: order.puppetId, charId } });
+    if (!puppet) throw new EconomyError("Marionete não encontrada.");
     const installed = await tx.puppetUpgrade.count({ where: { puppetId: order.puppetId } });
-    if (installed >= 2) throw new EconomyError("Essa marionete já possui as 2 evoluções instaladas. Libere um slot antes de recolher esta peça.");
+    const hasExtraSlotNode = (await tx.characterSkillNode.findFirst({ where: { charId, nodeId: EXTRA_SLOT_NODE_ID } })) !== null;
+    const anotherPuppetHasExtraSlot = await tx.puppet.findFirst({ where: { charId, extraSlot: true, NOT: { id: puppet.id } } });
+    const cap = puppetMechanismCap(hasExtraSlotNode, puppet.extraSlot, Boolean(anotherPuppetHasExtraSlot));
+    if (installed >= cap) throw new EconomyError("Essa marionete já possui as evoluções instaladas no limite atual. Libere um slot antes de recolher esta peça.");
+    // 1a vez cruzando de 2 pra 3 nesta marionete: reserva a vaga extra pra ela
+    // permanentemente (nao reverte ao desinstalar — so' descartar a marionete
+    // libera de novo, ver puppetMechanismCap).
+    if (installed === 2 && !puppet.extraSlot) {
+      await tx.puppet.update({ where: { id: puppet.id }, data: { extraSlot: true } });
+    }
     await tx.puppetUpgrade.create({ data: { puppetId: order.puppetId, upgradeId: order.optionId } });
     await tx.puppetCraftOrder.update({ where: { id: order.id }, data: { status: "INSTALLED" } });
     return { kind: "UPGRADE" as const, upgrade: getPuppetUpgrade(order.optionId)! };
@@ -268,7 +325,9 @@ export async function startPuppetRebuild(charId: string, puppetId: string) {
     if (existing) throw new EconomyError("A reconstrução desta marionete já está em andamento.");
     const shell = puppet.shell as PuppetShell;
     if (!isPuppetShell(shell)) throw new EconomyError("Carapaça inválida.");
-    const ingredients = puppetRebuildIngredients(shell);
+    const skillNodes = await tx.characterSkillNode.findMany({ where: { charId }, select: { nodeId: true } });
+    const craftMult = characterPassiveMods(skillNodes.map((node) => node.nodeId)).puppetCraftCostMult;
+    const { ingredients } = applyCraftDiscount(0, puppetRebuildIngredients(shell), craftMult);
     await debitIngredients(tx, charId, ingredients);
     const order = await tx.puppetCraftOrder.create({
       data: { charId, puppetId, kind: "REBUILD", optionId: shell, finishesAt: new Date(Date.now() + REBUILD_DURATION_HOURS * HOUR) },

@@ -312,6 +312,7 @@ describe("passivas: Raio", () => {
       freeAttributePoints: 0,
       offClanNodeCostPenalty: 0,
       clanPassiveAmplifier: 0,
+      puppetCraftCostMult: 1,
     });
   });
 });

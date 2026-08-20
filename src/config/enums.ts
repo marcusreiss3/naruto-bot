@@ -288,5 +288,7 @@ export const LEDGER_TYPES = [
   "COLLECTION_ORDER_RESERVE",
   "COLLECTION_ORDER_PAYOUT",
   "COLLECTION_ORDER_REFUND",
+  // Tratamento pago no hospital (/mapa) — cura basica ou avancada.
+  "HOSPITAL_TREATMENT",
 ] as const;
 export type LedgerType = (typeof LEDGER_TYPES)[number];

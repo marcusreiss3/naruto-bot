@@ -28,6 +28,7 @@ import { cellDistance, resolveActingParticipantId } from "../services/combat/com
 import { BALANCE } from "../config/balance.js";
 import type { Element } from "../config/enums.js";
 import { getOrCreateCharacter, attrsFromRow } from "../services/characters/character-service.js";
+import { isSparringChannel } from "../services/combat/sparring.js";
 import {
   startCombat,
   getActiveSession,
@@ -1030,16 +1031,18 @@ async function checkVictory(interaction: ChatInputCommandInteraction, sessionId:
   if (!over) return;
 
   await endCombat(sessionId);
-  await persistResources(session);
+  const sparring = isSparringChannel(session.channelId);
+  if (!sparring) await persistResources(session);
+  const treinoNote = sparring ? "\n-# ⚔️ Combate de treino: sua vida real não foi afetada." : "";
 
   if (playersAlive === 0) {
-    await interaction.followUp("💀 **Todos os jogadores foram derrotados!** Combate perdido.");
+    await interaction.followUp(`💀 **Todos os jogadores foram derrotados!** Combate perdido.${treinoNote}`);
     await onCombatLost(interaction, session);
     return;
   }
 
   // jogadores venceram (NPCs eliminados, ou PvP com 1 sobrevivente)
-  await interaction.followUp("🏆 **Vitória dos jogadores!**");
+  await interaction.followUp(`🏆 **Vitória dos jogadores!**${treinoNote}`);
   await onCombatEnded(interaction, session);
 }
 

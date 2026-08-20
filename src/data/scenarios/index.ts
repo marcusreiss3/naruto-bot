@@ -11,6 +11,10 @@ export const BECO_KONOHA_CHANNEL_ID = "1516452197976772679";
 export const ACADEMIA_GENIN_CHANNEL_ID = "1516456751099285564";
 export const MANSAO_HOKAGE_CHANNEL_ID = "1516470677962494084";
 export const HOSPITAL_KONOHA_CHANNEL_ID = "1516825458765987980";
+export const HOSPITAL_SUNA_CHANNEL_ID = "1523535402755948574";
+export const HOSPITAL_KIRI_CHANNEL_ID = "1523535455268634796";
+export const HOSPITAL_KUMO_CHANNEL_ID = "1523535542443053086";
+export const HOSPITAL_IWA_CHANNEL_ID = "1523535496121286737";
 export const CAVERNA_CHANNEL_ID = "1521879431168131132";
 export const CAMPO_ABERTO_CHANNEL_ID = "1522249926845923339";
 export const CENTRO_COMERCIAL_SUNA_CHANNEL_ID = "1523372488292302958";
@@ -21,6 +25,21 @@ export const MANSAO_KAZEKAGE_CHANNEL_ID = "1523371643102167234";
 export const MANSAO_RAIKAGE_CHANNEL_ID = "1523371661074763850";
 export const MANSAO_TSUCHIKAGE_CHANNEL_ID = "1523371687721177270";
 export const MANSAO_MIZUKAGE_CHANNEL_ID = "1523374733448577024";
+/** Canais onde o Kage disponibiliza o mural diário de missões. */
+export const KAGE_MANSION_CHANNEL_IDS = [
+  MANSAO_HOKAGE_CHANNEL_ID,
+  MANSAO_KAZEKAGE_CHANNEL_ID,
+  MANSAO_RAIKAGE_CHANNEL_ID,
+  MANSAO_TSUCHIKAGE_CHANNEL_ID,
+  MANSAO_MIZUKAGE_CHANNEL_ID,
+] as const;
+// Arenas de treino livre: combate normal, mas a vida perdida nao e' persistida
+// no personagem ao fim (ver isSparringChannel em services/combat/sparring.ts).
+export const ARENA_TREINO_1_CHANNEL_ID = "1539984596584632430";
+export const ARENA_TREINO_2_CHANNEL_ID = "1539984630953025536";
+export const ARENA_TREINO_3_CHANNEL_ID = "1539984648376156190";
+export const ARENA_TREINO_4_CHANNEL_ID = "1539984757704757350";
+export const ARENA_TREINO_5_CHANNEL_ID = "1539984779959869520";
 
 export const SCENARIOS: ScenarioDef[] = [
   {
@@ -165,6 +184,54 @@ export const SCENARIOS: ScenarioDef[] = [
     },
   },
   {
+    id: "hospital_suna",
+    name: "Hospital de Sunagakure",
+    channelId: HOSPITAL_SUNA_CHANNEL_ID,
+    rows: 6,
+    cols: 10,
+    description: "Ala de tratamento erguida contra o vento seco de Sunagakure, com curandeiros preparando bandagens e soro.",
+    terrain: "sand",
+    cells: {
+      obstacles: ["D4", "D7", "F1", "F10"],
+    },
+  },
+  {
+    id: "hospital_kiri",
+    name: "Hospital de Kirigakure",
+    channelId: HOSPITAL_KIRI_CHANNEL_ID,
+    rows: 6,
+    cols: 10,
+    description: "Ala de tratamento encoberta pela nevoa de Kirigakure, com leitos alinhados e o cheiro de ervas medicinais no ar.",
+    terrain: "grass",
+    cells: {
+      obstacles: ["D4", "D7", "F1", "F10"],
+    },
+  },
+  {
+    id: "hospital_kumo",
+    name: "Hospital de Kumogakure",
+    channelId: HOSPITAL_KUMO_CHANNEL_ID,
+    rows: 6,
+    cols: 10,
+    description: "Ala de tratamento nas alturas de Kumogakure, com equipes medicas atendendo ninjas feridos em treino ou missao.",
+    terrain: "grass",
+    cells: {
+      obstacles: ["D4", "D7", "F1", "F10"],
+    },
+  },
+  {
+    id: "hospital_iwa",
+    name: "Hospital de Iwagakure",
+    channelId: HOSPITAL_IWA_CHANNEL_ID,
+    rows: 6,
+    cols: 10,
+    description: "Ala de tratamento escavada na rocha de Iwagakure, resistente e silenciosa, com curandeiros atentos a cada leito.",
+    terrain: "sand",
+    cells: {
+      obstacles: ["D4", "D7", "F1", "F10"],
+    },
+  },
+  {
     id: "caverna",
     name: "Caverna",
     channelId: CAVERNA_CHANNEL_ID,
@@ -295,6 +362,66 @@ export const SCENARIOS: ScenarioDef[] = [
     terrain: "grass",
     image: "mizukage-mansion.png",
     cells: { water: ["A1", "A2", "F9", "F10"], obstacles: ["C5", "D5"] },
+  },
+  {
+    id: "arena_treino_1",
+    name: "Arena de Treino I",
+    channelId: ARENA_TREINO_1_CHANNEL_ID,
+    rows: 6,
+    cols: 10,
+    description: "Arena reservada para treino livre entre jogadores. A vida perdida aqui é apenas de treino e não fica registrada de verdade.",
+    terrain: "grass",
+    cells: {
+      obstacles: ["C4", "C7", "D4", "D7"],
+    },
+  },
+  {
+    id: "arena_treino_2",
+    name: "Arena de Treino II",
+    channelId: ARENA_TREINO_2_CHANNEL_ID,
+    rows: 6,
+    cols: 10,
+    description: "Arena reservada para treino livre entre jogadores. A vida perdida aqui é apenas de treino e não fica registrada de verdade.",
+    terrain: "grass",
+    cells: {
+      obstacles: ["C4", "C7", "D4", "D7"],
+    },
+  },
+  {
+    id: "arena_treino_3",
+    name: "Arena de Treino III",
+    channelId: ARENA_TREINO_3_CHANNEL_ID,
+    rows: 6,
+    cols: 10,
+    description: "Arena reservada para treino livre entre jogadores. A vida perdida aqui é apenas de treino e não fica registrada de verdade.",
+    terrain: "grass",
+    cells: {
+      obstacles: ["C4", "C7", "D4", "D7"],
+    },
+  },
+  {
+    id: "arena_treino_4",
+    name: "Arena de Treino IV",
+    channelId: ARENA_TREINO_4_CHANNEL_ID,
+    rows: 6,
+    cols: 10,
+    description: "Arena reservada para treino livre entre jogadores. A vida perdida aqui é apenas de treino e não fica registrada de verdade.",
+    terrain: "grass",
+    cells: {
+      obstacles: ["C4", "C7", "D4", "D7"],
+    },
+  },
+  {
+    id: "arena_treino_5",
+    name: "Arena de Treino V",
+    channelId: ARENA_TREINO_5_CHANNEL_ID,
+    rows: 6,
+    cols: 10,
+    description: "Arena reservada para treino livre entre jogadores. A vida perdida aqui é apenas de treino e não fica registrada de verdade.",
+    terrain: "grass",
+    cells: {
+      obstacles: ["C4", "C7", "D4", "D7"],
+    },
   },
   {
     id: "yuki_mirror_field",

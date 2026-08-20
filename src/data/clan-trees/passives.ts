@@ -128,6 +128,11 @@ export interface ClanPassiveDef {
   // mesmo campo que Terreno Firme (Terra) ja usa em element-trees/passives.ts;
   // aqui e' a versao de clã (Sarutobi).
   terrainDurationBonus?: number;
+  // multiplica o custo (Ryō + ingredientes) de criar e reformar marionetes —
+  // consumido em services/puppets/puppet-service.ts, nao em passiveMods()
+  // (e' economia de craft, nao modificador de combate; agregado junto com
+  // o resto dos campos "de personagem" em characterPassiveMods()).
+  puppetCraftCostMult?: number;
 }
 
 export const CLAN_PASSIVES: ClanPassiveDef[] = [
@@ -830,6 +835,53 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
   { nodeId: "iryo_triagem_rapida", clanId: "iryo", abilityIds: ["iryo_desintoxicacao", "iryo_hemostatica", "iryo_mosquitos", "iryo_yin", "iryo_choque_desorientacao"], rangeBonus: 1 },
   { nodeId: "iryo_lamina_estavel", clanId: "iryo", abilityIds: ["iryo_bisturi"], effectDurationBonus: { effectId: "EMPOWERED", bonus: 1 } },
   { nodeId: "iryo_sinapses_caoticas", clanId: "iryo", abilityIds: ["iryo_choque_desorientacao"], effectDurationBonus: { effectId: "CONFUSION", bonus: 1 } },
+
+  // ------------------------------------------------------------ SHIROGANE
+  // Clã dos marionetistas de Suna (Kankuro) — não tem jutsu próprio, então
+  // toda a árvore é buff pro sistema de Kugutsu (categoria KUGUTSU das 12
+  // abilities de mecanismo em data/jutsus/kugutsu.ts, nenhuma delas com
+  // `clanId`). crossCategory: "KUGUTSU" é o mesmo escape hatch que Olhos de
+  // Sangue (Chinoike) usa pra Genjutsu — vale pra QUALQUER técnica da
+  // categoria, mesmo sem gate de clã na própria ability. shirogane_braco_extra
+  // fica de fora de propósito (mecânica de capability pura, lida direto por
+  // nodeId em puppet-service.ts, mesmo padrão de kugutsu_slot_2).
+  {
+    nodeId: "shirogane_raiz",
+    clanId: "shirogane",
+    crossCategory: "KUGUTSU",
+    costMult: 0.9,
+    puppetCraftCostMult: 0.9,
+  },
+  {
+    nodeId: "shirogane_engenharia_letal",
+    clanId: "shirogane",
+    crossCategory: "KUGUTSU",
+    damageMult: 1.1,
+  },
+  {
+    nodeId: "shirogane_fios_precisos",
+    clanId: "shirogane",
+    crossCategory: "KUGUTSU",
+    rangeBonus: 1,
+  },
+  {
+    nodeId: "shirogane_venenos_calibrados",
+    clanId: "shirogane",
+    crossCategory: "KUGUTSU",
+    effectChanceBonus: { POISON: 0.15, BLEED: 0.1 },
+  },
+  {
+    nodeId: "shirogane_oficina_mestra",
+    clanId: "shirogane",
+    puppetCraftCostMult: 0.88,
+  },
+  {
+    nodeId: "shirogane_apice",
+    clanId: "shirogane",
+    crossCategory: "KUGUTSU",
+    damageMult: 1.15,
+    ignoresShield: true,
+  },
 ];
 
 const CLAN_PASSIVE_INDEX: Map<string, ClanPassiveDef> = new Map(CLAN_PASSIVES.map((p) => [p.nodeId, p]));

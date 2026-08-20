@@ -2105,8 +2105,15 @@ export const CLANS: ClanDef[] = [
   {
     id: "shirogane",
     name: "Shirogane",
-    description: "Marionetistas de Sunagakure, voltados a preparo, alcance e armadilhas.\nA árvore é focada em controlar o combate por ferramentas, venenos e posicionamento.",
+    description: "Marionetistas de Sunagakure, voltados a preparo, alcance e armadilhas.\nA árvore reforça o sistema de Kugutsu: mais dano, alcance e venenos nos mecanismos, oficina mais barata e uma 3ª vaga de mecanismo numa marionete escolhida.",
     passiveIds: [],
+    // Sem jutsu proprio — mesmo padrao do Onoki/Yotsuki/Bakurei: a arvore
+    // inteira (clan-trees/index.ts) e' passiva. Kugutsu ja existe como
+    // disciplina INDEPENDENTE de cla (kugutsu_oficina_inicial, qualquer
+    // personagem pode construir marionetes) — Shirogane e' quem faz aquele
+    // sistema ficar bom, via crossCategory: "KUGUTSU" em
+    // clan-trees/passives.ts e o desconto de craft em
+    // services/puppets/puppet-service.ts.
     activeIds: [],
     hooks: {},
   },

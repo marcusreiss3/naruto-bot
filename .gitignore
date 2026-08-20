@@ -24,6 +24,7 @@ public/assets/**
 # index.html / style.css, que nao passam por assetUrl(). Sao 0,21 MB no total.
 !public/assets/bg/
 !public/assets/bg/login.webp
+!public/assets/bg/mission-board-landscape.png
 !public/assets/guides/
 !public/assets/guides/**
 # Banners rasterizados da Central ficam exclusivamente no Square Blob.

@@ -47,6 +47,8 @@ model UserCharacter {
   fightingStyles  CharacterFightingStyle[]
   jutsus          CharacterJutsu[]
   missions        MissionInstance[]
+  dailyMissionBoards DailyMissionBoard[]
+  dailyMissionClaims DailyMissionClaim[]
   inventory       InventoryItem[]
   skillNodes      CharacterSkillNode[]
   taxActivities   WeeklyTaxActivity[]
@@ -460,6 +462,35 @@ model MissionObjectiveState {
   progress    Int             @default(0)
 }
 
+// O mural e' individual por personagem e por dia. As ofertas ficam salvas
+// para que o jogador veja sempre o mesmo conjunto ate a proxima virada.
+model DailyMissionBoard {
+  id         String        @id @default(cuid())
+  character  UserCharacter @relation(fields: [charId], references: [id], onDelete: Cascade)
+  charId     String
+  dayKey     String
+  offersJson String
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  @@unique([charId, dayKey])
+}
+
+// Uma linha por rank aceito no dia impede duplo clique e faz o limite diario
+// sobreviver a reinicios do bot.
+model DailyMissionClaim {
+  id        String        @id @default(cuid())
+  character UserCharacter @relation(fields: [charId], references: [id], onDelete: Cascade)
+  charId    String
+  dayKey    String
+  rank      String
+  missionId String
+  createdAt DateTime      @default(now())
+
+  @@unique([charId, dayKey, rank])
+  @@index([charId, dayKey])
+}
+
 model NpcState {
   id         String @id @default(cuid())
   templateId String
@@ -502,6 +533,7 @@ model Puppet {
   appearanceUrl String?
   shell     String        // OFFENSE | DEFENSE | EFFECT
   destroyedAt DateTime?
+  extraSlot Boolean       @default(false) // 3a vaga de mecanismo do cla Shirogane — permanente, so uma marionete por personagem
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
   upgrades  PuppetUpgrade[]

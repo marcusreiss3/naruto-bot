@@ -179,6 +179,8 @@ export const ECONOMY_EMOJI_PLACEHOLDERS = {
   carapaca: "🛡️",
   mecanismo: "⚙️",
   fios_chakra: "🧵",
+  hospital: "🏥",
+  vida: "❤️",
 } as const;
 
 export type EmojiKey = keyof typeof ECONOMY_EMOJI_PLACEHOLDERS;
