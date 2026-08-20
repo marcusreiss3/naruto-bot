@@ -307,8 +307,22 @@
             { type: "callout", tone: "info", title: "ANBU e Kage são caminhos especiais", text: "Essas posições dependem da história do personagem, da confiança da Vila e das decisões tomadas dentro do Roleplay." },
           ],
         },
+        {
+          id: "missoes-por-rank",
+          title: "Missões diárias por rank",
+          blocks: [
+            { type: "paragraph", text: "O rank define quais faixas do Mural de Missões você pode aceitar. Abra `/mapa` na Mansão do Kage da sua própria Vila para ver as ofertas do dia." },
+            { type: "cards", items: [
+              { title: "Academia", text: "O Mural de Missões diárias é liberado a partir de Genin." },
+              { title: "Genin", text: "Pode aceitar missões D e C. Para uma missão C, precisa de um Chūnin, Jōnin ou Kage na party." },
+              { title: "Chūnin", text: "Pode aceitar missões D, C e B. Para uma missão B, precisa de outro Chūnin, Jōnin ou Kage na party." },
+              { title: "Jōnin e Kage", text: "Podem aceitar missões D, C e B sem parceiro obrigatório." },
+            ] },
+            { type: "links", items: [{ slug: "missoes-e-party", section: "mural-diario", title: "Entender o Mural de Missões", text: "Veja duração, limites diários e como a party participa das ofertas." }] },
+          ],
+        },
       ],
-      related: ["personagem-e-atributos", "arvores-e-jutsus", "combate-tatico"],
+      related: ["personagem-e-atributos", "arvores-e-jutsus", "missoes-e-party", "combate-tatico"],
     },
     {
       slug: "arvores-e-jutsus",
@@ -559,6 +573,18 @@
           ],
         },
         {
+          id: "vida-e-recuperacao",
+          title: "Vida, recuperação e hospitais",
+          blocks: [
+            { type: "paragraph", text: "Fora de combate, sua Vida recupera **2 pontos por minuto** automaticamente, até o máximo. Essa recuperação é silenciosa; basta permanecer sem uma sessão de combate ativa." },
+            { type: "cards", items: [
+              { title: "Tratamento básico", text: "Em um Hospital, abra `/mapa` e escolha o tratamento básico. Por 15 Ryō, ele recupera aproximadamente metade da sua Vida máxima." },
+              { title: "Tratamento avançado", text: "No mesmo painel do Hospital, o tratamento avançado custa 25 Ryō e recupera toda a Vida que estiver faltando." },
+            ] },
+            { type: "callout", tone: "warning", title: "Combate interrompe a recuperação", text: "A recuperação passiva e os tratamentos do Hospital não funcionam enquanto seu personagem estiver em combate." },
+          ],
+        },
+        {
           id: "marionetes-no-campo",
           title: "Marionetes no campo",
           blocks: [
@@ -734,12 +760,23 @@
       sections: [
         { id: "acompanhar-missoes", title: "Acompanhe sua missão", blocks: [
           { type: "steps", items: [
-            { title: "Consulte o catálogo", text: "Use `/missoes ativas` para conhecer as missões existentes." },
+            { title: "Abra o mural", text: "Use `/mapa` na Mansão do Kage da sua própria Vila para receber o Mural de Missões Diárias." },
             { title: "Veja sua jornada", text: "Use `/missoes minhas` para acompanhar missões em andamento e o próximo objetivo." },
             { title: "Leia o local", text: "Objetivos podem pedir movimento, diálogo, investigação, coleta, puzzle ou combate." },
             { title: "Interaja", text: "Use `/interagir npc` quando o objetivo indicar um personagem ou elemento do cenário." },
           ] },
           { type: "commands", groupIds: ["missions"] },
+        ] },
+        { id: "mural-diario", title: "Mural de Missões Diárias", blocks: [
+          { type: "paragraph", text: "O Mural aparece como uma mensagem privada depois de usar `/mapa` na Mansão do Kage da sua Vila. Ele oferece uma missão diária de cada faixa disponível: D, C e B." },
+          { type: "steps", items: [
+            { title: "Vá à Mansão do Kage", text: "O mural só aparece na Mansão da sua própria Vila." },
+            { title: "Abra /mapa", text: "Leia as ofertas e escolha a faixa de missão que seu rank permite aceitar." },
+            { title: "Acompanhe o objetivo", text: "Depois de aceitar, use `/missoes minhas` para consultar a jornada." },
+          ] },
+          { type: "callout", tone: "info", title: "Limites do mural", text: "Você pode aceitar uma missão de cada rank por dia. Uma missão aceita expira após 3 horas se não for concluída; ao expirar ou ser abandonada, a faixa volta a ficar disponível." },
+          { type: "callout", tone: "warning", title: "A party também conta", text: "Uma pessoa elegível da sua party que já tenha uma missão ativa ou concluída naquela faixa no dia bloqueia a aceitação para o grupo. Organize a party antes de escolher a missão." },
+          { type: "links", items: [{ slug: "ranks-ninja", section: "missoes-por-rank", title: "Consultar missões por rank", text: "Veja quais faixas cada rank pode aceitar e quando um parceiro é obrigatório." }] },
         ] },
         { id: "party", title: "Jogue em party", blocks: [
           { type: "paragraph", text: "Use `/party` para abrir o painel do grupo. Convites duram 10 minutos e são aceitos ou recusados pelos botões da própria mensagem; o grupo acompanha combates e missões compatíveis." },
@@ -903,6 +940,7 @@
         { id: "combate-e-itens", title: "Combate e itens", blocks: [
           { type: "faq", items: [
             { question: "Como me movimento no combate?", answer: "Use as setas exibidas na própria interface. Elas mostram apenas as posições válidas dentro do alcance disponível." },
+            { question: "Como recupero Vida?", answer: "Fora de combate, a Vida recupera 2 pontos por minuto automaticamente. Para recuperar mais rápido, abra `/mapa` em um Hospital: o tratamento básico custa 15 Ryō e cura cerca de metade da Vida máxima; o avançado custa 25 Ryō e cura toda a Vida faltante." },
             { question: "O que acontece em um empate de Iniciativa?", answer: "O combate mantém a ordem em que os participantes entraram na sessão." },
             { question: "Por que não consigo equipar a Lâmina de Chakra?", answer: "Ela exige a habilidade Lâmina de Chakra na árvore de Bukijutsu. Aprenda essa habilidade antes de tentar equipar a arma." },
             { question: "Onde vejo o efeito de uma condição?", answer: "Abra o catálogo do Guia de Efeitos. Ele reúne dano contínuo, controles, bônus, marcas e efeitos de linhagem." },
