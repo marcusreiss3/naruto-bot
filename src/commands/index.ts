@@ -19,7 +19,7 @@ import { bonecoTreino } from "./boneco-treino.js";
 import { invocacao } from "./invocacao.js";
 import { inventario } from "./inventario.js";
 import { acao } from "./acao.js";
-import { craft } from "./craft.js";
+import { criar } from "./criar.js";
 import { marionetes } from "./marionetes.js";
 import { comer } from "./comer.js";
 import { sincronizarVila } from "./sincronizar-vila.js";
@@ -32,7 +32,7 @@ export const commands: Command[] = [
   atributos,
   inventario,
   acao,
-  craft,
+  criar,
   marionetes,
   comer,
   sincronizarVila,

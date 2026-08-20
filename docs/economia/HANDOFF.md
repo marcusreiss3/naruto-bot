@@ -164,7 +164,7 @@ Concluída. Typecheck limpo, 1.032 testes passando (91 arquivos).
 
 ```bash
 npx prisma db push    # sem --accept-data-loss: só tabelas novas
-npm run register      # /acao, /craft e /comer são comandos novos (27 no total)
+npm run register      # /acao, /criar e /comer são comandos novos (27 no total)
 ```
 
 Tabelas novas: `GatheringCooldown` e `EconomyActionLog`. Nenhum dado existente
@@ -194,7 +194,7 @@ raro. Um teste que esqueça de fixar esse último valor vai ver 1 item a mais.
 
 ### Decisões
 
-- **`personalRecipe()` é a única porta do `/craft`.** Ela devolve `undefined`
+- **`personalRecipe()` é a única porta do `/criar`.** Ela devolve `undefined`
   para qualquer receita municipal, então id forjado por customId, autocomplete
   ou comando não produz aço, pólvora, tinta, Lámen nem Pergaminho de Arsenal.
   Há teste que enche o inventário dos ingredientes certos e confirma a recusa.

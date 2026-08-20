@@ -226,7 +226,7 @@ export const ITEMS: ItemDef[] = [
   },
 
   // ---------------- Materiais comuns (coleta) ----------------
-  // Todos empilhaveis e sem acao: viram produto pelo /craft ou pela loja da
+  // Todos empilhaveis e sem acao: viram produto pelo /criar ou pela loja da
   // vila. Preco de NPC e' da etapa 05; nada aqui tem ryoValue ainda.
   mat("madeira", "Madeira", "Toras cortadas de árvores comuns, base de qualquer construção ninja."),
   mat("pedra", "Pedra", "Blocos brutos arrancados da rocha, usados em obras e muros."),

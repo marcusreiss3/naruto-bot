@@ -24,7 +24,7 @@ import {
 } from "../ui/economy-components-v2.js";
 import { emoji } from "../ui/economy-emojis.js";
 
-const PUPPET_PREFIX = "craft:puppet:v1";
+const PUPPET_PREFIX = "criar:puppet:v1";
 type Workshop = NonNullable<Awaited<ReturnType<typeof listPuppetWorkshop>>>;
 
 function requirements(state: Workshop, shell: PuppetShell): string[] {
@@ -92,9 +92,9 @@ function constructionPanel(name: string, shell: PuppetShell, hasAppearance: bool
   ])];
 }
 
-export const craft: Command = {
+export const criar: Command = {
   data: new SlashCommandBuilder()
-    .setName("craft")
+    .setName("criar")
     .setDescription("Fabricação pessoal com os materiais da sua mochila")
     .addSubcommand((s) => s.setName("listar").setDescription("Mostra as receitas que você pode fazer"))
     .addSubcommand((s) => s.setName("criar").setDescription("Fabrica uma receita")
@@ -124,7 +124,7 @@ export const craft: Command = {
       await interaction.editReply(v2Edit([economyContainer("estoque", [
         titleBlock("manutencao", "Fabricação pessoal", "Consome a sua mochila e entrega na hora"), divider(),
         listBlock(null, PERSONAL_RECIPES.map(describeRecipe), "Nenhuma receita disponível."),
-        ...(ownsWorkshop ? [divider(), text(`-# Para construir uma marionete, use ${emoji("marionete")} **/craft marionete**.`)] : []),
+        ...(ownsWorkshop ? [divider(), text(`-# Para construir uma marionete, use ${emoji("marionete")} **/criar marionete**.`)] : []),
       ])]));
       return;
     }

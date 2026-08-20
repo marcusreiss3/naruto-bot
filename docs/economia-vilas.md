@@ -241,11 +241,11 @@ Não mostrar “quase ganhou” e não permitir aumentar essas chances por obra.
 
 ### 5.1 Limite entre craft pessoal e produção da vila
 
-O comando pessoal `/craft` existe somente para o básico. Seu embed `listar` deve mostrar apenas essas receitas e nunca permitir que o jogador escolha manualmente uma receita avançada por `customId`, texto ou comando forjado.
+O comando pessoal `/criar` existe somente para o básico. Seu embed `listar` deve mostrar apenas essas receitas e nunca permitir que o jogador escolha manualmente uma receita avançada por `customId`, texto ou comando forjado.
 
 | Onde é produzido | Receitas permitidas | Como o jogador obtém o resultado |
 |---|---|---|
-| **`/craft` pessoal** | Lingote de Ferro, Papel, Farinha, Lenha; Kunai, Shuriken e Senbon; Pão | Consome o inventário do próprio jogador e cria o item imediatamente. |
+| **`/criar` pessoal** | Lingote de Ferro, Papel, Farinha, Lenha; Kunai, Shuriken e Senbon; Pão | Consome o inventário do próprio jogador e cria o item imediatamente. |
 | **Fundição Ninja da própria vila** | Aço, Pólvora, Fūma Shuriken, Papel Bomba, Bomba de Fumaça, Fios de Aço Ninja, Kunai Explosiva, Katana e Lâmina de Chakra | Kage/staff produz com o estoque da Fundição; jogadores obtêm o produto comprando-o em `/loja`. |
 | **Ichiraku da própria vila** | Caldo, Tempero, Carne Cozida, Peixe Cozido, Ensopado, Dango e Lámen | Kage/staff produz com o estoque do Ichiraku; jogadores compram o alimento pronto em `/loja`. |
 | **Oficina de Selos da própria vila** | Tinta de Selo e Pergaminho de Arsenal | Kage/staff produz com o estoque da Oficina; Pergaminho respeita o limite semanal de três. |
@@ -274,7 +274,7 @@ O craft consome materiais e cria somente os IDs de item já existentes. O preço
 
 Processamento pessoal, sem custo de Ryō: 2 Minério de Ferro + 1 Carvão → 1 Lingote; 3 Fibra → 1 Papel; 2 Grãos → 1 Farinha; 2 Madeira → 1 Lenha. Processamento municipal: 2 Lingotes + 1 Carvão → 1 Aço; Pólvora: 1 Carvão + 1 Sal + 1 Fibra; Tinta de Selo: 1 Carvão + 1 Erva Medicinal + 1 Água Limpa.
 
-O craft pessoal permitido é instantâneo e feito por `/craft criar receita`. Receitas municipais só aparecem ao Kage/staff na administração da loja adequada e sempre usam o estoque daquela loja. **Pergaminho de Arsenal não aparece no craft pessoal:** só pode ser produzido pela Oficina de Selos, pelo Kage/staff, usando estoque da vila e limite semanal. Não adicionar durabilidade de armas agora: armas de arremesso já são consumidas pelo combate e katana/lâmina não possuem sistema de desgaste.
+O craft pessoal permitido é instantâneo e feito por `/criar criar receita`. Receitas municipais só aparecem ao Kage/staff na administração da loja adequada e sempre usam o estoque daquela loja. **Pergaminho de Arsenal não aparece no craft pessoal:** só pode ser produzido pela Oficina de Selos, pelo Kage/staff, usando estoque da vila e limite semanal. Não adicionar durabilidade de armas agora: armas de arremesso já são consumidas pelo combate e katana/lâmina não possuem sistema de desgaste.
 
 ### 5.3 Fome e alimentos
 
@@ -285,14 +285,14 @@ Adicionar `saciedade` de 0 a 100 ao estado do personagem, inicial 100. Criar `/c
 | Cru | Carne crua | caça | inventário / `/comer` | 4 |
 | Cru | Peixe cru | pesca | inventário / `/comer` | 4 |
 | Básico | Fruta | coleta | inventário / `/comer` | 8 |
-| Básico | Pão | 2 Farinha + 1 Água Limpa + 1 Lenha | `/craft` pessoal | 16 |
+| Básico | Pão | 2 Farinha + 1 Água Limpa + 1 Lenha | `/criar` pessoal | 16 |
 | Preparado | Carne cozida | Carne crua + Lenha + Sal | Ichiraku | 18 |
 | Preparado | Peixe cozido | Peixe cru + Lenha + Sal | Ichiraku | 16 |
 | Preparado | Ensopado | Carne crua + Fruta + Água Limpa + Lenha | Ichiraku | 25 |
 | Craft avançado | Lámen | 1 Farinha + 1 Caldo + 1 Carne crua **ou** Peixe cru + 1 Água Limpa + 1 Tempero | Ichiraku | 40 |
 | Craft avançado | Dango | 2 Farinha + 1 Fruta | Ichiraku | 22 |
 
-`Caldo` é 1 Carne crua + 1 Água Limpa + 1 Lenha; `Tempero` é 1 Erva Medicinal + 1 Sal. Esta é a **única receita canônica de Lámen** e deve ser usada pelo catálogo e pelo Ichiraku; ela não pertence ao `/craft` pessoal. Alimentos preparados podem ser vendidos por NPC com preço afetado pela taxa; matéria-prima e craft mantêm a economia de recursos útil.
+`Caldo` é 1 Carne crua + 1 Água Limpa + 1 Lenha; `Tempero` é 1 Erva Medicinal + 1 Sal. Esta é a **única receita canônica de Lámen** e deve ser usada pelo catálogo e pelo Ichiraku; ela não pertence ao `/criar` pessoal. Alimentos preparados podem ser vendidos por NPC com preço afetado pela taxa; matéria-prima e craft mantêm a economia de recursos útil.
 
 ## 6. Evolução de vila
 
@@ -680,8 +680,8 @@ Criar um serviço central, por exemplo `src/services/economy/shop-service.ts`, q
 ```text
 /loja
 /acao minerar|coletar|cacar|pescar|coletar-agua
-/craft listar
-/craft criar receita [quantidade]
+/criar listar
+/criar criar receita [quantidade]
 /comer item [quantidade]
 /vila
 ```

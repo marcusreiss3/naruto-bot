@@ -1,9 +1,9 @@
-// Catalogo central de receitas. Nenhum handler repete formula: /craft filtra
+// Catalogo central de receitas. Nenhum handler repete formula: /criar filtra
 // `personal` e a administracao de loja da etapa 05 filtra `villageShop`.
 //
 // A separacao NAO e' cosmetica. O craft pessoal existe so' para o basico; aco,
 // polvora, tinta, armas avancadas e alimentos preparados dependem das estruturas
-// da vila. Uma receita `villageShop` nao pode ser acionada pelo /craft nem com
+// da vila. Uma receita `villageShop` nao pode ser acionada pelo /criar nem com
 // customId forjado — quem garante isso e' personalRecipe(), unica porta de
 // entrada do comando.
 
@@ -34,7 +34,7 @@ function ing(itemId: string, qty = 1): RecipeIngredient {
 }
 
 export const RECIPES: RecipeDef[] = [
-  // ---------------- /craft pessoal ----------------
+  // ---------------- /criar pessoal ----------------
   // Processamento basico, sem custo de Ryo.
   {
     id: "lingote_ferro",
@@ -293,7 +293,7 @@ export function getRecipe(id: string): RecipeDef | undefined {
 
 export const PERSONAL_RECIPES = RECIPES.filter((recipe) => recipe.scope === "personal");
 
-// Unica porta do /craft. Devolve undefined para qualquer receita municipal,
+// Unica porta do /criar. Devolve undefined para qualquer receita municipal,
 // inclusive quando o id chega por customId ou autocomplete forjado.
 export function personalRecipe(id: string): RecipeDef | undefined {
   const recipe = RECIPE_MAP.get(id);

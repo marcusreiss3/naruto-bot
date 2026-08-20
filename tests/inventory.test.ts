@@ -152,7 +152,7 @@ describe("catálogo de itens", () => {
       "/missoes ativas",
       "/interagir npc",
       "/acao minerar",
-      "/craft listar",
+      "/criar listar",
       "/loja",
       "/sincronizar-vila",
       "/vila",

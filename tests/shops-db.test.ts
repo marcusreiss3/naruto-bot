@@ -477,7 +477,7 @@ describe("produção municipal", () => {
     const pessoalNaFundicao = await shops.shopCraft({
       villageId: "KONOHA",
       shopType: "FUNDICAO",
-      recipeId: "lingote_ferro", // receita de /craft pessoal
+      recipeId: "lingote_ferro", // receita de /criar pessoal
       vezes: 1,
       origem: "SHOP",
       actorDiscordId: "kage1",
@@ -488,7 +488,7 @@ describe("produção municipal", () => {
     expect(await estoqueLoja("MARCENARIA", "farinha")).toBe(5);
   });
 
-  it("/craft pessoal continua sem enxergar receita municipal", async () => {
+  it("/criar pessoal continua sem enxergar receita municipal", async () => {
     const crafting = await import("../src/services/economy/crafting.js");
     const char = await novoNinja();
     for (const [itemId, q] of Object.entries({

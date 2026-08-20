@@ -566,7 +566,7 @@ model PuppetUpgrade {
 
 // Ordens com tempo real de oficina. O material e o Ryō são debitados ao iniciar;
 // status é resolvido de modo preguiçoso pelo serviço quando o usuário consulta
-// /craft ou /marionetes, portanto não depende de cron/worker.
+// /criar ou /marionetes, portanto não depende de cron/worker.
 model PuppetCraftOrder {
   id        String        @id @default(cuid())
   character UserCharacter @relation(fields: [charId], references: [id], onDelete: Cascade)

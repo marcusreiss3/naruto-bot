@@ -67,10 +67,10 @@ function render(state: Workshop, selectedId: string | null, selectedUpgradeId: s
 
   if (!state.skillNodes.some((node) => node.nodeId === "kugutsu_oficina_inicial")) {
     children.push(noticeBlock("bloqueio", "Compre **Oficina de Marionetes** na árvore de Kugutsu para liberar construções."));
-    children.push(text(`-# Depois, abra ${emoji("marionete")} **/craft marionete** para criar a sua carapaça.`));
+    children.push(text(`-# Depois, abra ${emoji("marionete")} **/criar marionete** para criar a sua carapaça.`));
   } else if (!state.puppets.length) {
     children.push(noticeBlock("aviso", "Você ainda não possui uma marionete concluída."));
-    children.push(text(`-# Use ${emoji("marionete")} **/craft marionete** para escolher a carapaça, conferir materiais e iniciar a obra.`));
+    children.push(text(`-# Use ${emoji("marionete")} **/criar marionete** para escolher a carapaça, conferir materiais e iniciar a obra.`));
   } else if (selected) {
     if (state.puppets.length > 1) {
       children.push(selectRow(new StringSelectMenuBuilder().setCustomId(id("selecionar")).setPlaceholder("Selecionar marionete")

@@ -198,7 +198,7 @@ export function buildGuideCatalog() {
         { command: "/restaurar-pergaminho pergaminho", description: "Restaura um pergaminho de Bukijutsu gasto por metade do valor em Ryō." },
         { command: "/arremessar item alvo", description: "Lança uma arma à distância e consome uma unidade após a ação ser validada." },
         { command: "/usar item", description: "Ativa ou prepara ferramentas ninja e consome os materiais necessários." },
-        { command: "/craft marionete", description: "Abre a oficina para construir uma marionete quando Oficina de Marionetes estiver aprendida." },
+        { command: "/criar marionete", description: "Abre a oficina para construir uma marionete quando Oficina de Marionetes estiver aprendida." },
         { command: "/marionetes", description: "Gerencia marionetes, mecanismos, construções, reconstruções e invocações em combate." },
         { command: "/dar item jogador", description: "Entrega uma quantidade do item diretamente a outro jogador." },
         { command: "/largar item", description: "Deixa uma quantidade do item na sua célula durante o combate." },
@@ -226,7 +226,7 @@ export function buildGuideCatalog() {
     },
     {
       id: "resources",
-      title: "Coleta, craft e alimentação",
+      title: "Coleta, produção e alimentação",
       icon: "⛏️",
       commands: [
         { command: "/acao minerar", description: "Procura minérios em uma área e canal compatíveis com mineração." },
@@ -234,8 +234,8 @@ export function buildGuideCatalog() {
         { command: "/acao cacar", description: "Caça recursos em uma área compatível." },
         { command: "/acao pescar", description: "Pesca em um local que ofereça essa atividade." },
         { command: "/acao coletar-agua", description: "Coleta água onde a atividade estiver disponível." },
-        { command: "/craft listar", description: "Mostra as receitas pessoais disponíveis e os materiais exigidos." },
-        { command: "/craft criar receita quantidade", description: "Produz uma receita conhecida na quantidade informada, se houver materiais." },
+        { command: "/criar listar", description: "Mostra as receitas pessoais disponíveis e os materiais exigidos." },
+        { command: "/criar criar receita quantidade", description: "Produz uma receita conhecida na quantidade informada, se houver materiais." },
         { command: "/comer item quantidade", description: "Consome uma comida do inventário e recupera saciedade." },
       ],
     },

@@ -98,7 +98,7 @@ export interface KugutsuArsenalEntry {
 
 // Catalogo estatico do site: todo mecanismo que existe pra instalar numa
 // marionete, com o combate (igual a um no' JUTSU normal) e a receita de
-// construcao junto (igual ao /craft marionete mostra no Discord). Nao
+// construcao junto (igual ao /criar marionete mostra no Discord). Nao
 // depende de personagem — e' o mesmo pra qualquer um que abrir a arvore.
 export function buildKugutsuArsenal(): KugutsuArsenalEntry[] {
   const entries: KugutsuArsenalEntry[] = [];

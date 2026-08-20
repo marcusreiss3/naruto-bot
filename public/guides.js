@@ -389,7 +389,7 @@
       order: 7,
       type: "guide",
       readingTime: 7,
-      keywords: ["marionete", "Kugutsu", "oficina", "carapaça", "mecanismo", "craft", "fios de chakra", "reconstrução"],
+      keywords: ["marionete", "Kugutsu", "oficina", "carapaça", "mecanismo", "criar", "fios de chakra", "reconstrução"],
       sections: [
         {
           id: "desbloquear-oficina",
@@ -399,7 +399,7 @@
             { type: "steps", items: [
               { title: "Invista em Kugutsu", text: "Distribua pontos no atributo para cumprir os requisitos da árvore." },
               { title: "Compre a Oficina", text: "Aprenda Oficina de Marionetes na árvore de Kugutsu." },
-              { title: "Abra a construção", text: "Use `/craft marionete` para escolher uma carapaça, informar o nome e iniciar a obra." },
+              { title: "Abra a construção", text: "Use `/criar marionete` para escolher uma carapaça, informar o nome e iniciar a obra." },
               { title: "Acompanhe na oficina", text: "Use `/marionetes` para ver a construção e recolhê-la quando estiver pronta." },
             ] },
           ],
@@ -636,7 +636,7 @@
       order: 11,
       type: "guide",
       readingTime: 9,
-      keywords: ["inventário", "arma", "ferramenta ninja", "comida", "material", "recurso", "coleta", "craft", "receita", "loja", "equipar", "arremessar"],
+      keywords: ["inventário", "arma", "ferramenta ninja", "comida", "material", "recurso", "coleta", "criar", "receita", "loja", "equipar", "arremessar"],
       sections: [
         {
           id: "inventario",
@@ -680,7 +680,7 @@
           title: "Coleta, produção e alimentação",
           blocks: [
             { type: "paragraph", text: "As fontes de obtenção exibidas no compêndio vêm das áreas de coleta, receitas e lojas. Recursos naturais pertencem a **áreas**, não a Vilas específicas: o guia mostra Floresta, Rio, Montanha, Caverna, Campo Aberto ou Deserto somente quando essa relação existe." },
-            { type: "list", items: ["Use `/acao` em uma área compatível para minerar, coletar, caçar, pescar ou obter água.", "Cada tipo de ação de coleta possui seu próprio intervalo de 15 minutos.", "O setor da sua Vila pode melhorar o rendimento da ação mesmo quando a coleta acontece em outra região.", "Setores também produzem determinados recursos no estoque central da Vila; essa produção coletiva aparece separada no card.", "Use `/craft listar` para ver receitas pessoais e `/craft criar` para produzir quando tiver os ingredientes.", "Use `/comer` para consumir uma comida do inventário."] },
+            { type: "list", items: ["Use `/acao` em uma área compatível para minerar, coletar, caçar, pescar ou obter água.", "Cada tipo de ação de coleta possui seu próprio intervalo de 15 minutos.", "O setor da sua Vila pode melhorar o rendimento da ação mesmo quando a coleta acontece em outra região.", "Setores também produzem determinados recursos no estoque central da Vila; essa produção coletiva aparece separada no card.", "Use `/criar listar` para ver receitas pessoais e `/criar criar` para produzir quando tiver os ingredientes.", "Use `/comer` para consumir uma comida do inventário."] },
             { type: "commands", groupIds: ["resources"] },
             { type: "links", items: [
               { slug: "mundo-e-viagem", section: "destinos", title: "Onde encontrar as áreas", text: "Veja os destinos e regiões abertas do sistema de viagem." },

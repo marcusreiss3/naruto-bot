@@ -32,7 +32,7 @@ Converter todos os resultados e painéis da economia abaixo. Não tocar nos embe
 | Comércio do Kage | `src/commands/vila-comercio.ts` | Kage, efêmero | administração, abastecer, produzir, atacado, construção do Ichiraku |
 | Obras do Kage | `src/commands/vila-obras.ts` | Kage, efêmero | Centro, vagas, setores, cronômetros e reformas |
 | Exploração | `src/commands/acao.ts` | canal de RP | resultado narrativo da coleta |
-| Craft, comida e inventário | `src/commands/craft.ts`, `src/commands/inventario.ts`, comando de comer | jogador | listas, resultado e estado do inventário/saciedade |
+| Criar, comida e inventário | `src/commands/criar.ts`, `src/commands/inventario.ts`, comando de comer | jogador | listas, resultado e estado do inventário/saciedade |
 | Administração de vila | `src/commands/admin-vila.ts` | staff | recibos de ajuste curtos e auditáveis |
 
 Se um arquivo auxiliar cria embed para um desses fluxos, converter também. Toda resposta simples de erro pode continuar texto efêmero curto; não transformar “saldo insuficiente” em uma tela grande.
@@ -224,10 +224,10 @@ Estoque: 500/500 • orçamento de compra hoje: 150/150 Ryō
 
 Para Fundição, Ichiraku e Oficina, adicionar `Produzir` quando houver receita na estação; Marcenaria e Empório não mostram `Produzir`. `Contrato empreendedor` só aparece se a loja possui contrato possível. Não mostrar botão desabilitado sem explicar em texto o motivo.
 
-### `/acao`, `/craft`, `/comer`, `/inventario` e admin
+### `/acao`, `/criar`, `/comer`, `/inventario` e admin
 
 - `/acao`: cartão compacto público, com nome da ação, área, narrativa curta, loot usando `itemLabel`, e rodapé textual com a vila/personagem. Não revelar probabilidade rara, cooldown ou informação de outros jogadores.
-- `/craft` e `/comer`: cartão compacto privado com ingredientes consumidos, item criado/consumido, saciedade antes/depois quando aplicável e recibo de sucesso.
+- `/criar` e `/comer`: cartão compacto privado com ingredientes consumidos, item criado/consumido, saciedade antes/depois quando aplicável e recibo de sucesso.
 - `/inventario`: container privado com saldo, saciedade e categorias dobráveis/paginadas; não gerar mural gigantesco de itens. Usar select de categoria se necessário.
 - `/admin-vila`: cartão pequeno de staff, vermelho para ajuste negativo e verde para positivo, exibindo vila, ator, mudança antes/depois, motivo e ID/horário do lançamento.
 

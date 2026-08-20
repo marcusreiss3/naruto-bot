@@ -207,7 +207,7 @@ describe("catálogo de receitas", () => {
     for (const id of proibidas) {
       // A receita existe no catálogo…
       expect(getRecipe(id), id).toBeDefined();
-      // …mas a porta do /craft recusa.
+      // …mas a porta do /criar recusa.
       expect(personalRecipe(id), id).toBeUndefined();
     }
   });
