@@ -24,6 +24,7 @@ const PRODUCT_EMOJI: Record<PremiumProductId, EmojiKey> = {
   trait_spin: "giro_traco",
   ryo_10000: "ryo",
   attribute_respec: "reset_atributos",
+  fighting_style_reset: "reset_estilos",
   character_reset: "reset_personagem",
 };
 
@@ -154,6 +155,21 @@ function characterResetConfirmationPanel(wallet: PremiumWallet): TopLevel[] {
   ])];
 }
 
+function fightingStyleResetConfirmationPanel(wallet: PremiumWallet): TopLevel[] {
+  return [economyContainer("obras", [
+    titleBlock("reset_estilos", "Confirmar reset de estilos", "Esta ação usa Ingots e reorganiza seus estilos de luta"),
+    factsBlock([{ label: "Ingots", value: String(wallet.ingots) }, { label: "Custo", value: "100" }]),
+    divider(),
+    noticeBlock("aviso", "Todos os estilos de luta aprendidos serão removidos, junto das habilidades e técnicas exclusivas de suas árvores."),
+    text("Seus atributos, nível e demais habilidades permanecem. Depois do reset, você poderá aprender outros estilos com os mestres."),
+    divider(),
+    buttonRow(
+      button({ id: cid("confirm-fighting-style-reset"), label: "Confirmar reset por 100 Ingots", style: ButtonStyle.Danger, emojiKey: "reset_estilos" }),
+      button({ id: cid("cancel-fighting-style-reset"), label: "Cancelar", style: ButtonStyle.Secondary }),
+    ),
+  ])];
+}
+
 function traitChoicePanel(wallet: PremiumWallet, sessionId: string, options: ReadonlyArray<TraitDef>): TopLevel[] {
   const children: ContainerChild[] = [
     titleBlock("giro_traco", "Uma assinatura mítica foi encontrada", "Escolha um dos Traços revelados"),
@@ -217,6 +233,10 @@ export const lojaPremium: Command = {
           await interaction.update(v2Edit(characterResetConfirmationPanel(wallet)));
           return;
         }
+        if (product.kind === "FIGHTING_STYLE_RESET") {
+          await interaction.update(v2Edit(fightingStyleResetConfirmationPanel(wallet)));
+          return;
+        }
         await buyPremiumProduct(wallet.id, char.id, product.id as PremiumProductId, interaction.id);
         feedback = product.kind === "RYO" ? `✅ ${product.ryo.toLocaleString("pt-BR")} Ryō adicionados ao seu saldo.` : `✅ ${product.name} adquirido.`;
       } else if (action === "confirm-respec") {
@@ -225,7 +245,10 @@ export const lojaPremium: Command = {
       } else if (action === "confirm-character-reset") {
         const result = await buyPremiumProduct(wallet.id, char.id, "character_reset", interaction.id);
         feedback = `✅ Reset concluído. ${result.refundedPoints ?? 0} ponto(s) devolvido(s). Use /ficha para registrar o novo nome, idade, história e aparência.`;
-      } else if (action === "cancel-respec" || action === "cancel-character-reset" || action === "back") {
+      } else if (action === "confirm-fighting-style-reset") {
+        const result = await buyPremiumProduct(wallet.id, char.id, "fighting_style_reset", interaction.id);
+        feedback = `✅ Reset concluído. ${result.removedFightingStyles ?? 0} estilo(s) de luta e suas habilidades exclusivas foram removidos.`;
+      } else if (action === "cancel-respec" || action === "cancel-character-reset" || action === "cancel-fighting-style-reset" || action === "back") {
         await interaction.update(v2Edit(panel(wallet)));
         return;
       } else if (action === "use-clan") {

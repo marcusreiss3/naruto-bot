@@ -29,6 +29,7 @@ export type PremiumPurchaseResult = {
   product: ReturnType<typeof getPremiumProduct>;
   refundedPoints?: number;
   characterReset?: boolean;
+  removedFightingStyles?: number;
 };
 
 async function resetSkillTreeProgression(tx: Prisma.TransactionClient, charId: string): Promise<number> {
@@ -56,17 +57,43 @@ async function resetSkillTreeProgression(tx: Prisma.TransactionClient, charId: s
   return refundedPoints;
 }
 
+async function resetFightingStyleProgression(tx: Prisma.TransactionClient, charId: string): Promise<number> {
+  const char = await tx.userCharacter.findUnique({
+    where: { id: charId },
+    include: { fightingStyles: true, skillNodes: true },
+  });
+  if (!char) throw new PremiumStoreError("Personagem não encontrado.");
+  if (!char.fightingStyles.length) throw new PremiumStoreError("Você ainda não aprendeu um estilo de luta para resetar.");
+
+  const ownedStyles = new Set(char.fightingStyles.map((entry) => entry.style));
+  const styleNodes = char.skillNodes
+    .map(({ nodeId }) => getNode(nodeId))
+    .filter((node) => node?.fightingStyle && ownedStyles.has(node.fightingStyle));
+  const nodeIds = styleNodes.map((node) => node!.id);
+  const styleJutsus = [...new Set(styleNodes
+    .filter((node) => node!.kind === "JUTSU" && node!.grantsAbilityId)
+    .map((node) => node!.grantsAbilityId!))];
+
+  if (nodeIds.length) await tx.characterSkillNode.deleteMany({ where: { charId, nodeId: { in: nodeIds } } });
+  if (styleJutsus.length) await tx.characterJutsu.deleteMany({ where: { charId, jutsuId: { in: styleJutsus } } });
+  await tx.characterFightingStyle.deleteMany({ where: { charId } });
+  return char.fightingStyles.length;
+}
+
 export async function buyPremiumProduct(walletId: string, charId: string, productId: PremiumProductId, interactionId: string): Promise<PremiumPurchaseResult> {
   const product = getPremiumProduct(productId);
   if (!product) throw new PremiumStoreError("Produto premium desconhecido.");
-  if (product.kind === "CHARACTER_RESET") {
+  if (product.kind === "CHARACTER_RESET" || product.kind === "FIGHTING_STYLE_RESET") {
     const activeCombat = await prisma.combatParticipant.findFirst({
       where: { charId, session: { status: "ACTIVE" } },
       select: { id: true },
     });
-    if (activeCombat) throw new PremiumStoreError("Encerre o combate em andamento antes de resetar o personagem.");
+    if (activeCombat) throw new PremiumStoreError(product.kind === "CHARACTER_RESET"
+      ? "Encerre o combate em andamento antes de resetar o personagem."
+      : "Encerre o combate em andamento antes de resetar os estilos de luta.");
   }
   let refundedPoints: number | undefined;
+  let removedFightingStyles: number | undefined;
   let resetIdentity: { discordId: string; guildId: string } | undefined;
   try {
     await prisma.$transaction(async (tx) => {
@@ -83,6 +110,8 @@ export async function buyPremiumProduct(walletId: string, charId: string, produc
         await tx.userCharacter.update({ where: { id: charId }, data: { ryo: { increment: product.ryo } } });
       } else if (product.kind === "RESPEC") {
         refundedPoints = await resetSkillTreeProgression(tx, charId);
+      } else if (product.kind === "FIGHTING_STYLE_RESET") {
+        removedFightingStyles = await resetFightingStyleProgression(tx, charId);
       } else {
         const char = await tx.userCharacter.findUnique({ where: { id: charId }, select: { discordId: true, guildId: true } });
         if (!char) throw new PremiumStoreError("Personagem não encontrado.");
@@ -102,9 +131,9 @@ export async function buyPremiumProduct(walletId: string, charId: string, produc
     if ((error as { code?: string }).code === "P2002") throw new PremiumStoreError("Esta compra jÃ¡ foi processada.");
     throw error;
   }
-  if (product.kind === "RESPEC" || product.kind === "CHARACTER_RESET") await refreshDerived(charId);
+  if (product.kind === "RESPEC" || product.kind === "CHARACTER_RESET" || product.kind === "FIGHTING_STYLE_RESET") await refreshDerived(charId);
   if (resetIdentity) await releaseAppearance(resetIdentity.discordId, resetIdentity.guildId).catch(() => undefined);
-  return { product, refundedPoints, characterReset: product.kind === "CHARACTER_RESET" };
+  return { product, refundedPoints, characterReset: product.kind === "CHARACTER_RESET", removedFightingStyles };
 }
 
 export async function useClanSpin(charId: string, walletId: string): Promise<{ id: string; name: string; villageId: string }> {

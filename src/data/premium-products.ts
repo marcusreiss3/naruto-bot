@@ -31,6 +31,13 @@ export const PREMIUM_PRODUCTS = [
     kind: "RESPEC",
   },
   {
+    id: "fighting_style_reset",
+    name: "Reset de estilos de luta",
+    description: "Remove os estilos de luta aprendidos e as habilidades das árvores desses estilos, liberando espaço para aprender outros.",
+    cost: 100,
+    kind: "FIGHTING_STYLE_RESET",
+  },
+  {
     id: "character_reset",
     name: "Reset premium de personagem",
     description: "Permite refazer nome, rank, idade, história e aparência; devolve os pontos investidos, remove as habilidades aprendidas nas Árvores de Habilidade e libera novamente o uso de Giros de Vila + Clã.",

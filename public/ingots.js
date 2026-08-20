@@ -108,6 +108,12 @@ window.INGOTS_PAGE = {
           meta: "Custo: 100 Ingots",
         },
         {
+          icon: "styles",
+          title: "Reset de estilos de luta",
+          text: "Remove os estilos de luta aprendidos e as habilidades exclusivas de suas árvores, liberando espaço para aprender outros com os mestres. Seus atributos, nível e demais habilidades permanecem.",
+          meta: "Custo: 100 Ingots",
+        },
+        {
           icon: "account",
           title: "Reset premium de personagem",
           text: "Permite refazer nome, rank, idade, história e aparência; também devolve os pontos investidos e remove as habilidades aprendidas nas Árvores de Habilidade. O rank volta para Academia, permitindo usar Giros de Vila + Clã novamente. Mantém nível, XP, Vila, Clã, Traço, inventário, Ryō, Ingots e Giros.",
@@ -152,7 +158,7 @@ window.INGOTS_PAGE = {
 };
 
 window.IngotsPage = (function () {
-  const INGOT_ICON_SPRITE = "/assets/guides/ingot-icons.svg?v=ingot-packages-1";
+  const INGOT_ICON_SPRITE = "/assets/guides/ingot-icons.svg?v=ingot-packages-2";
   const assetUrl = (path) => (window.assetUrl ? window.assetUrl(path) : path);
 
   function escapeHtml(value) {

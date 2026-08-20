@@ -21,9 +21,10 @@ import {
   type ContainerChild,
   type TopLevel,
 } from "../ui/economy-components-v2.js";
-import { emoji } from "../ui/economy-emojis.js";
+import { emoji, type EmojiKey } from "../ui/economy-emojis.js";
 import { prisma } from "../db/client.js";
 import { CENTER, SECTORS, isSectorKey } from "../data/sectors.js";
+import type { SectorKey } from "../data/sectors.js";
 import { VILLAGE_NAMES, type VillageId } from "../data/villages.js";
 import { EconomyError } from "../services/economy/errors.js";
 import {
@@ -36,6 +37,13 @@ import {
 import { payMaintenance, pendingMaintenance } from "../services/economy/maintenance.js";
 import { productionPreview } from "../services/economy/production.js";
 import { startVillageSchedulers } from "../services/economy/village-scheduler.js";
+
+const SECTOR_EMOJI_KEYS: Record<SectorKey, EmojiKey> = {
+  CRIACAO_HORTAS: "setor_criacao_hortas",
+  MINAS_FUNDICOES: "setor_minas_fundicoes",
+  POCOS_RESERVATORIOS: "setor_pocos_reservatorios",
+  SILVICULTURA_COLETA: "setor_silvicultura_coleta",
+};
 
 // Aba `Obras` do painel /vila (secoes 6.1 a 6.4 e 8).
 //
@@ -133,7 +141,7 @@ export async function renderObras(
         const nivel = linha?.level ?? 0;
         const obra = linha?.constructingTo ? ` ${emoji("obras")} → ${linha.constructingTo}` : "";
         const reforma = linha && linha.status !== "OK" ? ` ${emoji("aviso")} sem reforma` : "";
-        return `${def.emoji} **${def.name}** — nível ${nivel}/5${obra}${reforma}`;
+        return `${emoji(SECTOR_EMOJI_KEYS[def.key])} **${def.name}** — nível ${nivel}/5${obra}${reforma}`;
       }),
       "—",
     ),
@@ -198,7 +206,7 @@ export async function renderObras(
             ...SECTORS.map((def) => ({
               label: `${def.name} (nível ${porChave.get(def.key)?.level ?? 0})`.slice(0, 100),
               value: `SECTOR:${def.key}`,
-              emoji: def.emoji,
+              emoji: emoji(SECTOR_EMOJI_KEYS[def.key]),
               description: def.description.slice(0, 100),
             })),
           ]),
