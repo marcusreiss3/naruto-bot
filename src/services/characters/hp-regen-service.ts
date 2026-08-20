@@ -12,7 +12,10 @@ const REGEN_AMOUNT = 2;
 let regenTimer: NodeJS.Timeout | null = null;
 
 async function regenTick(): Promise<void> {
-  await prisma.$executeRaw`UPDATE "UserCharacter" SET "hpCurrent" = MIN("hpMax", "hpCurrent" + ${REGEN_AMOUNT}) WHERE "hpCurrent" < "hpMax"`;
+  // PostgreSQL usa bigint para parametros bindados pelo Prisma; os campos de
+  // vida sao integer. LEAST + cast explicito evita o erro de tipos 42883 e
+  // preserva o teto de vida máxima.
+  await prisma.$executeRaw`UPDATE "UserCharacter" SET "hpCurrent" = LEAST("hpMax", "hpCurrent" + CAST(${REGEN_AMOUNT} AS integer)) WHERE "hpCurrent" < "hpMax"`;
 }
 
 export function startHpRegenScheduler(): void {
