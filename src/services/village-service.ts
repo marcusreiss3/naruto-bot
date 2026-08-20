@@ -13,7 +13,7 @@ import {
 export { VILLAGE_IDS, VILLAGE_NAMES, isVillageId, normalizeVillageId } from "../data/villages.js";
 export type { VillageId } from "../data/villages.js";
 
-import { VILLAGE_IDS, type VillageId } from "../data/villages.js";
+import { isVillageId, VILLAGE_IDS, type VillageId } from "../data/villages.js";
 
 export const VILLAGE_ROLES: Record<VillageId, string> = {
   KONOHA: "1523372974965522582",
@@ -30,6 +30,11 @@ export const VILLAGE_MANSIONS: Record<VillageId, string> = {
   KUMO: MANSAO_RAIKAGE_CHANNEL_ID,
   KIRI: MANSAO_MIZUKAGE_CHANNEL_ID,
 };
+
+/** Confere se o canal é a mansão do Kage da vila atual do personagem. */
+export function isVillageMansionChannel(villageId: unknown, channelId: string): boolean {
+  return isVillageId(villageId) && VILLAGE_MANSIONS[villageId] === channelId;
+}
 
 export function villageFromMember(member: GuildMember | null | undefined): VillageId {
   if (!member) return "KONOHA";

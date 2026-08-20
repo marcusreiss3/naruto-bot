@@ -6,7 +6,7 @@ import {
   type ChatInputCommandInteraction,
 } from "discord.js";
 import type { Command } from "./types.js";
-import { getScenarioByChannel, getScenarioById, KAGE_MANSION_CHANNEL_IDS } from "../data/index.js";
+import { getScenarioByChannel, getScenarioById } from "../data/index.js";
 import type { ScenarioDef } from "../data/types.js";
 import type { NinjaRank } from "../config/enums.js";
 import { MapRenderer, type RenderEntity } from "../services/maps/renderer.js";
@@ -105,6 +105,7 @@ import {
   type DailyMissionRank,
 } from "../services/missions/daily-mission-board.js";
 import { renderMissionBoardCard } from "../ui/mission-board-card.js";
+import { isVillageMansionChannel } from "../services/village-service.js";
 
 const PREFIX = "mapa:v1";
 const cid = (action: string) => `${PREFIX}:${action}`;
@@ -620,7 +621,7 @@ export const mapa: Command = {
     if (
       !session
       && char.ninjaRank !== "ACADEMIA"
-      && (KAGE_MANSION_CHANNEL_IDS as readonly string[]).includes(channelId)
+      && isVillageMansionChannel(char.villageId, channelId)
     ) {
       const mural = await buildDailyMissionBoard(char);
       await interaction.followUp({ ...mural.payload, files: [mural.file] });
@@ -640,6 +641,10 @@ export const mapa: Command = {
       if (!isDailyMissionRank(actionArg)) return;
       const guildId = interaction.guildId ?? "global";
       const char = await getOrCreateCharacter(interaction.user.id, guildId, interaction.user.username);
+      if (!isVillageMansionChannel(char.villageId, interaction.channelId)) {
+        await interaction.reply({ content: `${emoji("erro")} Você só pode aceitar missões na mansão do Kage da sua vila.`, ephemeral: true });
+        return;
+      }
       const result = await claimDailyMission(char.id, char.ninjaRank as NinjaRank, actionArg);
       const mural = await buildDailyMissionBoard(
         char,

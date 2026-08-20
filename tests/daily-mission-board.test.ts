@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { MISSIONS } from "../src/data/missions/index.js";
 import { canClaimDailyMissionRank } from "../src/services/missions/daily-mission-board.js";
 import { renderMissionBoardCard } from "../src/ui/mission-board-card.js";
+import { isVillageMansionChannel, VILLAGE_MANSIONS } from "../src/services/village-service.js";
 
 describe("mural diário de missões", () => {
   it("não oferece mestres de artes marciais", () => {
@@ -16,6 +17,12 @@ describe("mural diário de missões", () => {
     expect(canClaimDailyMissionRank("GENIN", "B")).toBe(false);
     expect(canClaimDailyMissionRank("CHUNIN", "B")).toBe(true);
     expect(canClaimDailyMissionRank("JONIN", "B")).toBe(true);
+  });
+
+  it("reconhece somente a mansão da vila do personagem", () => {
+    expect(isVillageMansionChannel("KONOHA", VILLAGE_MANSIONS.KONOHA)).toBe(true);
+    expect(isVillageMansionChannel("KONOHA", VILLAGE_MANSIONS.SUNA)).toBe(false);
+    expect(isVillageMansionChannel("SEM_VILA", VILLAGE_MANSIONS.KONOHA)).toBe(false);
   });
 
   it("renderiza as três ofertas no card pessoal", async () => {
