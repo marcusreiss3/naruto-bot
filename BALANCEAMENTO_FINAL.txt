@@ -219,14 +219,14 @@ REFERÊNCIA DE DANO — CARAPAÇA OFENSIVA, SEM SHIROGANE
 
 Nível    Mecanismos ofensivos disponíveis   Dano médio   Melhor golpe   Custo/dano
 -------------------------------------------------------------------------------------
-nv 10                 4                         29,98        45,10          0,93
-nv 20                 7                         42,14        63,75          0,92
-nv 30                 8                         44,84        63,75          0,94
-nv 45                 8                         44,84        63,75          0,94
+nv 10                 4                         23,10        33,00          1,23
+nv 20                 7                         31,79        47,50          1,22
+nv 30                 8                         36,62        52,65          1,15
+nv 45                 8                         36,62        52,65          1,15
 
 Esta referência considera os bônus totais da carapaça ofensiva: +10% no nível
-4, +18% no nível 12 e +25% no nível 20. No topo, o multiplicador efetivo da
-carapaça é 1,25×.
+4, +18% no nível 12, +25% no nível 20 e +35% no nível 30. No topo, o
+multiplicador efetivo da carapaça é 1,35×.
 
 SHIROGANE — ESPECIALIZAÇÃO SOBRE KUGUTSU
 
@@ -240,10 +240,10 @@ marionete. No ápice, a build completa reúne:
   - uma terceira vaga de mecanismo em uma única marionete;
   - técnicas ofensivas que ignoram Barreira no ápice.
 
-No nível 22, com a carapaça ofensiva completa, Shirogane leva o multiplicador
-de dano da marionete a 1,25 × 1,10 = 1,375×. O arsenal de oito mecanismos
-ofensivos fica em aproximadamente 49,32 de dano médio, 70,13 no melhor golpe
-e 0,77 de custo/dano após a redução de Chakra.
+No nível 30, com a carapaça ofensiva completa, Shirogane leva o multiplicador
+de dano da marionete a 1,35 × 1,10 = 1,485×. O arsenal de oito mecanismos
+ofensivos fica em aproximadamente 40,28 de dano médio, 57,92 no melhor golpe
+e 0,94 de custo/dano após a redução de Chakra.
 
 Esse teto precisa ser lido com as restrições próprias de Kugutsu: construção,
 materiais, Chakra do condutor, alcance dos fios, ação comum compartilhada
@@ -266,28 +266,40 @@ DANO REAL — arsenal médio com passivas próprias, sem transformação
 
   Nível   Bukijutsu   Elemental   Clã   Estilo   Kekkei Genkai*   Kugutsu**
   ---------------------------------------------------------------------------
-  nv 10      25,91       20,62    22,57   18,30       23,71          29,98
-  nv 20      33,54       30,86    32,16   22,70       32,70          42,14
-  nv 30      36,37       34,78    36,77   27,37       47,25          44,84
-  nv 45      36,37       37,96    37,17   32,85       57,02          44,84
+  nv 10      25,91       20,62    22,57   18,30       23,71          23,10
+  nv 20      33,54       30,86    32,16   22,70       32,70          31,79
+  nv 30      36,37       34,78    36,77   27,37       47,25          36,62
+  nv 45      36,37       37,96    37,17   32,85       57,02          36,62
+
+HIERARQUIA POR FAIXA DE NÍVEL — DANO REAL
+
+  nv 10   Bukijutsu > Kekkei Genkai* > Clã > Kugutsu > Elemental > Estilo
+  nv 20   Bukijutsu > Kekkei Genkai* > Clã > Kugutsu > Elemental > Estilo
+  nv 30   Kekkei Genkai* > Clã > Kugutsu > Bukijutsu > Elemental > Estilo
+  nv 45   Kekkei Genkai* > Elemental > Clã > Kugutsu > Bukijutsu > Estilo
+
+Esta ordem compara somente o dano médio das tabelas, sem modos, transformações
+ou afinidades externas. Kugutsu pressupõe oficina, materiais, construção e uma
+marionete ativa. Kekkei Genkai* permanece como projeção teórica por nível nas
+faixas em que a fusão ainda não é obtida normalmente.
 
 MELHOR GOLPE DISPONÍVEL — com passivas próprias, sem transformação
 
   Nível   Bukijutsu   Elemental   Clã   Estilo   Kekkei Genkai*   Kugutsu**
   ---------------------------------------------------------------------------
-  nv 10      29,90       24,34    25,02   23,04       28,41          45,10
-  nv 20      38,09       41,51    40,35   29,84       39,56          63,75
-  nv 30      50,25       52,48    49,20   40,23       60,25          63,75
-  nv 45      50,25       63,07    50,20   48,27       82,54          63,75
+  nv 10      29,90       24,34    25,02   23,04       28,41          33,00
+  nv 20      38,09       41,51    40,35   29,84       39,56          47,50
+  nv 30      50,25       52,48    49,20   40,23       60,25          52,65
+  nv 45      50,25       63,07    50,20   48,27       82,54          52,65
 
 CUSTO / DANO REAL — menor é melhor
 
   Nível   Bukijutsu   Elemental   Clã   Estilo   Kekkei Genkai*   Kugutsu**
   ---------------------------------------------------------------------------
-  nv 10       0,92        0,99     0,91    1,03        1,39          0,93
-  nv 20       1,05        0,80     0,92    1,03        1,22          0,92
-  nv 30       1,08        0,81     0,90    1,00        0,94          0,94
-  nv 45       1,08        0,82     0,91    0,83        0,87          0,94
+  nv 10       0,92        0,99     0,91    1,03        1,39          1,23
+  nv 20       1,05        0,80     0,92    1,03        1,22          1,22
+  nv 30       1,08        0,81     0,90    1,00        0,94          1,15
+  nv 45       1,08        0,82     0,91    0,83        0,87          1,15
 
 * Kekkei Genkai usa uma projeção teórica por nível: as fusões têm requisitos
 de obtenção próprios e não estão disponíveis desde o início da progressão.

@@ -11,6 +11,7 @@ describe("puppetCapabilities", () => {
     expect(puppetCapabilities(["kugutsu_carapaca_ofensiva"]).shellDamageBonus).toBeCloseTo(0.10);
     expect(puppetCapabilities(["kugutsu_carapaca_ofensiva_ii"]).shellDamageBonus).toBeCloseTo(0.18);
     expect(puppetCapabilities(["kugutsu_carapaca_ofensiva_iii"]).shellDamageBonus).toBeCloseTo(0.25);
+    expect(puppetCapabilities(["kugutsu_carapaca_ofensiva_iv"]).shellDamageBonus).toBeCloseTo(0.35);
     expect(puppetCapabilities(["kugutsu_carapaca_defensiva_iii"]).shellHpBonus).toBeCloseTo(0.45);
     expect(puppetCapabilities(["kugutsu_carapaca_defensiva_iii"]).shellShieldBonus).toBeCloseTo(0.45);
     expect(puppetCapabilities(["kugutsu_carapaca_efeito_ii"]).shellEffectTurns).toBe(2);

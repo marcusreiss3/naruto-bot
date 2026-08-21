@@ -92,4 +92,8 @@ export const KUGUTSU_TREE: SkillNodeDef[] = [
     "kugutsu_carapaca_efeito_iii", "Mestre dos Dispositivos", "Carapaça de efeito", 1.5, 5, ["kugutsu_carapaca_efeito_ii", "kugutsu_craft_grau_iii"], 4, 20, 23,
     "Passiva: mecanismos de carapaça de efeito que aplicam Veneno, Sangramento ou Queimadura custam 10% menos Chakra.",
   ),
+  passive(
+    "kugutsu_carapaca_ofensiva_iv", "Mestre do Assalto", "Carapaça ofensiva", -1.5, 7, ["kugutsu_carapaca_ofensiva_iii", "kugutsu_slot_3"], 5, 30, 29,
+    "Passiva: suas marionetes ofensivas chegam a +35% de dano total.",
+  ),
 ];

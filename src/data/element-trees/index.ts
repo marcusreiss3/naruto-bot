@@ -978,8 +978,18 @@ const NODE_ICONS: Record<string, string> = {
   kugutsu_slot_3: "kugutsu/triade-de-fios.png",
   kugutsu_alcance_fios_iii: "kugutsu/fios-de-chakra-estendidos-iii.png",
   kugutsu_carapaca_ofensiva_iii: "kugutsu/coracao-de-guerra.png",
+  kugutsu_carapaca_ofensiva_iv: "kugutsu/coracao-de-guerra.png",
   kugutsu_carapaca_defensiva_iii: "kugutsu/fortaleza-mecanica.png",
   kugutsu_carapaca_efeito_iii: "kugutsu/mestre-dos-dispositivos.png",
+
+  // ---- Shirogane ----
+  shirogane_raiz: "shirogane/dominio-dos-fios.png",
+  shirogane_engenharia_letal: "shirogane/engenharia-letal.png",
+  shirogane_fios_precisos: "shirogane/fios-precisos.png",
+  shirogane_venenos_calibrados: "shirogane/venenos-calibrados.png",
+  shirogane_oficina_mestra: "shirogane/oficina-mestra.png",
+  shirogane_braco_extra: "shirogane/braco-extra.png",
+  shirogane_apice: "shirogane/mestre-marionetista.png",
 
   // ---- Taijutsu de Agitação ----
   tai_agitacao_passos: "taijutsu-agitacao/passos-irregulares.png",
