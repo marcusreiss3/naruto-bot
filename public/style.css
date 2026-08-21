@@ -5843,53 +5843,20 @@ details.guide-faq > div {
 
 #ingotPremiumStatus a { color: inherit; text-decoration: underline; }
 
-.pix-placeholder {
-  position: relative;
-  display: grid;
-  width: min(100%, 204px);
-  aspect-ratio: 1;
-  place-content: center;
-  gap: 5px;
-  margin: 22px auto 18px;
-  overflow: hidden;
-  border: 8px solid #eee8d8;
-  border-radius: 8px;
-  background:
-    linear-gradient(90deg, transparent 8%, #40433f 8% 16%, transparent 16% 25%, #40433f 25% 31%, transparent 31% 43%, #40433f 43% 50%, transparent 50% 63%, #40433f 63% 69%, transparent 69% 82%, #40433f 82% 90%, transparent 90%),
-    linear-gradient(0deg, transparent 6%, #40433f 6% 14%, transparent 14% 27%, #40433f 27% 34%, transparent 34% 44%, #40433f 44% 53%, transparent 53% 68%, #40433f 68% 76%, transparent 76% 88%, #40433f 88% 95%, transparent 95%),
-    #fbf8ef;
+#ingotPaymentStatus {
+  margin: 14px 0 0;
+  min-height: 15px;
+  color: var(--text-muted);
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 1.4;
 }
 
-.pix-placeholder::before,
-.pix-placeholder::after {
-  content: "";
-  position: absolute;
-  width: 42px;
-  height: 42px;
-  border: 8px solid #40433f;
-  background: #fbf8ef;
-}
+#ingotPaymentStatus.is-error { color: var(--danger); }
 
-.pix-placeholder::before { top: 12px; left: 12px; }
-.pix-placeholder::after { right: 12px; bottom: 12px; }
+#ingotPaymentStatus.is-success { color: var(--ingot-gold-bright); }
 
-.pix-placeholder span,
-.pix-placeholder small {
-  position: relative;
-  z-index: 1;
-  padding: 2px 7px;
-  background: #fbf8ef;
-  color: #2e6559;
-  font: 800 18px/1 var(--font-display);
-  letter-spacing: .1em;
-}
-
-.pix-placeholder small {
-  color: #4c5d56;
-  font-size: 9px;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-}
+#ingotPaymentStatus a { color: inherit; text-decoration: underline; }
 
 .ingot-payment-note {
   margin: 0 0 20px;

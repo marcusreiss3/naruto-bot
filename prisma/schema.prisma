@@ -137,6 +137,26 @@ model PremiumSpinSession {
   @@index([walletId, kind, expiresAt])
 }
 
+// Pedido de compra de pacote de Ingots via PIX/cartao (Mercado Pago Checkout
+// Pro). Fica PENDING ate' o webhook confirmar; paymentId unico impede
+// creditar duas vezes se a notificacao chegar repetida.
+model IngotOrder {
+  id           String           @id @default(cuid())
+  discordId    String
+  guildId      String
+  packageId    String
+  ingots       Int
+  amountCents  Int
+  status       IngotOrderStatus @default(PENDING)
+  preferenceId String?          @unique
+  paymentId    String?          @unique
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@index([discordId, guildId])
+  @@index([status])
+}
+
 model CharacterResourceState {
   id        String        @id @default(cuid())
   character UserCharacter @relation(fields: [charId], references: [id], onDelete: Cascade)
@@ -590,6 +610,13 @@ model PuppetCraftOrder {
 enum PartyMemberRole {
   MEMBER
   SUB_LEADER
+}
+
+enum IngotOrderStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
 }
 
 // ---------------- Aparência ----------------

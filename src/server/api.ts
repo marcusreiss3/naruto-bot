@@ -15,6 +15,8 @@ import { MANGEKYO_VARIANT_LABEL } from "../services/characters/mangekyo.js";
 import { buildGuideCatalog } from "../services/characters/equipment-catalog.js";
 import { buildKugutsuArsenal } from "../services/puppets/puppet-service.js";
 import { buyPremiumProductForDiscordUser } from "../services/premium/ingot-store.js";
+import { createIngotCheckout, handleMercadoPagoWebhook, IngotCheckoutError } from "../services/premium/ingot-checkout.js";
+import { log } from "../utils/logger.js";
 
 export function registerApi(app: FastifyInstance): void {
   app.get("/api/guides/catalog", async (_req, reply) => {
@@ -131,5 +133,41 @@ export function registerApi(app: FastifyInstance): void {
 
     const result = await buyPremiumProductForDiscordUser(discordId, ENV.DISCORD_GUILD_ID, body.productId);
     return reply.send(result);
+  });
+
+  // Inicia a compra de um pacote de Ingots via Mercado Pago Checkout Pro.
+  // Devolve a URL de redirecionamento; o credito real so' acontece quando o
+  // webhook confirmar o pagamento (nunca aqui, nunca antes de pagar).
+  app.post("/api/premium/checkout", async (req, reply) => {
+    const discordId = getSessionDiscordId(req);
+    if (!discordId) return reply.code(401).send({ ok: false, error: "Não autenticado." });
+
+    const body = req.body as { packageId?: string } | undefined;
+    if (!body?.packageId) return reply.code(400).send({ ok: false, error: "packageId faltando." });
+
+    try {
+      const { url } = await createIngotCheckout(discordId, ENV.DISCORD_GUILD_ID, body.packageId);
+      return reply.send({ ok: true, url });
+    } catch (error) {
+      if (error instanceof IngotCheckoutError) return reply.code(400).send({ ok: false, error: error.message });
+      throw error;
+    }
+  });
+
+  // Notificação do Mercado Pago. Não usa sessão — a identidade de quem
+  // chama vem da assinatura HMAC (x-signature), verificada dentro do
+  // service. Responde 200 sempre que a notificação foi lida (mesmo que o
+  // pedido já estivesse processado), pra não entrar em loop de reenvio; só
+  // devolve erro quando algo realmente falhou.
+  app.post("/api/premium/webhook", async (req, reply) => {
+    const query = req.query as Record<string, string | undefined>;
+    const outcome = await handleMercadoPagoWebhook({
+      xSignature: req.headers["x-signature"] as string | undefined,
+      xRequestId: req.headers["x-request-id"] as string | undefined,
+      dataId: query["data.id"],
+      type: query["type"],
+    });
+    if (!outcome.handled) log.warn("webhook premium ignorado:", outcome.reason);
+    return reply.code(200).send({ ok: true });
   });
 }

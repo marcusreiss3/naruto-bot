@@ -52,6 +52,14 @@ export const ENV = {
   SESSION_SECRET: opt("SESSION_SECRET"),
   // porta do servidor HTTP (Square injeta PORT)
   WEB_PORT: Number(opt("PORT", "8080")),
+
+  // ---- Pagamento de Ingots via Mercado Pago (opcional) ----
+  // Sem o token, a rota de checkout fica desligada e o site so' mostra o
+  // aviso de "em preparacao" — nao derruba o resto do site.
+  MP_ACCESS_TOKEN: opt("MP_ACCESS_TOKEN"),
+  // Segredo do webhook (painel MP: Suas integrações > app > Webhooks). Sem
+  // ele o endpoint recusa TODA notificacao — nunca credita Ingots as cegas.
+  MP_WEBHOOK_SECRET: opt("MP_WEBHOOK_SECRET"),
 };
 
 export const HAS_GROQ = Boolean(ENV.GROQ_API_KEY);
@@ -60,3 +68,8 @@ export const HAS_GEMINI = Boolean(ENV.GEMINI_API_KEY);
 export const HAS_WEB = Boolean(
   ENV.DISCORD_CLIENT_SECRET && ENV.WEB_BASE_URL && ENV.SESSION_SECRET && ENV.DISCORD_GUILD_ID,
 );
+export const HAS_MERCADO_PAGO = Boolean(ENV.MP_ACCESS_TOKEN);
+// So' abre checkout se o webhook TAMBEM estiver configurado — sem o
+// segredo, um pagamento real aprovado nao credita Ingots (o webhook recusa
+// por falta de assinatura), e o cliente paga sem receber nada.
+export const HAS_MERCADO_PAGO_CHECKOUT = Boolean(ENV.MP_ACCESS_TOKEN && ENV.MP_WEBHOOK_SECRET);

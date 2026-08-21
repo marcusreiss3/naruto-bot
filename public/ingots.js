@@ -293,7 +293,7 @@ window.IngotsPage = (function () {
         <div><dt>Ingots</dt><dd>${escapeHtml(pkg.ingots)}</dd></div>
         <div><dt>Valor</dt><dd>${escapeHtml(pkg.price)}</dd></div>
       </dl>
-      <button class="ingot-package-buy" type="button" data-package-id="${escapeHtml(pkg.id)}">Comprar via PIX</button>
+      <button class="ingot-package-buy" type="button" data-package-id="${escapeHtml(pkg.id)}">Comprar</button>
     </article>`;
   }
 
@@ -312,14 +312,15 @@ window.IngotsPage = (function () {
     return `<div class="ingot-payment-modal hidden" id="ingotPaymentModal" role="dialog" aria-modal="true" aria-labelledby="ingotPaymentTitle">
       <div class="ingot-payment-card" tabindex="-1">
         <button class="ingot-payment-close" type="button" data-close-payment aria-label="Fechar pagamento">×</button>
-        <span class="ingot-payment-kicker">Pagamento por PIX</span>
+        <span class="ingot-payment-kicker">Pagamento</span>
         <h2 id="ingotPaymentTitle">Pacote</h2>
         <p id="ingotPaymentPrice">Valor a definir</p>
-        <div class="pix-placeholder" role="img" aria-label="QR Code PIX em preparação">
-          <span>PIX</span><small>em breve</small>
+        <p class="ingot-payment-note">Você será redirecionado para o Mercado Pago pra pagar com PIX, cartão ou boleto. Assim que o pagamento for aprovado, os Ingots caem automaticamente na sua conta.</p>
+        <div class="ingot-premium-actions">
+          <button class="btn-secondary" type="button" data-close-payment>Cancelar</button>
+          <button class="ingot-carousel-card-buy" type="button" id="ingotPaymentPay">Pagar agora</button>
         </div>
-        <p class="ingot-payment-note">O QR Code e a chave PIX serão disponibilizados quando os pacotes forem definidos. Nenhum pagamento é solicitado nesta etapa.</p>
-        <button class="btn-secondary" type="button" data-close-payment>Entendi</button>
+        <p id="ingotPaymentStatus"></p>
       </div>
     </div>`;
   }
@@ -476,6 +477,50 @@ window.IngotsPage = (function () {
       }
     }
 
+    // Compra de pacote de Ingots via PIX/cartão (Mercado Pago Checkout
+    // Pro). O servidor cria o pedido pendente e devolve a URL de
+    // checkout hospedada pelo Mercado Pago — o site so' redireciona pra
+    // lá; os Ingots so' entram na conta quando o webhook confirmar o
+    // pagamento (nunca antes).
+    async function handleIngotCheckout() {
+      const modal = root.querySelector("#ingotPaymentModal");
+      const payBtn = root.querySelector("#ingotPaymentPay");
+      const status = root.querySelector("#ingotPaymentStatus");
+      if (payBtn.disabled) return;
+      const packageId = modal.dataset.packageId;
+      payBtn.disabled = true;
+      status.textContent = "Preparando pagamento…";
+      status.className = "";
+
+      try {
+        const res = await fetch("/api/premium/checkout", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ packageId }),
+        });
+        if (res.status === 401) {
+          status.innerHTML = 'Faça <a href="/auth/login">login pelo Discord</a> pra comprar.';
+          status.className = "is-error";
+          return;
+        }
+        const data = await res.json();
+        if (!data.ok) {
+          status.textContent = data.error || "Não foi possível iniciar o pagamento.";
+          status.className = "is-error";
+          return;
+        }
+        status.textContent = "Redirecionando pro Mercado Pago…";
+        status.className = "is-success";
+        window.location.href = data.url;
+      } catch {
+        status.textContent = "Falha de conexão. Tente de novo.";
+        status.className = "is-error";
+      } finally {
+        payBtn.disabled = false;
+      }
+    }
+
     let modalReturnFocus = null;
 
     function bindPaymentModal() {
@@ -528,10 +573,19 @@ window.IngotsPage = (function () {
           const pkg = page.packages?.find((entry) => entry.id === buy.dataset.packageId);
           if (!pkg) return;
           modalReturnFocus = buy;
+          paymentModal.dataset.packageId = pkg.id;
           root.querySelector("#ingotPaymentTitle").textContent = pkg.title;
           root.querySelector("#ingotPaymentPrice").textContent = `${pkg.ingots} · ${pkg.price}`;
+          root.querySelector("#ingotPaymentPay").disabled = false;
+          const status = root.querySelector("#ingotPaymentStatus");
+          status.textContent = "";
+          status.className = "";
           paymentModal.classList.remove("hidden");
           requestAnimationFrame(() => paymentModal.querySelector(".ingot-payment-card")?.focus());
+          return;
+        }
+        if (event.target.closest("#ingotPaymentPay")) {
+          handleIngotCheckout();
           return;
         }
         if (event.target === paymentModal || event.target.closest("[data-close-payment]")) { closeModal(paymentModal); return; }
