@@ -114,7 +114,9 @@ export async function buyPremiumProduct(walletId: string, charId: string, produc
       } else {
         const char = await tx.userCharacter.findUnique({ where: { id: charId }, select: { discordId: true, guildId: true } });
         if (!char) throw new PremiumStoreError("Personagem não encontrado.");
-        refundedPoints = await resetSkillTreeProgression(tx, charId);
+        // Diferente do RESPEC: o Reset Premium troca so' a identidade
+        // narrativa. Atributos, pontos investidos, nos das Arvores de
+        // Habilidade e jutsus permanecem intactos.
         await tx.userCharacter.update({
           where: { id: charId },
           data: { displayName: null, ninjaRank: "ACADEMIA" },
