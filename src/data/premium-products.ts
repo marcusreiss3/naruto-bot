@@ -32,7 +32,7 @@ export const PREMIUM_PRODUCTS = [
   {
     id: "character_reset",
     name: "Reset premium de personagem",
-    description: "Permite refazer nome, rank, idade, história e aparência, e libera novamente o uso de Giros de Vila + Clã. Mantém todos os atributos, pontos investidos e habilidades das Árvores de Habilidade.",
+    description: "Permite refazer nome, rank, idade, história e aparência; devolve os pontos investidos, remove as habilidades aprendidas nas Árvores de Habilidade e libera novamente o uso de Giros de Vila + Clã.",
     cost: 5000,
     kind: "CHARACTER_RESET",
   },

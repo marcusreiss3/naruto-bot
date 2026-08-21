@@ -159,8 +159,8 @@ function characterResetConfirmationPanel(wallet: PremiumWallet): TopLevel[] {
     titleBlock("reset_personagem", "Confirmar reset premium", "Esta ação usa Ingots e prepara uma nova ficha"),
     factsBlock([{ label: `${emoji("ingots")} Ingots`, value: String(wallet.ingots) }, { label: "Custo", value: String(cost) }]),
     divider(),
-    noticeBlock("aviso", "Nome, rank, idade, aparência e história serão resetados. O rank volta para Academia, permitindo usar Giros de Vila + Clã novamente."),
-    text("Você manterá nível, XP, Vila, Clã, Traço, inventário, Ryō, Ingots, Giros disponíveis, atributos, pontos investidos e as habilidades das Árvores de Habilidade."),
+    noticeBlock("aviso", "Nome, rank, idade, aparência e história serão resetados. O rank volta para Academia, permitindo usar Giros de Vila + Clã novamente. Os pontos investidos voltarão ao saldo e as habilidades aprendidas nas Árvores de Habilidade serão removidas."),
+    text("Você manterá nível, XP, Vila, Clã, Traço, inventário, Ryō, Ingots e Giros disponíveis."),
     text("Depois, use `/ficha` para preencher novamente os dados narrativos do personagem."),
     divider(),
     buttonRow(
@@ -267,8 +267,8 @@ export const lojaPremium: Command = {
         feedback = `✅ Reset concluído. ${result.refundedPoints ?? 0} ponto(s) devolvido(s); atributos e habilidades das Árvores de Habilidade foram removidos.`;
       } else if (action === "confirm-character-reset") {
         page = 1;
-        await buyPremiumProduct(wallet.id, char.id, "character_reset", interaction.id);
-        feedback = "✅ Reset concluído. Atributos, pontos investidos e habilidades das Árvores de Habilidade foram mantidos. Use /ficha para registrar o novo nome, idade, história e aparência.";
+        const result = await buyPremiumProduct(wallet.id, char.id, "character_reset", interaction.id);
+        feedback = `✅ Reset concluído. ${result.refundedPoints ?? 0} ponto(s) devolvido(s). Use /ficha para registrar o novo nome, idade, história e aparência.`;
       } else if (action === "confirm-fighting-style-reset") {
         page = 1;
         const result = await buyPremiumProduct(wallet.id, char.id, "fighting_style_reset", interaction.id);
