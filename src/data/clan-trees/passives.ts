@@ -37,6 +37,9 @@ export interface ClanPassiveDef {
   effectStacksBonus?: Partial<Record<EffectId, number>>;
   // estende a duracao de um efeito aplicado pelos jutsus de clã
   effectDurationBonus?: { effectId: EffectId; bonus: number };
+  // estende uma lista de efeitos específicos sem ampliar controles que não
+  // pertencem à passiva (ex.: Veneno e Sangramento de Shirogane).
+  effectDurationBonuses?: Partial<Record<EffectId, number>>;
   // casas extras de alcance
   rangeBonus?: number;
   rangeShapes?: Shape[];
@@ -850,7 +853,6 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
     clanId: "shirogane",
     crossCategory: "KUGUTSU",
     costMult: 0.9,
-    puppetCraftCostMult: 0.9,
   },
   {
     nodeId: "shirogane_engenharia_letal",
@@ -868,18 +870,17 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
     nodeId: "shirogane_venenos_calibrados",
     clanId: "shirogane",
     crossCategory: "KUGUTSU",
-    effectChanceBonus: { POISON: 0.15, BLEED: 0.1 },
+    effectDurationBonuses: { POISON: 1, BLEED: 1 },
   },
   {
     nodeId: "shirogane_oficina_mestra",
     clanId: "shirogane",
-    puppetCraftCostMult: 0.88,
+    puppetCraftCostMult: 0.85,
   },
   {
     nodeId: "shirogane_apice",
     clanId: "shirogane",
     crossCategory: "KUGUTSU",
-    damageMult: 1.15,
     ignoresShield: true,
   },
 ];

@@ -34,7 +34,7 @@ export const KUGUTSU_ABILITIES: Ability[] = [
   attack("kugutsu_lanca_chamas", "Lança-Chamas", 35, 2, 36, "Um bocal de fogo cospe chamas sobre o alvo.", [{ effectId: "BURN", stacks: 1, duration: 3 }]),
   // Câmara de Tortura (30/56) × 1,35 = 41.
   attack("kugutsu_cauda_escorpiao", "Cauda de Escorpião", 41, 2, 56, "A cauda perfura o alvo com veneno e lâmina.", [{ effectId: "POISON", stacks: 1, duration: 3 }, { effectId: "BLEED", stacks: 1, duration: 2 }]),
-  { id: "kugutsu_carapaca_resistente", name: "Carapaça Resistente", category: "KUGUTSU", tier: 2, resource: "chakra", cost: 18, actionType: "COMUM", range: 0, shape: "SELF", selfEffects: [{ effectId: "SHIELD", stacks: 18, hpPercentStacks: 0.35, duration: 2 }, { effectId: "ROOT", duration: 2 }], tags: ["kugutsu", "puppet-defense"], description: "A marionete sela a estrutura, protegendo quem está dentro por dois turnos." },
+  { id: "kugutsu_carapaca_resistente", name: "Carapaça Resistente", category: "KUGUTSU", tier: 2, resource: "chakra", cost: 18, actionType: "COMUM", range: 0, shape: "SELF", selfEffects: [{ effectId: "SHIELD", stacks: 7, hpPercentStacks: 0.10, duration: 2, replaceGroup: "kugutsu_carapaca_resistente" }, { effectId: "ROOT", duration: 2 }], tags: ["kugutsu", "puppet-defense"], description: "A marionete sela a estrutura, protegendo quem está dentro por dois turnos." },
   // Cadeia do Desastre (38/66) × 1,35 = 51. Os dois exigem duas marionetes;
   // Dama também exige Imobilização e mantém a execução abaixo de 8% de vida.
   { ...attack("kugutsu_dama_ferro", "Dama de Ferro", 51, 1, 66, "Duas marionetes coordenam a execução mecânica de um alvo capturado.", [{ effectId: "BLEED", stacks: 3, duration: 3 }]), oncePerCombat: true },

@@ -63,6 +63,8 @@ import {
   parseEffectData,
   type EffectState,
 } from "./effects.js";
+
+const PUPPET_DOT_EFFECTS = new Set<EffectId>(["POISON", "BLEED", "BURN"]);
 import {
   effectiveLineBlockers,
   effectiveObstacles,
@@ -823,12 +825,7 @@ export async function deployPuppet(
   if (!spot) return { ok: false, error: "Não há uma célula livre ao seu lado para a marionete." };
 
   const baseHp = Math.max(35, Math.round(owner.hpMax * (0.20 + Math.min(30, Number(owner.flags.level ?? 1)) * 0.002)));
-  const baseDamage = puppet.shell === "OFFENSE" ? 0.10 : 0;
-  const baseHpBonus = puppet.shell === "DEFENSE" ? 0.12 : 0;
-  const baseShield = puppet.shell === "DEFENSE" ? 0.12 : 0;
-  const baseEffectTurns = puppet.shell === "EFFECT" ? 1 : 0;
-  const baseDrain = puppet.shell === "EFFECT" ? 0.05 : 0;
-  const hp = Math.round(baseHp * (1 + baseHpBonus + (puppet.shell === "DEFENSE" ? caps.shellHpBonus : 0)));
+  const hp = Math.round(baseHp * (1 + (puppet.shell === "DEFENSE" ? caps.shellHpBonus : 0)));
   const abilityIds = puppet.upgrades.map((part) => PUPPET_UPGRADE_ABILITY[part.upgradeId]).filter((value): value is string => Boolean(value));
   const cp = await prisma.combatParticipant.create({
     data: {
@@ -837,10 +834,10 @@ export async function deployPuppet(
       flagsJson: JSON.stringify({
         isPuppet: true, isSummon: true, puppetId: puppet.id, controllerId: owner.id, summonerId: owner.id,
         puppetShell: puppet.shell, puppetAppearanceUrl: puppet.appearanceUrl, puppetUpgrades: puppet.upgrades.map((part) => part.upgradeId),
-        puppetLeash: caps.leash, puppetDamageBonus: baseDamage + (puppet.shell === "OFFENSE" ? caps.shellDamageBonus : 0),
-        puppetShieldBonus: baseShield + (puppet.shell === "DEFENSE" ? caps.shellShieldBonus : 0),
-        puppetEffectTurns: baseEffectTurns + (puppet.shell === "EFFECT" ? caps.shellEffectTurns : 0),
-        puppetChakraDrainBonus: baseDrain + (puppet.shell === "EFFECT" ? caps.shellChakraDrainBonus : 0),
+        puppetLeash: caps.leash, puppetDamageBonus: puppet.shell === "OFFENSE" ? caps.shellDamageBonus : 0,
+        puppetShieldBonus: puppet.shell === "DEFENSE" ? caps.shellShieldBonus : 0,
+        puppetEffectTurns: puppet.shell === "EFFECT" ? caps.shellEffectTurns : 0,
+        puppetDotCostMult: puppet.shell === "EFFECT" ? caps.shellDotCostMult : 1,
         puppetBonusAttack: caps.bonusAttack, attrs: owner.flags.attrs, nodes,
       }),
     },
@@ -1163,15 +1160,21 @@ export async function useAbility(
     const shieldBonus = Number(actor.flags.puppetShieldBonus ?? 0);
     const prolong = (effects: AppliedEffect[] | undefined) => effects?.map((effect) => ({
       ...effect,
-      duration: effect.duration === undefined ? undefined : effect.duration + effectTurns,
-      ...(effect.effectId === "SHIELD" ? {
+      duration: effect.duration === undefined || !PUPPET_DOT_EFFECTS.has(effect.effectId)
+        ? effect.duration
+        : Math.min(5, effect.duration + effectTurns),
+      ...(ability.id === "kugutsu_escudo_luz_mecanica" && effect.effectId === "SHIELD" ? {
         stacks: effect.stacks === undefined ? undefined : Math.round(effect.stacks * (1 + shieldBonus)),
         hpPercentStacks: effect.hpPercentStacks === undefined ? undefined : effect.hpPercentStacks * (1 + shieldBonus),
       } : {}),
     }));
+    const appliesDot = (effects: AppliedEffect[] | undefined) =>
+      effects?.some((effect) => PUPPET_DOT_EFFECTS.has(effect.effectId)) ?? false;
+    const dotCostMult = appliesDot(ability.effects) ? Number(actor.flags.puppetDotCostMult ?? 1) : 1;
     ability = {
       ...ability,
       baseDamage: ability.baseDamage === undefined ? undefined : ability.baseDamage * (1 + damageBonus),
+      cost: ability.cost * dotCostMult,
       effects: prolong(ability.effects),
       selfEffects: prolong(ability.selfEffects),
     };

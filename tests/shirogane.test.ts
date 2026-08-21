@@ -12,11 +12,11 @@ describe("passivas do clã Shirogane (buff de Kugutsu)", () => {
       ability,
     );
     expect(mods.costMult).toBeCloseTo(0.9);
-    expect(mods.damageMult).toBeCloseTo(1.1 * 1.15);
+    expect(mods.damageMult).toBeCloseTo(1.1);
     expect(mods.rangeBonus).toBe(1);
     expect(mods.ignoresShield).toBe(true);
-    expect(mods.effectChanceBonus.POISON).toBeCloseTo(0.15);
-    expect(mods.effectChanceBonus.BLEED).toBeCloseTo(0.1);
+    expect(mods.effectDurationBonus.POISON).toBe(1);
+    expect(mods.effectDurationBonus.BLEED).toBe(1);
   });
 
   it("não vaza pra técnicas de outra categoria (crossCategory é escopado)", () => {
@@ -32,9 +32,9 @@ describe("passivas do clã Shirogane (buff de Kugutsu)", () => {
     expect(mods.ignoresShield).toBe(false);
   });
 
-  it("desconto de criação/reforma (puppetCraftCostMult) acumula raiz + oficina mestra", () => {
-    expect(characterPassiveMods(["shirogane_raiz"]).puppetCraftCostMult).toBeCloseTo(0.9);
-    expect(characterPassiveMods(["shirogane_raiz", "shirogane_oficina_mestra"]).puppetCraftCostMult).toBeCloseTo(0.9 * 0.88);
+  it("desconto de criação/reforma pertence somente à Oficina Mestra", () => {
+    expect(characterPassiveMods(["shirogane_raiz"]).puppetCraftCostMult).toBe(1);
+    expect(characterPassiveMods(["shirogane_raiz", "shirogane_oficina_mestra"]).puppetCraftCostMult).toBeCloseTo(0.85);
     expect(characterPassiveMods([]).puppetCraftCostMult).toBe(1);
   });
 });

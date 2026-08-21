@@ -26,15 +26,15 @@ export const KUGUTSU_TREE: SkillNodeDef[] = [
   ),
   passive(
     "kugutsu_carapaca_ofensiva", "Engrenagens Ofensivas", "Carapaça ofensiva", -1.5, 1, ["kugutsu_oficina_inicial"], 2, 4, 7,
-    "Passiva: suas marionetes de carapaça ofensiva causam +12% de dano.",
+    "Passiva: suas marionetes de carapaça ofensiva causam +10% de dano.",
   ),
   passive(
     "kugutsu_carapaca_defensiva", "Estrutura Reforçada", "Carapaça defensiva", 0, 1, ["kugutsu_oficina_inicial"], 2, 4, 7,
-    "Passiva: suas marionetes de carapaça defensiva ganham +15% de vida e seus escudos recebem +15% de força.",
+    "Passiva: suas marionetes de carapaça defensiva ganham +15% de vida, e o Escudo Luz Mecânica recebe +15% de força.",
   ),
   passive(
     "kugutsu_carapaca_efeito", "Mecanismos Tóxicos", "Carapaça de efeito", 1.5, 1, ["kugutsu_oficina_inicial"], 2, 4, 7,
-    "Passiva: os efeitos aplicados por suas marionetes de carapaça de efeito duram 1 rodada a mais, e a drenagem de chakra aumenta em 5 pontos percentuais.",
+    "Passiva: Veneno, Sangramento e Queimadura aplicados por suas marionetes de carapaça de efeito duram 1 rodada a mais.",
   ),
   passive(
     "kugutsu_alcance_fios_i", "Fios de Chakra Estendidos I", "Controle", -0.75, 2, ["kugutsu_oficina_inicial"], 2, 6, 9,
@@ -50,15 +50,15 @@ export const KUGUTSU_TREE: SkillNodeDef[] = [
   ),
   passive(
     "kugutsu_carapaca_ofensiva_ii", "Mecanismo de Assalto", "Carapaça ofensiva", -1.5, 3, ["kugutsu_carapaca_ofensiva"], 3, 12, 15,
-    "Passiva: suas marionetes ofensivas recebem mais 13% de dano, totalizando +25%.",
+    "Passiva: suas marionetes ofensivas recebem mais 8% de dano, totalizando +18%.",
   ),
   passive(
     "kugutsu_carapaca_defensiva_ii", "Núcleo Blindado", "Carapaça defensiva", 0, 3, ["kugutsu_carapaca_defensiva"], 3, 12, 15,
-    "Passiva: suas marionetes defensivas recebem mais 15% de vida e de força de escudo, totalizando +30% em ambos.",
+    "Passiva: suas marionetes defensivas recebem mais 15% de vida, totalizando +30%; o Escudo Luz Mecânica também chega a +30% de força.",
   ),
   passive(
     "kugutsu_carapaca_efeito_ii", "Reservatório de Veneno", "Carapaça de efeito", 1.5, 3, ["kugutsu_carapaca_efeito"], 3, 12, 15,
-    "Passiva: os efeitos aplicados por suas marionetes de efeito duram mais 1 rodada, totalizando +2 rodadas, e a drenagem de chakra ganha mais 5 pontos percentuais.",
+    "Passiva: Veneno, Sangramento e Queimadura aplicados por suas marionetes de carapaça de efeito duram mais 1 rodada, totalizando +2 rodadas.",
   ),
   passive(
     "kugutsu_alcance_fios_ii", "Fios de Chakra Estendidos II", "Controle", -0.75, 4, ["kugutsu_alcance_fios_i"], 3, 14, 17,
@@ -82,14 +82,14 @@ export const KUGUTSU_TREE: SkillNodeDef[] = [
   ),
   passive(
     "kugutsu_carapaca_ofensiva_iii", "Coração de Guerra", "Carapaça ofensiva", -1.5, 5, ["kugutsu_carapaca_ofensiva_ii", "kugutsu_craft_grau_iii"], 4, 20, 23,
-    "Passiva: suas marionetes ofensivas chegam a +35% de dano total.",
+    "Passiva: suas marionetes ofensivas chegam a +25% de dano total.",
   ),
   passive(
     "kugutsu_carapaca_defensiva_iii", "Fortaleza Mecânica", "Carapaça defensiva", 0, 6, ["kugutsu_carapaca_defensiva_ii", "kugutsu_craft_grau_iii"], 4, 20, 23,
-    "Passiva: suas marionetes defensivas chegam a +45% de vida e de força de escudo total.",
+    "Passiva: suas marionetes defensivas chegam a +45% de vida; o Escudo Luz Mecânica também chega a +45% de força.",
   ),
   passive(
     "kugutsu_carapaca_efeito_iii", "Mestre dos Dispositivos", "Carapaça de efeito", 1.5, 5, ["kugutsu_carapaca_efeito_ii", "kugutsu_craft_grau_iii"], 4, 20, 23,
-    "Passiva: os efeitos aplicados por suas marionetes de efeito chegam a +3 rodadas de duração total, e a drenagem de chakra chega a +15 pontos percentuais.",
+    "Passiva: mecanismos de carapaça de efeito que aplicam Veneno, Sangramento ou Queimadura custam 10% menos Chakra.",
   ),
 ];

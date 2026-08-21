@@ -261,6 +261,11 @@ export function passiveMods(
       const { effectId, bonus } = p.effectDurationBonus;
       mods.effectDurationBonus[effectId] = (mods.effectDurationBonus[effectId] ?? 0) + bonus;
     }
+    if (p.effectDurationBonuses) {
+      for (const [effectId, bonus] of Object.entries(p.effectDurationBonuses) as [EffectId, number][]) {
+        mods.effectDurationBonus[effectId] = (mods.effectDurationBonus[effectId] ?? 0) + bonus;
+      }
+    }
     if (p.extraBurnStacks) mods.extraBurnStacks += p.extraBurnStacks;
     if (p.extraCrystalStacks) mods.extraCrystalStacks += p.extraCrystalStacks;
     // explosao: o gatilho mais baixo e o dano mais alto vencem

@@ -426,7 +426,7 @@
             { type: "cards", items: [
               { title: "Carapaça ofensiva", text: "Prioriza mecanismos de dano." },
               { title: "Carapaça defensiva", text: "Prioriza vida própria e escudos." },
-              { title: "Carapaça de efeito", text: "Prioriza toxinas, duração e drenagem de chakra." },
+              { title: "Carapaça de efeito", text: "Prioriza toxinas e desgaste contínuo." },
             ] },
             { type: "callout", tone: "info", title: "Limite de oficina", text: "Você pode possuir até 5 marionetes, contando construções em andamento ou prontas para recolher. Cada marionete aceita até 2 mecanismos instalados." },
           ],

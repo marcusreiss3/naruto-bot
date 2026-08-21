@@ -6,6 +6,18 @@ describe("puppetCapabilities", () => {
     expect(puppetCapabilities([]).extraAbilitySlot).toBe(false);
     expect(puppetCapabilities(["shirogane_braco_extra"]).extraAbilitySlot).toBe(true);
   });
+
+  it("reflete somente os bônus descritos nas três carapaças", () => {
+    expect(puppetCapabilities(["kugutsu_carapaca_ofensiva"]).shellDamageBonus).toBeCloseTo(0.10);
+    expect(puppetCapabilities(["kugutsu_carapaca_ofensiva_ii"]).shellDamageBonus).toBeCloseTo(0.18);
+    expect(puppetCapabilities(["kugutsu_carapaca_ofensiva_iii"]).shellDamageBonus).toBeCloseTo(0.25);
+    expect(puppetCapabilities(["kugutsu_carapaca_defensiva_iii"]).shellHpBonus).toBeCloseTo(0.45);
+    expect(puppetCapabilities(["kugutsu_carapaca_defensiva_iii"]).shellShieldBonus).toBeCloseTo(0.45);
+    expect(puppetCapabilities(["kugutsu_carapaca_efeito_ii"]).shellEffectTurns).toBe(2);
+    const effectApex = puppetCapabilities(["kugutsu_carapaca_efeito", "kugutsu_carapaca_efeito_ii", "kugutsu_carapaca_efeito_iii"]);
+    expect(effectApex.shellEffectTurns).toBe(2);
+    expect(effectApex.shellDotCostMult).toBeCloseTo(0.9);
+  });
 });
 
 describe("puppetMechanismCap", () => {

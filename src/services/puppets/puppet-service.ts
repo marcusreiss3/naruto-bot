@@ -31,7 +31,7 @@ export interface PuppetCapabilities {
   shellHpBonus: number;
   shellShieldBonus: number;
   shellEffectTurns: number;
-  shellChakraDrainBonus: number;
+  shellDotCostMult: number;
   // Braço Extra (Shirogane): personagem pode reservar a 3a vaga de mecanismo
   // numa marionete. Nao decide sozinho o teto — ver puppetMechanismCap.
   extraAbilitySlot: boolean;
@@ -43,11 +43,11 @@ export function puppetCapabilities(owned: Iterable<string>): PuppetCapabilities 
     slots: nodes.has("kugutsu_slot_3") ? 3 : nodes.has("kugutsu_slot_2") ? 2 : 1,
     leash: nodes.has("kugutsu_alcance_fios_iii") ? 5 : nodes.has("kugutsu_alcance_fios_ii") ? 4 : nodes.has("kugutsu_alcance_fios_i") ? 3 : 2,
     bonusAttack: nodes.has("kugutsu_acao_bonus"),
-    shellDamageBonus: nodes.has("kugutsu_carapaca_ofensiva_iii") ? 0.35 : nodes.has("kugutsu_carapaca_ofensiva_ii") ? 0.25 : nodes.has("kugutsu_carapaca_ofensiva") ? 0.12 : 0,
+    shellDamageBonus: nodes.has("kugutsu_carapaca_ofensiva_iii") ? 0.25 : nodes.has("kugutsu_carapaca_ofensiva_ii") ? 0.18 : nodes.has("kugutsu_carapaca_ofensiva") ? 0.10 : 0,
     shellHpBonus: nodes.has("kugutsu_carapaca_defensiva_iii") ? 0.45 : nodes.has("kugutsu_carapaca_defensiva_ii") ? 0.30 : nodes.has("kugutsu_carapaca_defensiva") ? 0.15 : 0,
     shellShieldBonus: nodes.has("kugutsu_carapaca_defensiva_iii") ? 0.45 : nodes.has("kugutsu_carapaca_defensiva_ii") ? 0.30 : nodes.has("kugutsu_carapaca_defensiva") ? 0.15 : 0,
-    shellEffectTurns: nodes.has("kugutsu_carapaca_efeito_iii") ? 3 : nodes.has("kugutsu_carapaca_efeito_ii") ? 2 : nodes.has("kugutsu_carapaca_efeito") ? 1 : 0,
-    shellChakraDrainBonus: nodes.has("kugutsu_carapaca_efeito_iii") ? 0.15 : nodes.has("kugutsu_carapaca_efeito_ii") ? 0.10 : nodes.has("kugutsu_carapaca_efeito") ? 0.05 : 0,
+    shellEffectTurns: nodes.has("kugutsu_carapaca_efeito_ii") ? 2 : nodes.has("kugutsu_carapaca_efeito") ? 1 : 0,
+    shellDotCostMult: nodes.has("kugutsu_carapaca_efeito_iii") ? 0.9 : 1,
     extraAbilitySlot: nodes.has(EXTRA_SLOT_NODE_ID),
   };
 }

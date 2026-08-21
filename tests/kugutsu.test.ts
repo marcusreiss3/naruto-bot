@@ -25,4 +25,10 @@ describe("Kugutsu", () => {
     expect(ability("kugutsu_dama_ferro").oncePerCombat).toBe(true);
     expect(ability("kugutsu_atacando_ambos_lados").oncePerCombat).toBe(true);
   });
+
+  it("faz a Carapaça Resistente renovar sua própria Barreira moderada", () => {
+    const shield = ability("kugutsu_carapaca_resistente").selfEffects?.find((effect) => effect.effectId === "SHIELD");
+    expect(shield).toMatchObject({ stacks: 7, hpPercentStacks: 0.10, duration: 2, replaceGroup: "kugutsu_carapaca_resistente" });
+    expect(ability("kugutsu_carapaca_resistente").selfEffects?.find((effect) => effect.effectId === "ROOT")).toMatchObject({ duration: 2 });
+  });
 });

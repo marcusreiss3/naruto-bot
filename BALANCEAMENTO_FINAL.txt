@@ -1,6 +1,6 @@
 ================================================================================
 BALANCEAMENTO FINAL — ÁRVORES DE DANO
-Atualizado em 11/08/2026
+Estado atual do sistema
 ================================================================================
 
 1. OBJETIVO DE CADA CATEGORIA
@@ -20,7 +20,13 @@ ESTILOS DE LUTA
     Ficam abaixo dos elementais sem modo, mas têm picos altos com modos.
 
 KEKKEI GENKAI
-    Serão revisadas separadamente.
+    Exigem a fusão de afinidades e ficam acima do elemental comum em dano,
+    sem superar as demais categorias também em eficiência de recurso.
+
+KUGUTSU
+    É uma especialização de infraestrutura: exige oficina, materiais,
+    construção e posicionamento das marionetes. A carapaça define o foco da
+    build; Shirogane é a especialização de clã para esse sistema.
 
 
 2. COMO LER AS MÉTRICAS
@@ -37,10 +43,14 @@ CUSTO / DANO
 
 PICO / PN
     Melhor golpe dividido pelo custo total em PN. Quanto maior, mais dano
-    ofensivo por PN investido. Não mede controle, defesa, regeneração ou alcance.
+    ofensivo por PN investido. Não mede controle, defesa, regeneração, alcance,
+    materiais, tempo de construção ou economia de ações.
+
+As tabelas contam técnicas de uso único por combate quando elas fazem parte do
+arsenal da categoria. Modos e transformações ficam fora das médias gerais.
 
 
-3. BALANCEAMENTO FINAL DOS CLÃS
+3. BALANCEAMENTO DOS CLÃS OFENSIVOS
 --------------------------------------------------------------------------------
 
 Os dois bônus de dano são multiplicativos.
@@ -91,9 +101,8 @@ Vento completo          47          49,37          68,51          0,74
 Kamaitachi completo     26          30,45          39,90          1,29
 Kamaitachi + Vento      73          61,36          80,40             -
 
-Hoshigaki + Água e Kamaitachi + Vento atingem números altos, mas não são
-comparáveis a uma única árvore: exigem respectivamente 86 e 73 PN. O custo
-extra em pontos e a dependência de duas árvores são o contrapeso do pico.
+O custo extra em pontos e a dependência de duas árvores são o contrapeso do
+pico dessas combinações.
 
 
 6. ELEMENTAIS
@@ -114,25 +123,15 @@ Raio 2     47         6             51,66         96,60          0,68
 Fogo e Vento lideram dano bruto. Água entrega controle e sinergias; Terra
 entrega resistência; Raio entrega mobilidade e interações com Água.
 
-Legenda: Água 1 e Raio 1 usam alvo normal. Água 2 e Raio 2 usam alvo
-Encharcado. Com a árvore completa, Água fica em 1,4375× no alvo seco e
-2,15625× contra Encharcado. Raio 2 é um teto condicional: depende de Água,
-cenário ou outra fonte de Encharcado, ao contrário de Água 2.
-
-Contra Encharcado, Raio aplica o multiplicador condicional de 1,75×; além
-disso, técnicas de corrente podem usar alvos Encharcados como condutores.
-
-As passivas grandes de dano incondicional (Fôlego do Dragão, Corte Profundo e
-Peso da Montanha, todas ×1,55) abrem no nível 25 nos três elementos. Vento e
-Terra abriam no 18 até 09/08/2026 — sete níveis antes do Fogo, sem nada que
-justificasse. Era isso que fazia a build Kamaitachi + Vento matar em 2,8
-golpes no nível 20, quando a faixa saudável é de 3 a 4.
+Água 1 e Raio 1 usam alvo normal. Água 2 e Raio 2 usam alvo Encharcado.
+Com a árvore completa, Água fica em 1,4375× no alvo seco e 2,15625× contra
+Encharcado. Raio recebe multiplicador condicional de 1,75× contra Encharcado.
 
 
 7. ESTILOS DE LUTA
 --------------------------------------------------------------------------------
 
-Comparação no nível 45, com as passivas próprias de cada árvore E com as
+Comparação no nível 45, com as passivas próprias de cada árvore e com as
 passivas genéricas de Taijutsu. Modos não entram nestes números.
 
 Estilo              PN   Jutsus de dano   Dano médio   Melhor golpe   Custo/dano
@@ -141,197 +140,19 @@ Punho Forte        127         9             28,51         42,77          0,94
 Punho Arhat         22         6             29,70         43,55          0,80
 Punho Adamantino    33         5             40,35         58,50          0,77
 
-Os números acima não incluem modos. O Punho Forte tem o maior investimento,
-mas seus Portões mudam seu teto: com o 8º Portão, o pico (Guy Noturno: 52 base
-× 2,50 do portão × 1,08 da Disciplina Corporal × 1,20 da Maestria Marcial)
-chega a aproximadamente 168,5. Esse valor é compensado por 80 HP perdidos por
-turno e pela impossibilidade de fechar ou trocar o Portão antes da morte.
+O Punho Forte ganha um teto temporário com os Portões Internos. O 8º Portão
+aplica 2,50× ao dano de Taijutsu, causa 80 HP de desgaste por turno e não pode
+ser fechado ou trocado antes da morte.
 
 
-8. NÚMEROS FINAIS
+8. KEKKEI GENKAI
 --------------------------------------------------------------------------------
 
-DANO REAL — arsenal médio com passivas próprias, sem transformação
+Cristal, Vapor, Calor, Lava, Explosão, Poeira e Gelo exigem a conclusão das
+combinações elementais correspondentes. O alto custo de obtenção é o motivo
+para ficarem acima do elemental comum em dano.
 
-  Nível   Bukijutsu   Elemental   Clã   Estilo   Kekkei Genkai*
-  nv 10      25,91       20,62    22,57   18,30       23,71
-  nv 20      33,54       30,86    32,16   22,70       32,70
-  nv 30      36,37       34,78    36,77   27,37       47,25
-  nv 45      36,37       37,96    37,17   32,85       57,02
-
-MELHOR GOLPE DISPONÍVEL — com passivas, sem transformação
-
-  Nível   Bukijutsu   Elemental   Clã   Estilo   Kekkei Genkai*
-  nv 10      29,90       24,34    25,02   23,04       28,41
-  nv 20      38,09       41,51    40,35   29,84       39,56
-  nv 30      50,25       52,48    49,20   40,23       60,25
-  nv 45      50,25       63,07    50,20   48,27       82,54
-
-CUSTO / DANO REAL — menor é melhor
-
-  Nível   Bukijutsu   Elemental   Clã   Estilo   Kekkei Genkai*
-  nv 10      0,92        0,99     0,91   1,03        1,39
-  nv 20      1,05        0,80     0,92   1,03        1,22
-  nv 30      1,08        0,81     0,90   1,00        0,94
-  nv 45      1,08        0,82     0,91   0,83        0,87
-
-* NÚMEROS TEÓRICOS — nenhum personagem tem esse dano de verdade nesses
-níveis. A coluna usa a mesma fórmula das outras (nó com reqLevel ≤ N,
-ignorando de onde o personagem tirou o nó), mas Kekkei Genkai tem um gate
-que as outras não têm: nenhuma das sete é alcançável antes do nível 35 sem
-desconto de clã (ver capítulo 12), e mesmo com desconto (Bakurei/Explosão,
-Yuki/Gelo, Onoki/Poeira) o mínimo real fica perto do nível 12-22, não 10.
-No nv10 da tabela, Explosão nem entra na média (não tem golpe de dano
-liberado nesse ponto da própria árvore) — dividido pelas 6 linhagens que
-têm. Trate estas três linhas como "se a linhagem existisse desde o nível 1,
-crescendo do próprio começo da árvore" — útil pra comparar a FORMA da curva
-com as outras classes, não pra afirmar que alguém bate isso nesse nível.
-
-No nv45 Kekkei Genkai lidera dano médio (57,02) e melhor golpe (82,54), mas
-a margem contra a coluna Elemental (37,96 / 63,07) é maior do que parece
-porque essa coluna inclui Água e Raio medidos em alvo seco. Contra o Fogo
-(47,35 / 80,60), que é o elemental no teto, a diferença real é +20% no dano
-médio e +2% no melhor golpe — que é o "um pouco mais forte" pretendido.
-
-Em custo/dano, Kekkei Genkai (0,87) fica ATRÁS de Elemental (0,82) e Estilo
-(0,83), perto de Clã (0,91) e só à frente de Bukijutsu (1,08): o grupo bate
-mais forte por golpe, mas gasta mais chakra por ponto de dano que o
-elemental comum. Não vence mais nenhuma coluna nas três métricas ao mesmo
-tempo — antes de 12/08/2026 vencia todas as três (0,70 de custo/dano
-incluído), o que era dominância estrita e foi corrigido em duas rodadas: a
-primeira cortou o multiplicador de dano (2,025x → 1,82x); a segunda, no
-mesmo dia, subiu o custo de chakra em +12% pra fechar a lacuna que ainda
-sobrava em custo/dano mesmo depois do corte de dano (ver capítulo 12).
-
-A curva teórica (linhas com *) reforça que não sobrou dominância constante:
-no nv20, o melhor golpe teórico de KKG (39,56) fica ABAIXO do Elemental
-(41,51) — a única faixa em que isso acontece. KKG só volta a liderar a
-partir do nv30, quando os ápices das árvores (nível 30+) começam a entrar.
-
-COMO AS TABELAS DE CLASSES SÃO CALCULADAS
-
-Clã: média dos 9 clãs de dano dos capítulos 3 e 4 (Akimichi, Inuzuka, Kaguya,
-Hyuuga, Raikage, Hoshigaki, Chinoike, Kamaitachi, Hozuki) — não o roster
-completo de clãs, que inclui vários de suporte puro sem multiplicador de dano
-(Nara, Aburame, Uzumaki...). Cada clã considera só as passivas próprias
-permanentes. Não considera afinidades externas ou modos/transformações.
-
-Estilo de luta: média de Punho Forte, Punho Arhat e Punho Adamantino, cada um
-com a árvore própria do estilo mais as passivas genéricas de Taijutsu. Não
-considera modos, Portões ou outras transformações temporárias.
-
-Elemental: média dos 5 elementos básicos (Fogo, Água, Vento, Terra, Raio),
-alvo seco, só passivas próprias de cada elemento. Kekkei genkai NÃO entra
-aqui — tem coluna própria (ver capítulo 12). Técnica de CLÃ com natureza de
-chakra também não entra aqui, mesmo tendo campo de elemento: ela é contada
-na coluna Clã. O escopo é o NÓ DA ÁRVORE, não a etiqueta de elemento da
-habilidade.
-
-Kekkei Genkai: média das 7 linhagens (Cristal, Vapor, Calor, Lava, Explosão,
-Poeira, Gelo) no nível 45, só passivas próprias — mesmo cálculo do capítulo
-12. Sem afinidade externa nem modo/transformação, igual às outras colunas.
-
-O QUE FICA DE FORA DE TODAS AS TABELAS
-
-Técnica que exige TRANSFORMAÇÃO aberta. Na prática são as cinco do Punho
-Forte que dependem de Portão — Lótus Oculta, Pavão do Amanhecer, Tigre
-Diurno, Elefante do Anoitecer e Guy Noturno — mais os próprios nós de Portão.
-Uso único por combate NÃO é motivo de exclusão por si só: Kirin e Cadeia do
-Desastre Celestial entram normalmente.
-
-Até 06/08/2026 esta regra não estava escrita e era aplicada de forma
-inconsistente: Pavão e Tigre entravam na conta do Punho Forte, mas Elefante e
-Guy não. Por isso o Estilo caiu de 50,43 pra 48,27 no melhor golpe do nv45 —
-não houve nerf nenhum, só a regra passou a valer pras cinco.
-
-HIERARQUIA POR FAIXA DE NÍVEL — dano real, sem modos ou afinidades externas
-
-  Início (nv 10):  Bukijutsu > Clã > Elemental > Estilo
-  Meio   (nv 20):  Bukijutsu > Clã > Elemental > Estilo
-  Meio   (nv 30):  Clã > Bukijutsu > Elemental > Estilo
-  Final  (nv 45):  Kekkei Genkai > Elemental > Clã > Bukijutsu > Estilo
-
-Bukijutsu cumpre o objetivo de começar forte e perder eficiência depois (o
-custo/dano dele só piora nível a nível, o único assim) — inclusive lidera
-o início de jogo, antes do Clã assumir na faixa do meio. No nível 45, o
-Elemental ultrapassa o Clã mesmo sem afinidade nenhuma (37,96 contra 37,17) —
-o clã só fica claramente à frente do elemental somando a árvore externa
-(ver capítulo 4), que é exatamente o que o capítulo 1 promete. Estilo fica
-atrás em dano médio a faixa toda, mas o melhor golpe dele se aproxima do
-resto no fim de jogo (nv 45: 48,27, quase igual ao Clã) — isso sem contar
-os Portões, que mudam o teto dele por completo (ver capítulo 9).
-
-
-9. TAIJUTSU E MODOS
---------------------------------------------------------------------------------
-
-Maestria Marcial no nível 40: +20% de dano em Taijutsu.
-Estilo no nível 45: dano médio sem modo 32,85; melhor golpe 48,27; custo/dano 0,83.
-8º Portão: 2,50× em Taijutsu, 80 HP por turno e irreversível até a morte.
-Pico estimado com 8º Portão: aproximadamente 168,5.
-
-
-10. VIDA E SOBREVIVÊNCIA
---------------------------------------------------------------------------------
-
-Fórmula: HP = 100 + nível × 3 + taijutsu × 1, multiplicado pelos bônus
-percentuais das passivas de vida da árvore de Fundamentos de Taijutsu
-(Vigor de Combate +10%, Corpo Temperado +8%, Resistência Física +5% —
-somam entre si, até +23%).
-
-O peso era 2/2 até 09/08/2026. O problema não era o piso: quem investe só o
-mínimo em taijutsu já sobrevivia bem. Era o TOPO — cada nível dá 4 pontos de
-atributo, então quem despejava tudo em taijutsu ganhava 5× mais HP por
-level-up que quem não investia nada, e essa distância só crescia (1,9× no
-nv10, 3,5× no nv45). Mover peso do atributo para o nível encolhe o topo sem
-mexer no piso.
-
-GOLPES ATÉ MATAR, no piso realista de investimento em taijutsu
-(o mínimo para comprar as passivas de vida já disponíveis no nível)
-
-  Nível   HP     Golpes até morrer
-  nv 10   165          5,5
-  nv 20   201          4,8
-  nv 30   271          5,2
-  nv 45   326          5,2
-
-A faixa saudável de referência é de 3 a 4 golpes, mas essa métrica assume
-dano cheio sem NENHUMA reação — e 21% do arsenal com dano já ignora
-Bloqueio, Aparo ou Esquiva por design. Com as reações funcionando, o número
-real é maior que o da tabela, então uma folga até uns 5 golpes é margem de
-segurança, não gordura.
-
-Para referência do outro extremo, no nível 45: um build de Taijutsu completo
-(Punho Forte + Fundamentos, 139 de taijutsu) chega a 460 de HP, e quem
-despeja 100% dos pontos de atributo em taijutsu (177) chega a 507.
-
-
-11. VEREDITO FINAL
---------------------------------------------------------------------------------
-
-Bukijutsu é melhor no começo e perde eficiência no final.
-Elementais comuns são a base de comparação.
-Clãs ofensivos ficam próximos ou acima dos elementais com afinidades.
-Estilos de luta ficam abaixo dos elementais sem modo e têm explosão temporária.
-Kekkei Genkai ficam acima do resto em dano no nv45 (médio 57,02 contra 47,35
-do Fogo, o elemental no teto), mas NÃO em eficiência: o custo/dano delas
-(0,87) fica atrás de Elemental (0,82) e Estilo (0,83), perto de Clã (0,91).
-Batem mais forte por golpe, gastando mais chakra por golpe — e são o único
-grupo sem presença nenhuma antes do nível 35. Ver capítulo 12.
-
-
-12. KEKKEI GENKAI
---------------------------------------------------------------------------------
-
-Cristal, Vapor, Calor, Lava, Explosão, Poeira e Gelo. Diferente das árvores
-dos capítulos anteriores, aqui o "custo de entrada" não é só o PN da própria
-árvore: todas as sete só abrem depois de completar uma combinação de árvores
-elementais básicas inteiras (ver `KEKKEI_GENKAI_RECIPES` em
-kekkei-genkai.ts) — o método de obtenção mais caro do jogo é o motivo pelo
-qual elas têm que bater mais forte que o elemental comum.
-
-COMPARATIVO NO NÍVEL 45, com as passivas próprias (script:
-`npx tsx scripts/kkg-balance-report.ts`)
+COMPARATIVO NO NÍVEL 45, com as passivas próprias
 
 Linhagem    PN   nós  passivas  jutsus  Dano médio  Melhor golpe  Custo/dano  Pico/PN  nvS
 --------------------------------------------------------------------------------------------
@@ -343,34 +164,24 @@ Vapor       26     8      5        3       54,60        83,72        0,77      3
 Calor       26     8      5        3       53,39        83,72        0,84      3,22    38
 Gelo        53    14      5        9       50,05        83,72        0,80      1,58    38
 
-COMO COMPARAR COM O ELEMENTAL — a média do capítulo 6 (dano médio 37,96,
-melhor golpe 63,07) é enganosa pra esta conta, porque inclui Água (28,43) e
-Raio (29,52) medidos em ALVO SECO, que é o estado em que os dois são fracos
-de propósito. A comparação honesta usa os elementos que já estão no teto:
-
   Referência                     Dano médio   Melhor golpe
+  ---------------------------------------------------------
   Fogo (elemental mais forte)        47,35        80,60
   Vento                              49,37        68,51
   Elemental com setup feito*         45,23        76,82
   MÉDIA KEKKEI GENKAI                57,02        82,54
-  * Água e Raio contados em alvo Encharcado (Água 2 / Raio 2 do capítulo 6)
 
-Contra essa régua, Kekkei Genkai fica ~15-26% acima em dano médio e ~2-8%
-acima no melhor golpe — "um pouco mais forte", que é o alvo. Contra a média
-crua do capítulo 6 o número parece +50%, mas isso mede KKG contra Água e
-Raio desmontados, não contra o que o elemental realmente entrega jogando bem.
+  * Água e Raio contados em alvo Encharcado.
 
-Uma ressalva estrutural que nenhum ajuste de número resolve: "dano médio"
-premia árvore CURTA. Vapor tem 3 jutsus (16/28/46 de base) e Fogo tem 8
-(12/16/18/20/22/28/32/40) — os golpes fracos de rank baixo do Fogo entram na
-média e puxam pra baixo, enquanto o Vapor não tem nenhum. Parte da diferença
-que sobra é isso, não poder real: na prática os dois usam o melhor golpe
-disponível, e aí a distância é de 2-8%, não de 20%.
+O melhor golpe de Kekkei Genkai fica próximo do teto elemental, enquanto o
+dano médio fica acima por exigir fusão. Sua eficiência de Chakra (0,87) fica
+atrás de Elemental (0,82) e Estilo (0,83), e próxima de Clã (0,91).
 
-CUSTO TOTAL DE OBTENÇÃO — PN da(s) árvore(s) elemental(is) exigida(s) pela
-fusão (capítulo 6) + PN da própria árvore de KKG. Sem afinidade de clã.
+CUSTO TOTAL DE OBTENÇÃO — PN das árvores elementais exigidas + PN da própria
+árvore de Kekkei Genkai. Sem afinidade de clã.
 
   Linhagem    Árvores exigidas         PN prévio  + PN próprio  = Total
+  ------------------------------------------------------------------------
   Calor       Fogo + Vento                    100          26      126
   Vapor       Fogo + Água                     105          26      131
   Explosão    Terra + Raio                     98          32      130
@@ -379,125 +190,165 @@ fusão (capítulo 6) + PN da própria árvore de KKG. Sem afinidade de clã.
   Cristal     Terra + Água                     103          62      165
   Poeira      Fogo + Terra + Vento             151          31      182
 
-Explosão (Bakurei), Gelo (Yuki) e Poeira (Onoki) fundem com 25% de cada
-árvore em vez de 100% pra quem já é do clã dono do kekkei genkai — um
-desconto de clã, não um problema de balanceamento (mesma lógica das
-afinidades naturais do capítulo 4). Isso também abre um caminho de fusão
-bem mais cedo (~nível 12 no caso otimista, contra o piso de 35 de todo
-mundo), então o balanceamento nv45 do capítulo não é suficiente sozinho
-pra esses três — ver capítulo 8 pra checagem nível a nível.
+Bakurei, Yuki e Onoki podem fundir a Kekkei Genkai associada com 25% de cada
+árvore elemental exigida. Esse é o desconto de afinidade natural do clã.
 
-O QUE MUDOU NESTA REVISÃO (11/08/2026, com ajuste em 12/08/2026)
 
-Antes desta revisão, o balanceamento de KKG nunca tinha sido conferido, e a
-comparação com o custo de obtenção real mostrava dois furos que o próprio
-código já sinalizava em comentário mas nunca tinha corrigido:
+9. KUGUTSU E SHIROGANE
+--------------------------------------------------------------------------------
 
-  - Poeira (Jinton) tem no `enums.ts` o rótulo explícito de "kekkei genkai
-    mais forte do jogo" e a passiva certa pra isso (na época 2,17x contra o
-    2,025x padrão dos outros KKG, em `passives.ts`) — mas as 4 técnicas
-    nunca passavam de rank A. Era, na prática, a PENÚLTIMA linhagem em dano
-    (64,02 de médio) apesar de ser a MAIS CARA de obter (151 PN só nas
-    árvores elementais prévias — mais que qualquer outra).
-  - Vapor e Calor tinham o comentário "devem empatar no mesmo patamar do
-    Cristal" no cabeçalho da árvore de Lava, mas nunca ganharam a
-    equalização que Lava e Explosão já tinham recebido: paravam em rank A,
-    3 jutsus só, sem ápice.
+Kugutsu usa mecanismos instalados em marionetes, não jutsus comprados
+diretamente na árvore. Cada instalação exige nível, a Oficina do Grau correto,
+Ryō, materiais e tempo de construção. Uma marionete comporta dois mecanismos;
+o Braço Extra de Shirogane libera um terceiro mecanismo para uma única
+marionete do personagem.
 
-A correção NÃO criou golpe novo nenhum (as técnicas do jogo vêm da obra
-original) — promoveu a própria técnica de ponta de cada árvore pro posto de
-S-rank/ápice, igual Cristal/Lava/Explosão/Gelo já faziam:
+PROGRESSÃO DOS MECANISMOS
 
-  - Vapor: Chute em Propulsão (era A, nível 16) virou S, nível 38. baseDamage
-    40→46, custo 48→58, Corrosão 2/3 rodadas → 3/4 rodadas.
-  - Calor: Assassinato de Calor Extremo (era A, nível 16) virou S, nível 38.
-    baseDamage 34→46, custo 48→62. Passou a aplicar Desidratação (a
-    identidade própria do Calor) em vez de Queimadura genérica — o golpe
-    mais forte da árvore agora mostra a cara do próprio elemento.
-  - Poeira: Projéteis (era A, nível 26) virou S, nível 38. baseDamage
-    34→46, custo 60→68, Desintegração 1→2 acúmulos (some com o acúmulo
-    extra do Estilhaço de Poeira pra colapsar a defesa do alvo num golpe
-    só — mesmo padrão que o Cristal já usa no S-rank dele).
+  Grau     Níveis dos mecanismos   Oficina exigida
+  ------------------------------------------------------------
+  I                 4–6            Oficina de Marionetes
+  II               10–15           Oficina de Precisão
+  III              20–22           Arquiteto de Marionetes
 
-Cristal ganhou receita de fusão nesta revisão (Terra + Água) — antes não
-tinha nenhuma ("fica de fora por enquanto"), então ninguém chegava nela em
-jogo apesar dos números já estarem balanceados. Com 165 PN de custo total,
-fica entre Gelo e Poeira — mas o melhor golpe dela fecha no mesmo teto
-padrão (83,72), não acima: o investimento extra compra versatilidade (15
-nós, 10 jutsus, controle e defesa) em vez de um teto de dano maior, o que
-também explica o pior custo/dano do grupo (0,96).
+Os mecanismos de Grau III mais fortes exigem duas marionetes em campo e são
+limitados a um uso por combate. Dama de Ferro também exige o alvo Imobilizado,
+uma marionete com Capturar e outra com Lâmina Agulha.
 
-AJUSTE DE 12/08/2026 — multiplicador bruto cortado
+REFERÊNCIA DE DANO — CARAPAÇA OFENSIVA, SEM SHIROGANE
 
-A revisão de 11/08 corrigiu os furos internos (Poeira/Vapor/Calor sem ápice)
-mas deixou o grupo forte demais em relação ao resto do jogo: dano médio
-63,40 e melhor golpe 91,79, contra 47,35/80,60 do Fogo — E ainda com o
-melhor custo/dano do jogo (0,70 contra 0,82 do elemental). Isso é dominância
-estrita, não "um pouco mais forte", e pesava especialmente nos 3 clãs que
-fundem cedo com desconto.
+Nível    Mecanismos ofensivos disponíveis   Dano médio   Melhor golpe   Custo/dano
+-------------------------------------------------------------------------------------
+nv 10                 4                         29,98        45,10          0,93
+nv 20                 7                         42,14        63,75          0,92
+nv 30                 8                         44,84        63,75          0,94
+nv 45                 8                         44,84        63,75          0,94
 
-O multiplicador de passiva de todo KKG caiu de 2,025x (1,35 raiz × 1,50
-ápice) pra 1,82x (1,30 × 1,40) — ficando ABAIXO do elemental básico
-(2,015x), não acima. Poeira caiu de 2,17x pra 1,9575x (1,35 × 1,45),
-continuando a mais alta do grupo. baseDamage, nível e PN não foram tocados
-nesta etapa: melhor golpe caiu pra 82,54 (contra 80,60 do Fogo — +2%), dano
-médio pra 57,02 (contra 47,35 — +20%). O teto de 93,15 que todas as
-linhagens compartilhavam virou 83,72.
+Esta referência considera os bônus totais da carapaça ofensiva: +10% no nível
+4, +18% no nível 12 e +25% no nível 20. No topo, o multiplicador efetivo da
+carapaça é 1,25×.
 
-Isso resolveu dano médio e melhor golpe, mas não bastou sozinho: custo/dano
-caiu junto com o dano (o multiplicador de passiva afeta os dois, e custo em
-chakra não mudou), fechando em 0,77 — comparado contra o Fogo (0,59) isso
-parecia pior, mas comparado contra a MÉDIA da coluna Elemental do capítulo 8
-(0,82) o KKG ainda vencia. Ou seja: mesmo depois do corte, Kekkei Genkai
-continuava batendo Bukijutsu, Elemental, Clã E Estilo nas três métricas ao
-mesmo tempo — só que por uma margem menor. Ainda era dominância estrita.
+SHIROGANE — ESPECIALIZAÇÃO SOBRE KUGUTSU
 
-AJUSTE DE 12/08/2026 (parte 2) — custo de chakra
+O clã não ganha um arsenal independente: ele melhora todas as técnicas de
+marionete. No ápice, a build completa reúne:
 
-Primeira tentativa: +12% uniforme no custo de chakra de todo jutsu de dano
-das 7 linhagens. Corrigiu a média do grupo, mas era injusto — Cristal
-(0,96), Poeira (0,91) e Explosão (0,89) já tinham custo/dano igual ou pior
-que a própria média antes de qualquer ajuste; não eram a causa do problema
-e não precisavam pagar. Vapor (0,62), Calor (0,68), Gelo (0,64) e Lava
-(0,73) é que puxavam a média do grupo pra baixo.
+  - 10% menos Chakra nas técnicas de marionete;
+  - 15% menos Ryō e materiais para criar ou reconstruir marionetes;
+  - +10% de dano nas técnicas ofensivas de marionete;
+  - +1 de alcance das técnicas de marionete;
+  - uma terceira vaga de mecanismo em uma única marionete;
+  - técnicas ofensivas que ignoram Barreira no ápice.
 
-Reformulado: Cristal/Poeira/Explosão voltaram pro custo original (calibrado
-por `suggestedJutsuCost()`, sem desvio nenhum). Só Vapor/Calor/Gelo/Lava
-levam aumento — +24,7% em vez de +12%, pra fechar a MESMA média de grupo
-(0,87) taxando só quem causava o problema. baseDamage/dano/PN/nível
-continuam intocados nas duas rodadas.
+No nível 22, com a carapaça ofensiva completa, Shirogane leva o multiplicador
+de dano da marionete a 1,25 × 1,10 = 1,375×. O arsenal de oito mecanismos
+ofensivos fica em aproximadamente 49,32 de dano médio, 70,13 no melhor golpe
+e 0,77 de custo/dano após a redução de Chakra.
 
-De caminho, achamos que a referência usada pra julgar "o S-rank de Vapor tá
-barato" estava errada: a tabela de custo por rank da skill `ninjutsu-
-authoring` dizia que rank S custa 70-80% do pool, mas os 5 elementos
-básicos hoje custam 50-70% (Fogo 52, Água 50, Vento 67, Terra 70, Raio 70,
-média 62%) — a tabela nunca foi atualizada depois do corte de custo que
-aconteceu nesses elementos. Corrigida pra 50-83%, a faixa real medida
-contra as 12 linhagens (básicos + KKG) em 12/08/2026.
+Esse teto precisa ser lido com as restrições próprias de Kugutsu: construção,
+materiais, Chakra do condutor, alcance dos fios, ação comum compartilhada
+com o condutor, posição no campo e destruição permanente da marionete até a
+reconstrução.
 
-Resultado final: custo/dano 0,87 — atrás de Elemental (0,82) e Estilo
-(0,83), perto de Clã (0,91), só à frente de Bukijutsu (1,08). Kekkei Genkai
-não vence mais nenhuma métrica contra TODAS as outras colunas ao mesmo
-tempo: lidera dano médio e melhor golpe, mas é a segunda pior eficiência de
-chakra do jogo. O teto de melhor golpe (83,72 / 90,05 pra Poeira) e o dano
-médio (57,02) continuam os da parte 1 — só o custo de usar mudou.
+As carapaças defensiva e de efeito seguem outros objetivos e não entram na
+média de dano. A defensiva concede até +45% de Vida à marionete e amplifica
+somente o Escudo Luz Mecânica, que protege a própria marionete. Carapaça
+Resistente protege o condutor por duas rodadas com 7 pontos fixos e 10% da
+Vida máxima, renovando sua própria Barreira ao reaplicar. A carapaça de efeito
+amplia Veneno, Sangramento e Queimadura em até duas rodadas, com teto de cinco;
+seu ápice reduz em 10% o Chakra dos mecanismos que aplicam esses efeitos.
 
-AJUSTE DE 12/08/2026 — pico de poder cedo do Onoki
 
-A tabela do nv45 não capturava um problema: Onoki funde Poeira com só 25%
-de Fogo+Terra+Vento, o que pode acontecer por volta do nível 12 — bem antes
-do piso de 35 que vale pro resto. No reqLevel antigo, isso destravava
-Pilar (jinton_pilar, indefensável) com 44,8 de dano ainda nesse nível, mais
-forte que a coluna nv20 inteira do capítulo 8. Os reqLevel de Pilar,
-Fragmentação Progressiva, Erosão Absoluta e Cônica subiram (11/16/16/24 →
-22/27/27/32) sem tocar em dano, custo ou PN — o pico de 44,8 continua
-existindo, só abre por volta do nível 22 em vez de 12, dentro da faixa
-normal do bracket nv20-30. Não afeta quem funde por 100% (o piso real já
-era 35 antes disso).
+10. NÚMEROS FINAIS
+--------------------------------------------------------------------------------
 
-Domo de Iceberg (Gelo) foi corrigido separadamente: a Barreira usava só
-stacks fixo (16), o único efeito SHIELD do jogo inteiro sem o par
-flat + % do HP máximo que todo outro Barreira usa. Virou 9 + 13% do HP,
-mesmo par já usado em Barreiras de porte parecido.
+DANO REAL — arsenal médio com passivas próprias, sem transformação
+
+  Nível   Bukijutsu   Elemental   Clã   Estilo   Kekkei Genkai*   Kugutsu**
+  ---------------------------------------------------------------------------
+  nv 10      25,91       20,62    22,57   18,30       23,71          29,98
+  nv 20      33,54       30,86    32,16   22,70       32,70          42,14
+  nv 30      36,37       34,78    36,77   27,37       47,25          44,84
+  nv 45      36,37       37,96    37,17   32,85       57,02          44,84
+
+MELHOR GOLPE DISPONÍVEL — com passivas próprias, sem transformação
+
+  Nível   Bukijutsu   Elemental   Clã   Estilo   Kekkei Genkai*   Kugutsu**
+  ---------------------------------------------------------------------------
+  nv 10      29,90       24,34    25,02   23,04       28,41          45,10
+  nv 20      38,09       41,51    40,35   29,84       39,56          63,75
+  nv 30      50,25       52,48    49,20   40,23       60,25          63,75
+  nv 45      50,25       63,07    50,20   48,27       82,54          63,75
+
+CUSTO / DANO REAL — menor é melhor
+
+  Nível   Bukijutsu   Elemental   Clã   Estilo   Kekkei Genkai*   Kugutsu**
+  ---------------------------------------------------------------------------
+  nv 10       0,92        0,99     0,91    1,03        1,39          0,93
+  nv 20       1,05        0,80     0,92    1,03        1,22          0,92
+  nv 30       1,08        0,81     0,90    1,00        0,94          0,94
+  nv 45       1,08        0,82     0,91    0,83        0,87          0,94
+
+* Kekkei Genkai usa uma projeção teórica por nível: as fusões têm requisitos
+de obtenção próprios e não estão disponíveis desde o início da progressão.
+
+** Kugutsu usa carapaça ofensiva, sem Shirogane. A categoria exige oficina,
+materiais, construção e marionete ativa; os números não representam uma técnica
+comprada diretamente na árvore. O combo completo de Shirogane é detalhado no
+capítulo 9 e não entra nesta coluna para não misturar categoria e clã.
+
+COMO AS TABELAS SÃO CALCULADAS
+
+Clã: média dos nove clãs ofensivos da tabela do capítulo 3, apenas com
+passivas próprias permanentes e sem afinidade externa ou transformação.
+
+Estilo de luta: média de Punho Forte, Punho Arhat e Punho Adamantino, com a
+árvore própria e as passivas genéricas de Taijutsu, sem modos ou Portões.
+
+Elemental: média dos cinco elementos básicos, em alvo seco e apenas com as
+passivas próprias de cada elemento.
+
+Kekkei Genkai: média das sete linhagens, apenas com passivas próprias e sem
+afinidade externa ou transformação.
+
+Kugutsu: média dos mecanismos de dano já liberados no nível, com carapaça
+ofensiva e seus bônus próprios. Técnicas de Grau III de uso único entram no
+arsenal quando seus requisitos de duas marionetes são atendidos.
+
+
+11. VIDA E SOBREVIVÊNCIA
+--------------------------------------------------------------------------------
+
+Fórmula: HP = 100 + nível × 3 + Taijutsu, multiplicado pelos bônus percentuais
+das passivas de vida da árvore de Fundamentos de Taijutsu. Vigor de Combate,
+Corpo Temperado e Resistência Física somam até +23% de Vida máxima.
+
+GOLPES ATÉ MATAR, no piso realista de investimento em Taijutsu
+
+  Nível   HP     Golpes até morrer
+  ---------------------------------
+  nv 10   165          5,5
+  nv 20   201          4,8
+  nv 30   271          5,2
+  nv 45   326          5,2
+
+Esta métrica assume dano cheio, sem reação defensiva. Bloqueio, Aparo,
+Esquiva, Barreira, terreno e controle alteram a duração real do combate.
+
+
+12. VEREDITO FINAL
+--------------------------------------------------------------------------------
+
+Bukijutsu é melhor no começo e perde eficiência no final.
+Elementais comuns são a base de comparação.
+Clãs ofensivos ficam próximos ou acima dos elementais quando somados às suas
+afinidades naturais.
+Estilos de luta ficam abaixo dos elementais sem modo e têm picos temporários.
+Kekkei Genkai lideram dano médio e melhor golpe no fim da progressão, mas não
+lideram a eficiência de Chakra.
+Kugutsu ofensivo tem dano alto e eficiência competitiva, equilibrados por
+preparo econômico, requisitos de oficina, dependência da marionete em campo e
+economia de ações do condutor. Shirogane eleva esse teto e deve ser acompanhado
+como combinação de categoria + clã, não como um clã ofensivo genérico.
 
 ================================================================================

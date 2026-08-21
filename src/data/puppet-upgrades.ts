@@ -27,7 +27,7 @@ export const PUPPET_SHELLS: Record<PuppetShell, { name: string; description: str
     ingredients: [{ itemId: "madeira_reforcada", qty: 5 }, { itemId: "aco", qty: 3 }, { itemId: "couro", qty: 3 }],
   },
   EFFECT: {
-    name: "Carapaça de efeito", description: "Prioriza toxinas, duração e drenagem.", ryo: 200, durationHours: 4,
+    name: "Carapaça de efeito", description: "Prioriza toxinas e desgaste contínuo.", ryo: 200, durationHours: 4,
     ingredients: [{ itemId: "madeira_reforcada", qty: 4 }, { itemId: "aco", qty: 2 }, { itemId: "polvora", qty: 2 }, { itemId: "fibra_vegetal", qty: 4 }],
   },
 };
