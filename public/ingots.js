@@ -22,12 +22,12 @@ window.INGOTS_PAGE = {
   ],
 
   packages: [
-    { id: "01", title: "Pequeno Cofre", icon: "/assets/ingots/packages/pequeno-cofre.png", ingots: "Quantidade a definir", price: "R$ —" },
-    { id: "02", title: "Bolsa de Ryo", icon: "/assets/ingots/packages/bolsa-ryo.png", ingots: "Quantidade a definir", price: "R$ —" },
-    { id: "03", title: "Caixa de Suprimentos", icon: "/assets/ingots/packages/caixa-suprimentos.png", ingots: "Quantidade a definir", price: "R$ —" },
-    { id: "04", title: "Baú do Mercador", icon: "/assets/ingots/packages/bau-mercador.png", ingots: "Quantidade a definir", price: "R$ —" },
-    { id: "05", title: "Tesouro do Daimyō", icon: "/assets/ingots/packages/tesouro-daimyo.png", ingots: "Quantidade a definir", price: "R$ —" },
-    { id: "06", title: "Reserva do Hokage", icon: "/assets/ingots/packages/reserva-hokage.png", ingots: "Quantidade a definir", price: "R$ —" },
+    { id: "01", title: "Pequeno Cofre", icon: "/assets/ingots/packages/pequeno-cofre.png", ingots: "400 Ingots", price: "R$ 5,00" },
+    { id: "02", title: "Bolsa de Selos", icon: "/assets/ingots/packages/bolsa-selos.png", ingots: "850 Ingots", price: "R$ 10,00" },
+    { id: "03", title: "Caixa de Suprimentos", icon: "/assets/ingots/packages/caixa-suprimentos.png", ingots: "1.800 Ingots", price: "R$ 20,00" },
+    { id: "04", title: "Baú do Mercador", icon: "/assets/ingots/packages/bau-mercador.png", ingots: "3.200 Ingots", price: "R$ 35,00" },
+    { id: "05", title: "Tesouro do Daimyō", icon: "/assets/ingots/packages/tesouro-daimyo.png", ingots: "5.700 Ingots", price: "R$ 60,00" },
+    { id: "06", title: "Reserva do Hokage", icon: "/assets/ingots/packages/reserva-hokage.png", ingots: "10.000 Ingots", price: "R$ 100,00" },
   ],
 
   sections: [
@@ -84,40 +84,34 @@ window.INGOTS_PAGE = {
       intro: "Use `/loja-premium` para comprar e usar Giros, receber Ryō ou reorganizar sua progressão. Um Giro não permite escolher diretamente uma Vila, Clã ou Traço específico.",
       cards: [
         {
-          icon: "clan",
+          emojiId: "1539494083209461842",
           title: "Giro de Vila + Clã",
           text: "Sorteia uma nova combinação válida de Vila + Clã enquanto o personagem ainda for da Academia.",
-          meta: "Custo: 100 Ingots",
+          meta: "Custo: 400 Ingots",
         },
         {
-          icon: "trait",
+          emojiId: "1539494084660428872",
           title: "Giro de Traço",
           text: "Permite obter um novo Traço usando as probabilidades normais. Um resultado Mítico deixa você escolher entre as opções sorteadas.",
-          meta: "Custo: 100 Ingots",
+          meta: "Custo: 300 Ingots",
         },
         {
-          icon: "economy",
-          title: "10.000 Ryō",
-          text: "Adiciona 10.000 Ryō diretamente ao saldo do personagem.",
-          meta: "Custo: 100 Ingots",
-        },
-        {
-          icon: "account",
+          emojiId: "1539494086254530600",
           title: "Reset de atributos",
           text: "Devolve os pontos investidos, zera os atributos e remove as habilidades aprendidas nas Árvores de Habilidade.",
-          meta: "Custo: 100 Ingots",
+          meta: "Custo: 2.000 Ingots",
         },
         {
-          icon: "styles",
+          emojiId: "1539812355960086538",
           title: "Reset de estilos de luta",
           text: "Remove os estilos de luta aprendidos e as habilidades exclusivas de suas árvores, liberando espaço para aprender outros com os mestres. Seus atributos, nível e demais habilidades permanecem.",
-          meta: "Custo: 100 Ingots",
+          meta: "Custo: 1.500 Ingots",
         },
         {
-          icon: "account",
+          emojiId: "1539494087655165993",
           title: "Reset premium de personagem",
           text: "Permite refazer nome, rank, idade, história e aparência; também devolve os pontos investidos e remove as habilidades aprendidas nas Árvores de Habilidade. O rank volta para Academia, permitindo usar Giros de Vila + Clã novamente. Mantém nível, XP, Vila, Clã, Traço, inventário, Ryō, Ingots e Giros.",
-          meta: "Custo: 100 Ingots",
+          meta: "Custo: 5.000 Ingots",
         },
       ],
     },
@@ -182,15 +176,65 @@ window.IngotsPage = (function () {
     return `<svg aria-hidden="true" viewBox="0 0 48 48"><use href="${INGOT_ICON_SPRITE}#ingot-${escapeHtml(safeIcon)}"></use></svg>`;
   }
 
+  // IDs de emoji customizado do Discord: renderiza direto do CDN deles, sem
+  // depender do sprite local nem de um asset proprio pra cada um.
+  function discordEmojiUrl(emojiId) {
+    return `https://cdn.discordapp.com/emojis/${encodeURIComponent(emojiId)}.webp?size=96&quality=lossless`;
+  }
+
+  function cardIconMarkup(card) {
+    if (card.emojiId) return `<img src="${escapeHtml(discordEmojiUrl(card.emojiId))}" alt="" loading="lazy" decoding="async">`;
+    return ingotIcon(card.icon);
+  }
+
   function cardMarkup(card) {
     return `<article class="ingot-card">
-      <div class="ingot-card-icon">${ingotIcon(card.icon)}</div>
+      <div class="ingot-card-icon">${cardIconMarkup(card)}</div>
       <div class="ingot-card-body">
         <h3>${escapeHtml(card.title)}</h3>
         <p>${escapeHtml(card.text)}</p>
         ${card.meta && card.meta !== "Quantidade: a definir" ? `<span class="ingot-card-meta">${escapeHtml(card.meta)}</span>` : ""}
       </div>
     </article>`;
+  }
+
+  // Carrossel do "No que gastar": card so' mostra nome ate' ser clicado, e a
+  // seta avanca de 3 em 3. Cada pagina centraliza o que tiver (mesmo com
+  // menos de 3 cards na ultima).
+  function carouselCardMarkup(card, index) {
+    return `<button type="button" class="ingot-carousel-card" data-card-index="${index}" aria-expanded="false">
+      <span class="ingot-carousel-card-icon">${cardIconMarkup(card)}</span>
+      <span class="ingot-carousel-card-name">${escapeHtml(card.title)}</span>
+      <span class="ingot-carousel-card-detail">
+        <span class="ingot-carousel-card-detail-inner">
+          <span class="ingot-carousel-card-text">${escapeHtml(card.text)}</span>
+          ${card.meta && card.meta !== "Quantidade: a definir" ? `<span class="ingot-carousel-card-meta">${escapeHtml(card.meta)}</span>` : ""}
+        </span>
+      </span>
+    </button>`;
+  }
+
+  function chunk(list, size) {
+    const pages = [];
+    for (let i = 0; i < list.length; i += size) pages.push(list.slice(i, i + size));
+    return pages;
+  }
+
+  function carouselMarkup(cards) {
+    if (!cards?.length) return "";
+    const pages = chunk(cards, 3);
+    let cursor = 0;
+    const pagesMarkup = pages.map((page) => {
+      const cardsMarkup = page.map((card) => carouselCardMarkup(card, cursor++)).join("");
+      return `<div class="ingot-carousel-page">${cardsMarkup}</div>`;
+    }).join("");
+    return `<div class="ingot-carousel" data-page-count="${pages.length}">
+      <button type="button" class="ingot-carousel-arrow" data-dir="prev" aria-label="Ver produtos anteriores" disabled>‹</button>
+      <div class="ingot-carousel-viewport">
+        <div class="ingot-carousel-track">${pagesMarkup}</div>
+      </div>
+      <button type="button" class="ingot-carousel-arrow" data-dir="next" aria-label="Ver mais produtos"${pages.length < 2 ? " disabled" : ""}>›</button>
+    </div>`;
   }
 
   function packageMarkup(pkg) {
@@ -214,7 +258,7 @@ window.IngotsPage = (function () {
     return `<section class="ingot-section ingot-packages-section" aria-labelledby="ingotPackagesTitle">
       <div class="section-heading">
         <div><span class="guides-eyebrow">Loja premium</span><h2 id="ingotPackagesTitle">Pacotes de Ingots</h2></div>
-        <p>Os valores e as quantidades serão divulgados antes da abertura. O botão já mostra como funcionará o pagamento por PIX.</p>
+        <p>Quanto maior o pacote, melhor o valor por Ingot. O botão já mostra como funcionará o pagamento por PIX.</p>
       </div>
       <div class="ingot-packages-grid">${packages.map(packageMarkup).join("")}</div>
     </section>`;
@@ -239,7 +283,9 @@ window.IngotsPage = (function () {
   function sectionMarkup(section) {
     const body = section.list
       ? `<ul class="ingot-rules">${section.list.map((rule) => `<li>${escapeHtml(rule)}</li>`).join("")}</ul>`
-      : `<div class="ingot-grid">${(section.cards || []).map(cardMarkup).join("")}</div>`;
+      : section.id === "no-que-gastar"
+        ? carouselMarkup(section.cards || [])
+        : `<div class="ingot-grid">${(section.cards || []).map(cardMarkup).join("")}</div>`;
     return `<section class="ingot-section" id="ingot-section-${escapeHtml(section.id)}" aria-labelledby="ingot-title-${escapeHtml(section.id)}">
       <div class="section-heading">
         <div>
@@ -282,7 +328,7 @@ window.IngotsPage = (function () {
       </header>
 
       <p class="ingot-draft-note" role="note">
-        Sistema em preparação. Os valores marcados como <strong>a definir</strong> ainda não foram fechados — as regras abaixo já valem.
+        Sistema em preparação. O pagamento por PIX ainda não está aberto e alguns itens seguem marcados como <strong>a definir</strong> — as regras e preços abaixo já valem.
       </p>
 
       ${(data.sections || []).map((section) => `${sectionMarkup(section)}${section.id === "no-que-gastar" ? packagesMarkup(data.packages) : ""}`).join("")}
@@ -297,9 +343,32 @@ window.IngotsPage = (function () {
     function show() {
       root.innerHTML = pageMarkup(page);
       bindPaymentModal();
+      bindCarousels();
       document.title = `${page.title} — Arquivo Shinobi`;
       if (scrollContainer) scrollContainer.scrollTop = 0;
       root.querySelector("h1")?.focus({ preventScroll: true });
+    }
+
+    function updateCarouselTransform(carousel) {
+      const track = carousel.querySelector(".ingot-carousel-track");
+      const currentPage = Number(carousel.dataset.currentPage || 0);
+      if (track) track.style.transform = `translateX(-${currentPage * 100}%)`;
+    }
+
+    function updateCarouselArrows(carousel) {
+      const pageCount = Number(carousel.dataset.pageCount || 1);
+      const currentPage = Number(carousel.dataset.currentPage || 0);
+      const prev = carousel.querySelector('[data-dir="prev"]');
+      const next = carousel.querySelector('[data-dir="next"]');
+      if (prev) prev.disabled = currentPage <= 0;
+      if (next) next.disabled = currentPage >= pageCount - 1;
+    }
+
+    function bindCarousels() {
+      root.querySelectorAll(".ingot-carousel").forEach((carousel) => {
+        carousel.dataset.currentPage = "0";
+        updateCarouselArrows(carousel);
+      });
     }
 
     let paymentReturnFocus = null;
@@ -312,6 +381,23 @@ window.IngotsPage = (function () {
         paymentReturnFocus = null;
       };
       root.onclick = (event) => {
+        const arrow = event.target.closest(".ingot-carousel-arrow");
+        if (arrow) {
+          const carousel = arrow.closest(".ingot-carousel");
+          const pageCount = Number(carousel.dataset.pageCount || 1);
+          const currentPage = Number(carousel.dataset.currentPage || 0);
+          const nextPage = arrow.dataset.dir === "next" ? Math.min(pageCount - 1, currentPage + 1) : Math.max(0, currentPage - 1);
+          carousel.dataset.currentPage = String(nextPage);
+          updateCarouselTransform(carousel);
+          updateCarouselArrows(carousel);
+          return;
+        }
+        const carouselCard = event.target.closest(".ingot-carousel-card");
+        if (carouselCard) {
+          const isOpen = carouselCard.getAttribute("aria-expanded") === "true";
+          carouselCard.setAttribute("aria-expanded", String(!isOpen));
+          return;
+        }
         const buy = event.target.closest("[data-package-id]");
         if (buy) {
           const pkg = page.packages?.find((entry) => entry.id === buy.dataset.packageId);

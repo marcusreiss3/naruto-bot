@@ -10,7 +10,7 @@ import { getOrCreateCharacter } from "../services/characters/character-service.j
 import { buyPremiumProduct, chooseTraitSpin, getPremiumWallet, PremiumStoreError, startTraitSpin, useClanSpin, type PremiumWallet } from "../services/premium/ingot-store.js";
 import { blobAssetUrl } from "../services/blob/asset-manifest.js";
 import { ENV } from "../config/env.js";
-import { button, buttonRow, divider, economyContainer, factsBlock, mediaGallery, noticeBlock, text, thumbnailSection, titleBlock, v2Edit, v2Payload, type ContainerChild, type TopLevel } from "../ui/economy-components-v2.js";
+import { button, buttonRow, divider, economyContainer, factsBlock, mediaGallery, navigationRow, noticeBlock, text, thumbnailSection, titleBlock, v2Edit, v2Payload, type ContainerChild, type TopLevel } from "../ui/economy-components-v2.js";
 import { emoji, type EmojiKey } from "../ui/economy-emojis.js";
 
 const PREFIX = "loja-premium:v1";
@@ -22,11 +22,11 @@ const RARITY_LABEL: Record<string, string> = { COMUM: "Comum", RARA: "Rara", EPI
 const PRODUCT_EMOJI: Record<PremiumProductId, EmojiKey> = {
   clan_spin: "giro_cla",
   trait_spin: "giro_traco",
-  ryo_10000: "ryo",
   attribute_respec: "reset_atributos",
   fighting_style_reset: "reset_estilos",
   character_reset: "reset_personagem",
 };
+type Page = 0 | 1;
 
 function assetUrl(webPath: string): string {
   return blobAssetUrl(webPath) ?? `${SITE_URL}${webPath}`;
@@ -44,7 +44,14 @@ function productOffer(product: (typeof PREMIUM_PRODUCTS)[number]): ContainerChil
   ];
 }
 
-function panel(wallet: PremiumWallet, feedback?: string): TopLevel[] {
+function pageNav(page: Page): ContainerChild {
+  return navigationRow([
+    { id: cid("page", "0"), label: "Giros", disabled: page === 0 },
+    { id: cid("page", "1"), label: "Recursos e reorganização", disabled: page === 1 },
+  ]);
+}
+
+function panel(wallet: PremiumWallet, feedback?: string, page: Page = 0): TopLevel[] {
   const spins = PREMIUM_PRODUCTS.filter((product) => product.kind === "SPIN");
   const extras = PREMIUM_PRODUCTS.filter((product) => product.kind !== "SPIN");
   const children: ContainerChild[] = [
@@ -56,18 +63,24 @@ function panel(wallet: PremiumWallet, feedback?: string): TopLevel[] {
     ]),
   ];
   if (feedback) children.push(noticeBlock(feedback.startsWith("✅") ? "sucesso" : "erro", feedback.replace(/^[✅❌]\s*/, "")));
-  children.push(divider(), text(`## Giros\nUse ${emoji("giro_cla")} para revelar uma nova possibilidade de Vila + Clã ou ${emoji("giro_traco")} para um novo Traço.`));
-  for (const product of spins) children.push(...productOffer(product));
-  children.push(divider(), text("## Recursos e reorganização\nOpções diretas para o saldo e para reorganizar sua progressão."));
-  for (const product of extras) children.push(...productOffer(product));
+  children.push(divider(), pageNav(page));
+  if (page === 0) {
+    children.push(divider(), text(`## Giros\nUse ${emoji("giro_cla")} para revelar uma nova possibilidade de Vila + Clã ou ${emoji("giro_traco")} para um novo Traço.`));
+    for (const product of spins) children.push(...productOffer(product));
+    children.push(
+      divider(),
+      text("## Giros disponíveis\nUse os Giros que você já possui."),
+      buttonRow(
+        button({ id: cid("use-clan"), label: "Usar Giro de Vila + Clã", emojiKey: "giro_cla", disabled: wallet.clanSpins < 1 }),
+        button({ id: cid("use-trait"), label: "Usar Giro de Traço", emojiKey: "giro_traco", disabled: wallet.traitSpins < 1 }),
+      ),
+      text("-# Giros de Vila + Clã sorteiam uma nova origem válida e só podem ser usados enquanto o personagem ainda for da Academia."),
+    );
+  } else {
+    children.push(divider(), text("## Recursos e reorganização\nOpções diretas para reorganizar sua progressão."));
+    for (const product of extras) children.push(...productOffer(product));
+  }
   children.push(
-    divider(),
-    text("## Giros disponíveis\nUse os Giros que você já possui."),
-    buttonRow(
-      button({ id: cid("use-clan"), label: "Usar Giro de Vila + Clã", emojiKey: "giro_cla", disabled: wallet.clanSpins < 1 }),
-      button({ id: cid("use-trait"), label: "Usar Giro de Traço", emojiKey: "giro_traco", disabled: wallet.traitSpins < 1 }),
-    ),
-    text("-# Giros de Vila + Clã sorteiam uma nova origem válida e só podem ser usados enquanto o personagem ainda for da Academia."),
     divider(),
     text(`### ${emoji("ingots")} Sobre Ingots\n[Abra a aba de Ingots no site](${INGOTS_URL}) para ver como conseguir e no que gastar.`),
   );
@@ -125,46 +138,49 @@ async function syncOriginRoles(interaction: ButtonInteraction, villageId: Villag
 }
 
 function respecConfirmationPanel(wallet: PremiumWallet): TopLevel[] {
+  const cost = getPremiumProduct("attribute_respec")!.cost;
   return [economyContainer("obras", [
     titleBlock("reset_atributos", "Confirmar reset de atributos", "Esta ação usa Ingots e altera sua ficha"),
-    factsBlock([{ label: "Ingots", value: String(wallet.ingots) }, { label: "Custo", value: "100" }]),
+    factsBlock([{ label: "Ingots", value: String(wallet.ingots) }, { label: "Custo", value: String(cost) }]),
     divider(),
     noticeBlock("aviso", "Todos os atributos serão zerados, os pontos investidos voltarão ao saldo e as habilidades aprendidas nas Árvores de Habilidade serão removidas."),
     text("Você poderá redistribuir os pontos com `/atributos` depois do reset."),
     divider(),
     buttonRow(
-      button({ id: cid("confirm-respec"), label: "Confirmar reset por 100 Ingots", style: ButtonStyle.Danger, emojiKey: "reset_atributos" }),
+      button({ id: cid("confirm-respec"), label: `Confirmar reset por ${cost} Ingots`, style: ButtonStyle.Danger, emojiKey: "reset_atributos" }),
       button({ id: cid("cancel-respec"), label: "Cancelar", style: ButtonStyle.Secondary }),
     ),
   ])];
 }
 
 function characterResetConfirmationPanel(wallet: PremiumWallet): TopLevel[] {
+  const cost = getPremiumProduct("character_reset")!.cost;
   return [economyContainer("obras", [
     titleBlock("reset_personagem", "Confirmar reset premium", "Esta ação usa Ingots e prepara uma nova ficha"),
-    factsBlock([{ label: "Ingots", value: String(wallet.ingots) }, { label: "Custo", value: "100" }]),
+    factsBlock([{ label: "Ingots", value: String(wallet.ingots) }, { label: "Custo", value: String(cost) }]),
     divider(),
     noticeBlock("aviso", "Nome, rank, idade, aparência e história serão resetados. O rank volta para Academia, permitindo usar Giros de Vila + Clã novamente. Os pontos investidos voltarão ao saldo e as habilidades aprendidas nas Árvores de Habilidade serão removidas."),
     text("Você manterá nível, XP, Vila, Clã, Traço, inventário, Ryō, Ingots e Giros disponíveis."),
     text("Depois, use `/ficha` para preencher novamente os dados narrativos do personagem."),
     divider(),
     buttonRow(
-      button({ id: cid("confirm-character-reset"), label: "Confirmar reset por 100 Ingots", style: ButtonStyle.Danger, emojiKey: "reset_personagem" }),
+      button({ id: cid("confirm-character-reset"), label: `Confirmar reset por ${cost} Ingots`, style: ButtonStyle.Danger, emojiKey: "reset_personagem" }),
       button({ id: cid("cancel-character-reset"), label: "Cancelar", style: ButtonStyle.Secondary }),
     ),
   ])];
 }
 
 function fightingStyleResetConfirmationPanel(wallet: PremiumWallet): TopLevel[] {
+  const cost = getPremiumProduct("fighting_style_reset")!.cost;
   return [economyContainer("obras", [
     titleBlock("reset_estilos", "Confirmar reset de estilos", "Esta ação usa Ingots e reorganiza seus estilos de luta"),
-    factsBlock([{ label: "Ingots", value: String(wallet.ingots) }, { label: "Custo", value: "100" }]),
+    factsBlock([{ label: "Ingots", value: String(wallet.ingots) }, { label: "Custo", value: String(cost) }]),
     divider(),
     noticeBlock("aviso", "Todos os estilos de luta aprendidos serão removidos, junto das habilidades e técnicas exclusivas de suas árvores."),
     text("Seus atributos, nível e demais habilidades permanecem. Depois do reset, você poderá aprender outros estilos com os mestres."),
     divider(),
     buttonRow(
-      button({ id: cid("confirm-fighting-style-reset"), label: "Confirmar reset por 100 Ingots", style: ButtonStyle.Danger, emojiKey: "reset_estilos" }),
+      button({ id: cid("confirm-fighting-style-reset"), label: `Confirmar reset por ${cost} Ingots`, style: ButtonStyle.Danger, emojiKey: "reset_estilos" }),
       button({ id: cid("cancel-fighting-style-reset"), label: "Cancelar", style: ButtonStyle.Secondary }),
     ),
   ])];
@@ -219,12 +235,18 @@ export const lojaPremium: Command = {
   async handleButton(interaction: ButtonInteraction) {
     const [, , action, value, traitId] = interaction.customId.split(":");
     if (!action) return;
+    let page: Page = 0;
     try {
       const { char, wallet } = await stateFor(interaction);
       let feedback = "";
-      if (action === "buy") {
+      if (action === "page") {
+        page = value === "1" ? 1 : 0;
+        await interaction.update(v2Edit(panel(wallet, undefined, page)));
+        return;
+      } else if (action === "buy") {
         const product = getPremiumProduct(value ?? "");
         if (!product) throw new PremiumStoreError("Produto premium desconhecido.");
+        page = product.kind === "SPIN" ? 0 : 1;
         if (product.kind === "RESPEC") {
           await interaction.update(v2Edit(respecConfirmationPanel(wallet)));
           return;
@@ -238,18 +260,24 @@ export const lojaPremium: Command = {
           return;
         }
         await buyPremiumProduct(wallet.id, char.id, product.id as PremiumProductId, interaction.id);
-        feedback = product.kind === "RYO" ? `✅ ${product.ryo.toLocaleString("pt-BR")} Ryō adicionados ao seu saldo.` : `✅ ${product.name} adquirido.`;
+        feedback = `✅ ${product.name} adquirido.`;
       } else if (action === "confirm-respec") {
+        page = 1;
         const result = await buyPremiumProduct(wallet.id, char.id, "attribute_respec", interaction.id);
         feedback = `✅ Reset concluído. ${result.refundedPoints ?? 0} ponto(s) devolvido(s); atributos e habilidades das Árvores de Habilidade foram removidos.`;
       } else if (action === "confirm-character-reset") {
+        page = 1;
         const result = await buyPremiumProduct(wallet.id, char.id, "character_reset", interaction.id);
         feedback = `✅ Reset concluído. ${result.refundedPoints ?? 0} ponto(s) devolvido(s). Use /ficha para registrar o novo nome, idade, história e aparência.`;
       } else if (action === "confirm-fighting-style-reset") {
+        page = 1;
         const result = await buyPremiumProduct(wallet.id, char.id, "fighting_style_reset", interaction.id);
         feedback = `✅ Reset concluído. ${result.removedFightingStyles ?? 0} estilo(s) de luta e suas habilidades exclusivas foram removidos.`;
-      } else if (action === "cancel-respec" || action === "cancel-character-reset" || action === "cancel-fighting-style-reset" || action === "back") {
-        await interaction.update(v2Edit(panel(wallet)));
+      } else if (action === "cancel-respec" || action === "cancel-character-reset" || action === "cancel-fighting-style-reset") {
+        await interaction.update(v2Edit(panel(wallet, undefined, 1)));
+        return;
+      } else if (action === "back") {
+        await interaction.update(v2Edit(panel(wallet, undefined, 0)));
         return;
       } else if (action === "use-clan") {
         const clan = await useClanSpin(char.id, wallet.id);
@@ -271,11 +299,11 @@ export const lojaPremium: Command = {
         return;
       } else return;
       const updated = await getPremiumWallet(interaction.user.id, interaction.guildId!);
-      await interaction.update(v2Edit(panel(updated, feedback)));
+      await interaction.update(v2Edit(panel(updated, feedback, page)));
     } catch (error) {
       const state = await stateFor(interaction).catch(() => null);
       const message = `❌ ${error instanceof Error ? error.message : "Não foi possível concluir a operação."}`;
-      const payload = v2Edit(panel(state?.wallet ?? { id: "", ingots: 0, clanSpins: 0, traitSpins: 0 }, message));
+      const payload = v2Edit(panel(state?.wallet ?? { id: "", ingots: 0, clanSpins: 0, traitSpins: 0 }, message, page));
       if (interaction.replied || interaction.deferred) await interaction.editReply(payload);
       else await interaction.update(payload);
     }

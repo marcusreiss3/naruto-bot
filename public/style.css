@@ -5912,6 +5912,13 @@ details.guide-faq > div {
   filter: drop-shadow(0 0 7px rgba(214, 168, 79, .25));
 }
 
+.ingot-card-icon img {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 7px rgba(214, 168, 79, .25));
+}
+
 .ingot-card-body { position: relative; z-index: 1; min-width: 0; }
 
 .ingot-card-body h3 { margin: 0 0 6px; font-size: 16px; color: var(--text-primary); }
@@ -5927,6 +5934,163 @@ details.guide-faq > div {
   color: var(--warning);
   font-size: 12px;
   font-weight: 600;
+}
+
+.ingot-carousel {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ingot-carousel-viewport {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.ingot-carousel-track {
+  display: flex;
+  transition: transform 320ms cubic-bezier(.4, 0, .2, 1);
+}
+
+.ingot-carousel-page {
+  display: flex;
+  flex: 0 0 100%;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+  padding: 4px;
+}
+
+.ingot-carousel-card {
+  display: flex;
+  flex: 0 0 auto;
+  width: 210px;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(145deg, var(--surface-raised), var(--surface));
+  box-shadow: inset 0 1px rgba(255, 255, 255, .025);
+  color: inherit;
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+}
+
+.ingot-carousel-card:hover {
+  border-color: rgba(214, 168, 79, .5);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, .16), inset 0 1px rgba(255, 255, 255, .04);
+  transform: translateY(-2px);
+}
+
+.ingot-carousel-card[aria-expanded="true"] {
+  border-color: rgba(230, 187, 96, .55);
+  background: linear-gradient(145deg, rgba(230, 187, 96, .1), var(--surface));
+}
+
+.ingot-carousel-card-icon {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border: 1px solid rgba(214, 168, 79, .22);
+  border-radius: var(--radius-md);
+  background: radial-gradient(circle at 35% 28%, rgba(214, 168, 79, .16), var(--surface-inset) 72%);
+}
+
+.ingot-carousel-card-icon svg,
+.ingot-carousel-card-icon img {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  color: var(--rank-s);
+  filter: drop-shadow(0 0 7px rgba(214, 168, 79, .25));
+}
+
+.ingot-carousel-card-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.ingot-carousel-card-detail {
+  display: grid;
+  grid-template-rows: 0fr;
+  width: 100%;
+  opacity: 0;
+  transition: grid-template-rows 220ms ease, opacity 180ms ease;
+}
+
+.ingot-carousel-card[aria-expanded="true"] .ingot-carousel-card-detail {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.ingot-carousel-card-detail-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.ingot-carousel-card-text {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.ingot-carousel-card-meta {
+  display: inline-block;
+  padding: 4px 9px;
+  border-radius: var(--radius-xs);
+  background: var(--warning-subtle);
+  color: var(--warning);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.ingot-carousel-arrow {
+  display: grid;
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 1px solid rgba(232, 191, 103, .55);
+  border-radius: 50%;
+  background: rgba(161, 112, 33, .16);
+  color: #f4d58f;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color 140ms ease, background 140ms ease, transform 140ms ease;
+}
+
+.ingot-carousel-arrow:hover:not(:disabled) {
+  border-color: rgba(244, 213, 143, .78);
+  background: rgba(176, 124, 40, .28);
+  transform: translateY(-1px);
+}
+
+.ingot-carousel-arrow:focus-visible {
+  outline: 2px solid var(--warning);
+  outline-offset: 2px;
+}
+
+.ingot-carousel-arrow:disabled {
+  opacity: .35;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .ingot-carousel-card { width: 156px; padding: 16px 12px; }
 }
 
 .ingot-rules {

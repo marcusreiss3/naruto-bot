@@ -106,8 +106,6 @@ export async function buyPremiumProduct(walletId: string, charId: string, produc
 
       if (product.kind === "SPIN") {
         await tx.premiumWallet.update({ where: { id: walletId }, data: { [product.spinField]: { increment: 1 } } });
-      } else if (product.kind === "RYO") {
-        await tx.userCharacter.update({ where: { id: charId }, data: { ryo: { increment: product.ryo } } });
       } else if (product.kind === "RESPEC") {
         refundedPoints = await resetSkillTreeProgression(tx, charId);
       } else if (product.kind === "FIGHTING_STYLE_RESET") {
