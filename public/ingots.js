@@ -226,10 +226,19 @@ window.IngotsPage = (function () {
   // aninhar <button> dentro de <button> (HTML invalido).
   function carouselCardMarkup(card, index) {
     const buyButton = card.productId
-      ? `<button type="button" class="ingot-carousel-card-buy" data-product-id="${escapeHtml(card.productId)}" data-cost="${card.cost}" data-title="${escapeHtml(card.title)}"${card.confirmMessage ? ` data-confirm="${escapeHtml(card.confirmMessage)}"` : ""}>
-          ${ingotsEmojiMarkup()}<span>Comprar por ${card.cost.toLocaleString("pt-BR")}</span>
-        </button>
-        <p class="ingot-carousel-card-status" role="status" aria-live="polite"></p>`
+      ? `<div class="ingot-carousel-card-purchase">
+          <button type="button" class="ingot-carousel-card-buy" data-product-id="${escapeHtml(card.productId)}" data-title="${escapeHtml(card.title)}">
+            ${ingotsEmojiMarkup()}<span>Comprar por ${card.cost.toLocaleString("pt-BR")}</span>
+          </button>
+          ${card.confirmMessage ? `<div class="ingot-carousel-card-confirm" hidden>
+            <p>${escapeHtml(card.confirmMessage)}</p>
+            <div class="ingot-carousel-card-confirm-actions">
+              <button type="button" class="ingot-carousel-card-confirm-yes">Sim, comprar</button>
+              <button type="button" class="ingot-carousel-card-confirm-no">Cancelar</button>
+            </div>
+          </div>` : ""}
+          <p class="ingot-carousel-card-status" role="status" aria-live="polite"></p>
+        </div>`
       : "";
     return `<div class="ingot-carousel-card" data-card-index="${index}">
       <span class="ingot-carousel-card-shine" aria-hidden="true"></span>
@@ -412,15 +421,14 @@ window.IngotsPage = (function () {
       root.querySelectorAll(".ingot-carousel").forEach((carousel) => goToCarouselPage(carousel, 0));
     }
 
-    // Compra de produto premium direto do site. Verifica login, pede
-    // confirmacao pros itens destrutivos (mesmo aviso do bot) e desconta os
-    // Ingots no servidor — a mesma regra usada pelo /loja-premium.
+    // Compra de produto premium direto do site, sem sair da pagina. Desconta
+    // os Ingots no servidor — a mesma regra usada pelo /loja-premium. O
+    // botao nunca fica travado depois: o jogador pode comprar varios giros
+    // seguidos, so' fica desabilitado durante a propria requisicao.
     async function handlePremiumBuy(buyButton) {
       if (buyButton.disabled) return;
-      const { productId, title, confirm: confirmMessage } = buyButton.dataset;
-      if (confirmMessage && !window.confirm(confirmMessage)) return;
-
-      const status = buyButton.nextElementSibling;
+      const { productId, title } = buyButton.dataset;
+      const status = buyButton.closest(".ingot-carousel-card-purchase")?.querySelector(".ingot-carousel-card-status");
       buyButton.disabled = true;
       if (status) { status.textContent = "Processando…"; status.classList.remove("is-error", "is-success"); }
 
@@ -443,12 +451,11 @@ window.IngotsPage = (function () {
           if (status) { status.textContent = data.error || "Não foi possível concluir a compra."; status.classList.add("is-error"); }
           return;
         }
-        if (status) { status.textContent = `✅ ${title} comprado! Confira no /loja-premium.`; status.classList.add("is-success"); }
-        buyButton.querySelector("span").textContent = "Comprado";
+        if (status) { status.textContent = `Compra confirmada: ${title}. Já pode comprar de novo ou conferir no /loja-premium.`; status.classList.add("is-success"); }
       } catch {
         if (status) { status.textContent = "Falha de conexão. Tente de novo."; status.classList.add("is-error"); }
       } finally {
-        if (!buyButton.querySelector("span").textContent.startsWith("Comprado")) buyButton.disabled = false;
+        buyButton.disabled = false;
       }
     }
 
@@ -469,8 +476,30 @@ window.IngotsPage = (function () {
           goToCarouselPage(carousel, arrow.dataset.dir === "next" ? currentPage + 1 : currentPage - 1);
           return;
         }
+        const confirmYes = event.target.closest(".ingot-carousel-card-confirm-yes");
+        if (confirmYes) {
+          const purchase = confirmYes.closest(".ingot-carousel-card-purchase");
+          purchase.querySelector(".ingot-carousel-card-confirm").hidden = true;
+          const buyButton = purchase.querySelector(".ingot-carousel-card-buy");
+          buyButton.hidden = false;
+          handlePremiumBuy(buyButton);
+          return;
+        }
+        const confirmNo = event.target.closest(".ingot-carousel-card-confirm-no");
+        if (confirmNo) {
+          const purchase = confirmNo.closest(".ingot-carousel-card-purchase");
+          purchase.querySelector(".ingot-carousel-card-confirm").hidden = true;
+          purchase.querySelector(".ingot-carousel-card-buy").hidden = false;
+          return;
+        }
         const buyButton = event.target.closest(".ingot-carousel-card-buy");
         if (buyButton) {
+          const confirmPanel = buyButton.closest(".ingot-carousel-card-purchase").querySelector(".ingot-carousel-card-confirm");
+          if (confirmPanel) {
+            buyButton.hidden = true;
+            confirmPanel.hidden = false;
+            return;
+          }
           handlePremiumBuy(buyButton);
           return;
         }
