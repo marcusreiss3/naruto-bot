@@ -226,19 +226,9 @@ window.IngotsPage = (function () {
   // aninhar <button> dentro de <button> (HTML invalido).
   function carouselCardMarkup(card, index) {
     const buyButton = card.productId
-      ? `<div class="ingot-carousel-card-purchase">
-          <button type="button" class="ingot-carousel-card-buy" data-product-id="${escapeHtml(card.productId)}" data-title="${escapeHtml(card.title)}">
-            ${ingotsEmojiMarkup()}<span>Comprar por ${card.cost.toLocaleString("pt-BR")}</span>
-          </button>
-          ${card.confirmMessage ? `<div class="ingot-carousel-card-confirm" hidden>
-            <p>${escapeHtml(card.confirmMessage)}</p>
-            <div class="ingot-carousel-card-confirm-actions">
-              <button type="button" class="ingot-carousel-card-confirm-yes">Sim, comprar</button>
-              <button type="button" class="ingot-carousel-card-confirm-no">Cancelar</button>
-            </div>
-          </div>` : ""}
-          <p class="ingot-carousel-card-status" role="status" aria-live="polite"></p>
-        </div>`
+      ? `<button type="button" class="ingot-carousel-card-buy" data-product-id="${escapeHtml(card.productId)}" data-title="${escapeHtml(card.title)}" data-cost="${card.cost}"${card.confirmMessage ? ` data-warning="${escapeHtml(card.confirmMessage)}"` : ""}>
+          ${ingotsEmojiMarkup()}<span>Comprar por ${card.cost.toLocaleString("pt-BR")}</span>
+        </button>`
       : "";
     return `<div class="ingot-carousel-card" data-card-index="${index}">
       <span class="ingot-carousel-card-shine" aria-hidden="true"></span>
@@ -334,6 +324,26 @@ window.IngotsPage = (function () {
     </div>`;
   }
 
+  // Modal de confirmacao de compra premium. Toda compra passa por aqui —
+  // nao ha atalho que desconte Ingots sem esse clique explicito em
+  // "Confirmar compra".
+  function premiumModalMarkup() {
+    return `<div class="ingot-payment-modal hidden" id="ingotPremiumModal" role="dialog" aria-modal="true" aria-labelledby="ingotPremiumTitle">
+      <div class="ingot-payment-card" tabindex="-1">
+        <button class="ingot-payment-close" type="button" data-close-premium aria-label="Fechar">×</button>
+        <span class="ingot-payment-kicker">Loja Premium</span>
+        <h2 id="ingotPremiumTitle">Produto</h2>
+        <p id="ingotPremiumCost">Custo: — Ingots</p>
+        <p id="ingotPremiumWarning" class="ingot-premium-warning" hidden></p>
+        <div class="ingot-premium-actions">
+          <button class="btn-secondary" type="button" data-close-premium>Cancelar</button>
+          <button class="ingot-carousel-card-buy" type="button" id="ingotPremiumConfirm">Confirmar compra</button>
+        </div>
+        <p id="ingotPremiumStatus" role="status" aria-live="polite"></p>
+      </div>
+    </div>`;
+  }
+
   function sectionMarkup(section) {
     const body = section.list
       ? `<ul class="ingot-rules">${section.list.map((rule) => `<li>${escapeHtml(rule)}</li>`).join("")}</ul>`
@@ -388,6 +398,7 @@ window.IngotsPage = (function () {
       ${(data.sections || []).map((section) => `${sectionMarkup(section)}${section.id === "no-que-gastar" ? packagesMarkup(data.packages) : ""}`).join("")}
       ${faqMarkup(data.faq)}
       ${paymentModalMarkup()}
+      ${premiumModalMarkup()}
     </div>`;
   }
 
@@ -422,15 +433,20 @@ window.IngotsPage = (function () {
     }
 
     // Compra de produto premium direto do site, sem sair da pagina. Desconta
-    // os Ingots no servidor — a mesma regra usada pelo /loja-premium. O
-    // botao nunca fica travado depois: o jogador pode comprar varios giros
-    // seguidos, so' fica desabilitado durante a propria requisicao.
-    async function handlePremiumBuy(buyButton) {
-      if (buyButton.disabled) return;
-      const { productId, title } = buyButton.dataset;
-      const status = buyButton.closest(".ingot-carousel-card-purchase")?.querySelector(".ingot-carousel-card-status");
-      buyButton.disabled = true;
-      if (status) { status.textContent = "Processando…"; status.classList.remove("is-error", "is-success"); }
+    // os Ingots no servidor — a mesma regra usada pelo /loja-premium. So'
+    // executa quando o jogador clica em "Confirmar compra" dentro do modal;
+    // o botao de confirmar so' fica desabilitado durante a propria
+    // requisicao, pra dar pra comprar varias unidades seguidas sem reabrir
+    // o modal.
+    async function handlePremiumBuy() {
+      const modal = root.querySelector("#ingotPremiumModal");
+      const confirmBtn = root.querySelector("#ingotPremiumConfirm");
+      const status = root.querySelector("#ingotPremiumStatus");
+      if (confirmBtn.disabled) return;
+      const { productId, title } = modal.dataset;
+      confirmBtn.disabled = true;
+      status.textContent = "Processando…";
+      status.classList.remove("is-error", "is-success");
 
       try {
         const res = await fetch("/api/premium/buy", {
@@ -440,33 +456,35 @@ window.IngotsPage = (function () {
           body: JSON.stringify({ productId }),
         });
         if (res.status === 401) {
-          if (status) {
-            status.innerHTML = 'Faça <a href="/auth/login">login pelo Discord</a> pra comprar.';
-            status.classList.add("is-error");
-          }
+          status.innerHTML = 'Faça <a href="/auth/login">login pelo Discord</a> pra comprar.';
+          status.classList.add("is-error");
           return;
         }
         const data = await res.json();
         if (!data.ok) {
-          if (status) { status.textContent = data.error || "Não foi possível concluir a compra."; status.classList.add("is-error"); }
+          status.textContent = data.error || "Não foi possível concluir a compra.";
+          status.classList.add("is-error");
           return;
         }
-        if (status) { status.textContent = `Compra confirmada: ${title}. Já pode comprar de novo ou conferir no /loja-premium.`; status.classList.add("is-success"); }
+        status.textContent = `Compra confirmada: ${title}. Pode confirmar de novo pra comprar outra unidade, ou fechar e conferir no /loja-premium.`;
+        status.classList.add("is-success");
       } catch {
-        if (status) { status.textContent = "Falha de conexão. Tente de novo."; status.classList.add("is-error"); }
+        status.textContent = "Falha de conexão. Tente de novo.";
+        status.classList.add("is-error");
       } finally {
-        buyButton.disabled = false;
+        confirmBtn.disabled = false;
       }
     }
 
-    let paymentReturnFocus = null;
+    let modalReturnFocus = null;
 
     function bindPaymentModal() {
-      const modal = root.querySelector("#ingotPaymentModal");
-      const closePayment = () => {
+      const paymentModal = root.querySelector("#ingotPaymentModal");
+      const premiumModal = root.querySelector("#ingotPremiumModal");
+      const closeModal = (modal) => {
         modal.classList.add("hidden");
-        paymentReturnFocus?.focus();
-        paymentReturnFocus = null;
+        modalReturnFocus?.focus();
+        modalReturnFocus = null;
       };
       root.onclick = (event) => {
         const arrow = event.target.closest(".ingot-carousel-arrow");
@@ -476,31 +494,26 @@ window.IngotsPage = (function () {
           goToCarouselPage(carousel, arrow.dataset.dir === "next" ? currentPage + 1 : currentPage - 1);
           return;
         }
-        const confirmYes = event.target.closest(".ingot-carousel-card-confirm-yes");
-        if (confirmYes) {
-          const purchase = confirmYes.closest(".ingot-carousel-card-purchase");
-          purchase.querySelector(".ingot-carousel-card-confirm").hidden = true;
-          const buyButton = purchase.querySelector(".ingot-carousel-card-buy");
-          buyButton.hidden = false;
-          handlePremiumBuy(buyButton);
-          return;
-        }
-        const confirmNo = event.target.closest(".ingot-carousel-card-confirm-no");
-        if (confirmNo) {
-          const purchase = confirmNo.closest(".ingot-carousel-card-purchase");
-          purchase.querySelector(".ingot-carousel-card-confirm").hidden = true;
-          purchase.querySelector(".ingot-carousel-card-buy").hidden = false;
+        if (event.target.closest("#ingotPremiumConfirm")) {
+          handlePremiumBuy();
           return;
         }
         const buyButton = event.target.closest(".ingot-carousel-card-buy");
         if (buyButton) {
-          const confirmPanel = buyButton.closest(".ingot-carousel-card-purchase").querySelector(".ingot-carousel-card-confirm");
-          if (confirmPanel) {
-            buyButton.hidden = true;
-            confirmPanel.hidden = false;
-            return;
-          }
-          handlePremiumBuy(buyButton);
+          modalReturnFocus = buyButton;
+          premiumModal.dataset.productId = buyButton.dataset.productId;
+          premiumModal.dataset.title = buyButton.dataset.title;
+          root.querySelector("#ingotPremiumTitle").textContent = buyButton.dataset.title;
+          root.querySelector("#ingotPremiumCost").innerHTML = `${ingotsEmojiMarkup()} Custo: ${Number(buyButton.dataset.cost).toLocaleString("pt-BR")} Ingots`;
+          const warning = root.querySelector("#ingotPremiumWarning");
+          if (buyButton.dataset.warning) { warning.textContent = buyButton.dataset.warning; warning.hidden = false; }
+          else { warning.hidden = true; warning.textContent = ""; }
+          const status = root.querySelector("#ingotPremiumStatus");
+          status.textContent = "";
+          status.className = "";
+          root.querySelector("#ingotPremiumConfirm").disabled = false;
+          premiumModal.classList.remove("hidden");
+          requestAnimationFrame(() => premiumModal.querySelector(".ingot-payment-card")?.focus());
           return;
         }
         const cardToggle = event.target.closest(".ingot-carousel-card-toggle");
@@ -514,24 +527,26 @@ window.IngotsPage = (function () {
         if (buy) {
           const pkg = page.packages?.find((entry) => entry.id === buy.dataset.packageId);
           if (!pkg) return;
-          paymentReturnFocus = buy;
+          modalReturnFocus = buy;
           root.querySelector("#ingotPaymentTitle").textContent = pkg.title;
           root.querySelector("#ingotPaymentPrice").textContent = `${pkg.ingots} · ${pkg.price}`;
-          modal.classList.remove("hidden");
-          requestAnimationFrame(() => modal.querySelector(".ingot-payment-card")?.focus());
+          paymentModal.classList.remove("hidden");
+          requestAnimationFrame(() => paymentModal.querySelector(".ingot-payment-card")?.focus());
           return;
         }
-        if (event.target === modal || event.target.closest("[data-close-payment]")) closePayment();
+        if (event.target === paymentModal || event.target.closest("[data-close-payment]")) { closeModal(paymentModal); return; }
+        if (event.target === premiumModal || event.target.closest("[data-close-premium]")) { closeModal(premiumModal); return; }
       };
       root.onkeydown = (event) => {
-        if (modal.classList.contains("hidden")) return;
+        const openModal = [paymentModal, premiumModal].find((modal) => !modal.classList.contains("hidden"));
+        if (!openModal) return;
         if (event.key === "Escape") {
           event.preventDefault();
-          closePayment();
+          closeModal(openModal);
           return;
         }
         if (event.key !== "Tab") return;
-        const focusable = [...modal.querySelectorAll("button:not([disabled]), [tabindex]:not([tabindex='-1'])")];
+        const focusable = [...openModal.querySelectorAll("button:not([disabled]), [tabindex]:not([tabindex='-1'])")];
         const first = focusable[0];
         const last = focusable.at(-1);
         if (event.shiftKey && document.activeElement === first) {

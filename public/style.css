@@ -5806,6 +5806,43 @@ details.guide-faq > div {
   font-weight: 700;
 }
 
+#ingotPremiumWarning {
+  margin: 14px 0 0;
+  padding: 10px 14px;
+  border: 1px solid rgba(237, 107, 118, .35);
+  border-radius: var(--radius-sm);
+  background: var(--danger-subtle);
+  color: var(--text-secondary);
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.ingot-premium-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.ingot-premium-actions .btn-secondary { flex: 1 1 0; }
+
+#ingotPremiumStatus {
+  margin: 14px 0 0;
+  min-height: 15px;
+  color: var(--text-muted);
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+#ingotPremiumStatus.is-error { color: var(--danger); }
+
+#ingotPremiumStatus.is-success { color: var(--ingot-gold-bright); }
+
+#ingotPremiumStatus a { color: inherit; text-decoration: underline; }
+
 .pix-placeholder {
   position: relative;
   display: grid;
@@ -6149,21 +6186,6 @@ details.guide-faq > div {
   vertical-align: -3px;
 }
 
-.ingot-carousel-card-purchase {
-  display: flex;
-  width: 100%;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-
-/* `hidden` sozinho perde pra qualquer `display` que a classe define (mesma
-   especificidade, mas regra de autor bate UA stylesheet) — reforca aqui. */
-.ingot-carousel-card-buy[hidden],
-.ingot-carousel-card-confirm[hidden] {
-  display: none;
-}
-
 .ingot-carousel-card-buy {
   display: inline-flex;
   align-items: center;
@@ -6179,63 +6201,6 @@ details.guide-faq > div {
   white-space: nowrap;
   cursor: pointer;
   transition: transform 140ms ease, box-shadow 140ms ease, filter 140ms ease;
-}
-
-.ingot-carousel-card-confirm {
-  display: flex;
-  width: 100%;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 14px;
-  border: 1px solid rgba(237, 107, 118, .35);
-  border-radius: var(--radius-md);
-  background: var(--danger-subtle);
-}
-
-.ingot-carousel-card-confirm p {
-  margin: 0;
-  color: var(--text-secondary);
-  font-size: 12px;
-  line-height: 1.5;
-}
-
-.ingot-carousel-card-confirm-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.ingot-carousel-card-confirm-yes,
-.ingot-carousel-card-confirm-no {
-  padding: 7px 14px;
-  border-radius: 999px;
-  font: 750 12px var(--font-display);
-  cursor: pointer;
-  transition: transform 140ms ease, filter 140ms ease;
-}
-
-.ingot-carousel-card-confirm-yes {
-  border: 1px solid rgba(237, 107, 118, .6);
-  background: var(--danger);
-  color: #2a0a0c;
-}
-
-.ingot-carousel-card-confirm-no {
-  border: 1px solid var(--border-strong);
-  background: var(--surface-inset);
-  color: var(--text-secondary);
-}
-
-.ingot-carousel-card-confirm-yes:hover,
-.ingot-carousel-card-confirm-no:hover {
-  filter: brightness(1.1);
-  transform: translateY(-1px);
-}
-
-.ingot-carousel-card-confirm-yes:focus-visible,
-.ingot-carousel-card-confirm-no:focus-visible {
-  outline: 2px solid var(--warning);
-  outline-offset: 2px;
 }
 
 .ingot-carousel-card-buy .ingot-inline-icon { width: 17px; height: 17px; vertical-align: -3.5px; }
@@ -6257,20 +6222,6 @@ details.guide-faq > div {
   opacity: .8;
   transform: none;
 }
-
-.ingot-carousel-card-status {
-  min-height: 15px;
-  margin: 0;
-  color: var(--text-muted);
-  font-size: 12px;
-  line-height: 1.4;
-}
-
-.ingot-carousel-card-status.is-error { color: var(--danger); }
-
-.ingot-carousel-card-status.is-success { color: var(--ingot-gold-bright); }
-
-.ingot-carousel-card-status a { color: inherit; text-decoration: underline; }
 
 .ingot-carousel-arrow {
   display: grid;
