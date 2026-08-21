@@ -5988,17 +5988,11 @@ details.guide-faq > div {
   max-width: 236px;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-  padding: 28px 20px 22px;
   overflow: hidden;
   border: 1px solid rgba(230, 187, 96, .28);
   border-radius: var(--radius-lg);
   background: linear-gradient(165deg, rgba(230, 187, 96, .07), var(--surface-raised) 38%, var(--surface));
   box-shadow: 0 10px 26px rgba(0, 0, 0, .18), inset 0 1px rgba(255, 255, 255, .03);
-  color: inherit;
-  font: inherit;
-  text-align: center;
-  cursor: pointer;
   transition: border-color 200ms ease, box-shadow 220ms ease, transform 220ms ease;
 }
 
@@ -6022,23 +6016,43 @@ details.guide-faq > div {
 }
 
 .ingot-carousel-card:hover .ingot-carousel-card-shine,
-.ingot-carousel-card:focus-visible .ingot-carousel-card-shine {
+.ingot-carousel-card:focus-within .ingot-carousel-card-shine {
   transform: translateX(130%);
 }
 
 .ingot-carousel-card:hover,
-.ingot-carousel-card:focus-visible {
+.ingot-carousel-card:focus-within {
   border-color: rgba(244, 213, 143, .8);
   box-shadow: 0 18px 38px rgba(0, 0, 0, .3), 0 0 0 1px rgba(230, 187, 96, .28) inset, 0 0 30px rgba(230, 187, 96, .2);
   transform: translateY(-5px) scale(1.015);
 }
 
-.ingot-carousel-card:focus-visible { outline: none; }
-
-.ingot-carousel-card[aria-expanded="true"] {
+.ingot-carousel-card.is-open {
   border-color: rgba(244, 213, 143, .85);
   background: linear-gradient(165deg, rgba(230, 187, 96, .15), var(--surface-raised) 40%, var(--surface));
   box-shadow: 0 18px 40px rgba(0, 0, 0, .32), 0 0 0 1px rgba(230, 187, 96, .38) inset, 0 0 34px rgba(230, 187, 96, .24);
+}
+
+.ingot-carousel-card-toggle {
+  all: unset;
+  z-index: 1;
+  display: flex;
+  box-sizing: border-box;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 28px 20px 22px;
+  color: inherit;
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+}
+
+.ingot-carousel-card-toggle:focus-visible {
+  outline: 2px solid var(--warning);
+  outline-offset: -3px;
+  border-radius: var(--radius-lg);
 }
 
 .ingot-carousel-card-icon-ring {
@@ -6091,11 +6105,11 @@ details.guide-faq > div {
 
 .ingot-carousel-card-hint-label::before { content: "Ver detalhes"; }
 
-.ingot-carousel-card[aria-expanded="true"] .ingot-carousel-card-hint-label::before { content: "Ocultar"; }
+.ingot-carousel-card-toggle[aria-expanded="true"] .ingot-carousel-card-hint-label::before { content: "Ocultar"; }
 
 .ingot-carousel-card-chevron { transition: transform 220ms ease; }
 
-.ingot-carousel-card[aria-expanded="true"] .ingot-carousel-card-chevron { transform: rotate(180deg); }
+.ingot-carousel-card-toggle[aria-expanded="true"] .ingot-carousel-card-chevron { transform: rotate(180deg); }
 
 .ingot-carousel-card-detail {
   display: grid;
@@ -6106,7 +6120,7 @@ details.guide-faq > div {
   transition: grid-template-rows 240ms ease, opacity 200ms ease;
 }
 
-.ingot-carousel-card[aria-expanded="true"] .ingot-carousel-card-detail {
+.ingot-carousel-card.is-open .ingot-carousel-card-detail {
   grid-template-rows: 1fr;
   opacity: 1;
 }
@@ -6117,30 +6131,74 @@ details.guide-faq > div {
   align-items: center;
   gap: 10px;
   min-height: 0;
-  padding-top: 4px;
+  padding: 0 20px 22px;
   overflow: hidden;
 }
 
 .ingot-carousel-card-text {
+  margin: 0;
   font-size: 13px;
   line-height: 1.5;
   color: var(--text-secondary);
 }
 
-.ingot-carousel-card-meta {
+.ingot-inline-icon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  vertical-align: -3px;
+}
+
+.ingot-carousel-card-buy {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
+  gap: 7px;
+  padding: 9px 18px;
+  border: 1px solid rgba(244, 213, 143, .6);
   border-radius: 999px;
   background: linear-gradient(135deg, #e6bb60, #c4943f);
   box-shadow: 0 4px 12px rgba(0, 0, 0, .28);
   color: #241a08;
-  font-size: 12px;
-  font-weight: 800;
+  font: 800 12.5px/1 var(--font-display);
   letter-spacing: .02em;
   white-space: nowrap;
+  cursor: pointer;
+  transition: transform 140ms ease, box-shadow 140ms ease, filter 140ms ease;
 }
+
+.ingot-carousel-card-buy .ingot-inline-icon { width: 17px; height: 17px; vertical-align: -3.5px; }
+
+.ingot-carousel-card-buy:hover:not(:disabled) {
+  filter: brightness(1.08);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, .32), 0 0 16px rgba(230, 187, 96, .35);
+  transform: translateY(-1px);
+}
+
+.ingot-carousel-card-buy:focus-visible {
+  outline: 2px solid var(--warning);
+  outline-offset: 2px;
+}
+
+.ingot-carousel-card-buy:disabled {
+  cursor: default;
+  filter: grayscale(.25);
+  opacity: .8;
+  transform: none;
+}
+
+.ingot-carousel-card-status {
+  min-height: 15px;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.ingot-carousel-card-status.is-error { color: var(--danger); }
+
+.ingot-carousel-card-status.is-success { color: var(--ingot-gold-bright); }
+
+.ingot-carousel-card-status a { color: inherit; text-decoration: underline; }
 
 .ingot-carousel-arrow {
   display: grid;
@@ -6176,37 +6234,6 @@ details.guide-faq > div {
   cursor: not-allowed;
 }
 
-.ingot-carousel-dots {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.ingot-carousel-dot {
-  width: 8px;
-  height: 8px;
-  padding: 0;
-  border: 1px solid rgba(230, 187, 96, .42);
-  border-radius: 50%;
-  background: rgba(230, 187, 96, .14);
-  cursor: pointer;
-  transition: width 200ms ease, background 200ms ease, border-color 200ms ease;
-}
-
-.ingot-carousel-dot:hover { border-color: rgba(244, 213, 143, .85); }
-
-.ingot-carousel-dot.is-active {
-  width: 24px;
-  border-color: transparent;
-  border-radius: 5px;
-  background: linear-gradient(90deg, #e6bb60, #f4d58f);
-}
-
-.ingot-carousel-dot:focus-visible {
-  outline: 2px solid var(--warning);
-  outline-offset: 2px;
-}
-
 @keyframes ingot-icon-pulse {
   0%, 100% { box-shadow: 0 0 0 0 rgba(230, 187, 96, .35), 0 0 16px rgba(230, 187, 96, .22); }
   50% { box-shadow: 0 0 0 6px rgba(230, 187, 96, 0), 0 0 26px rgba(230, 187, 96, .4); }
@@ -6215,7 +6242,9 @@ details.guide-faq > div {
 @media (max-width: 640px) {
   .ingot-carousel { gap: 10px; }
   .ingot-carousel-arrow { width: 40px; height: 40px; }
-  .ingot-carousel-card { max-width: 150px; padding: 22px 14px 16px; }
+  .ingot-carousel-card { max-width: 150px; }
+  .ingot-carousel-card-toggle { padding: 22px 14px 16px; }
+  .ingot-carousel-card-detail-inner { padding: 0 14px 16px; }
   .ingot-carousel-card-icon-ring { width: 62px; height: 62px; }
   .ingot-carousel-card-icon { width: 46px; height: 46px; }
   .ingot-carousel-card-icon svg,

@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { prisma } from "../../db/client.js";
 import type { Prisma } from "@prisma/client";
 import { getPremiumProduct, type PremiumProductId } from "../../data/premium-products.js";
@@ -189,4 +190,34 @@ export async function chooseTraitSpin(charId: string, walletId: string, sessionI
   });
   await setCharacterTrait(charId, traitId);
   return trait;
+}
+
+export type WebPremiumBuyResult =
+  | { ok: true; wallet: PremiumWallet; message: string }
+  | { ok: false; error: string };
+
+// Mesma regra de negocio do /loja-premium (buyPremiumProduct), so' que
+// resolvendo o personagem a partir da sessao web (discordId+guildId) em vez
+// de uma interacao do Discord. A guildId sempre vem de ENV.DISCORD_GUILD_ID
+// no servidor web, nunca do cliente.
+export async function buyPremiumProductForDiscordUser(discordId: string, guildId: string, productId: string): Promise<WebPremiumBuyResult> {
+  const product = getPremiumProduct(productId);
+  if (!product) return { ok: false, error: "Produto premium desconhecido." };
+
+  const char = await prisma.userCharacter.findUnique({
+    where: { discordId_guildId: { discordId, guildId } },
+    include: { profile: true },
+  });
+  if (!char) return { ok: false, error: "Você ainda não tem um personagem. Crie um pelo Discord antes de comprar." };
+  if (!char.profile?.completedAt) return { ok: false, error: "Conclua sua ficha (/ficha no Discord) antes de usar a Loja Premium." };
+
+  const wallet = await getPremiumWallet(discordId, guildId);
+  try {
+    await buyPremiumProduct(wallet.id, char.id, product.id, `web:${randomUUID()}`);
+  } catch (error) {
+    if (error instanceof PremiumStoreError) return { ok: false, error: error.message };
+    throw error;
+  }
+  const updated = await getPremiumWallet(discordId, guildId);
+  return { ok: true, wallet: updated, message: `${product.name} adquirido.` };
 }

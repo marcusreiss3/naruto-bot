@@ -14,6 +14,7 @@ import { buildMechanicsSummary, buildVisualDescription } from "../services/chara
 import { MANGEKYO_VARIANT_LABEL } from "../services/characters/mangekyo.js";
 import { buildGuideCatalog } from "../services/characters/equipment-catalog.js";
 import { buildKugutsuArsenal } from "../services/puppets/puppet-service.js";
+import { buyPremiumProductForDiscordUser } from "../services/premium/ingot-store.js";
 
 export function registerApi(app: FastifyInstance): void {
   app.get("/api/guides/catalog", async (_req, reply) => {
@@ -116,6 +117,19 @@ export function registerApi(app: FastifyInstance): void {
 
     const villageId = await villageForDiscordUser(ENV.DISCORD_GUILD_ID, discordId);
     const result = await buyNode(discordId, ENV.DISCORD_GUILD_ID, body.nodeId, villageId);
+    return reply.send(result);
+  });
+
+  // Compra de produto da Loja Premium (Giros, resets) direto pelo site.
+  // Revalida saldo e regras no servidor, igual ao /loja-premium do bot.
+  app.post("/api/premium/buy", async (req, reply) => {
+    const discordId = getSessionDiscordId(req);
+    if (!discordId) return reply.code(401).send({ ok: false, error: "Não autenticado." });
+
+    const body = req.body as { productId?: string } | undefined;
+    if (!body?.productId) return reply.code(400).send({ ok: false, error: "productId faltando." });
+
+    const result = await buyPremiumProductForDiscordUser(discordId, ENV.DISCORD_GUILD_ID, body.productId);
     return reply.send(result);
   });
 }

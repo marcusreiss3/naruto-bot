@@ -81,37 +81,50 @@ window.INGOTS_PAGE = {
     {
       id: "no-que-gastar",
       title: "No que gastar",
-      intro: "Use `/loja-premium` para comprar e usar Giros, receber Ryō ou reorganizar sua progressão. Um Giro não permite escolher diretamente uma Vila, Clã ou Traço específico.",
+      intro: "Compre direto aqui ou use `/loja-premium` no Discord — os dois descontam do mesmo saldo de Ingots. Um Giro não permite escolher diretamente uma Vila, Clã ou Traço específico.",
       cards: [
         {
           emojiId: "1539494083209461842",
           title: "Giro de Vila + Clã",
           text: "Sorteia uma nova combinação válida de Vila + Clã enquanto o personagem ainda for da Academia.",
           meta: "Custo: 400 Ingots",
+          productId: "clan_spin",
+          cost: 400,
         },
         {
           emojiId: "1539494084660428872",
           title: "Giro de Traço",
           text: "Permite obter um novo Traço usando as probabilidades normais. Um resultado Mítico deixa você escolher entre as opções sorteadas.",
           meta: "Custo: 300 Ingots",
+          productId: "trait_spin",
+          cost: 300,
         },
         {
           emojiId: "1539494086254530600",
           title: "Reset de atributos",
           text: "Devolve os pontos investidos, zera os atributos e remove as habilidades aprendidas nas Árvores de Habilidade.",
           meta: "Custo: 2.000 Ingots",
+          productId: "attribute_respec",
+          cost: 2000,
+          confirmMessage: "Isso vai zerar seus atributos (os pontos voltam pro saldo) e remover as habilidades aprendidas nas Árvores de Habilidade. Comprar mesmo assim?",
         },
         {
           emojiId: "1539812355960086538",
           title: "Reset de estilos de luta",
           text: "Remove os estilos de luta aprendidos e as habilidades exclusivas de suas árvores, liberando espaço para aprender outros com os mestres. Seus atributos, nível e demais habilidades permanecem.",
           meta: "Custo: 1.500 Ingots",
+          productId: "fighting_style_reset",
+          cost: 1500,
+          confirmMessage: "Isso vai remover todos os seus estilos de luta e as habilidades exclusivas deles. Comprar mesmo assim?",
         },
         {
           emojiId: "1539494087655165993",
           title: "Reset premium de personagem",
           text: "Permite refazer nome, rank, idade, história e aparência; também devolve os pontos investidos e remove as habilidades aprendidas nas Árvores de Habilidade. O rank volta para Academia, permitindo usar Giros de Vila + Clã novamente. Mantém nível, XP, Vila, Clã, Traço, inventário, Ryō, Ingots e Giros.",
           meta: "Custo: 5.000 Ingots",
+          productId: "character_reset",
+          cost: 5000,
+          confirmMessage: "Isso vai resetar nome, rank, idade, história e aparência do seu personagem (volta pra Academia). Depois você preenche tudo de novo com /ficha. Comprar mesmo assim?",
         },
       ],
     },
@@ -187,6 +200,14 @@ window.IngotsPage = (function () {
     return ingotIcon(card.icon);
   }
 
+  // Emoji de Ingots do Discord (o mesmo que o bot usa em `emoji("ingots")"),
+  // pra dar o mesmo "selo" visual em qualquer custo mostrado no site.
+  const INGOTS_EMOJI_ID = "1538746422260797440";
+
+  function ingotsEmojiMarkup() {
+    return `<img class="ingot-inline-icon" src="${escapeHtml(discordEmojiUrl(INGOTS_EMOJI_ID))}" alt="" loading="lazy" decoding="async">`;
+  }
+
   function cardMarkup(card) {
     return `<article class="ingot-card">
       <div class="ingot-card-icon">${cardIconMarkup(card)}</div>
@@ -200,25 +221,35 @@ window.IngotsPage = (function () {
 
   // Carrossel do "No que gastar": card so' mostra nome ate' ser clicado, e a
   // seta avanca de 3 em 3. Cada pagina centraliza o que tiver (mesmo com
-  // menos de 3 cards na ultima).
+  // menos de 3 cards na ultima). O botao de "ver detalhes" e' um <button>
+  // proprio (nao o card inteiro) pra caber o botao de comprar dentro sem
+  // aninhar <button> dentro de <button> (HTML invalido).
   function carouselCardMarkup(card, index) {
-    return `<button type="button" class="ingot-carousel-card" data-card-index="${index}" aria-expanded="false">
+    const buyButton = card.productId
+      ? `<button type="button" class="ingot-carousel-card-buy" data-product-id="${escapeHtml(card.productId)}" data-cost="${card.cost}" data-title="${escapeHtml(card.title)}"${card.confirmMessage ? ` data-confirm="${escapeHtml(card.confirmMessage)}"` : ""}>
+          ${ingotsEmojiMarkup()}<span>Comprar por ${card.cost.toLocaleString("pt-BR")}</span>
+        </button>
+        <p class="ingot-carousel-card-status" role="status" aria-live="polite"></p>`
+      : "";
+    return `<div class="ingot-carousel-card" data-card-index="${index}">
       <span class="ingot-carousel-card-shine" aria-hidden="true"></span>
-      <span class="ingot-carousel-card-icon-ring">
-        <span class="ingot-carousel-card-icon">${cardIconMarkup(card)}</span>
-      </span>
-      <span class="ingot-carousel-card-name">${escapeHtml(card.title)}</span>
-      <span class="ingot-carousel-card-hint">
-        <span class="ingot-carousel-card-hint-label"></span>
-        <svg class="ingot-carousel-card-chevron" viewBox="0 0 24 24" width="12" height="12" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </span>
-      <span class="ingot-carousel-card-detail">
-        <span class="ingot-carousel-card-detail-inner">
-          <span class="ingot-carousel-card-text">${escapeHtml(card.text)}</span>
-          ${card.meta && card.meta !== "Quantidade: a definir" ? `<span class="ingot-carousel-card-meta">${escapeHtml(card.meta)}</span>` : ""}
+      <button type="button" class="ingot-carousel-card-toggle" aria-expanded="false" aria-controls="ingot-carousel-detail-${index}">
+        <span class="ingot-carousel-card-icon-ring">
+          <span class="ingot-carousel-card-icon">${cardIconMarkup(card)}</span>
         </span>
-      </span>
-    </button>`;
+        <span class="ingot-carousel-card-name">${escapeHtml(card.title)}</span>
+        <span class="ingot-carousel-card-hint">
+          <span class="ingot-carousel-card-hint-label"></span>
+          <svg class="ingot-carousel-card-chevron" viewBox="0 0 24 24" width="12" height="12" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+      </button>
+      <div class="ingot-carousel-card-detail" id="ingot-carousel-detail-${index}">
+        <div class="ingot-carousel-card-detail-inner">
+          <p class="ingot-carousel-card-text">${escapeHtml(card.text)}</p>
+          ${buyButton}
+        </div>
+      </div>
+    </div>`;
   }
 
   function chunk(list, size) {
@@ -240,9 +271,6 @@ window.IngotsPage = (function () {
       const cardsMarkup = pageCards.map((card) => carouselCardMarkup(card, cursor++)).join("");
       return `<div class="ingot-carousel-page">${cardsMarkup}</div>`;
     }).join("");
-    const dotsMarkup = pages.length > 1
-      ? `<div class="ingot-carousel-dots">${pages.map((_, i) => `<button type="button" class="ingot-carousel-dot${i === 0 ? " is-active" : ""}" data-page="${i}" aria-label="Ir para o grupo ${i + 1} de produtos"></button>`).join("")}</div>`
-      : "";
     return `<div class="ingot-spend-showcase">
       <div class="ingot-carousel" data-page-count="${pages.length}">
         <button type="button" class="ingot-carousel-arrow" data-dir="prev" aria-label="Ver produtos anteriores" disabled>${CAROUSEL_ARROW_ICON.prev}</button>
@@ -251,7 +279,6 @@ window.IngotsPage = (function () {
         </div>
         <button type="button" class="ingot-carousel-arrow" data-dir="next" aria-label="Ver mais produtos"${pages.length < 2 ? " disabled" : ""}>${CAROUSEL_ARROW_ICON.next}</button>
       </div>
-      ${dotsMarkup}
     </div>`;
   }
 
@@ -379,13 +406,50 @@ window.IngotsPage = (function () {
       const next = carousel.querySelector('[data-dir="next"]');
       if (prev) prev.disabled = currentPage <= 0;
       if (next) next.disabled = currentPage >= pageCount - 1;
-
-      const dots = carousel.closest(".ingot-spend-showcase")?.querySelectorAll(".ingot-carousel-dot");
-      dots?.forEach((dot) => dot.classList.toggle("is-active", Number(dot.dataset.page) === currentPage));
     }
 
     function bindCarousels() {
       root.querySelectorAll(".ingot-carousel").forEach((carousel) => goToCarouselPage(carousel, 0));
+    }
+
+    // Compra de produto premium direto do site. Verifica login, pede
+    // confirmacao pros itens destrutivos (mesmo aviso do bot) e desconta os
+    // Ingots no servidor — a mesma regra usada pelo /loja-premium.
+    async function handlePremiumBuy(buyButton) {
+      if (buyButton.disabled) return;
+      const { productId, title, confirm: confirmMessage } = buyButton.dataset;
+      if (confirmMessage && !window.confirm(confirmMessage)) return;
+
+      const status = buyButton.nextElementSibling;
+      buyButton.disabled = true;
+      if (status) { status.textContent = "Processando…"; status.classList.remove("is-error", "is-success"); }
+
+      try {
+        const res = await fetch("/api/premium/buy", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ productId }),
+        });
+        if (res.status === 401) {
+          if (status) {
+            status.innerHTML = 'Faça <a href="/auth/login">login pelo Discord</a> pra comprar.';
+            status.classList.add("is-error");
+          }
+          return;
+        }
+        const data = await res.json();
+        if (!data.ok) {
+          if (status) { status.textContent = data.error || "Não foi possível concluir a compra."; status.classList.add("is-error"); }
+          return;
+        }
+        if (status) { status.textContent = `✅ ${title} comprado! Confira no /loja-premium.`; status.classList.add("is-success"); }
+        buyButton.querySelector("span").textContent = "Comprado";
+      } catch {
+        if (status) { status.textContent = "Falha de conexão. Tente de novo."; status.classList.add("is-error"); }
+      } finally {
+        if (!buyButton.querySelector("span").textContent.startsWith("Comprado")) buyButton.disabled = false;
+      }
     }
 
     let paymentReturnFocus = null;
@@ -405,16 +469,16 @@ window.IngotsPage = (function () {
           goToCarouselPage(carousel, arrow.dataset.dir === "next" ? currentPage + 1 : currentPage - 1);
           return;
         }
-        const dot = event.target.closest(".ingot-carousel-dot");
-        if (dot) {
-          const carousel = dot.closest(".ingot-spend-showcase")?.querySelector(".ingot-carousel");
-          if (carousel) goToCarouselPage(carousel, Number(dot.dataset.page));
+        const buyButton = event.target.closest(".ingot-carousel-card-buy");
+        if (buyButton) {
+          handlePremiumBuy(buyButton);
           return;
         }
-        const carouselCard = event.target.closest(".ingot-carousel-card");
-        if (carouselCard) {
-          const isOpen = carouselCard.getAttribute("aria-expanded") === "true";
-          carouselCard.setAttribute("aria-expanded", String(!isOpen));
+        const cardToggle = event.target.closest(".ingot-carousel-card-toggle");
+        if (cardToggle) {
+          const isOpen = cardToggle.getAttribute("aria-expanded") === "true";
+          cardToggle.setAttribute("aria-expanded", String(!isOpen));
+          cardToggle.closest(".ingot-carousel-card")?.classList.toggle("is-open", !isOpen);
           return;
         }
         const buy = event.target.closest("[data-package-id]");
