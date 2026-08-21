@@ -23,7 +23,7 @@ window.INGOTS_PAGE = {
 
   packages: [
     { id: "01", title: "Pequeno Cofre", icon: "/assets/ingots/packages/pequeno-cofre.png", ingots: "400 Ingots", price: "R$ 5,00" },
-    { id: "02", title: "Bolsa de Selos", icon: "/assets/ingots/packages/bolsa-selos.png", ingots: "850 Ingots", price: "R$ 10,00" },
+    { id: "02", title: "Bolsa de Selos", icon: "/assets/ingots/packages/bolsa-ryo.png", ingots: "850 Ingots", price: "R$ 10,00" },
     { id: "03", title: "Caixa de Suprimentos", icon: "/assets/ingots/packages/caixa-suprimentos.png", ingots: "1.800 Ingots", price: "R$ 20,00" },
     { id: "04", title: "Baú do Mercador", icon: "/assets/ingots/packages/bau-mercador.png", ingots: "3.200 Ingots", price: "R$ 35,00" },
     { id: "05", title: "Tesouro do Daimyō", icon: "/assets/ingots/packages/tesouro-daimyo.png", ingots: "5.700 Ingots", price: "R$ 60,00" },
@@ -203,8 +203,15 @@ window.IngotsPage = (function () {
   // menos de 3 cards na ultima).
   function carouselCardMarkup(card, index) {
     return `<button type="button" class="ingot-carousel-card" data-card-index="${index}" aria-expanded="false">
-      <span class="ingot-carousel-card-icon">${cardIconMarkup(card)}</span>
+      <span class="ingot-carousel-card-shine" aria-hidden="true"></span>
+      <span class="ingot-carousel-card-icon-ring">
+        <span class="ingot-carousel-card-icon">${cardIconMarkup(card)}</span>
+      </span>
       <span class="ingot-carousel-card-name">${escapeHtml(card.title)}</span>
+      <span class="ingot-carousel-card-hint">
+        <span class="ingot-carousel-card-hint-label"></span>
+        <svg class="ingot-carousel-card-chevron" viewBox="0 0 24 24" width="12" height="12" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
       <span class="ingot-carousel-card-detail">
         <span class="ingot-carousel-card-detail-inner">
           <span class="ingot-carousel-card-text">${escapeHtml(card.text)}</span>
@@ -220,20 +227,31 @@ window.IngotsPage = (function () {
     return pages;
   }
 
+  const CAROUSEL_ARROW_ICON = {
+    prev: '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    next: '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  };
+
   function carouselMarkup(cards) {
     if (!cards?.length) return "";
     const pages = chunk(cards, 3);
     let cursor = 0;
-    const pagesMarkup = pages.map((page) => {
-      const cardsMarkup = page.map((card) => carouselCardMarkup(card, cursor++)).join("");
+    const pagesMarkup = pages.map((pageCards) => {
+      const cardsMarkup = pageCards.map((card) => carouselCardMarkup(card, cursor++)).join("");
       return `<div class="ingot-carousel-page">${cardsMarkup}</div>`;
     }).join("");
-    return `<div class="ingot-carousel" data-page-count="${pages.length}">
-      <button type="button" class="ingot-carousel-arrow" data-dir="prev" aria-label="Ver produtos anteriores" disabled>‹</button>
-      <div class="ingot-carousel-viewport">
-        <div class="ingot-carousel-track">${pagesMarkup}</div>
+    const dotsMarkup = pages.length > 1
+      ? `<div class="ingot-carousel-dots">${pages.map((_, i) => `<button type="button" class="ingot-carousel-dot${i === 0 ? " is-active" : ""}" data-page="${i}" aria-label="Ir para o grupo ${i + 1} de produtos"></button>`).join("")}</div>`
+      : "";
+    return `<div class="ingot-spend-showcase">
+      <div class="ingot-carousel" data-page-count="${pages.length}">
+        <button type="button" class="ingot-carousel-arrow" data-dir="prev" aria-label="Ver produtos anteriores" disabled>${CAROUSEL_ARROW_ICON.prev}</button>
+        <div class="ingot-carousel-viewport">
+          <div class="ingot-carousel-track">${pagesMarkup}</div>
+        </div>
+        <button type="button" class="ingot-carousel-arrow" data-dir="next" aria-label="Ver mais produtos"${pages.length < 2 ? " disabled" : ""}>${CAROUSEL_ARROW_ICON.next}</button>
       </div>
-      <button type="button" class="ingot-carousel-arrow" data-dir="next" aria-label="Ver mais produtos"${pages.length < 2 ? " disabled" : ""}>›</button>
+      ${dotsMarkup}
     </div>`;
   }
 
@@ -349,26 +367,25 @@ window.IngotsPage = (function () {
       root.querySelector("h1")?.focus({ preventScroll: true });
     }
 
-    function updateCarouselTransform(carousel) {
-      const track = carousel.querySelector(".ingot-carousel-track");
-      const currentPage = Number(carousel.dataset.currentPage || 0);
-      if (track) track.style.transform = `translateX(-${currentPage * 100}%)`;
-    }
-
-    function updateCarouselArrows(carousel) {
+    function goToCarouselPage(carousel, targetPage) {
       const pageCount = Number(carousel.dataset.pageCount || 1);
-      const currentPage = Number(carousel.dataset.currentPage || 0);
+      const currentPage = Math.max(0, Math.min(pageCount - 1, targetPage));
+      carousel.dataset.currentPage = String(currentPage);
+
+      const track = carousel.querySelector(".ingot-carousel-track");
+      if (track) track.style.transform = `translateX(-${currentPage * 100}%)`;
+
       const prev = carousel.querySelector('[data-dir="prev"]');
       const next = carousel.querySelector('[data-dir="next"]');
       if (prev) prev.disabled = currentPage <= 0;
       if (next) next.disabled = currentPage >= pageCount - 1;
+
+      const dots = carousel.closest(".ingot-spend-showcase")?.querySelectorAll(".ingot-carousel-dot");
+      dots?.forEach((dot) => dot.classList.toggle("is-active", Number(dot.dataset.page) === currentPage));
     }
 
     function bindCarousels() {
-      root.querySelectorAll(".ingot-carousel").forEach((carousel) => {
-        carousel.dataset.currentPage = "0";
-        updateCarouselArrows(carousel);
-      });
+      root.querySelectorAll(".ingot-carousel").forEach((carousel) => goToCarouselPage(carousel, 0));
     }
 
     let paymentReturnFocus = null;
@@ -382,14 +399,16 @@ window.IngotsPage = (function () {
       };
       root.onclick = (event) => {
         const arrow = event.target.closest(".ingot-carousel-arrow");
-        if (arrow) {
+        if (arrow && !arrow.disabled) {
           const carousel = arrow.closest(".ingot-carousel");
-          const pageCount = Number(carousel.dataset.pageCount || 1);
           const currentPage = Number(carousel.dataset.currentPage || 0);
-          const nextPage = arrow.dataset.dir === "next" ? Math.min(pageCount - 1, currentPage + 1) : Math.max(0, currentPage - 1);
-          carousel.dataset.currentPage = String(nextPage);
-          updateCarouselTransform(carousel);
-          updateCarouselArrows(carousel);
+          goToCarouselPage(carousel, arrow.dataset.dir === "next" ? currentPage + 1 : currentPage - 1);
+          return;
+        }
+        const dot = event.target.closest(".ingot-carousel-dot");
+        if (dot) {
+          const carousel = dot.closest(".ingot-spend-showcase")?.querySelector(".ingot-carousel");
+          if (carousel) goToCarouselPage(carousel, Number(dot.dataset.page));
           return;
         }
         const carouselCard = event.target.closest(".ingot-carousel-card");

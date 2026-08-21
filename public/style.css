@@ -5863,7 +5863,8 @@ details.guide-faq > div {
 
 .ingot-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(268px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(268px, 320px));
+  justify-content: center;
   gap: 16px;
 }
 
@@ -5936,11 +5937,27 @@ details.guide-faq > div {
   font-weight: 600;
 }
 
+.ingot-spend-showcase {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+  padding: clamp(26px, 4vw, 42px) clamp(16px, 3vw, 30px);
+  border: 1px solid rgba(214, 168, 79, .24);
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(640px 230px at 50% 0%, rgba(214, 168, 79, .13), transparent 72%),
+    linear-gradient(165deg, rgba(36, 31, 19, .55), var(--surface));
+  box-shadow: var(--shadow-md), inset 0 1px rgba(255, 255, 255, .03);
+}
+
 .ingot-carousel {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 18px;
+  width: 100%;
+  max-width: 860px;
 }
 
 .ingot-carousel-viewport {
@@ -5951,79 +5968,142 @@ details.guide-faq > div {
 
 .ingot-carousel-track {
   display: flex;
-  transition: transform 320ms cubic-bezier(.4, 0, .2, 1);
+  align-items: flex-start;
+  transition: transform 380ms cubic-bezier(.4, 0, .2, 1);
 }
 
 .ingot-carousel-page {
   display: flex;
   flex: 0 0 100%;
-  flex-wrap: wrap;
   justify-content: center;
-  gap: 16px;
-  padding: 4px;
+  gap: 20px;
+  padding: 6px 2px;
 }
 
 .ingot-carousel-card {
+  position: relative;
   display: flex;
-  flex: 0 0 auto;
-  width: 210px;
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 236px;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-  padding: 20px 16px;
-  border: 1px solid var(--border);
+  gap: 12px;
+  padding: 28px 20px 22px;
+  overflow: hidden;
+  border: 1px solid rgba(230, 187, 96, .28);
   border-radius: var(--radius-lg);
-  background: linear-gradient(145deg, var(--surface-raised), var(--surface));
-  box-shadow: inset 0 1px rgba(255, 255, 255, .025);
+  background: linear-gradient(165deg, rgba(230, 187, 96, .07), var(--surface-raised) 38%, var(--surface));
+  box-shadow: 0 10px 26px rgba(0, 0, 0, .18), inset 0 1px rgba(255, 255, 255, .03);
   color: inherit;
   font: inherit;
   text-align: center;
   cursor: pointer;
-  transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+  transition: border-color 200ms ease, box-shadow 220ms ease, transform 220ms ease;
 }
 
-.ingot-carousel-card:hover {
-  border-color: rgba(214, 168, 79, .5);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, .16), inset 0 1px rgba(255, 255, 255, .04);
-  transform: translateY(-2px);
+.ingot-carousel-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 20px;
+  left: 20px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(230, 187, 96, .75), transparent);
 }
+
+.ingot-carousel-card-shine {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 42%, rgba(255, 255, 255, .16) 50%, transparent 58%);
+  transform: translateX(-130%);
+  transition: transform 700ms ease;
+}
+
+.ingot-carousel-card:hover .ingot-carousel-card-shine,
+.ingot-carousel-card:focus-visible .ingot-carousel-card-shine {
+  transform: translateX(130%);
+}
+
+.ingot-carousel-card:hover,
+.ingot-carousel-card:focus-visible {
+  border-color: rgba(244, 213, 143, .8);
+  box-shadow: 0 18px 38px rgba(0, 0, 0, .3), 0 0 0 1px rgba(230, 187, 96, .28) inset, 0 0 30px rgba(230, 187, 96, .2);
+  transform: translateY(-5px) scale(1.015);
+}
+
+.ingot-carousel-card:focus-visible { outline: none; }
 
 .ingot-carousel-card[aria-expanded="true"] {
-  border-color: rgba(230, 187, 96, .55);
-  background: linear-gradient(145deg, rgba(230, 187, 96, .1), var(--surface));
+  border-color: rgba(244, 213, 143, .85);
+  background: linear-gradient(165deg, rgba(230, 187, 96, .15), var(--surface-raised) 40%, var(--surface));
+  box-shadow: 0 18px 40px rgba(0, 0, 0, .32), 0 0 0 1px rgba(230, 187, 96, .38) inset, 0 0 34px rgba(230, 187, 96, .24);
+}
+
+.ingot-carousel-card-icon-ring {
+  display: grid;
+  z-index: 1;
+  width: 78px;
+  height: 78px;
+  place-items: center;
+  border: 1px solid rgba(230, 187, 96, .42);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 28%, rgba(230, 187, 96, .22), var(--surface-inset) 72%);
+  animation: ingot-icon-pulse 3.2s ease-in-out infinite;
 }
 
 .ingot-carousel-card-icon {
   display: grid;
-  width: 52px;
-  height: 52px;
+  width: 56px;
+  height: 56px;
   place-items: center;
-  border: 1px solid rgba(214, 168, 79, .22);
-  border-radius: var(--radius-md);
-  background: radial-gradient(circle at 35% 28%, rgba(214, 168, 79, .16), var(--surface-inset) 72%);
 }
 
 .ingot-carousel-card-icon svg,
 .ingot-carousel-card-icon img {
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
   object-fit: contain;
   color: var(--rank-s);
-  filter: drop-shadow(0 0 7px rgba(214, 168, 79, .25));
+  filter: drop-shadow(0 0 8px rgba(230, 187, 96, .32));
 }
 
 .ingot-carousel-card-name {
-  font-size: 15px;
-  font-weight: 700;
+  z-index: 1;
+  font: 750 16px/1.25 var(--font-display);
+  letter-spacing: .01em;
   color: var(--text-primary);
 }
 
+.ingot-carousel-card-hint {
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--ingot-gold-bright);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  opacity: .82;
+}
+
+.ingot-carousel-card-hint-label::before { content: "Ver detalhes"; }
+
+.ingot-carousel-card[aria-expanded="true"] .ingot-carousel-card-hint-label::before { content: "Ocultar"; }
+
+.ingot-carousel-card-chevron { transition: transform 220ms ease; }
+
+.ingot-carousel-card[aria-expanded="true"] .ingot-carousel-card-chevron { transform: rotate(180deg); }
+
 .ingot-carousel-card-detail {
   display: grid;
+  z-index: 1;
   grid-template-rows: 0fr;
   width: 100%;
   opacity: 0;
-  transition: grid-template-rows 220ms ease, opacity 180ms ease;
+  transition: grid-template-rows 240ms ease, opacity 200ms ease;
 }
 
 .ingot-carousel-card[aria-expanded="true"] .ingot-carousel-card-detail {
@@ -6035,8 +6115,9 @@ details.guide-faq > div {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   min-height: 0;
+  padding-top: 4px;
   overflow: hidden;
 }
 
@@ -6047,36 +6128,42 @@ details.guide-faq > div {
 }
 
 .ingot-carousel-card-meta {
-  display: inline-block;
-  padding: 4px 9px;
-  border-radius: var(--radius-xs);
-  background: var(--warning-subtle);
-  color: var(--warning);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #e6bb60, #c4943f);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .28);
+  color: #241a08;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 800;
+  letter-spacing: .02em;
   white-space: nowrap;
 }
 
 .ingot-carousel-arrow {
   display: grid;
   flex: 0 0 auto;
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   place-items: center;
   border: 1px solid rgba(232, 191, 103, .55);
   border-radius: 50%;
-  background: rgba(161, 112, 33, .16);
+  background: linear-gradient(160deg, rgba(230, 187, 96, .22), rgba(161, 112, 33, .14));
   color: #f4d58f;
-  font-size: 20px;
-  line-height: 1;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, .22), inset 0 1px rgba(255, 255, 255, .05);
   cursor: pointer;
-  transition: border-color 140ms ease, background 140ms ease, transform 140ms ease;
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease, box-shadow 160ms ease;
 }
 
+.ingot-carousel-arrow svg { display: block; }
+
 .ingot-carousel-arrow:hover:not(:disabled) {
-  border-color: rgba(244, 213, 143, .78);
-  background: rgba(176, 124, 40, .28);
-  transform: translateY(-1px);
+  border-color: rgba(244, 213, 143, .9);
+  background: linear-gradient(160deg, rgba(230, 187, 96, .4), rgba(176, 124, 40, .26));
+  transform: translateY(-2px) scale(1.06);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, .28), 0 0 18px rgba(230, 187, 96, .3), inset 0 1px rgba(255, 255, 255, .08);
 }
 
 .ingot-carousel-arrow:focus-visible {
@@ -6085,12 +6172,54 @@ details.guide-faq > div {
 }
 
 .ingot-carousel-arrow:disabled {
-  opacity: .35;
+  opacity: .3;
   cursor: not-allowed;
 }
 
+.ingot-carousel-dots {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ingot-carousel-dot {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: 1px solid rgba(230, 187, 96, .42);
+  border-radius: 50%;
+  background: rgba(230, 187, 96, .14);
+  cursor: pointer;
+  transition: width 200ms ease, background 200ms ease, border-color 200ms ease;
+}
+
+.ingot-carousel-dot:hover { border-color: rgba(244, 213, 143, .85); }
+
+.ingot-carousel-dot.is-active {
+  width: 24px;
+  border-color: transparent;
+  border-radius: 5px;
+  background: linear-gradient(90deg, #e6bb60, #f4d58f);
+}
+
+.ingot-carousel-dot:focus-visible {
+  outline: 2px solid var(--warning);
+  outline-offset: 2px;
+}
+
+@keyframes ingot-icon-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(230, 187, 96, .35), 0 0 16px rgba(230, 187, 96, .22); }
+  50% { box-shadow: 0 0 0 6px rgba(230, 187, 96, 0), 0 0 26px rgba(230, 187, 96, .4); }
+}
+
 @media (max-width: 640px) {
-  .ingot-carousel-card { width: 156px; padding: 16px 12px; }
+  .ingot-carousel { gap: 10px; }
+  .ingot-carousel-arrow { width: 40px; height: 40px; }
+  .ingot-carousel-card { max-width: 150px; padding: 22px 14px 16px; }
+  .ingot-carousel-card-icon-ring { width: 62px; height: 62px; }
+  .ingot-carousel-card-icon { width: 46px; height: 46px; }
+  .ingot-carousel-card-icon svg,
+  .ingot-carousel-card-icon img { width: 32px; height: 32px; }
 }
 
 .ingot-rules {
