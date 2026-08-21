@@ -444,7 +444,8 @@ window.IngotsPage = (function () {
       const confirmBtn = root.querySelector("#ingotPremiumConfirm");
       const status = root.querySelector("#ingotPremiumStatus");
       if (confirmBtn.disabled) return;
-      const { productId, title } = modal.dataset;
+      const productId = modal.dataset.selectedProduct;
+      const { title } = modal.dataset;
       confirmBtn.disabled = true;
       status.textContent = "Processando…";
       status.classList.remove("is-error", "is-success");
@@ -487,7 +488,7 @@ window.IngotsPage = (function () {
       const payBtn = root.querySelector("#ingotPaymentPay");
       const status = root.querySelector("#ingotPaymentStatus");
       if (payBtn.disabled) return;
-      const packageId = modal.dataset.packageId;
+      const packageId = modal.dataset.selectedPackage;
       payBtn.disabled = true;
       status.textContent = "Preparando pagamento…";
       status.className = "";
@@ -543,10 +544,10 @@ window.IngotsPage = (function () {
           handlePremiumBuy();
           return;
         }
-        const buyButton = event.target.closest(".ingot-carousel-card-buy");
+        const buyButton = event.target.closest(".ingot-carousel-card-buy[data-product-id]");
         if (buyButton) {
           modalReturnFocus = buyButton;
-          premiumModal.dataset.productId = buyButton.dataset.productId;
+          premiumModal.dataset.selectedProduct = buyButton.dataset.productId;
           premiumModal.dataset.title = buyButton.dataset.title;
           root.querySelector("#ingotPremiumTitle").textContent = buyButton.dataset.title;
           root.querySelector("#ingotPremiumCost").innerHTML = `${ingotsEmojiMarkup()} Custo: ${Number(buyButton.dataset.cost).toLocaleString("pt-BR")} Ingots`;
@@ -573,7 +574,7 @@ window.IngotsPage = (function () {
           const pkg = page.packages?.find((entry) => entry.id === buy.dataset.packageId);
           if (!pkg) return;
           modalReturnFocus = buy;
-          paymentModal.dataset.packageId = pkg.id;
+          paymentModal.dataset.selectedPackage = pkg.id;
           root.querySelector("#ingotPaymentTitle").textContent = pkg.title;
           root.querySelector("#ingotPaymentPrice").textContent = `${pkg.ingots} · ${pkg.price}`;
           root.querySelector("#ingotPaymentPay").disabled = false;
