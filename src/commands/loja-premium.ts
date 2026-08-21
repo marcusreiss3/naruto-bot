@@ -57,7 +57,7 @@ function panel(wallet: PremiumWallet, feedback?: string, page: Page = 0): TopLev
   const children: ContainerChild[] = [
     titleBlock("ingots", "Loja Premium", "Produtos adquiridos com Ingots"),
     factsBlock([
-      { label: "Ingots", value: String(wallet.ingots) },
+      { label: `${emoji("ingots")} Ingots`, value: String(wallet.ingots) },
       { label: `${emoji("giro_cla")} Giros de Vila + Clã`, value: String(wallet.clanSpins) },
       { label: `${emoji("giro_traco")} Giros de Traço`, value: String(wallet.traitSpins) },
     ]),
@@ -141,7 +141,7 @@ function respecConfirmationPanel(wallet: PremiumWallet): TopLevel[] {
   const cost = getPremiumProduct("attribute_respec")!.cost;
   return [economyContainer("obras", [
     titleBlock("reset_atributos", "Confirmar reset de atributos", "Esta ação usa Ingots e altera sua ficha"),
-    factsBlock([{ label: "Ingots", value: String(wallet.ingots) }, { label: "Custo", value: String(cost) }]),
+    factsBlock([{ label: `${emoji("ingots")} Ingots`, value: String(wallet.ingots) }, { label: "Custo", value: String(cost) }]),
     divider(),
     noticeBlock("aviso", "Todos os atributos serão zerados, os pontos investidos voltarão ao saldo e as habilidades aprendidas nas Árvores de Habilidade serão removidas."),
     text("Você poderá redistribuir os pontos com `/atributos` depois do reset."),
@@ -157,7 +157,7 @@ function characterResetConfirmationPanel(wallet: PremiumWallet): TopLevel[] {
   const cost = getPremiumProduct("character_reset")!.cost;
   return [economyContainer("obras", [
     titleBlock("reset_personagem", "Confirmar reset premium", "Esta ação usa Ingots e prepara uma nova ficha"),
-    factsBlock([{ label: "Ingots", value: String(wallet.ingots) }, { label: "Custo", value: String(cost) }]),
+    factsBlock([{ label: `${emoji("ingots")} Ingots`, value: String(wallet.ingots) }, { label: "Custo", value: String(cost) }]),
     divider(),
     noticeBlock("aviso", "Nome, rank, idade, aparência e história serão resetados. O rank volta para Academia, permitindo usar Giros de Vila + Clã novamente. Os pontos investidos voltarão ao saldo e as habilidades aprendidas nas Árvores de Habilidade serão removidas."),
     text("Você manterá nível, XP, Vila, Clã, Traço, inventário, Ryō, Ingots e Giros disponíveis."),
@@ -174,7 +174,7 @@ function fightingStyleResetConfirmationPanel(wallet: PremiumWallet): TopLevel[] 
   const cost = getPremiumProduct("fighting_style_reset")!.cost;
   return [economyContainer("obras", [
     titleBlock("reset_estilos", "Confirmar reset de estilos", "Esta ação usa Ingots e reorganiza seus estilos de luta"),
-    factsBlock([{ label: "Ingots", value: String(wallet.ingots) }, { label: "Custo", value: String(cost) }]),
+    factsBlock([{ label: `${emoji("ingots")} Ingots`, value: String(wallet.ingots) }, { label: "Custo", value: String(cost) }]),
     divider(),
     noticeBlock("aviso", "Todos os estilos de luta aprendidos serão removidos, junto das habilidades e técnicas exclusivas de suas árvores."),
     text("Seus atributos, nível e demais habilidades permanecem. Depois do reset, você poderá aprender outros estilos com os mestres."),
