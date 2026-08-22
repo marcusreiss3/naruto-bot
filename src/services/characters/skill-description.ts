@@ -150,6 +150,10 @@ export function buildMechanicsSummary(ability: Ability): string {
   }
   if (ability.clearsTerrain) parts.push(`Remove terreno de ${terrainName(ability.clearsTerrain)}.`);
   if (ability.oncePerCombat) parts.push("Pode ser usada somente uma vez por combate.");
+  if (ability.deathTrigger) {
+    const effects = ability.deathTrigger.effects.map((effect) => effectText(effect)).join(" ");
+    parts.push(`Ao ser derrotado, afeta inimigos em um raio de ${ability.deathTrigger.radius} casas: ${effects}`);
+  }
   if (ability.requiresStorm) {
     parts.push(
       "Exige ao menos uma área de chamas ainda ativa no campo para formar a tempestade, ou a passiva Nuvens de Tempestade.",

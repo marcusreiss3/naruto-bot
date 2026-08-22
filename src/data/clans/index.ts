@@ -1,7 +1,9 @@
 import type { Ability, ClanDef } from "../types.js";
+import { KAZEKAGE_ABILITIES } from "./kazekage.js";
 
 // Abilities de cla (categoria CLA). Hooks identificados por string p/ a engine.
 export const CLAN_ABILITIES: Ability[] = [
+  ...KAZEKAGE_ABILITIES,
   // ---- Uchiha ----
   {
     id: "uchiha_sharingan_1_tomoe",
@@ -86,6 +88,60 @@ export const CLAN_ABILITIES: Ability[] = [
     tags: ["cla", "uchiha", "doujutsu", "mangekyo"],
     description:
       "O Mangekyō desperta após um Trauma e manifesta uma variação única: Itachi, Sasuke, Shisui, Obito ou Madara. Seus caminhos exclusivos serão adicionados futuramente.",
+  },
+  {
+    id: "uchiha_coercao_sharingan",
+    name: "Coerção Sharingan",
+    category: "GENJUTSU",
+    tier: 2,
+    resource: "chakra",
+    cost: 22,
+    actionType: "COMUM",
+    baseDamage: 10,
+    scalingAttribute: "genjutsu",
+    range: 3,
+    shape: "SINGLE_TARGET",
+    effects: [{ effectId: "CONFUSION", duration: 2, chance: 0.75 }, { effectId: "ROOT", duration: 1, chance: 0.75 }],
+    requiresActiveDoujutsu: { flag: "sharinganTomoe", value: 3, label: "Sharingan de três tomoe" },
+    requirements: { clanId: "uchiha", manualOnly: true, attributes: { dojutsu: 18 }, level: 22 },
+    tags: ["cla", "uchiha", "genjutsu", "controle", "sharingan"],
+    description: "Com contato visual, aprisiona o alvo em um pesadelo e pode deixá-lo Confuso e Imobilizado.",
+  },
+  {
+    id: "uchiha_repressao_estacas",
+    name: "Ilusão Demoníaca: Repressão com Estacas",
+    category: "GENJUTSU",
+    tier: 3,
+    resource: "chakra",
+    cost: 25,
+    actionType: "COMUM",
+    baseDamage: 14,
+    scalingAttribute: "genjutsu",
+    range: 3,
+    shape: "SINGLE_TARGET",
+    effects: [{ effectId: "STUN", duration: 1, chance: 0.7 }, { effectId: "CHAKRA_DRAIN", duration: 2, chance: 0.7 }],
+    requiresActiveDoujutsu: { flag: "sharinganTomoe", value: 3, label: "Sharingan de três tomoe" },
+    requirements: { clanId: "uchiha", manualOnly: true, attributes: { dojutsu: 22 }, level: 26 },
+    tags: ["cla", "uchiha", "genjutsu", "controle", "sharingan"],
+    description: "A vítima sente estacas ilusórias atravessando seus membros: pode ficar Atordoada e ter o chakra drenado.",
+  },
+  {
+    id: "uchiha_genjutsu_sharingan",
+    name: "Genjutsu do Sharingan",
+    category: "GENJUTSU",
+    tier: 3,
+    resource: "chakra",
+    cost: 28,
+    actionType: "COMUM",
+    baseDamage: 12,
+    scalingAttribute: "genjutsu",
+    range: 3,
+    shape: "RADIUS",
+    effects: [{ effectId: "CONFUSION", duration: 2, chance: 0.75 }, { effectId: "DEFENSE_DOWN", duration: 2, chance: 0.75 }],
+    requiresActiveDoujutsu: { flag: "sharinganTomoe", value: 3, label: "Sharingan de três tomoe" },
+    requirements: { clanId: "uchiha", manualOnly: true, attributes: { dojutsu: 26 }, level: 30 },
+    tags: ["cla", "uchiha", "genjutsu", "area", "sharingan"],
+    description: "Projeta uma visão aterrorizante em todos os inimigos na área; eles podem ficar Confusos e com a Defesa Reduzida.",
   },
 
   // ---- Yamanaka ----
@@ -1912,6 +1968,9 @@ export const CLANS: ClanDef[] = [
       "uchiha_sharingan_1_tomoe",
       "uchiha_sharingan_2_tomoe",
       "uchiha_sharingan_3_tomoe",
+      "uchiha_coercao_sharingan",
+      "uchiha_repressao_estacas",
+      "uchiha_genjutsu_sharingan",
       "uchiha_mangekyo_sharingan",
     ],
     hooks: { onAttacked: "uchiha_read" },
@@ -2099,7 +2158,11 @@ export const CLANS: ClanDef[] = [
     name: "Kazekage",
     description: "Controladores de areia e Doton, com defesa que molda o campo de batalha.\nA árvore prioriza contenção, barreiras e pressão de média distância.",
     passiveIds: [],
-    activeIds: [],
+    activeIds: [
+      "kazekage_chuva_areia", "kazekage_mao_areia", "kazekage_escudo_areia", "kazekage_prisao_areia", "kazekage_caixao_areia", "kazekage_enterro_prisao_areia",
+      "kazekage_assalto_areia_ferro", "kazekage_martelo_ferro", "kazekage_pregos_longos", "kazekage_chuva_areia_ferro", "kazekage_ordem_mundial_ferro",
+      "kazekage_escudo_po_ouro", "kazekage_enterro_po_ouro", "kazekage_quadrado_perfeito_ouro", "kazekage_funeral_imperial_ouro", "kazekage_esfera_po_ouro",
+    ],
     hooks: {},
   },
   {

@@ -68,6 +68,23 @@ Chinoike      33    +10% / +20%       38,28       51,48       0,81        1,56
 Kamaitachi    26     +0% /  +5%       30,45       39,90       1,29        1,53
 Hozuki        27     +5% / +10%       33,50       39,27       1,02        1,45
 
+KAZEKAGE — MANIPULAÇÕES EXCLUSIVAS
+
+O despertar sorteia permanentemente Areia, Areia de Ferro ou Pó de Ouro. Cada
+personagem acessa somente um ramo. Os valores abaixo contam as passivas do
+ramo, mas não contam a árvore externa de Terra.
+
+Manipulação       PN   Passivas próprias     Dano médio   Melhor golpe
+-----------------------------------------------------------------------
+Areia             32        +10%                 21,56       30,80
+Areia de Ferro    32        +10% / +10%          28,56       38,72
+Pó de Ouro        28        +10%                 25,58       30,80
+
+Areia prioriza contenção, Barreira e finalização de alvos Imobilizados. Areia
+de Ferro é o ramo ofensivo, com penetração parcial de Bloqueio/Aparo e ápice
+de área de uso único por combate. Pó de Ouro troca parte do pico por Vida e
+Barreira mais fortes, sem deixar de ter controle e finalização.
+
 
 4. CLÃS COM AFINIDADES NATURAIS
 --------------------------------------------------------------------------------
@@ -87,6 +104,9 @@ Hoshigaki     Água                                  55,41             79,69
 Chinoike      Água em parte do arsenal              45,21             51,48
 Kamaitachi    Vento                                 61,36             80,40
 Hozuki        Água                                  48,15             56,45
+Kazekage      Terra — Areia                          43,45             62,06
+Kazekage      Terra — Areia de Ferro                 57,55             78,02
+Kazekage      Terra — Pó de Ouro                     51,54             62,06
 
 
 5. INVESTIMENTOS COMBINADOS CAROS
@@ -313,6 +333,12 @@ COMO AS TABELAS SÃO CALCULADAS
 
 Clã: média dos nove clãs ofensivos da tabela do capítulo 3, apenas com
 passivas próprias permanentes e sem afinidade externa ou transformação.
+
+Kazekage: não entra nessa média única, pois o despertar entrega somente uma
+das três manipulações exclusivas. Para o dano final, use a linha da
+manipulação sorteada na tabela do capítulo 4: Areia (43,45 / 62,06), Areia de
+Ferro (57,55 / 78,02) ou Pó de Ouro (51,54 / 62,06), respectivamente dano
+médio combinado e melhor golpe com Terra completa.
 
 Estilo de luta: média de Punho Forte, Punho Arhat e Punho Adamantino, com a
 árvore própria e as passivas genéricas de Taijutsu, sem modos ou Portões.

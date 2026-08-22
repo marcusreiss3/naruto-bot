@@ -194,7 +194,11 @@ export interface Ability {
   // Genjutsu Ketsuryuugan do Chinoike E' o proprio doujutsu agindo). O `flag`
   // bate com a chave em ParticipantRow.flags que /combate byakugan|ketsuryuugan
   // liga/desliga (ex: "byakuganActive"); `label` e' so' pra mensagem de erro.
-  requiresActiveDoujutsu?: { flag: string; label: string };
+  requiresActiveDoujutsu?: { flag: string; label: string; value?: unknown };
+  // Fórmula preparada no próprio corpo. Quando o usuário for derrotado, ela
+  // dispara uma última área de selamento; a técnica ainda precisa ser usada
+  // antes da morte, portanto não transforma uma derrota em ação gratuita.
+  deathTrigger?: { radius: number; effects: AppliedEffect[] };
   // pode ser usada uma unica vez por combate
   oncePerCombat?: boolean;
   reactionKind?: "BLOCK" | "DODGE" | "PARRY" | "JUTSU";

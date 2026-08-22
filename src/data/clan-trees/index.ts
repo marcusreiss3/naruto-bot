@@ -170,6 +170,45 @@ const UCHIHA: SkillNodeDef[] = [
     15,
     "Ativa o Sharingan de três tomoe. Concede +10% de esquiva, consome 9% de chakra por turno e aprende permanentemente apenas Ninjutsus de Fogo, Água, Vento, Terra e Raio, além dos jutsus ativos de Punho Forte, Arhat e Adamantino observados. Não copia passivas. Cada cópia exige nível e pontos no atributo da árvore; Ninjutsu elemental também exige afinidade.",
   ),
+  UC.jutsu(
+    "uchiha_coercao_sharingan",
+    "Coerção Sharingan",
+    "👁️",
+    "B",
+    "Genjutsu Ocular",
+    -1.25,
+    5,
+    ["uchiha_sharingan_3_tomoe"],
+    22,
+    18,
+    "Com contato visual, arrasta a mente do alvo para um pesadelo opressivo que pode deixá-lo confuso e preso no lugar. Exige o Sharingan de três tomoe ativo.",
+  ),
+  UC.jutsu(
+    "uchiha_repressao_estacas",
+    "Ilusão Demoníaca: Repressão com Estacas",
+    "🗡️",
+    "A",
+    "Genjutsu Ocular",
+    1.25,
+    5,
+    ["uchiha_sharingan_3_tomoe"],
+    26,
+    22,
+    "O olhar arrasta o alvo para uma ilusão de tortura, onde estacas atravessam seus membros e podem paralisá-lo por um instante. Exige o Sharingan de três tomoe ativo.",
+  ),
+  UC.jutsu(
+    "uchiha_genjutsu_sharingan",
+    "Genjutsu do Sharingan",
+    "🔴",
+    "A",
+    "Genjutsu Ocular",
+    0,
+    6,
+    ["uchiha_coercao_sharingan", "uchiha_repressao_estacas"],
+    30,
+    26,
+    "Projeta uma ilusão aterrorizante através do Sharingan de três tomoe, alcançando vários inimigos que possam ser vistos e deixando-os vulneráveis a ataques posteriores.",
+  ),
   {
     ...UC.jutsu(
       "uchiha_mangekyo_sharingan",
@@ -178,7 +217,7 @@ const UCHIHA: SkillNodeDef[] = [
       "S",
       "Mangekyō",
       0,
-      5,
+      7,
       ["uchiha_sharingan_3_tomoe"],
       45,
       32,
@@ -2079,9 +2118,9 @@ const RAIKAGE: SkillNodeDef[] = [
 // Hatake (15) e do Uzumaki (14), mas ainda um dos mais baratos do jogo,
 // coerente com "quase zero dano de graça" na tabela de "Custo total da
 // árvore vs dano" da skill jutsu-authoring.
-const KZ = makeClan("kamizuru", "ninjutsu");
+const KMZ = makeClan("kamizuru", "ninjutsu");
 const KAMIZURU: SkillNodeDef[] = [
-  KZ.pass(
+  KMZ.pass(
     "kamizuru_raiz",
     "Colônia de Iwa",
     "🐝",
@@ -2094,7 +2133,7 @@ const KAMIZURU: SkillNodeDef[] = [
     "Passiva sempre ativa: gerações inteiras hospedando abelhas de chakra fazem do próprio corpo uma colmeia viva. Seus jutsus de clã custam 10% menos chakra e têm +15 pontos percentuais de chance de fazer o alvo perder 10% de chakra por turno.",
     true,
   ),
-  KZ.jutsu(
+  KMZ.jutsu(
     "kamizuru_abelha_gigante",
     "Técnica de Invocação: Abelha Gigante",
     "🐝",
@@ -2107,7 +2146,7 @@ const KAMIZURU: SkillNodeDef[] = [
     3,
     "Invoca uma abelha gigante: mandíbula de dentes afiados, ferrão mortal e asas capazes de causar ventos fortes. Ataca sozinha todo turno, como uma invocação comum.",
   ),
-  KZ.jutsu(
+  KMZ.jutsu(
     "kamizuru_abelha_mel",
     "Técnica da Abelha do Mel",
     "🍯",
@@ -2120,7 +2159,7 @@ const KAMIZURU: SkillNodeDef[] = [
     8,
     "Conjura um enxame de abelhas feitas de chakra. Toda vez que uma abelha é ferida ou destruída, libera cera pegajosa sobre o adversário — forte o suficiente pra imobilizá-lo.",
   ),
-  KZ.jutsu(
+  KMZ.jutsu(
     "kamizuru_bomba_abelha",
     "Bomba de Abelha",
     "💣",
@@ -2133,7 +2172,7 @@ const KAMIZURU: SkillNodeDef[] = [
     8,
     "Abelhas carregando amuletos explosivos atacam em enxame. Assim que entram em contato com o alvo, os selos explodem.",
   ),
-  KZ.jutsu(
+  KMZ.jutsu(
     "kamizuru_colmeia_rocha",
     "Colmeia de Rocha",
     "🪨",
@@ -2146,7 +2185,7 @@ const KAMIZURU: SkillNodeDef[] = [
     14,
     "Cria uma caverna em forma de colmeia, abrigando larvas de abelha gigante que se alimentam de chakra e o drenam de cada centímetro das paredes — prendendo quem estiver lá dentro.",
   ),
-  KZ.jutsu(
+  KMZ.jutsu(
     "kamizuru_mil_ferroes",
     "Mil Ferrões de Abelha",
     "🩸",
@@ -2159,7 +2198,7 @@ const KAMIZURU: SkillNodeDef[] = [
     14,
     "Invoca uma nuvem de abelhas que disparam seus ferrões venenosos contra tudo na área, cercando o alvo por dentro.",
   ),
-  KZ.pass(
+  KMZ.pass(
     "kamizuru_apice",
     "Enxame Completo",
     "👑",
@@ -2380,6 +2419,48 @@ const BAKUREI: SkillNodeDef[] = [
   BK.pass("bakurei_cupula", "Cúpula Sufocante", "🛖", "Terra", -1, 4, ["bakurei_dragao_terra"], 20, 18, "Passiva: a Prisão Cúpula de Terra custa 10% menos chakra e o Dreno de Chakra que ela aplica dura 1 rodada a mais."),
 ];
 
+// --------------------------------------------------------------- KAZEKAGE
+// A raiz sorteia UMA manipulação persistente. Depois disso, só o ramo
+// correspondente é devolvido pelo servidor para o site e pode ser comprado.
+// Os três kits pagam em Ninjutsu e recebem, naturalmente, os modificadores
+// das técnicas de Terra por carregarem o elemento TERRA nas abilities.
+const KZ = makeClan("kazekage", "ninjutsu");
+const sandBranch = <T extends SkillNodeDef>(variant: "AREIA" | "FERRO" | "OURO", node: T): T => ({
+  ...node,
+  requiresKazekageSand: variant,
+});
+const KAZEKAGE: SkillNodeDef[] = [
+  KZ.pass("kazekage_despertar_areia", "Despertar da Areia", "🏜️", "Despertar", 0, 0, [], 1, 1, "Passiva permanente: desperta uma única manipulação de areia — Areia, Areia de Ferro ou Pó de Ouro — escolhida aleatoriamente. A escolha define sua árvore exclusiva.", true),
+
+  // Areia comum: domínio de área, contenção e execução sobre alvo já preso.
+  sandBranch("AREIA", KZ.pass("kazekage_areia_instinto", "Instinto da Areia", "🛡️", "Areia", -1.25, 1, ["kazekage_despertar_areia"], 4, 4, "Passiva: a areia reage ao perigo. +5 pontos percentuais de esquiva contra Ninjutsu.")),
+  sandBranch("AREIA", KZ.jutsu("kazekage_chuva_areia", "Chuva de Areia", "🌪️", "C", "Areia", -1.25, 2, ["kazekage_areia_instinto"], 5, 6, "Dispara uma infinidade de balas de areia em linha contra o adversário.")),
+  sandBranch("AREIA", KZ.jutsu("kazekage_mao_areia", "Mão de Areia", "✋", "B", "Areia", -1.25, 3, ["kazekage_chuva_areia"], 9, 10, "Mãos de areia surgem ao redor do alvo e fecham os dedos sobre ele.")),
+  sandBranch("AREIA", KZ.pass("kazekage_areia_dominio", "Domínio do Deserto", "🏜️", "Areia", -1.25, 4, ["kazekage_mao_areia"], 13, 14, "Passiva: seus jutsus de areia causam +10% de dano e a Imobilização aplicada por eles dura 1 rodada a mais.")),
+  sandBranch("AREIA", KZ.jutsu("kazekage_escudo_areia", "Escudo de Areia", "🛡️", "B", "Areia", 0, 3, ["kazekage_chuva_areia"], 10, 11, "A areia se ergue ao redor do próprio corpo em uma muralha compacta.")),
+  sandBranch("AREIA", KZ.jutsu("kazekage_prisao_areia", "Prisão de Areia", "⛓️", "B", "Confinamento", 0, 4, ["kazekage_escudo_areia"], 16, 16, "Uma onda voraz de areia cerca os inimigos por todos os lados.")),
+  sandBranch("AREIA", KZ.jutsu("kazekage_caixao_areia", "Caixão de Areia", "⚰️", "A", "Confinamento", 0, 5, ["kazekage_prisao_areia"], 22, 22, "A areia se fecha como um caixão e esmaga quem ficou em seu interior.")),
+  sandBranch("AREIA", KZ.jutsu("kazekage_enterro_prisao_areia", "Enterro da Prisão de Areia", "🌫️", "A", "Ápice", 0, 6, ["kazekage_caixao_areia"], 30, 28, "Um redemoinho de areia cobre o campo e engole os inimigos em seu centro.")),
+
+  // Areia de Ferro: pressão ofensiva e magnetismo para perfurar defesa.
+  sandBranch("FERRO", KZ.pass("kazekage_ferro_magnetismo", "Magnetismo de Ferro", "🧲", "Areia de Ferro", 0, 1, ["kazekage_despertar_areia"], 4, 4, "Passiva: suas técnicas de Areia de Ferro causam +10% de dano.")),
+  sandBranch("FERRO", KZ.jutsu("kazekage_assalto_areia_ferro", "Assalto da Areia de Ferro", "⚔️", "C", "Areia de Ferro", 0, 2, ["kazekage_ferro_magnetismo"], 5, 6, "Comprime areia de ferro numa arma metálica gigantesca e golpeia o alvo.")),
+  sandBranch("FERRO", KZ.jutsu("kazekage_martelo_ferro", "Martelo", "🔨", "B", "Areia de Ferro", -1, 3, ["kazekage_assalto_areia_ferro"], 10, 11, "Forma um bloco pesado de areia de ferro e o desaba sobre o alvo.")),
+  sandBranch("FERRO", KZ.jutsu("kazekage_pregos_longos", "Areia de Ferro: Pregos Longos", "📌", "B", "Areia de Ferro", 1, 3, ["kazekage_assalto_areia_ferro"], 12, 13, "Dispara várias lanças de areia de ferro em diferentes direções.")),
+  sandBranch("FERRO", KZ.pass("kazekage_ferro_polaridade", "Polaridade Oposta", "🧲", "Areia de Ferro", 0, 4, ["kazekage_martelo_ferro", "kazekage_pregos_longos"], 18, 18, "Passiva: suas técnicas de Areia de Ferro causam mais 10% de dano e ignoram 15% da redução de Bloqueio e Aparo.")),
+  sandBranch("FERRO", KZ.jutsu("kazekage_chuva_areia_ferro", "Chuva da Areia de Ferro", "🌧️", "A", "Areia de Ferro", 0, 5, ["kazekage_ferro_polaridade"], 22, 23, "Espalha pequenos grãos de areia de ferro por toda a área em segundos.")),
+  sandBranch("FERRO", KZ.jutsu("kazekage_ordem_mundial_ferro", "Ordem Mundial da Areia de Ferro", "☄️", "S", "Ápice", 0, 6, ["kazekage_chuva_areia_ferro"], 32, 30, "Colide duas massas de areia de ferro com campos magnéticos opostos em uma grande área.")),
+
+  // Pó de Ouro: defesa pesada, controle por densidade e arremesso.
+  sandBranch("OURO", KZ.pass("kazekage_ouro_densidade", "Densidade Dourada", "✨", "Pó de Ouro", 0, 1, ["kazekage_despertar_areia"], 4, 4, "Passiva: +8% de vida máxima. Sua Barreira de Pó de Ouro recebe mais 8 pontos.")),
+  sandBranch("OURO", KZ.jutsu("kazekage_escudo_po_ouro", "Escudo de Pó de Ouro", "🛡️", "C", "Pó de Ouro", 0, 2, ["kazekage_ouro_densidade"], 5, 6, "Eleva o pó de ouro ao redor do usuário em uma barricada espessa.")),
+  sandBranch("OURO", KZ.jutsu("kazekage_enterro_po_ouro", "Enterro de Pó de Ouro", "🌊", "B", "Pó de Ouro", -1, 3, ["kazekage_escudo_po_ouro"], 10, 11, "Uma maré de pó de ouro emerge do chão e avança pelo campo.")),
+  sandBranch("OURO", KZ.jutsu("kazekage_quadrado_perfeito_ouro", "Quadrado Perfeito do Pó de Ouro", "⬛", "B", "Pó de Ouro", 1, 3, ["kazekage_escudo_po_ouro"], 12, 13, "Forma uma massa quadrada de pó de ouro acima do alvo e a faz despencar.")),
+  sandBranch("OURO", KZ.pass("kazekage_ouro_gravidade", "Gravidade do Ouro", "⚖️", "Pó de Ouro", 0, 4, ["kazekage_enterro_po_ouro", "kazekage_quadrado_perfeito_ouro"], 18, 18, "Passiva: seus jutsus de Pó de Ouro causam +10% de dano e a Imobilização aplicada por eles dura 1 rodada a mais.")),
+  sandBranch("OURO", KZ.jutsu("kazekage_funeral_imperial_ouro", "Funeral Imperial do Pó de Ouro", "⚰️", "A", "Pó de Ouro", 0, 5, ["kazekage_ouro_gravidade"], 22, 23, "O pó de ouro engole o alvo e se comprime sob uma pressão esmagadora.")),
+  sandBranch("OURO", KZ.jutsu("kazekage_esfera_po_ouro", "Esfera do Pó de Ouro", "🟡", "A", "Ápice", 0, 6, ["kazekage_funeral_imperial_ouro"], 30, 28, "Arremessa uma esfera pesada de pó de ouro contra o alvo.")),
+];
+
 // -------------------------------------------------------------- SHIROGANE
 // Clã dos marionetistas de Suna (Kankuro). Kugutsu já existe como disciplina
 // INDEPENDENTE de clã (kugutsu_oficina_inicial, ver data/kugutsu-tree.ts) —
@@ -2428,5 +2509,6 @@ export const CLAN_TREES: Record<string, SkillNodeDef[]> = {
   onoki: ONOKI,
   yotsuki: YOTSUKI,
   bakurei: BAKUREI,
+  kazekage: KAZEKAGE,
   shirogane: SHIROGANE,
 };

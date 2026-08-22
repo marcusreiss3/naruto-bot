@@ -14,16 +14,17 @@ const IDS = [
   "gen_contra_genjutsu",
   "gen_substituicao_ilusoria",
   "gen_penas_caidas",
+  "gen_alicerce_relampago_ilusorio",
   "gen_dominio_mundo_obscuro",
   "gen_visao_inferno",
 ] as const;
 
 describe("árvore de Genjutsu: integridade", () => {
-  it("entra no índice global e concede as oito técnicas ativas", () => {
+  it("entra no índice global e concede as nove técnicas ativas", () => {
     const indexed = new Set(allNodes().map((n) => n.id));
     for (const node of GENJUTSU_TREE) expect(indexed.has(node.id)).toBe(true);
     const jutsuNodes = GENJUTSU_TREE.filter((n) => n.kind === "JUTSU");
-    expect(jutsuNodes).toHaveLength(8);
+    expect(jutsuNodes).toHaveLength(9);
     expect(new Set(jutsuNodes.map((n) => n.grantsAbilityId))).toEqual(new Set(IDS));
   });
 
@@ -35,7 +36,7 @@ describe("árvore de Genjutsu: integridade", () => {
     for (const n of GENJUTSU_TREE) expect(n.pool).toBe("genjutsu");
   });
 
-  it("todas as oito técnicas existem, são compra manual e não têm clanId/element", () => {
+  it("todas as nove técnicas existem, são compra manual e não têm clanId/element", () => {
     for (const id of IDS) {
       const ab = getAbility(id);
       expect(ab, id).toBeTruthy();
@@ -82,8 +83,9 @@ describe("árvore de Genjutsu: forma — raiz com 3 ramos, cada um com identidad
     }
   });
 
-  it("Pesadelo encadeia Penas Caídas -> Domínio do Medo -> Domínio do Mundo Obscuro", () => {
-    expect(GENJUTSU_TREE.find((n) => n.id === "gen_dominio_do_medo")!.requires).toEqual(["gen_penas_caidas"]);
+  it("Pesadelo encadeia Penas Caídas -> Alicerce -> Domínio do Medo -> Domínio do Mundo Obscuro", () => {
+    expect(GENJUTSU_TREE.find((n) => n.id === "gen_alicerce_relampago_ilusorio")!.requires).toEqual(["gen_penas_caidas"]);
+    expect(GENJUTSU_TREE.find((n) => n.id === "gen_dominio_do_medo")!.requires).toEqual(["gen_alicerce_relampago_ilusorio"]);
     expect(GENJUTSU_TREE.find((n) => n.id === "gen_dominio_mundo_obscuro")!.requires).toEqual(["gen_dominio_do_medo"]);
   });
 
@@ -91,6 +93,17 @@ describe("árvore de Genjutsu: forma — raiz com 3 ramos, cada um com identidad
     const apice = GENJUTSU_TREE.find((n) => n.id === "gen_visao_inferno")!;
     expect(new Set(apice.requires)).toEqual(new Set(["gen_interrogatorio", "gen_dominio_mundo_obscuro"]));
     expect(apice.rank).toBe("S");
+  });
+});
+
+describe("Alicerce de Relâmpago Ilusório: luz de área para abrir a guarda", () => {
+  const ab = getAbility("gen_alicerce_relampago_ilusorio")!;
+  it("atinge uma área e pode confundir, além de reduzir a defesa", () => {
+    expect(ab.shape).toBe("RADIUS");
+    expect(ab.effects).toEqual([
+      { effectId: "CONFUSION", duration: 2, chance: 0.75 },
+      { effectId: "DEFENSE_DOWN", duration: 1, chance: 0.75 },
+    ]);
   });
 });
 

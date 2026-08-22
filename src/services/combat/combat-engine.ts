@@ -1330,7 +1330,12 @@ export async function useAbility(
       return fail(`Você já tem o máximo de ${ability.summon.maxAlive} invocações desse tipo vivas em campo.`);
     }
   }
-  if (ability.requiresActiveDoujutsu && !actor.flags[ability.requiresActiveDoujutsu.flag]) {
+  if (
+    ability.requiresActiveDoujutsu &&
+    (!actor.flags[ability.requiresActiveDoujutsu.flag] ||
+      (ability.requiresActiveDoujutsu.value !== undefined &&
+        actor.flags[ability.requiresActiveDoujutsu.flag] !== ability.requiresActiveDoujutsu.value))
+  ) {
     return fail(`Precisa estar com o ${ability.requiresActiveDoujutsu.label} ativo pra usar essa técnica.`);
   }
   const requiredAbilityId = ability.requirements?.requiresAbilityId;
@@ -1392,6 +1397,14 @@ export async function useAbility(
   if (ability.oncePerCombat) await setFlag(actor.id, "usedOnceAbility", ability.id);
   if (isCopied) await setFlag(actor.id, "sharinganCopiedAbilityId", undefined);
   logs.push(`✨ ${actor.name} usou **${ability.name}** (-${cost}% ${ability.resource}).`);
+  if (ability.deathTrigger) {
+    await setFlag(actor.id, "armedDeathTrigger", {
+      abilityId: ability.id,
+      radius: ability.deathTrigger.radius,
+      effects: ability.deathTrigger.effects,
+    });
+    logs.push(`🔒 ${actor.name} preparou uma fórmula que será ativada se for derrotado.`);
+  }
   if (carelessAttackTriggered) {
     await setFlag(actionOwner.id, "nextNoReaction", true);
     logs.push(`⚠️ ${actionOwner.name} arriscou um Ataque Descuidado: o próximo golpe que sofrer não poderá ser reagido.`);
@@ -3112,12 +3125,52 @@ async function applyDamage(
 ): Promise<number> {
   const newHp = Math.max(0, participant.hpCurrent - delta);
   await prisma.combatParticipant.update({ where: { id: participant.id }, data: { hpCurrent: newHp } });
+  if (newHp <= 0 && participant.hpCurrent > 0) {
+    await triggerArmedDeathSeal(sessionId, participant.id, logs);
+  }
   if (newHp <= 0 && participant.hpCurrent > 0 && participant.flags?.isPuppet && typeof participant.flags.puppetId === "string") {
     await prisma.puppet.updateMany({ where: { id: participant.flags.puppetId, destroyedAt: null }, data: { destroyedAt: new Date() } });
     logs.push(`⚙️ ${participant.name} foi destruída; poderá ser reconstruída na oficina.`);
   }
   if (delta > 0) await mirrorControlledDamage(sessionId, participant.controlledById, delta, participant.name, logs);
   return newHp;
+}
+
+// Fórmulas preparadas em SELF (hoje, o Selo de Quatro Símbolos Reverso).
+// O estado fica no participante, não no jutsu que o derrotou: assim funciona
+// para dano direto, contra-ataque, dano refletido e qualquer outra morte que
+// passe pelo ponto único de dano da engine.
+async function triggerArmedDeathSeal(sessionId: string, participantId: string, logs: string[]): Promise<void> {
+  const current = await getSessionById(sessionId);
+  const dead = current?.participants.find((p) => p.id === participantId);
+  const trigger = dead?.flags.armedDeathTrigger as
+    | { abilityId: string; radius: number; effects: Ability["effects"] }
+    | undefined;
+  if (!current || !dead || !trigger?.effects?.length) return;
+
+  await setFlag(dead.id, "armedDeathTrigger", undefined);
+  const scenario = getScenarioById(current.scenarioId);
+  const center = parseCell(dead.cell);
+  if (!scenario || !center) return;
+  const cells = new Set(radiusCells(center, trigger.radius, scenario.rows, scenario.cols).map(toCell));
+  const targets = current.participants.filter(
+    (p) => p.hpCurrent > 0 && p.teamId !== dead.teamId && cells.has(p.cell),
+  );
+  for (const target of targets) {
+    for (const effect of trigger.effects) {
+      await applyEffect(
+        target.id,
+        effect.effectId,
+        effect.stacks ?? 1,
+        effect.duration ?? defaultDurationFor(effect.effectId),
+      );
+    }
+  }
+  if (targets.length) {
+    logs.push(`⚫ O selo final de ${dead.name} se fechou e atingiu ${targets.map((p) => p.name).join(", ")}.`);
+  } else {
+    logs.push(`⚫ O selo final de ${dead.name} se fechou sem inimigos próximos.`);
+  }
 }
 
 // Libera UM corpo controlado especifico. So' limpa o STUN artificial do

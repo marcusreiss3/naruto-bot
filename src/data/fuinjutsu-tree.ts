@@ -18,8 +18,11 @@ export const FUINJUTSU_TREE: SkillNodeDef[] = [
   passive("fuin_traco_contencao", "Traço de Contenção", "Supressão", -1.25, 2, ["fuin_raiz"], 8, 8, "Passiva: Método de Selamento de Fogo e Selo de Cinco Elementos custam 15% menos chakra."),
   jutsu("fuin_selo_cinco_elementos", "Selo de Cinco Elementos", "B", "Supressão", -1.25, 3, ["fuin_traco_contencao"], 14, 14, "Marca o fluxo de chakra do alvo com um selo maligno, dificultando ou bloqueando o uso de Ninjutsu."),
   jutsu("fuin_selamento_contrato", "Selamento de Contrato", "A", "Supressão", -1.25, 4, ["fuin_selo_cinco_elementos"], 24, 24, "Ao tocar o peito do alvo, rompe temporariamente seu contrato de invocação e bloqueia técnicas de chakra vinculadas a Bijuu."),
+  jutsu("fuin_selo_quatro_simbolos_reverso", "Selo de Quatro Símbolos Reverso", "A", "Supressão", -1.25, 5, ["fuin_selamento_contrato"], 30, 28, "Prepara no próprio peito uma fórmula mortal. Se o usuário for derrotado, a fórmula se fecha ao redor dele e sela temporariamente o Ninjutsu dos inimigos próximos."),
 
   jutsu("fuin_formacao_cordas_luz", "Formação das Cordas de Luz", "B", "Confinamento", 1.25, 1, ["fuin_metodo_selamento_fogo"], 10, 10, "Uma fórmula circular se alastra no chão e imobiliza inimigos dentro de sua área."),
   passive("fuin_ancora_formula", "Âncora da Fórmula", "Confinamento", 1.25, 2, ["fuin_formacao_cordas_luz"], 16, 16, "Passiva: suas técnicas de selamento que imobilizam duram 1 rodada adicional."),
   jutsu("fuin_ligacao_pano", "Técnica da Ligação de Pano", "C", "Confinamento", 1.25, 3, ["fuin_ancora_formula"], 20, 20, "Um grande rolo de pano selado envolve o adversário, prendendo seus movimentos e impedindo-o de usar técnicas de Ninjutsu."),
+  jutsu("fuin_rugido_confinamento_leao", "Rugido do Confinamento do Leão", "A", "Confinamento", 1.25, 4, ["fuin_ligacao_pano"], 26, 25, "Uma fórmula de leão fecha o fluxo usado para Ninjutsu do inimigo e pode prendê-lo ao chão. Não sela tenketsu: esse efeito permanece exclusivo do Punho Suave Hyūga."),
+  jutsu("fuin_selo_auto_amaldicoamento", "Selo de Auto-Amaldiçoamento", "A", "Confinamento", 1.25, 5, ["fuin_rugido_confinamento_leao"], 32, 30, "Inscreve discretamente uma marca amaldiçoada no alvo. Quando o selo se manifesta, ele pode ficar Imobilizado e sem moldar Ninjutsu por um breve período."),
 ];

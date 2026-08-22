@@ -839,6 +839,18 @@ export const CLAN_PASSIVES: ClanPassiveDef[] = [
   { nodeId: "iryo_lamina_estavel", clanId: "iryo", abilityIds: ["iryo_bisturi"], effectDurationBonus: { effectId: "EMPOWERED", bonus: 1 } },
   { nodeId: "iryo_sinapses_caoticas", clanId: "iryo", abilityIds: ["iryo_choque_desorientacao"], effectDurationBonus: { effectId: "CONFUSION", bonus: 1 } },
 
+  // --------------------------------------------------------------- KAZEKAGE
+  // Cada personagem recebe apenas UMA das três árvores. Areia comum equilibra
+  // contenção e defesa; Ferro é o ramo ofensivo; Ouro troca parte do pico por
+  // Barreira e vida. As abilities têm element:TERRA, então as passivas de
+  // Terra entram pelo fluxo normal de `passiveMods`.
+  { nodeId: "kazekage_areia_instinto", clanId: "kazekage", ninjutsuDodgeBonus: 0.05 },
+  { nodeId: "kazekage_areia_dominio", clanId: "kazekage", damageMult: 1.1, effectDurationBonus: { effectId: "ROOT", bonus: 1 } },
+  { nodeId: "kazekage_ferro_magnetismo", clanId: "kazekage", damageMult: 1.1 },
+  { nodeId: "kazekage_ferro_polaridade", clanId: "kazekage", damageMult: 1.1, armorPierce: 0.15 },
+  { nodeId: "kazekage_ouro_densidade", clanId: "kazekage", maxHpBonus: 0.08, abilityIds: ["kazekage_escudo_po_ouro"], effectStacksBonus: { SHIELD: 8 } },
+  { nodeId: "kazekage_ouro_gravidade", clanId: "kazekage", damageMult: 1.1, effectDurationBonus: { effectId: "ROOT", bonus: 1 } },
+
   // ------------------------------------------------------------ SHIROGANE
   // Clã dos marionetistas de Suna (Kankuro) — não tem jutsu próprio, então
   // toda a árvore é buff pro sistema de Kugutsu (categoria KUGUTSU das 12

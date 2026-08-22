@@ -54,6 +54,13 @@ import {
   type CharacterCondition,
   type MangekyoVariant,
 } from "./mangekyo.js";
+import {
+  kazekageSandVariantFromNodeId,
+  kazekageSandVariantNodeId,
+  KAZEKAGE_SAND_VARIANT_LABEL,
+  rollKazekageSandVariant,
+  type KazekageSandVariant,
+} from "./kazekage-sand.js";
 
 // Icone do elemento (footer). So basicos — kekkei genkai nunca e primeiro
 // elemento. Usado pra pintar o no "Primeiro Elemento" com o elemento do cla.
@@ -199,6 +206,7 @@ export interface CharSnapshot {
   copiedJutsuIds?: string[]; // arsenal permanente aprendido pelo Sharingan
   conditions?: Set<CharacterCondition>;
   mangekyoVariant?: MangekyoVariant;
+  kazekageSandVariant?: KazekageSandVariant;
   clanId: string | null; // cla do personagem (define o primeiro elemento)
   traitId?: string | null; // trait (Fantasma do Cla mexe no custo dos nos)
   // valor BRUTO de cada atributo. É o TETO de cada bolsa (orçamento) e também
@@ -258,6 +266,9 @@ function snapFrom(char: {
   const mangekyoVariant = char.skillNodes
     .map((s) => mangekyoVariantFromNodeId(s.nodeId))
     .find((variant): variant is MangekyoVariant => Boolean(variant));
+  const kazekageSandVariant = char.skillNodes
+    .map((s) => kazekageSandVariantFromNodeId(s.nodeId))
+    .find((variant): variant is KazekageSandVariant => Boolean(variant));
   const attributes: PoolMap = char.attributes ?? {};
   const spentByPool = spentOf(owned, { clanId: char.clan?.clanId, traitId: char.trait?.traitId });
   // disponível de cada pool = valor do atributo - o que já foi gasto nele.
@@ -282,6 +293,7 @@ function snapFrom(char: {
     copiedJutsuIds,
     conditions,
     mangekyoVariant,
+    kazekageSandVariant,
     clanId: char.clan?.clanId ?? null,
     traitId: char.trait?.traitId ?? null,
     attributes,
@@ -308,6 +320,15 @@ export async function loadSnapshot(discordId: string, guildId: string, villageId
       update: {},
     });
     snap.mangekyoVariant = variant;
+  }
+  if (snap.clanId === "kazekage" && snap.owned.has("kazekage_despertar_areia") && !snap.kazekageSandVariant) {
+    const variant = rollKazekageSandVariant();
+    await prisma.characterSkillNode.upsert({
+      where: { charId_nodeId: { charId: char.id, nodeId: kazekageSandVariantNodeId(variant) } },
+      create: { charId: char.id, nodeId: kazekageSandVariantNodeId(variant) },
+      update: {},
+    });
+    snap.kazekageSandVariant = variant;
   }
 
   return { ...snap, villageId };
@@ -336,6 +357,9 @@ export function lockReason(snap: CharSnapshot, node: SkillNodeDef): string | nul
   }
   if (node.requiresCondition && !snap.conditions?.has(node.requiresCondition)) {
     return `Requer condição: ${node.requiresCondition === "TRAUMA" ? "Trauma" : node.requiresCondition}.`;
+  }
+  if (node.requiresKazekageSand && snap.kazekageSandVariant !== node.requiresKazekageSand) {
+    return `Requer a manipulação ${KAZEKAGE_SAND_VARIANT_LABEL[node.requiresKazekageSand]}.`;
   }
   for (const req of node.requires) {
     if (!snap.owned.has(req)) {
@@ -383,7 +407,9 @@ export function viewTree(snap: CharSnapshot, element: Element): NodeView[] {
 
 // Mesma logica de viewTree, mas pra arvore de um CLA (sem `element`, gate por clanId).
 export function viewClanTree(snap: CharSnapshot, clanId: string): NodeView[] {
-  return (CLAN_TREES[clanId] ?? []).map((node) => {
+  return (CLAN_TREES[clanId] ?? [])
+    .filter((node) => !node.requiresKazekageSand || node.requiresKazekageSand === snap.kazekageSandVariant)
+    .map((node) => {
     const combat = combatOf(node);
     const mechanics = mechanicsOf(node);
     const visualDescription = visualDescriptionOf(node);
@@ -396,7 +422,7 @@ export function viewClanTree(snap: CharSnapshot, clanId: string): NodeView[] {
     return reason
       ? { ...visibleNode, combat, visualDescription, mechanics, effectiveReqPool: effectiveRequired, cost: effectiveNodeCost(node, snap), status: "LOCKED", reason }
       : { ...visibleNode, combat, visualDescription, mechanics, effectiveReqPool: effectiveRequired, cost: effectiveNodeCost(node, snap), status: "BUYABLE" };
-  });
+    });
 }
 
 export function viewBukijutsuTree(snap: CharSnapshot): NodeView[] {
@@ -540,6 +566,7 @@ export interface BuyResult {
   grantedElement?: Element; // no ELEMENT: qual elemento saiu no sorteio
   grantedElement2?: Element; // Sarutobi (Legado do Professor): segundo elemento dobrado
   grantedMangekyoVariant?: string;
+  grantedKazekageSand?: string;
   grantedKekkeiGenkai?: Element; // fusao automatica ao completar as arvores da receita
 }
 
@@ -588,6 +615,13 @@ export async function buyNode(
       grantedMangekyoVariant = rollMangekyoVariant();
       await tx.characterSkillNode.create({
         data: { charId: char.id, nodeId: mangekyoVariantNodeId(grantedMangekyoVariant) },
+      });
+    }
+    let grantedKazekageSand: KazekageSandVariant | undefined;
+    if (node.id === "kazekage_despertar_areia") {
+      grantedKazekageSand = rollKazekageSandVariant();
+      await tx.characterSkillNode.create({
+        data: { charId: char.id, nodeId: kazekageSandVariantNodeId(grantedKazekageSand) },
       });
     }
 
@@ -642,6 +676,7 @@ export async function buyNode(
       grantedElement,
       grantedElement2,
       grantedMangekyoVariant: grantedMangekyoVariant ? MANGEKYO_VARIANT_LABEL[grantedMangekyoVariant] : undefined,
+      grantedKazekageSand: grantedKazekageSand ? KAZEKAGE_SAND_VARIANT_LABEL[grantedKazekageSand] : undefined,
       grantedKekkeiGenkai,
     };
   });

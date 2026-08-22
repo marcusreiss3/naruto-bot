@@ -5,11 +5,30 @@ import { FUINJUTSU_TREE } from "../src/data/fuinjutsu-tree.js";
 import { buildMechanicsSummary } from "../src/services/characters/skill-description.js";
 
 describe("árvore de Fuinjutsu", () => {
-  it("registra seus cinco jutsus ativos na árvore e no catálogo", () => {
-    const ids = ["fuin_metodo_selamento_fogo", "fuin_selo_cinco_elementos", "fuin_selamento_contrato", "fuin_formacao_cordas_luz", "fuin_ligacao_pano"];
+  it("registra seus oito jutsus ativos na árvore e no catálogo", () => {
+    const ids = ["fuin_metodo_selamento_fogo", "fuin_selo_cinco_elementos", "fuin_selamento_contrato", "fuin_selo_quatro_simbolos_reverso", "fuin_formacao_cordas_luz", "fuin_ligacao_pano", "fuin_rugido_confinamento_leao", "fuin_selo_auto_amaldicoamento"];
     expect(ids.map(getNode).every(Boolean)).toBe(true);
     expect(ids.map(getAbility).every(Boolean)).toBe(true);
     expect(FUINJUTSU_TREE.every((node) => node.pool === "fuinjutsu")).toBe(true);
+  });
+
+  it("mantém o Selo dos Tenketsu exclusivo dos Hyūga", () => {
+    const rugido = getAbility("fuin_rugido_confinamento_leao")!;
+    expect(rugido.effects).toEqual([
+      { effectId: "NINJUTSU_BLOCK", duration: 2, chance: 0.85 },
+      { effectId: "ROOT", duration: 1, chance: 0.75 },
+    ]);
+    expect(rugido.effects!.some((effect) => effect.effectId === "TENKETSU_SEAL")).toBe(false);
+  });
+
+  it("arma o Selo Reverso antes da derrota e sela Ninjutsu apenas em inimigos próximos", () => {
+    const selo = getAbility("fuin_selo_quatro_simbolos_reverso")!;
+    expect(selo.actionType).toBe("BONUS");
+    expect(selo.oncePerCombat).toBe(true);
+    expect(selo.deathTrigger).toEqual({
+      radius: 2,
+      effects: [{ effectId: "ROOT", duration: 1 }, { effectId: "NINJUTSU_BLOCK", duration: 2 }],
+    });
   });
 
   it("mantém o Selamento de Contrato como controle de contrato sem dano bruto", () => {

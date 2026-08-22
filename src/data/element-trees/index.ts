@@ -16,6 +16,7 @@
 // ============================================================================
 import type { Attribute, Element, FightingStyle } from "../../config/enums.js";
 import type { CharacterCondition } from "../../services/characters/mangekyo.js";
+import type { KazekageSandVariant } from "../../services/characters/kazekage-sand.js";
 import type { VillageId } from "../../services/village-service.js";
 import { FUNDAMENTOS } from "./fundamentals.js";
 import { CLAN_TREES } from "../clan-trees/index.js";
@@ -85,6 +86,9 @@ export interface SkillNodeDef {
   // Condição narrativa/controlada pelo sistema. O primeiro uso é TRAUMA para
   // o Mangekyō; a forma de concedê-la será definida em etapa própria.
   requiresCondition?: CharacterCondition;
+  // Ramo exclusivo sorteado na raiz do Kazekage. O servidor oculta os ramos
+  // não escolhidos e também revalida esta trava na compra.
+  requiresKazekageSand?: KazekageSandVariant;
   grantsAbilityId?: string; // JUTSU: id da ability concedida
   desc: string;
 }

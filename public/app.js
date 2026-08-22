@@ -1219,6 +1219,8 @@ async function doBuy() {
         ? `Kekkei Genkai fundido: ${kkgName}! 🌟`
         : out.grantedMangekyoVariant
           ? `${out.grantedMangekyoVariant} despertou! 👁️`
+          : out.grantedKazekageSand
+            ? `${out.grantedKazekageSand} despertou na sua manipulação de areia! 🏜️`
           : elName2
             ? `Elementos sorteados: ${elName} e ${elName2}! 🎴`
             : elName

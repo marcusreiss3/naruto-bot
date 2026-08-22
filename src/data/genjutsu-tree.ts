@@ -44,8 +44,9 @@ export const GENJUTSU_TREE: SkillNodeDef[] = [
 
   // ---------------------------------------------------------------- Pesadelo
   jutsu("gen_penas_caidas", "Penas Caídas", "B", "🪶", "Pesadelo", 1.25, 1, ["gen_raiz"], 8, 8, "Solta uma chuva de penas no ambiente: todos os adversários na área sentem sono repentino e podem cair Atordoados."),
-  passive("gen_dominio_do_medo", "Domínio do Medo", "😨", "Pesadelo", 1.25, 2, ["gen_penas_caidas"], 18, 16, "Passiva: seus jutsus de Genjutsu têm +20 pontos percentuais de chance de Atordoar."),
-  jutsu("gen_dominio_mundo_obscuro", "Domínio do Mundo Obscuro", "A", "🌑", "Pesadelo", 1.25, 3, ["gen_dominio_do_medo"], 26, 20, "Envolve todo o local numa ilusão que separa você e o alvo do mundo exterior: a luta vira um mano a mano do qual não há como fugir. É Inevitável."),
+  jutsu("gen_alicerce_relampago_ilusorio", "Alicerce de Relâmpago Ilusório", "B", "⚡", "Pesadelo", 1.25, 2, ["gen_penas_caidas"], 14, 13, "Emana uma luz intensa a partir do próprio corpo. Os inimigos atingidos ficam desorientados pela claridade e podem alucinar, abrindo espaço para ataques."),
+  passive("gen_dominio_do_medo", "Domínio do Medo", "😨", "Pesadelo", 1.25, 3, ["gen_alicerce_relampago_ilusorio"], 18, 16, "Passiva: seus jutsus de Genjutsu têm +20 pontos percentuais de chance de Atordoar."),
+  jutsu("gen_dominio_mundo_obscuro", "Domínio do Mundo Obscuro", "A", "🌑", "Pesadelo", 1.25, 4, ["gen_dominio_do_medo"], 26, 20, "Envolve todo o local numa ilusão que separa você e o alvo do mundo exterior: a luta vira um mano a mano do qual não há como fugir. É Inevitável."),
 
   // ------------------------------------------------------------------- Ápice
   jutsu("gen_visao_inferno", "Ilusão Demoníaca: Visão do Inferno", "S", "👹", "Ápice", 0, 5, ["gen_interrogatorio", "gen_dominio_mundo_obscuro"], 34, 28, "A vítima é arrastada para uma visão em que o seu medo mais profundo toma forma e parece completamente real."),

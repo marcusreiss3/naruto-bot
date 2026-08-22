@@ -21,11 +21,14 @@ const TREE_IDS = [
   "uchiha_sharingan_2_tomoe",
   "uchiha_economia_visual",
   "uchiha_sharingan_3_tomoe",
+  "uchiha_coercao_sharingan",
+  "uchiha_repressao_estacas",
+  "uchiha_genjutsu_sharingan",
   "uchiha_mangekyo_sharingan",
 ];
 
 describe("Uchiha: árvore do Sharingan", () => {
-  it("tem somente os três tomoe, em sequência, pagos com Dōjutsu", () => {
+  it("mantém os três tomoe em sequência e abre técnicas oculares pagas com Dōjutsu", () => {
     const tree = CLAN_TREES.uchiha!;
     expect(tree.map((node) => node.id)).toEqual(TREE_IDS);
     expect(tree.map((node) => node.requires)).toEqual([
@@ -35,10 +38,12 @@ describe("Uchiha: árvore do Sharingan", () => {
       ["uchiha_sharingan_2_tomoe"],
       ["uchiha_economia_visual"],
       ["uchiha_sharingan_3_tomoe"],
+      ["uchiha_sharingan_3_tomoe"],
+      ["uchiha_coercao_sharingan", "uchiha_repressao_estacas"],
+      ["uchiha_sharingan_3_tomoe"],
     ]);
     expect(tree.every((node) => node.pool === "dojutsu")).toBe(true);
-    expect(tree.every((node) => node.col === 0)).toBe(true);
-    expect(tree.reduce((sum, node) => sum + node.cost, 0)).toBe(27);
+    expect(tree.reduce((sum, node) => sum + node.cost, 0)).toBe(43);
     for (const id of IDS) {
       expect(tree.find((node) => node.id === id)?.img).toMatch(/^\/assets\/icons\/uchiha\/sharingan-[123]-tomoe\.png$/);
     }
@@ -73,13 +78,23 @@ describe("Uchiha: árvore do Sharingan", () => {
     expect(Math.round(BALANCE.sharingan[3].upkeepPerTurn * both.sharinganUpkeepMult)).toBe(7);
   });
 
-  it("registra os três tomoe e o Mangekyō como habilidades ativas do clã", () => {
-    const active = [...IDS, "uchiha_mangekyo_sharingan"];
+  it("registra os três tomoe, os genjutsus oculares e o Mangekyō como habilidades ativas do clã", () => {
+    const active = [...IDS, "uchiha_coercao_sharingan", "uchiha_repressao_estacas", "uchiha_genjutsu_sharingan", "uchiha_mangekyo_sharingan"];
     expect(getClan("uchiha")!.activeIds).toEqual(active);
     for (const id of active) {
       expect(getAbility(id)!.requirements).toMatchObject({
         clanId: "uchiha",
         manualOnly: true,
+      });
+    }
+  });
+
+  it("exige Sharingan de três tomoe ativo para os três genjutsus oculares", () => {
+    for (const id of ["uchiha_coercao_sharingan", "uchiha_repressao_estacas", "uchiha_genjutsu_sharingan"]) {
+      expect(getAbility(id)!.requiresActiveDoujutsu).toEqual({
+        flag: "sharinganTomoe",
+        value: 3,
+        label: "Sharingan de três tomoe",
       });
     }
   });
