@@ -51,7 +51,7 @@ describe("árvore de Bukijutsu", () => {
     expect(byId.get("buki_dragoes_gemeos")?.requires).toEqual(["buki_arsenal_selado"]);
     expect(byId.get("buki_meteoro_anexado")?.requires).toEqual(["buki_moinho"]);
     expect(byId.get("buki_camara_tortura")?.requires).toEqual(["buki_meteoro_anexado"]);
-    expect(byId.get("buki_cadeia_desastre")?.requires).toEqual(["buki_esfera_explosiva"]);
+    expect(byId.get("buki_cadeia_desastre")?.requires).toEqual(["buki_maestria_arremesso"]);
   });
 
   it("coloca Maestria de Arremesso e Clone depois da Esfera Explosiva", () => {
@@ -73,7 +73,7 @@ describe("árvore de Bukijutsu", () => {
   it("possui ramificações e exige a convergência delas no ápice", () => {
     expect(new Set(BUKIJUTSU_TREE.map((node) => node.branch)).size).toBeGreaterThan(3);
     const apex = BUKIJUTSU_TREE.find((node) => node.id === "buki_cadeia_desastre")!;
-    expect(apex.requires).toEqual(["buki_esfera_explosiva"]);
+    expect(apex.requires).toEqual(["buki_maestria_arremesso"]);
     expect(apex.cost).toBe(8);
     expect(apex.reqLevel).toBe(24);
   });

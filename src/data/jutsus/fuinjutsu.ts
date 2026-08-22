@@ -23,9 +23,9 @@ export const FUINJUTSU_ABILITIES: Ability[] = [
   {
     id: "fuin_selo_quatro_simbolos_reverso", name: "Selo de Quatro Símbolos Reverso", category: "NINJUTSU", tier: 4, resource: "chakra", cost: 40, actionType: "BONUS",
     range: 0, shape: "SELF", scalingAttribute: "fuinjutsu", oncePerCombat: true,
-    deathTrigger: { radius: 5, sacrificeOnUse: true, executeBelowHpPercent: 0.25, radiusUnit: "METERS", sealDojutsuOnDeath: true },
-    requirements: { manualOnly: true, attributes: { fuinjutsu: 40 }, level: 42 }, tags: ["fuinjutsu", "selamento", "sacrificio", "execucao", "apice"],
-    description: "O usuário se sacrifica e fecha uma esfera de selamento em 5 metros. Inimigos dentro dela com até 25% de Vida são selados no corpo do usuário e morrem.",
+    deathTrigger: { radius: 6, sacrificeOnUse: true, executeBelowHpPercent: 0.25, radiusUnit: "METERS", sealDojutsuOnDeath: true },
+    requirements: { manualOnly: true, attributes: { fuinjutsu: 40 }, level: 40 }, tags: ["fuinjutsu", "sacrificio", "execucao", "apice"],
+    description: "O usuário se sacrifica e fecha uma esfera negra de 6 metros. Inimigos dentro dela com até 25% de Vida são derrotados imediatamente.",
   },
   {
     // 24 -> 20 em 09/08/2026: era -8 na regua, o unico Fuinjutsu caro SEM

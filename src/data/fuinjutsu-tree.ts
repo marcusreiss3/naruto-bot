@@ -18,7 +18,7 @@ export const FUINJUTSU_TREE: SkillNodeDef[] = [
   passive("fuin_traco_contencao", "Traço de Contenção", "Supressão", -1.25, 2, ["fuin_raiz"], 8, 8, "Passiva: Método de Selamento de Fogo e Selo de Cinco Elementos custam 15% menos chakra."),
   jutsu("fuin_selo_cinco_elementos", "Selo de Cinco Elementos", "B", "Supressão", -1.25, 3, ["fuin_traco_contencao"], 14, 14, "Marca o fluxo de chakra do alvo com um selo maligno, dificultando ou bloqueando o uso de Ninjutsu."),
   jutsu("fuin_selamento_contrato", "Selamento de Contrato", "A", "Supressão", -1.25, 4, ["fuin_selo_cinco_elementos"], 24, 24, "Ao tocar o peito do alvo, rompe temporariamente seu contrato de invocação e bloqueia técnicas de chakra vinculadas a Bijuu."),
-  jutsu("fuin_selo_quatro_simbolos_reverso", "Selo de Quatro Símbolos Reverso", "S", "Supressão", -1.25, 6, ["fuin_selamento_contrato"], 42, 40, "O usuário se sacrifica e fecha uma esfera negra de 5 metros. Inimigos com até 25% de Vida dentro dela são selados em seu corpo."),
+  jutsu("fuin_selo_quatro_simbolos_reverso", "Selo de Quatro Símbolos Reverso", "S", "Supressão", -1.25, 5, ["fuin_selamento_contrato"], 40, 40, "O usuário se sacrifica e fecha uma esfera negra de 6 metros. Inimigos com até 25% de Vida dentro dela são derrotados imediatamente."),
 
   jutsu("fuin_formacao_cordas_luz", "Formação das Cordas de Luz", "B", "Confinamento", 1.25, 1, ["fuin_metodo_selamento_fogo"], 10, 10, "Uma fórmula circular se alastra no chão e imobiliza inimigos dentro de sua área."),
   passive("fuin_ancora_formula", "Âncora da Fórmula", "Confinamento", 1.25, 2, ["fuin_formacao_cordas_luz"], 16, 16, "Passiva: suas técnicas de selamento que imobilizam duram 1 rodada adicional."),

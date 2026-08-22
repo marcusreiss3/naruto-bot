@@ -3205,7 +3205,7 @@ async function triggerArmedDeathSeal(sessionId: string, participantId: string, l
   }
 
   if (executed.length) {
-    logs.push(`⚫ O selo final de ${dead.name} sacrificou o usuário e selou ${executed.map((p) => p.name).join(", ")}.`);
+    logs.push(`⚫ A esfera final de ${dead.name} sacrificou o usuário e derrotou ${executed.map((p) => p.name).join(", ")}.`);
   } else if (targets.length) {
     logs.push(`⚫ O selo final de ${dead.name} se fechou, mas nenhum inimigo atingido estava vulnerável ao selamento.`);
   } else {

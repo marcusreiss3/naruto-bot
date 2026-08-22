@@ -96,8 +96,8 @@ export const BUKIJUTSU_TREE: SkillNodeDef[] = [
   },
   {
     id: "buki_cadeia_desastre", name: "Cadeia do Desastre Celestial", kind: "JUTSU", rank: "S", icon: "🌠",
-    pool: "bukijutsu", cost: 8, branch: "Pergaminhos", col: 0.75, row: 6,
-    requires: ["buki_esfera_explosiva"],
+    pool: "bukijutsu", cost: 8, branch: "Arremessos", col: 0, row: 6,
+    requires: ["buki_maestria_arremesso"],
     reqLevel: 24, reqPool: 23, grantsAbilityId: "buki_cadeia_desastre",
     desc: "Um grande pergaminho se abre no céu e faz dezenas de armas caírem como uma tempestade sobre toda a área.",
   },

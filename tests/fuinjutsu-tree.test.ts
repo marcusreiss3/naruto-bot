@@ -27,13 +27,14 @@ describe("árvore de Fuinjutsu", () => {
     expect(selo.tier).toBe(4);
     expect(selo.oncePerCombat).toBe(true);
     expect(selo.deathTrigger).toEqual({
-      radius: 5,
+      radius: 6,
       sacrificeOnUse: true,
       executeBelowHpPercent: 0.25,
       radiusUnit: "METERS",
       sealDojutsuOnDeath: true,
     });
-    expect(buildMechanicsSummary(selo)).toMatch(/5 metros.*25% de Vida/i);
+    expect(selo.requirements?.level).toBe(40);
+    expect(buildMechanicsSummary(selo)).toMatch(/6 metros.*25% de Vida/i);
   });
 
   it("mantém papéis distintos para pano, rugido e auto-amaldiçoamento", () => {

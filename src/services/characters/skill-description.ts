@@ -155,8 +155,8 @@ export function buildMechanicsSummary(ability: Ability): string {
     const radius = `em um raio de ${ability.deathTrigger.radius} ${unit}`;
     if (ability.deathTrigger.sacrificeOnUse) {
       const threshold = Math.round((ability.deathTrigger.executeBelowHpPercent ?? 0) * 100);
-      parts.push(`Ao usar, você é derrotado. Inimigos ${radius} com até ${threshold}% de Vida são selados e derrotados.`);
-      if (ability.deathTrigger.sealDojutsuOnDeath) parts.push("Se possuir dōjutsu, seus olhos também são selados e não poderão ser roubados.");
+      parts.push(`Ao usar, você é derrotado. Inimigos ${radius} com até ${threshold}% de Vida são derrotados imediatamente.`);
+      if (ability.deathTrigger.sealDojutsuOnDeath) parts.push("Se possuir dōjutsu, ele fica indisponível para o futuro sistema de roubo.");
     } else if (ability.deathTrigger.effects?.length) {
       const effects = ability.deathTrigger.effects.map((effect) => effectText(effect)).join(" ");
       parts.push(`Ao ser derrotado, afeta inimigos ${radius}: ${effects}`);

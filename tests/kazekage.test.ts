@@ -33,6 +33,8 @@ describe("Kazekage: manipulação exclusiva de areia", () => {
     expect(tree.filter((node) => node.requires.length === 0).map((node) => node.id)).toEqual(["kazekage_despertar_areia"]);
     expect(tree.every((node) => node.pool === "ninjutsu")).toBe(true);
     for (const id of IDS) expect(getNode(id)?.clanId).toBe("kazekage");
+    expect(getNode("kazekage_enterro_prisao_areia")?.rank).toBe("S");
+    expect(getNode("kazekage_esfera_po_ouro")?.rank).toBe("S");
   });
 
   it("cada árvore exibida contém apenas a raiz e o ramo sorteado", () => {
