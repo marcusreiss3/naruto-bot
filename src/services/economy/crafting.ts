@@ -4,6 +4,7 @@ import { personalRecipe, type RecipeDef, type RecipeIngredient } from "../../dat
 import { addInventoryItem, getInventoryQty, removeInventoryItem } from "../characters/inventory.js";
 import { EconomyError, runEconomy } from "./errors.js";
 import type { Tx } from "./ledger.js";
+import { recordDailyQuestEvent } from "../daily-quests/daily-quest-service.js";
 
 export interface ResolvedIngredient {
   itemId: string;
@@ -104,6 +105,7 @@ export async function craftPersonal(
   });
 
   if (!outcome.ok) return { ok: false, error: outcome.error };
+  await recordDailyQuestEvent(charId, { type: "CRAFT", recipeId: recipe.id });
   return {
     ok: true,
     result: {

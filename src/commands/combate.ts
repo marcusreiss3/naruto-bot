@@ -68,6 +68,7 @@ import { startKidDialogue } from "../services/missions/kid-dialogue.js";
 import { moverCleanVillage } from "../services/missions/clean-village.js";
 import { moverRoofCleanup } from "../services/missions/roof-cleanup.js";
 import { withTraitNode } from "../services/characters/trait-service.js";
+import { recordDailyQuestEvent } from "../services/daily-quests/daily-quest-service.js";
 
 // Tempo para confirmar um jutsu de area antes de cancelar sozinho.
 const PREVIEW_TIMEOUT_MS = 30_000;
@@ -177,6 +178,10 @@ export const combate: Command = {
           o.setName("jogadores").setDescription("Mencione os participantes (@a @b ...)").setRequired(false),
         ),
     )
+    .addSubcommand((s) =>
+      s.setName("duelar").setDescription("Inicia um duelo 1x1 contra outro jogador")
+        .addUserOption((o) => o.setName("adversario").setDescription("Jogador que ficará no time oposto").setRequired(true)),
+    )
     .addSubcommand((s) => s.setName("fim-turno").setDescription("Encerra seu turno"))
     .addSubcommand((s) => s.setName("pegar-arma").setDescription("Pega a arma caída na sua célula (ação comum)"))
     .addSubcommand((s) => s.setName("pegar-item").setDescription("Pega um item largado na sua célula (ação comum)"))
@@ -240,6 +245,8 @@ export const combate: Command = {
     switch (sub) {
       case "iniciar":
         return iniciar(interaction);
+      case "duelar":
+        return duelar(interaction);
       case "fim-turno":
         return fimTurno(interaction);
       case "pegar-arma":
@@ -396,6 +403,58 @@ async function iniciar(interaction: ChatInputCommandInteraction): Promise<void> 
     followup: true,
     movement: true,
   });
+}
+
+async function duelar(interaction: ChatInputCommandInteraction): Promise<void> {
+  const channelId = interaction.channelId;
+  const guildId = interaction.guildId ?? "global";
+  const adversario = interaction.options.getUser("adversario", true);
+  if (adversario.id === interaction.user.id || adversario.bot) {
+    await interaction.reply({ content: "❌ Escolha outro jogador para o duelo.", ephemeral: true });
+    return;
+  }
+  const scenario = getScenarioByChannel(channelId);
+  if (!scenario) {
+    await interaction.reply({ content: "❌ Canal sem cenário.", ephemeral: true });
+    return;
+  }
+  if (await getActiveSession(channelId)) {
+    await interaction.reply({ content: "❌ Já existe um combate ativo neste canal.", ephemeral: true });
+    return;
+  }
+
+  await interaction.deferReply();
+  const [desafiante, oponente] = await Promise.all([
+    startPlayerForUser(interaction.user, guildId),
+    startPlayerForUser(adversario, guildId),
+  ]);
+  oponente.teamId = "B";
+  const session = await startCombat({ channelId, guildId, scenarioId: scenario.id, players: [desafiante, oponente] });
+  await interaction.editReply(`${emoji("combate")} Duelo entre **${desafiante.name}** e **${oponente.name}** iniciado em **${scenario.name}**!`);
+  await sendCombatView(interaction, session.id, ["O duelo começou. Escolha seu deslocamento."], {
+    followup: true,
+    movement: true,
+  });
+}
+
+async function startPlayerForUser(
+  user: { id: string; username: string },
+  guildId: string,
+): Promise<StartPlayer & { teamId?: "A" | "B" }> {
+  const char = await getOrCreateCharacter(user.id, guildId, user.username);
+  return {
+    charId: char.id,
+    name: char.name,
+    level: char.level,
+    hpCurrent: char.hpCurrent,
+    hpMax: char.hpMax,
+    chakra: char.resources!.chakra,
+    energia: char.resources!.energia,
+    jutsuIds: char.jutsus.map((j) => j.jutsuId),
+    attrs: attrsFromRow(char.attributes!),
+    nodes: withTraitNode(char.skillNodes.map((n) => n.nodeId), char.trait?.traitId),
+    elements: char.elements.map((e) => e.element as Element),
+  };
 }
 
 // Resolve por qual CombatParticipant o usuario age agora: o proprio, ou o
@@ -1045,6 +1104,9 @@ async function checkVictory(interaction: ChatInputCommandInteraction, sessionId:
 
   // jogadores venceram (NPCs eliminados, ou PvP com 1 sobrevivente)
   await interaction.followUp(`🏆 **Vitória dos jogadores!**${treinoNote}`);
+  const winners = alive.filter((participant) => !participant.isNpc && participant.charId).map((participant) => participant.charId!);
+  const event = hasNpcs ? { type: "NPC_WIN" as const } : { type: "PVP_WIN" as const };
+  await Promise.all(winners.map((charId) => recordDailyQuestEvent(charId, event)));
   await onCombatEnded(interaction, session);
 }
 

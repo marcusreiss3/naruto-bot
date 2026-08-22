@@ -57,6 +57,7 @@ import {
 } from "./shop-pricing.js";
 import { addVillageStock, removeVillageStock, getVillageStockQty } from "./village-economy.js";
 import { dayKeyFor, weekKeyFor } from "./week.js";
+import { recordDailyQuestEvent } from "../daily-quests/daily-quest-service.js";
 
 // ---------------- Fundacao ----------------
 
@@ -396,12 +397,14 @@ export async function buyFromShop(
   // compartilhada, em vez de estoque municipal. Vive em general-market.ts.
   if (shopType === "MERCADO_GERAL") {
     const resultado = await buyFromGeneralMarket(charId, villageId, itemId, qty, now);
-    return resultado.ok
+    const outcome = resultado.ok
       ? { ...resultado, estoqueRestante: resultado.restante }
       : resultado;
+    if (outcome.ok) await recordDailyQuestEvent(charId, { type: "SHOP", shopType }, now);
+    return outcome;
   }
 
-  return runEconomy(
+  const outcome = await runEconomy(
     async (): Promise<BuyOutcome> =>
       prisma.$transaction(async (tx) => {
         const village = await tx.village.findUniqueOrThrow({ where: { id: villageId } });
@@ -436,6 +439,8 @@ export async function buyFromShop(
         return { itemId, name: item.name, qty, precoUnitario, total, saldo, estoqueRestante };
       }),
   );
+  if (outcome.ok) await recordDailyQuestEvent(charId, { type: "SHOP", shopType }, now);
+  return outcome;
 }
 
 // ---------------- Venda do jogador para a loja ----------------

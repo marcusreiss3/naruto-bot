@@ -2,6 +2,7 @@ import { prisma } from "../../db/client.js";
 import { getMission } from "../../data/missions/index.js";
 import type { MissionDef } from "../../data/types.js";
 import { addXp } from "../characters/character-service.js";
+import { recordDailyQuestEvent } from "../daily-quests/daily-quest-service.js";
 import { grantCharacterRyo } from "../economy/character-economy.js";
 import { accumulateMissionActivity } from "../economy/weekly-tax.js";
 import { PERFORMANCE_LIMITS, warnIfSlow } from "../../utils/performance.js";
@@ -249,6 +250,7 @@ export async function completeMission(charId: string, missionId: string): Promis
   // e' residual e nunca serve de base para a meta semanal — quem guarda a base
   // e' o WeeklyTaxActivity acima, com rewards.xp cru.
   await addXp(charId, rewards.xp);
+  await recordDailyQuestEvent(charId, { type: "MISSION" });
   return { rewards, halved };
 }
 

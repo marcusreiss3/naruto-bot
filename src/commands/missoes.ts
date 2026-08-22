@@ -16,6 +16,7 @@ import {
 } from "../services/missions/daily-mission-board.js";
 import type { MestreEstiloState } from "../services/missions/mestre-estilo.js";
 import { mestreEstiloExtraBlock } from "../ui/mestre-estilo-container.js";
+import { DAILY_QUEST_REWARD_INGOTS, getDailyQuestStatus } from "../services/daily-quests/daily-quest-service.js";
 import {
   button,
   buttonRow,
@@ -39,7 +40,8 @@ export const missoes: Command = {
     .setName("missoes")
     .setDescription("Missões")
     .addSubcommand((s) => s.setName("minhas").setDescription("Suas missões ativas"))
-    .addSubcommand((s) => s.setName("ativas").setDescription("Lista de missões disponíveis no jogo")),
+    .addSubcommand((s) => s.setName("ativas").setDescription("Lista de missões disponíveis no jogo"))
+    .addSubcommand((s) => s.setName("diarias").setDescription("Suas 3 missões diárias")),
   async execute(interaction: ChatInputCommandInteraction) {
     const sub = interaction.options.getSubcommand();
     switch (sub) {
@@ -47,6 +49,8 @@ export const missoes: Command = {
         return minhas(interaction);
       case "ativas":
         return ativas(interaction);
+      case "diarias":
+        return diarias(interaction);
     }
   },
 
@@ -128,4 +132,22 @@ async function ativas(interaction: ChatInputCommandInteraction): Promise<void> {
     embed.addFields({ name: `[${def.rank}] ${def.name} (\`${def.id}\`)`, value: def.description });
   }
   await interaction.reply({ embeds: [embed], ephemeral: true });
+}
+
+async function diarias(interaction: ChatInputCommandInteraction): Promise<void> {
+  const guildId = interaction.guildId ?? "global";
+  const char = await getOrCreateCharacter(interaction.user.id, guildId, interaction.user.username);
+  const daily = await getDailyQuestStatus(char.id, guildId);
+  const lines = daily.quests.map(({ quest, progress, completedAt }) => {
+    const done = Boolean(completedAt);
+    const andamento = quest.target > 1 ? ` — **${progress}/${quest.target}**` : "";
+    return `${emoji(done ? "sucesso" : "pendente")} ${done ? "~~" : ""}${quest.description}${done ? "~~" : ""}${andamento}${done ? " — concluída" : ""}`;
+  });
+  await interaction.reply(v2Payload(singleCard("cofre", [
+    titleBlock("missoes", "Missões diárias", "As mesmas 3 missões para todo o servidor"),
+    text(`Cada missão concluída rende ${emoji("ingots")} **${DAILY_QUEST_REWARD_INGOTS} Ingots**.`),
+    divider(),
+    listBlock(null, lines, "Nenhuma missão diária disponível."),
+    text(`-# Rotação de ${daily.dayKey} • troca todos os dias às 00:00 (horário de Brasília).`),
+  ]), true));
 }

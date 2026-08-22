@@ -192,6 +192,9 @@ export interface StartPlayer {
   attrs?: Record<string, number>;
   nodes?: string[];
   elements?: Element[];
+  // Combates comuns e parties continuam no time A. O duelo PvP informa B
+  // para o adversário, sem mudar nenhuma missão PvE existente.
+  teamId?: "A" | "B";
 }
 
 export interface StartNpc {
@@ -227,8 +230,12 @@ export async function startCombat(opts: {
   const participantIds: string[] = [];
   const initiative = new Map<string, number>();
   let li = 0;
+  let playerRight = 0;
   for (const p of opts.players) {
-    const cell = leftCells[li++] ?? free[0]!;
+    const teamId = p.teamId ?? "A";
+    const cell = teamId === "B"
+      ? rightCells[playerRight++] ?? free[free.length - 1]!
+      : leftCells[li++] ?? free[0]!;
     // maxHpBonus (ex: vitalidade do Uzumaki) so' entra AQUI, na entrada em
     // combate — nao mexe no hpMax persistido do personagem fora de luta.
     const cMods = characterPassiveMods(p.nodes ?? []);
@@ -243,7 +250,7 @@ export async function startCombat(opts: {
         sessionId: session.id,
         charId: p.charId,
         name: p.name,
-        teamId: "A",
+        teamId,
         cell,
         hpCurrent,
         hpMax,

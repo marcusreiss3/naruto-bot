@@ -26,6 +26,7 @@ import {
   stopAppearanceCleanupScheduler,
 } from "./services/appearance/appearance-service.js";
 import { startHpRegenScheduler, stopHpRegenScheduler } from "./services/characters/hp-regen-service.js";
+import { startDailyQuestScheduler, stopDailyQuestScheduler } from "./services/daily-quests/daily-quest-service.js";
 
 const client = new Client({
   intents: [
@@ -81,6 +82,9 @@ client.once(Events.ClientReady, async (c) => {
     log.error("Falha ao garantir os setores e o Centro:", err),
   );
   await purgeExpiredSessions().catch(() => undefined);
+  await startDailyQuestScheduler().catch((err) =>
+    log.error("Falha ao iniciar o relógio das missões diárias:", err),
+  );
 
   // Obras vencidas enquanto o bot esteve fora + criacao/retomada do canal do
   // Ichiraku. O anuncio publico sai daqui porque so' aqui existe cliente do
@@ -216,6 +220,7 @@ async function shutdown(): Promise<void> {
   stopSheetScheduler();
   stopAppearanceCleanupScheduler();
   stopHpRegenScheduler();
+  stopDailyQuestScheduler();
   await disconnect();
   client.destroy();
   process.exit(0);
