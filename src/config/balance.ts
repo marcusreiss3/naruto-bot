@@ -353,6 +353,7 @@ export const BALANCE = {
       blueXpMax: 40,
       blackChance: 0.08,
       targetLifetimeMs: 1_250,
+      durationMs: 180_000,
       gridSize: 3,
     },
     roleplay: {

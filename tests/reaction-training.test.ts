@@ -6,6 +6,7 @@ describe("treino de reflexos", () => {
   it("tem uma tentativa diária e meta equivalente a uma missão rank C", () => {
     expect(BALANCE.xp.trainingDailyLimit).toBe(1);
     expect(BALANCE.xp.trainingReward).toBe(250);
+    expect(BALANCE.xp.training.durationMs).toBe(180_000);
   });
 
   it("sorteia posição no grid e mantém o alvo por 1,25 segundo", () => {

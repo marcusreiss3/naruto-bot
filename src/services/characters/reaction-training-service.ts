@@ -70,7 +70,30 @@ export async function startTrainingSession(charId: string, now = new Date()) {
 export async function beginTrainingSession(sessionId: string, now = new Date()) {
   await prisma.trainingSession.updateMany({
     where: { id: sessionId, status: "INTRO", introEndsAt: { lte: now } },
-    data: { status: "ACTIVE", introEndsAt: null },
+    data: {
+      status: "ACTIVE",
+      introEndsAt: null,
+      endsAt: new Date(now.getTime() + BALANCE.xp.training.durationMs),
+    },
+  });
+  return prisma.trainingSession.findUnique({ where: { id: sessionId } });
+}
+
+export async function expireTrainingSession(sessionId: string, now = new Date()) {
+  await prisma.trainingSession.updateMany({
+    where: {
+      id: sessionId,
+      status: "ACTIVE",
+      OR: [{ endsAt: null }, { endsAt: { lte: now } }],
+    },
+    data: {
+      status: "EXPIRED",
+      activeToken: null,
+      activeKind: null,
+      activeSlot: null,
+      expiresAt: null,
+      endedAt: now,
+    },
   });
   return prisma.trainingSession.findUnique({ where: { id: sessionId } });
 }
@@ -83,13 +106,14 @@ export async function issueTrainingTarget(
 ) {
   const session = await prisma.trainingSession.findUnique({ where: { id: sessionId } });
   if (!session || session.status !== "ACTIVE") return session;
+  if (!session.endsAt || session.endsAt <= now) return expireTrainingSession(session.id, now);
 
   const target = rollTrainingTarget(now, rng, session.activeSlot ?? undefined);
   const eligibility = expectedToken
     ? { activeToken: expectedToken, expiresAt: { lte: now } }
     : { OR: [{ activeToken: null }, { expiresAt: { lte: now } }] };
   const updated = await prisma.trainingSession.updateMany({
-    where: { id: sessionId, status: "ACTIVE", ...eligibility },
+    where: { id: sessionId, status: "ACTIVE", endsAt: { gt: now }, ...eligibility },
     data: {
       activeToken: target.token,
       activeKind: target.kind,
@@ -107,7 +131,7 @@ export async function issueTrainingTarget(
 export async function armTrainingTarget(sessionId: string, token: string, now = new Date()) {
   const expiresAt = new Date(now.getTime() + BALANCE.xp.training.targetLifetimeMs);
   const armed = await prisma.trainingSession.updateMany({
-    where: { id: sessionId, status: "ACTIVE", activeToken: token },
+    where: { id: sessionId, status: "ACTIVE", endsAt: { gt: now }, activeToken: token },
     data: { expiresAt },
   });
   if (armed.count === 0) return prisma.trainingSession.findUnique({ where: { id: sessionId } });
@@ -116,6 +140,7 @@ export async function armTrainingTarget(sessionId: string, token: string, now = 
 
 export type TrainingHitResult =
   | { ok: false; reason: "STALE" | "OWNER" | "MISSING" }
+  | { ok: false; reason: "EXPIRED"; session: Awaited<ReturnType<typeof prisma.trainingSession.findUniqueOrThrow>> }
   | { ok: true; kind: TrainingTargetKind; gainedXp: number; session: Awaited<ReturnType<typeof prisma.trainingSession.findUniqueOrThrow>> };
 
 export async function hitTrainingTarget(input: {
@@ -129,13 +154,21 @@ export async function hitTrainingTarget(input: {
   const session = await prisma.trainingSession.findUnique({ where: { id: input.sessionId } });
   if (!session) return { ok: false, reason: "MISSING" };
   if (session.charId !== input.charId) return { ok: false, reason: "OWNER" };
+  if (session.status === "ACTIVE" && (!session.endsAt || session.endsAt <= now)) {
+    await expireTrainingSession(session.id, now);
+    return {
+      ok: false,
+      reason: "EXPIRED",
+      session: await prisma.trainingSession.findUniqueOrThrow({ where: { id: session.id } }),
+    };
+  }
   if (session.status !== "ACTIVE" || session.activeToken !== input.token || !session.expiresAt || session.expiresAt <= now) {
     return { ok: false, reason: "STALE" };
   }
 
   if (session.activeKind === "BLACK") {
     const failed = await prisma.trainingSession.updateMany({
-      where: { id: session.id, status: "ACTIVE", activeToken: input.token, expiresAt: { gt: now } },
+      where: { id: session.id, status: "ACTIVE", endsAt: { gt: now }, activeToken: input.token, expiresAt: { gt: now } },
       data: { status: "FAILED", activeToken: null, activeKind: null, activeSlot: null, expiresAt: null, endedAt: now },
     });
     if (failed.count === 0) return { ok: false, reason: "STALE" };
@@ -151,7 +184,7 @@ export async function hitTrainingTarget(input: {
   const total = session.xpEarned + gainedXp;
   const completed = total >= session.xpGoal;
   const hit = await prisma.trainingSession.updateMany({
-    where: { id: session.id, status: "ACTIVE", activeToken: input.token, expiresAt: { gt: now } },
+    where: { id: session.id, status: "ACTIVE", endsAt: { gt: now }, activeToken: input.token, expiresAt: { gt: now } },
     data: {
       xpEarned: total,
       status: completed ? "COMPLETED" : "ACTIVE",

@@ -541,10 +541,11 @@ model TrainingSession {
   character   UserCharacter @relation(fields: [charId], references: [id], onDelete: Cascade)
   charId      String
   dayKey      String
-  status      String        @default("INTRO") // INTRO | ACTIVE | COMPLETED | FAILED
+  status      String        @default("INTRO") // INTRO | ACTIVE | COMPLETED | FAILED | EXPIRED
   xpEarned    Int           @default(0)
   xpGoal      Int
   introEndsAt DateTime?
+  endsAt      DateTime?
   activeToken String?
   activeKind  String?       // BLUE | BLACK
   activeSlot  Int?

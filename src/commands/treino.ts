@@ -11,6 +11,7 @@ import { getOrCreateCharacter } from "../services/characters/character-service.j
 import {
   armTrainingTarget,
   beginTrainingSession,
+  expireTrainingSession,
   hitTrainingTarget,
   issueTrainingTarget,
   startTrainingSession,
@@ -33,7 +34,7 @@ function introductionPanel(): TopLevel[] {
     titleBlock("tempo", "Treino de Reflexos", "Preparação"),
     text("🔵 Clique no alvo azul para ganhar XP.\n⚫ Clicar no alvo preto encerra o treino, mas você mantém o XP conquistado."),
     divider(),
-    text("-# O treino começa em 5 segundos. Cada alvo ficará disponível por 1,25 s."),
+    text("-# O treino começa em 5 segundos, dura até 3 minutos e cada alvo fica disponível por 1,25 s."),
   ]);
 }
 
@@ -42,6 +43,8 @@ function alreadyUsedPanel(session: TrainingSession): TopLevel[] {
     ? "Você já concluiu o treino de hoje."
     : session.status === "FAILED"
       ? "Sua tentativa de treino de hoje já foi encerrada."
+      : session.status === "EXPIRED"
+        ? "O tempo do seu treino de hoje já acabou."
       : "Você já iniciou a tentativa de treino de hoje.";
   return singleCard("aviso", [
     titleBlock("aviso", "Treino indisponível"),
@@ -64,6 +67,14 @@ function panel(session: TrainingSession, feedback?: string): TopLevel[] {
     return singleCard("erro", [
       titleBlock("erro", "Treino encerrado", "Você clicou no alvo preto"),
       text(`⚫ O treino terminou. Você manteve os **${session.xpEarned}/${session.xpGoal} XP** já conquistados.`),
+      divider(),
+      text("-# A próxima tentativa fica disponível à 00:00 (horário de Brasília)."),
+    ]);
+  }
+  if (session.status === "EXPIRED") {
+    return singleCard("aviso", [
+      titleBlock("tempo", "Tempo esgotado", "Treino encerrado"),
+      text(`⏱️ Você manteve os **${session.xpEarned}/${session.xpGoal} XP** conquistados antes do tempo acabar.`),
       divider(),
       text("-# A próxima tentativa fica disponível à 00:00 (horário de Brasília)."),
     ]);
@@ -105,14 +116,20 @@ async function armAndScheduleTarget(session: TrainingSession, interaction: Train
 
 function scheduleTargetExpiry(session: TrainingSession, interaction: TrainingInteraction): void {
   clearTrainingTimer(session.id);
-  if (session.status !== "ACTIVE" || !session.activeToken || !session.expiresAt) return;
+  if (session.status !== "ACTIVE" || !session.activeToken || !session.expiresAt || !session.endsAt) return;
 
   const expectedToken = session.activeToken;
-  const delay = Math.max(0, session.expiresAt.getTime() - Date.now()) + 25;
+  const delay = Math.max(0, Math.min(session.expiresAt.getTime(), session.endsAt.getTime()) - Date.now()) + 25;
   const timer = setTimeout(async () => {
     timers.delete(session.id);
     try {
-      const next = await issueTrainingTarget(session.id, new Date(), expectedToken);
+      const now = new Date();
+      if (session.endsAt && session.endsAt <= now) {
+        const expired = await expireTrainingSession(session.id, now);
+        if (expired) await interaction.editReply(v2Edit(panel(expired)));
+        return;
+      }
+      const next = await issueTrainingTarget(session.id, now, expectedToken);
       if (!next || next.status !== "ACTIVE" || !next.activeToken) return;
       // Respostas efêmeras só podem ser atualizadas de forma confiável pelo
       // webhook da interação; Message#edit pode falhar silenciosamente nelas.
@@ -176,10 +193,14 @@ export const treino: Command = {
     const character = await getOrCreateCharacter(interaction.user.id, interaction.guildId, interaction.user.username);
     const result = await hitTrainingTarget({ sessionId, charId: character.id, token });
     if (!result.ok) {
-      const message = result.reason === "OWNER"
-        ? "Este treino pertence a outro jogador."
-        : "Esse alvo já mudou de posição.";
-      await interaction.reply({ content: message, ephemeral: true });
+      if (result.reason === "EXPIRED") {
+        clearTrainingTimer(result.session.id);
+        await interaction.update(v2Edit(panel(result.session)));
+      } else {
+        // Um clique que chegou no limite do alvo não deve interromper nem
+        // poluir o minijogo com uma resposta efêmera de erro.
+        await interaction.deferUpdate();
+      }
       return;
     }
 
