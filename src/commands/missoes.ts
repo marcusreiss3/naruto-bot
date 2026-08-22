@@ -16,7 +16,12 @@ import {
 } from "../services/missions/daily-mission-board.js";
 import type { MestreEstiloState } from "../services/missions/mestre-estilo.js";
 import { mestreEstiloExtraBlock } from "../ui/mestre-estilo-container.js";
-import { DAILY_QUEST_REWARD_INGOTS, getDailyQuestStatus } from "../services/daily-quests/daily-quest-service.js";
+import {
+  DAILY_QUEST_REWARD_INGOTS,
+  WEEKLY_QUEST_REWARD_INGOTS,
+  getDailyQuestStatus,
+  getWeeklyQuestStatus,
+} from "../services/daily-quests/daily-quest-service.js";
 import {
   button,
   buttonRow,
@@ -41,7 +46,8 @@ export const missoes: Command = {
     .setDescription("Missões")
     .addSubcommand((s) => s.setName("minhas").setDescription("Suas missões ativas"))
     .addSubcommand((s) => s.setName("ativas").setDescription("Lista de missões disponíveis no jogo"))
-    .addSubcommand((s) => s.setName("diarias").setDescription("Suas 3 missões diárias")),
+    .addSubcommand((s) => s.setName("diarias").setDescription("Suas 3 missões diárias"))
+    .addSubcommand((s) => s.setName("semanais").setDescription("Suas 3 missões semanais")),
   async execute(interaction: ChatInputCommandInteraction) {
     const sub = interaction.options.getSubcommand();
     switch (sub) {
@@ -51,6 +57,8 @@ export const missoes: Command = {
         return ativas(interaction);
       case "diarias":
         return diarias(interaction);
+      case "semanais":
+        return semanais(interaction);
     }
   },
 
@@ -149,5 +157,22 @@ async function diarias(interaction: ChatInputCommandInteraction): Promise<void> 
     divider(),
     listBlock(null, lines, "Nenhuma missão diária disponível."),
     text(`-# Rotação de ${daily.dayKey} • troca todos os dias às 00:00 (horário de Brasília).`),
+  ]), true));
+}
+
+async function semanais(interaction: ChatInputCommandInteraction): Promise<void> {
+  const guildId = interaction.guildId ?? "global";
+  const char = await getOrCreateCharacter(interaction.user.id, guildId, interaction.user.username);
+  const weekly = await getWeeklyQuestStatus(char.id, guildId);
+  const lines = weekly.quests.map(({ quest, progress, completedAt }) => {
+    const done = Boolean(completedAt);
+    return `${emoji(done ? "sucesso" : "pendente")} ${done ? "~~" : ""}${quest.description}${done ? "~~" : ""} — **${progress}/${quest.target}**${done ? " — concluída" : ""}`;
+  });
+  await interaction.reply(v2Payload(singleCard("cofre", [
+    titleBlock("missoes", "Missões semanais"),
+    text(`Cada missão concluída rende ${emoji("ingots")} **${WEEKLY_QUEST_REWARD_INGOTS} Ingots**.`),
+    divider(),
+    listBlock(null, lines, "Nenhuma missão semanal disponível."),
+    text(`-# Semana iniciada em ${weekly.weekKey} • troca todo domingo às 00:00 (horário de Brasília).`),
   ]), true));
 }

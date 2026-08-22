@@ -57,7 +57,7 @@ import {
 } from "./shop-pricing.js";
 import { addVillageStock, removeVillageStock, getVillageStockQty } from "./village-economy.js";
 import { dayKeyFor, weekKeyFor } from "./week.js";
-import { recordDailyQuestEvent } from "../daily-quests/daily-quest-service.js";
+import { recordActivityQuestEvent } from "../daily-quests/daily-quest-service.js";
 
 // ---------------- Fundacao ----------------
 
@@ -400,7 +400,7 @@ export async function buyFromShop(
     const outcome = resultado.ok
       ? { ...resultado, estoqueRestante: resultado.restante }
       : resultado;
-    if (outcome.ok) await recordDailyQuestEvent(charId, { type: "SHOP", shopType }, now);
+    if (outcome.ok) await recordActivityQuestEvent(charId, { type: "SHOP", shopType, amount: qty }, now);
     return outcome;
   }
 
@@ -439,7 +439,7 @@ export async function buyFromShop(
         return { itemId, name: item.name, qty, precoUnitario, total, saldo, estoqueRestante };
       }),
   );
-  if (outcome.ok) await recordDailyQuestEvent(charId, { type: "SHOP", shopType }, now);
+  if (outcome.ok) await recordActivityQuestEvent(charId, { type: "SHOP", shopType, amount: qty }, now);
   return outcome;
 }
 

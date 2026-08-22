@@ -3,8 +3,12 @@ import {
   DAILY_QUESTS,
   DAILY_QUEST_MAX_PER_CATEGORY,
   DAILY_QUEST_PER_DAY,
+  WEEKLY_QUEST_PER_WEEK,
+  WEEKLY_QUESTS,
   getDailyQuestDay,
+  getWeeklyQuestWeek,
   selectDailyQuests,
+  selectWeeklyQuests,
 } from "../src/services/daily-quests/daily-quest-service.js";
 
 describe("missões diárias de atividade", () => {
@@ -33,5 +37,19 @@ describe("missões diárias de atividade", () => {
     expect(DAILY_QUESTS.filter((quest) => quest.kind === "CRAFT")).toHaveLength(4);
     expect(DAILY_QUESTS.filter((quest) => quest.kind === "GATHER")).toHaveLength(5);
     expect(DAILY_QUESTS.filter((quest) => quest.kind === "SHOP")).toHaveLength(4);
+  });
+
+  it("vira a semana no domingo à meia-noite de Brasília", () => {
+    expect(getWeeklyQuestWeek(new Date("2026-08-23T02:59:59.999Z"))).toBe("2026-08-16");
+    expect(getWeeklyQuestWeek(new Date("2026-08-23T03:00:00.000Z"))).toBe("2026-08-23");
+  });
+
+  it("sorteia três semanais difíceis sem triplicar uma categoria", () => {
+    const rotation = selectWeeklyQuests(() => 0.999);
+    const quantities = new Map<string, number>();
+    for (const quest of rotation) quantities.set(quest.kind, (quantities.get(quest.kind) ?? 0) + 1);
+    expect(rotation).toHaveLength(WEEKLY_QUEST_PER_WEEK);
+    expect(Math.max(...quantities.values())).toBeLessThanOrEqual(DAILY_QUEST_MAX_PER_CATEGORY);
+    expect(rotation.every((quest) => WEEKLY_QUESTS.includes(quest) && quest.target >= 7)).toBe(true);
   });
 });

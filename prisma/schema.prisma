@@ -50,6 +50,7 @@ model UserCharacter {
   dailyMissionBoards DailyMissionBoard[]
   dailyMissionClaims DailyMissionClaim[]
   dailyQuestProgress DailyQuestProgress[]
+  weeklyQuestProgress WeeklyQuestProgress[]
   inventory       InventoryItem[]
   skillNodes      CharacterSkillNode[]
   taxActivities   WeeklyTaxActivity[]
@@ -549,6 +550,35 @@ model DailyQuestProgress {
 
   @@unique([charId, dayKey, questId])
   @@index([charId, dayKey])
+}
+
+// A rotação semanal segue a mesma regra de compartilhamento da diária, mas a
+// chave representa o domingo que abriu a semana (00:00 America/Sao_Paulo).
+model WeeklyQuestRotation {
+  id           String   @id @default(cuid())
+  guildId      String
+  weekKey      String
+  questIdsJson String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([guildId, weekKey])
+  @@index([weekKey])
+}
+
+model WeeklyQuestProgress {
+  id          String        @id @default(cuid())
+  character   UserCharacter @relation(fields: [charId], references: [id], onDelete: Cascade)
+  charId      String
+  weekKey     String
+  questId     String
+  progress    Int           @default(0)
+  completedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@unique([charId, weekKey, questId])
+  @@index([charId, weekKey])
 }
 
 model NpcState {

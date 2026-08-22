@@ -13,7 +13,7 @@ import {
 import { addInventoryItem } from "../characters/inventory.js";
 import { EconomyError, runEconomy } from "./errors.js";
 import { activeOrderFor, closeFinishedOrders, deliverToOrder } from "./collection-orders.js";
-import { recordDailyQuestEvent } from "../daily-quests/daily-quest-service.js";
+import { recordActivityQuestEvent } from "../daily-quests/daily-quest-service.js";
 
 export interface GatherLoot {
   itemId: string;
@@ -241,7 +241,7 @@ export async function performGathering(
     // Fecha a ordem se esta entrega bateu a meta ou esgotou o orçamento.
     if (delivery) await closeFinishedOrders(now);
 
-    await recordDailyQuestEvent(charId, { type: "GATHER", action, loot }, now);
+    await recordActivityQuestEvent(charId, { type: "GATHER", action, loot }, now);
 
     return { result: { area, action, loot, delivery } };
   }).then((r) =>

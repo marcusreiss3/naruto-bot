@@ -68,7 +68,7 @@ import { startKidDialogue } from "../services/missions/kid-dialogue.js";
 import { moverCleanVillage } from "../services/missions/clean-village.js";
 import { moverRoofCleanup } from "../services/missions/roof-cleanup.js";
 import { withTraitNode } from "../services/characters/trait-service.js";
-import { recordDailyQuestEvent } from "../services/daily-quests/daily-quest-service.js";
+import { recordActivityQuestEvent } from "../services/daily-quests/daily-quest-service.js";
 
 // Tempo para confirmar um jutsu de area antes de cancelar sozinho.
 const PREVIEW_TIMEOUT_MS = 30_000;
@@ -1105,8 +1105,10 @@ async function checkVictory(interaction: ChatInputCommandInteraction, sessionId:
   // jogadores venceram (NPCs eliminados, ou PvP com 1 sobrevivente)
   await interaction.followUp(`🏆 **Vitória dos jogadores!**${treinoNote}`);
   const winners = alive.filter((participant) => !participant.isNpc && participant.charId).map((participant) => participant.charId!);
-  const event = hasNpcs ? { type: "NPC_WIN" as const } : { type: "PVP_WIN" as const };
-  await Promise.all(winners.map((charId) => recordDailyQuestEvent(charId, event)));
+  const event = hasNpcs
+    ? { type: "NPC_WIN" as const, amount: real.filter((participant) => participant.isNpc && participant.hpCurrent <= 0).length }
+    : { type: "PVP_WIN" as const };
+  await Promise.all(winners.map((charId) => recordActivityQuestEvent(charId, event)));
   await onCombatEnded(interaction, session);
 }
 
