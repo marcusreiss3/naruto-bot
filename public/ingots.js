@@ -73,8 +73,8 @@ window.INGOTS_PAGE = {
         {
           icon: "content",
           title: "Missões Diárias",
-          text: "Complete as Missões Diárias para receber Ingots gratuitamente. As condições e a quantidade são exibidas no painel da missão.",
-          meta: "Quantidade: a definir",
+          text: "Complete as três tarefas de `/missoes diarias` para receber Ingots gratuitamente. Cada tarefa concluída rende 20 Ingots.",
+          meta: "Até 60 Ingots por dia",
         },
       ],
     },

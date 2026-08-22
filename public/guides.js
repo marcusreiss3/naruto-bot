@@ -582,6 +582,7 @@
               { title: "Tratamento avançado", text: "No mesmo painel do Hospital, o tratamento avançado custa 25 Ryō e recupera toda a Vida que estiver faltando." },
             ] },
             { type: "callout", tone: "warning", title: "Combate interrompe a recuperação", text: "A recuperação passiva e os tratamentos do Hospital não funcionam enquanto seu personagem estiver em combate." },
+            { type: "callout", tone: "info", title: "Lutas off-RP", text: "Nos canais de lutas off-RP, o combate é apenas de treino: Vida, Chakra e Energia usados na sessão não são aplicados à ficha ao final da batalha." },
           ],
         },
         {
@@ -778,6 +779,14 @@
           { type: "callout", tone: "warning", title: "A party também conta", text: "Uma pessoa elegível da sua party que já tenha uma missão ativa ou concluída naquela faixa no dia bloqueia a aceitação para o grupo. Organize a party antes de escolher a missão." },
           { type: "links", items: [{ slug: "ranks-ninja", section: "missoes-por-rank", title: "Consultar missões por rank", text: "Veja quais faixas cada rank pode aceitar e quando um parceiro é obrigatório." }] },
         ] },
+        { id: "diarias-de-ingots", title: "Missões diárias de Ingots", blocks: [
+          { type: "paragraph", text: "Além do Mural, use `/missoes diarias` para consultar as três tarefas rotativas do dia. Elas acompanham atividades normais do jogo, como criar, concluir missões, vencer combates, coletar ou comprar em lojas." },
+          { type: "cards", items: [
+            { title: "3 tarefas por dia", text: "As três tarefas são escolhidas diariamente e o painel mostra o objetivo e o progresso de cada uma." },
+            { title: "20 Ingots por tarefa", text: "Cada tarefa concluída entrega 20 Ingots, para um total de até 60 Ingots no dia." },
+          ] },
+          { type: "callout", tone: "info", title: "Acompanhe pelo painel", text: "O progresso é registrado automaticamente quando você realiza a atividade pedida. Abra `/missoes diarias` para conferir o andamento e as tarefas concluídas." },
+        ] },
         { id: "party", title: "Jogue em party", blocks: [
           { type: "paragraph", text: "Use `/party` para abrir o painel do grupo. Convites duram 10 minutos e são aceitos ou recusados pelos botões da própria mensagem; o grupo acompanha combates e missões compatíveis." },
           { type: "list", items: ["O líder e os sub-líderes podem convidar integrantes.", "O líder pode promover sub-líderes; líder e sub-líderes removem membros comuns.", "Use o botão **Sair da party** no painel para deixar o grupo. Se o líder sair, a party é desfeita.", "Cada missão define participantes, objetivos e recompensas; formar party não compartilha todo conteúdo automaticamente."] },
@@ -789,7 +798,7 @@
       slug: "mundo-e-viagem",
       title: "Mundo e viagem",
       description: "Entenda sua localização, os destinos, as rotas e a chegada entre Vilas e áreas abertas.",
-      category: "mundo",
+      category: "aventura",
       icon: "guide-travel",
       order: 14,
       type: "guide",
