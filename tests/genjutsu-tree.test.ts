@@ -105,6 +105,11 @@ describe("Alicerce de Relâmpago Ilusório: luz de área para abrir a guarda", (
       { effectId: "DEFENSE_DOWN", duration: 1, chance: 0.75 },
     ]);
   });
+
+  it("exibe a arte própria do Alicerce de Relâmpago Ilusório", () => {
+    expect(allNodes().find((node) => node.id === "gen_alicerce_relampago_ilusorio")?.img)
+      .toBe("/assets/icons/genjutsu/alicerce-de-relampago-ilusorio.png");
+  });
 });
 
 describe("árvore de Genjutsu: identidade de controle (sem damageMult de dano bruto)", () => {

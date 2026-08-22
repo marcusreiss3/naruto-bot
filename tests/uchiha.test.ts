@@ -49,6 +49,9 @@ describe("Uchiha: árvore do Sharingan", () => {
     }
     expect(tree.find((node) => node.id === "uchiha_controle_ocular")?.img).toBe("/assets/icons/uchiha/controle-ocular.png");
     expect(tree.find((node) => node.id === "uchiha_economia_visual")?.img).toBe("/assets/icons/uchiha/economia-visual.png");
+    expect(tree.find((node) => node.id === "uchiha_coercao_sharingan")?.img).toBe("/assets/icons/uchiha/coercao-sharingan.png");
+    expect(tree.find((node) => node.id === "uchiha_repressao_estacas")?.img).toBe("/assets/icons/uchiha/ilusao-demoniaca-repressao-com-estacas.png");
+    expect(tree.find((node) => node.id === "uchiha_genjutsu_sharingan")?.img).toBe("/assets/icons/uchiha/genjutsu-do-sharingan.png");
     expect(tree.find((node) => node.id === "uchiha_mangekyo_sharingan")?.img).toBe("/assets/icons/uchiha/mangekyo-sharingan.png");
   });
 

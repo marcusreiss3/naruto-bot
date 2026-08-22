@@ -47,9 +47,6 @@ const ELEMENTS = [
   // ---- Sunagakure ----
   { id: "KAMAITACHI", name: "Kamaitachi", icon: "🌪️", color: "#8fae8f", clanGate: "kamaitachi" },
   { id: "KAZEKAGE", name: "Kazekage", icon: "🏜️", color: "#c9974f", clanGate: "kazekage" },
-  { id: "KAZEKAGE_AREIA", name: "Areia — prévia", icon: "🏜️", color: "#c9974f", clanGate: "kazekage", backgroundOf: "KAZEKAGE" },
-  { id: "KAZEKAGE_FERRO", name: "Areia de Ferro — prévia", icon: "🧲", color: "#8e99a8", clanGate: "kazekage", backgroundOf: "KAZEKAGE" },
-  { id: "KAZEKAGE_OURO", name: "Pó de Ouro — prévia", icon: "✨", color: "#d6ad4b", clanGate: "kazekage", backgroundOf: "KAZEKAGE" },
   { id: "SHIROGANE", name: "Shirogane", icon: "🪆", color: "#9a8f7a", clanGate: "shirogane" },
   // ---- Kirigakure ----
   { id: "HOSHIGAKI", name: "Hoshigaki", icon: "🦈", color: "#4a7d8c", clanGate: "hoshigaki" },
@@ -366,6 +363,7 @@ const GLOSSARY = [
   { re: "bloque\\w* o Ninjutsu|Bloqueio de Ninjutsu", tip: "Bloqueio de Ninjutsu: o alvo não consegue usar jutsu de categoria Ninjutsu enquanto durar." },
   { re: "Bloqueio de Fuga|Fuga bloqueada|não consegue fugir|sem poder fugir|não conseguem fugir", tip: "Bloqueio de Fuga: o alvo não pode usar a ação de fugir do combate enquanto o efeito durar." },
   { re: "Dreno de Chakra|perde 10% de chakra por turno|perder 10% de chakra por turno", tip: "Dreno de Chakra: remove 10% de chakra do alvo no início de cada turno enquanto durar." },
+  { re: "Marcado", tip: "Marcado: identifica o alvo para técnicas que exigem uma marca, como execuções e perseguições. Não causa dano por si só." },
   { re: "Confuso|Confusão", tip: "Confusão: enquanto durar, o alvo confuso ataca alguém aleatório entre todos os vivos em vez de escolher — pode até acertar o próprio time." },
   { re: "Aceleração|Acelerado", tip: "Aceleração: concede +2 de movimento, +10 pontos percentuais de Esquiva e +25 pontos percentuais de chance de fuga. Quem acertar o portador corpo a corpo sofre 8 de dano." },
   { re: "Desarme", tip: "Desarme: o alvo derruba a arma equipada e precisa recuperá-la antes de voltar a usá-la." },

@@ -45,6 +45,12 @@ describe("árvore de Fuinjutsu", () => {
     ]);
   });
 
+  it("exibe as artes próprias dos três selamentos novos", () => {
+    expect(getNode("fuin_rugido_confinamento_leao")?.img).toBe("/assets/icons/fuinjutsu/rugido-do-confinamento-do-leao.png");
+    expect(getNode("fuin_selo_auto_amaldicoamento")?.img).toBe("/assets/icons/fuinjutsu/selo-de-auto-amaldicoamento.png");
+    expect(getNode("fuin_selo_quatro_simbolos_reverso")?.img).toBe("/assets/icons/fuinjutsu/selo-de-quatro-simbolos-reverso.png");
+  });
+
   it("mantém o Selamento de Contrato como controle de contrato sem dano bruto", () => {
     const ability = getAbility("fuin_selamento_contrato")!;
     expect(ability.effects).toEqual([{ effectId: "CONTRACT_SEAL", duration: 2, chance: 0.85 }]);

@@ -187,7 +187,7 @@ export type BlobStats = {
  * saber quantos objetos existem de verdade.
  */
 export async function stats(): Promise<BlobStats> {
-  return request<BlobStats>("stats", {});
+  return request<BlobStats>("account/stats", {});
 }
 
 /** Apaga um objeto pelo id (`conta/prefix/nome.ext`). Um por requisicao. */
