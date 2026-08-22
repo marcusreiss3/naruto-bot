@@ -310,15 +310,19 @@ export const admin: Command = {
     )
     .addSubcommand((s) =>
       s
-        .setName("desbloquear-tudo")
-        .setDescription("DEBUG: 999 em todo atributo, todo elemento concedido, todo nó de toda árvore desbloqueado")
-        .addUserOption((o) => o.setName("usuario").setDescription("Usuário").setRequired(true)),
-    )
-    .addSubcommand((s) =>
-      s
-        .setName("item-dar-tudo")
-        .setDescription("DEBUG: concede 1 unidade de cada item do catálogo")
-        .addUserOption((o) => o.setName("usuario").setDescription("Usuário").setRequired(true)),
+        .setName("debug-conceder")
+        .setDescription("DEBUG: concede atributos/árvores ou todos os itens")
+        .addUserOption((o) => o.setName("usuario").setDescription("Usuário").setRequired(true))
+        .addStringOption((o) =>
+          o
+            .setName("tipo")
+            .setDescription("O que conceder")
+            .addChoices(
+              { name: "Tudo (atributos, elementos, estilos e árvores)", value: "tudo" },
+              { name: "Todos os itens", value: "itens" },
+            )
+            .setRequired(true),
+        ),
     ),
   async autocomplete(interaction: AutocompleteInteraction) {
     const focused = interaction.options.getFocused(true);
@@ -699,8 +703,14 @@ export const admin: Command = {
         );
         return;
       }
-      case "desbloquear-tudo": {
+      case "debug-conceder": {
         const char = await getChar();
+        const tipo = interaction.options.getString("tipo", true);
+        if (tipo === "itens") {
+          for (const item of ITEMS) await addInventoryItem(prisma, char.id, item.id, 1);
+          await interaction.editReply(`✅ **${char.name}**: 1 unidade de cada um dos ${ITEMS.length} itens do catálogo.`);
+          return;
+        }
         for (const attr of ATTRIBUTES) await setAttribute(char.id, attr, 999);
         for (const element of ELEMENTS) await setElement(char.id, element);
         for (const style of FIGHTING_STYLES) await setFightingStyle(char.id, style);
@@ -722,12 +732,6 @@ export const admin: Command = {
         await interaction.editReply(
           `✅ **${char.name}**: 999 em todos os atributos, todos os elementos e estilos de luta concedidos e ${nodes.length} nós desbloqueados (todas as árvores — elementos, kekkei genkai e TODOS os clãs, mesmo os que não são o seu).`,
         );
-        return;
-      }
-      case "item-dar-tudo": {
-        const char = await getChar();
-        for (const item of ITEMS) await addInventoryItem(prisma, char.id, item.id, 1);
-        await interaction.editReply(`✅ **${char.name}**: 1 unidade de cada um dos ${ITEMS.length} itens do catálogo.`);
         return;
       }
       case "ficha-resetar": {
