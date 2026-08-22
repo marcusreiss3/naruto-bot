@@ -7,6 +7,9 @@ import { log } from "../../utils/logger.js";
 
 export const DAILY_QUEST_REWARD_INGOTS = 20;
 export const DAILY_QUEST_PER_DAY = 3;
+// Duas variações da mesma atividade ainda deixam a rotação imprevisível, mas
+// impedem dias frustrantes com as três metas sendo, por exemplo, compras.
+export const DAILY_QUEST_MAX_PER_CATEGORY = 2;
 
 type QuestKind = "CRAFT" | "MISSION" | "NPC_WIN" | "PVP_WIN" | "GATHER" | "SHOP";
 
@@ -79,7 +82,26 @@ export function selectDailyQuests(rng: () => number = Math.random): DailyQuestDe
     const swap = Math.floor(rng() * (index + 1));
     [pool[index], pool[swap]] = [pool[swap]!, pool[index]!];
   }
-  return pool.slice(0, DAILY_QUEST_PER_DAY);
+  const selected: DailyQuestDef[] = [];
+  const categoryCounts = new Map<QuestKind, number>();
+  for (const quest of pool) {
+    const count = categoryCounts.get(quest.kind) ?? 0;
+    if (count >= DAILY_QUEST_MAX_PER_CATEGORY) continue;
+    selected.push(quest);
+    categoryCounts.set(quest.kind, count + 1);
+    if (selected.length === DAILY_QUEST_PER_DAY) break;
+  }
+  return selected;
+}
+
+function respectsCategoryCap(quests: readonly DailyQuestDef[]): boolean {
+  const counts = new Map<QuestKind, number>();
+  for (const quest of quests) {
+    const next = (counts.get(quest.kind) ?? 0) + 1;
+    if (next > DAILY_QUEST_MAX_PER_CATEGORY) return false;
+    counts.set(quest.kind, next);
+  }
+  return true;
 }
 
 function parseQuestIds(raw: string): DailyQuestDef[] | null {
@@ -87,7 +109,8 @@ function parseQuestIds(raw: string): DailyQuestDef[] | null {
     const ids: unknown = JSON.parse(raw);
     if (!Array.isArray(ids) || ids.length !== DAILY_QUEST_PER_DAY || new Set(ids).size !== ids.length) return null;
     const quests = ids.map((id) => typeof id === "string" ? QUEST_BY_ID.get(id) : undefined);
-    return quests.every((quest): quest is DailyQuestDef => Boolean(quest)) ? quests : null;
+    if (!quests.every((quest): quest is DailyQuestDef => Boolean(quest))) return null;
+    return respectsCategoryCap(quests) ? quests : null;
   } catch {
     return null;
   }
