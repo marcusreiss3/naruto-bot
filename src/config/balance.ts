@@ -338,16 +338,23 @@ export const BALANCE = {
 
   // ---- Progressao / XP ----
   // A curva inteira (nível 1 -> 50) soma 95.550 XP. Com a rotina-base de um
-  // ninja ativo — uma missão D + uma C (≈350), dois treinos futuros (2 × 250)
-  // e cerca de uma hora de RP (≈108) — a chegada ao nível 50 fica pouco acima
-  // de 99 dias. RP complementa a jornada; missão continua sendo a fonte mais
+  // ninja ativo — uma missão D + uma C (≈350), um treino de reação (até 250)
+  // e cerca de uma hora de RP (≈108) — a chegada ao nível 50 fica em cerca de
+  // 135 dias. RP complementa a jornada; missão continua sendo a fonte mais
   // eficiente de progresso, inclusive no rank D.
   xpPerLevel: (level: number) => 200 + level * 70,
   xp: {
-    // Reserva para o sistema de treinos. Ainda não há treino com recompensa,
-    // mas quando entrar cada conclusão deve usar exatamente este valor.
+    // Treino diário de reação: clicar no alvo azul concede XP até a meta;
+    // clicar no preto encerra a tentativa, preservando o que já foi ganho.
     trainingReward: 250,
-    trainingDailyLimit: 2,
+    trainingDailyLimit: 1,
+    training: {
+      blueXpMin: 25,
+      blueXpMax: 40,
+      blackChance: 0.08,
+      targetLifetimeMs: 1_250,
+      gridSize: 3,
+    },
     roleplay: {
       rewardMin: 2,
       rewardMax: 4,

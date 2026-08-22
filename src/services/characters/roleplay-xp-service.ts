@@ -1,62 +1,45 @@
 import { BALANCE } from "../../config/balance.js";
-import { SCENARIOS } from "../../data/scenarios/index.js";
-import { TRAVEL_LOCATIONS } from "../../data/travel.js";
 import { prisma } from "../../db/client.js";
 import { addXp } from "./character-service.js";
 
-// Canais de narrativa sem /mapa que já existem no servidor. Os demais são
-// obtidos de SCENARIOS, para que abrir um novo mapa o torne elegível sem manter
-// uma segunda lista manualmente.
-const EXTRA_ROLEPLAY_CHANNEL_IDS = [
-  // Sunagakure
-  "1523370396827516939",
-  "1523370437919244309",
-  "1523370489081364490",
-  "1523371376663199864",
-  "1523371643102167234",
-  "1523371661074763850",
-  "1523372453403955281",
-  "1523372472223793254",
-  "1523372488292302958",
-  "1523535402755948574",
-  "1528612734071996586",
-  "1529259038079058020",
-  "1529259855968342086",
-  "1529262846280728706",
-  // Kirigakure
-  "1523372437398487151",
-  "1523374733448577024",
-  "1523535455268634796",
-  "1528612808932196422",
-  "1529259305692565554",
-  "1529259778864316608",
-  "1529262571138449509",
-  // Kumogakure
-  "1523535542443053086",
-  "1528612950347087872",
-  "1529259253288669286",
-  "1529259743875694722",
-  "1529262635730731171",
-  // Iwagakure
-  "1523371687721177270",
-  "1523535496121286737",
-  "1528612907640684706",
-  "1529259374994915510",
-  "1529262739728502988",
-  "1529279597500432545",
-  "1537470138851401840",
-  "1537470404019490897",
-  "1537470479013511218",
-] as const;
-
-export const ROLEPLAY_CHANNEL_IDS = new Set<string>([
-  ...EXTRA_ROLEPLAY_CHANNEL_IDS,
-  ...SCENARIOS.map((scenario) => scenario.channelId).filter((channelId) => !channelId.startsWith("mission:")),
-  ...Object.values(TRAVEL_LOCATIONS).flatMap((location) => location.channelIds),
+// XP é permitido em todo canal do servidor, exceto os espaços administrativos,
+// de criação e arenas que não representam RP. Canais de /ficha criados no
+// futuro são barrados separadamente pela sessão persistida no banco.
+export const ROLEPLAY_XP_EXCLUDED_CHANNEL_IDS = new Set<string>([
+  "1516084510968778953",
+  "1520114256740352061",
+  "1520114348079583263",
+  "1520114532511387729",
+  "1520115244981289162",
+  "1520115478532456719",
+  "1520115743469994105",
+  "1520115799854153991",
+  "1520115882347466804",
+  "1520116009518764194",
+  "1520116229225058304",
+  "1520116350360617154",
+  "1532259278352552059",
+  "1532489626604797992",
+  "1532490677253050508",
+  "1532490901400846477",
+  "1533259689381462117",
+  "1533260961547288666",
+  "1533261034704343220",
+  "1533261132150870137",
+  "1533263291248414801",
+  "1533263360873861130",
+  "1533265940261638204",
+  "1533269210615251014",
+  "1537492104819900427",
+  "1539984596584632430",
+  "1539984630953025536",
+  "1539984648376156190",
+  "1539984757704757350",
+  "1539984779959869520",
 ]);
 
 export function isRoleplayChannel(channelId: string): boolean {
-  return ROLEPLAY_CHANNEL_IDS.has(channelId);
+  return !ROLEPLAY_XP_EXCLUDED_CHANNEL_IDS.has(channelId);
 }
 
 function validRoleplayContent(content: string): boolean {
@@ -80,7 +63,16 @@ export async function awardRoleplayXp(input: {
   content: string;
   now?: Date;
 }): Promise<number | null> {
-  if (!isRoleplayChannel(input.channelId) || !validRoleplayContent(input.content)) return null;
+  // DMs não entram: a regra vale somente para canais do servidor.
+  if (input.guildId === "global" || !isRoleplayChannel(input.channelId) || !validRoleplayContent(input.content)) return null;
+
+  // Cada /ficha abre um canal temporário e registra o ID em uma sessão. Esta
+  // consulta também cobre novos canais sem precisar adicioná-los à lista acima.
+  const sheetSession = await prisma.sheetCreationSession.findUnique({
+    where: { channelId: input.channelId },
+    select: { id: true },
+  });
+  if (sheetSession) return null;
 
   // Mensagem de RP não cria ficha automaticamente: só personagens existentes
   // participam da progressão.

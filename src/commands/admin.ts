@@ -9,6 +9,7 @@ import { getCharacterTrait, setCharacterTrait, clearCharacterTrait } from "../se
 import { respec } from "../services/characters/attribute-allocator.js";
 import {
   getOrCreateCharacter,
+  addXp,
   setAttribute,
   addAttribute,
   setLevel,
@@ -21,6 +22,7 @@ import {
   addJutsu,
   removeJutsu,
 } from "../services/characters/character-service.js";
+import { resetTrainingCooldown } from "../services/characters/reaction-training-service.js";
 import { CLANS, getAbility, ALL_ABILITIES, MISSIONS, getMission } from "../data/index.js";
 import { allNodes } from "../data/element-trees/index.js";
 import { ITEMS, getItem } from "../data/items.js";
@@ -218,6 +220,19 @@ export const admin: Command = {
         .setDescription("Define o nível")
         .addUserOption((o) => o.setName("usuario").setDescription("Usuário").setRequired(true))
         .addIntegerOption((o) => o.setName("valor").setDescription("Nível").setRequired(true)),
+    )
+    .addSubcommand((s) =>
+      s
+        .setName("xp-adicionar")
+        .setDescription("Adiciona XP a um personagem")
+        .addUserOption((o) => o.setName("usuario").setDescription("Usuário").setRequired(true))
+        .addIntegerOption((o) => o.setName("quantidade").setDescription("Quantidade de XP").setMinValue(1).setRequired(true)),
+    )
+    .addSubcommand((s) =>
+      s
+        .setName("treino-resetar")
+        .setDescription("Libera novamente o treino diário de um jogador")
+        .addUserOption((o) => o.setName("usuario").setDescription("Usuário").setRequired(true)),
     )
     .addSubcommand((s) =>
       s
@@ -579,6 +594,25 @@ export const admin: Command = {
         const valor = interaction.options.getInteger("valor", true);
         await setLevel(char.id, valor);
         await interaction.editReply(`✅ Nível de **${char.name}** = ${valor}.`);
+        return;
+      }
+      case "xp-adicionar": {
+        const char = await getChar();
+        const quantidade = interaction.options.getInteger("quantidade", true);
+        const result = await addXp(char.id, quantidade);
+        await interaction.editReply(
+          `✅ **+${quantidade} XP** para **${char.name}**.${result.leveledTo ? ` Agora é nível **${result.leveledTo}**.` : ""}`,
+        );
+        return;
+      }
+      case "treino-resetar": {
+        const char = await getChar();
+        const reset = await resetTrainingCooldown(char.id);
+        await interaction.editReply(
+          reset
+            ? `✅ Treino diário de **${char.name}** resetado. Ele já pode usar \`/treino\` novamente.`
+            : `ℹ️ **${char.name}** ainda não usou o treino de hoje.`,
+        );
         return;
       }
       case "recurso-set": {

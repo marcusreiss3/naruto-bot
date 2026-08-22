@@ -15,11 +15,10 @@ describe("balanceamento de nível", () => {
     expect(BALANCE.xp.roleplay.cooldownMaxMs).toBe(180_000);
   });
 
-  it("inclui os canais de RP informados e os canais de mapa", () => {
+  it("permite qualquer canal normal e bloqueia as exceções", () => {
     expect(isRoleplayChannel("1537470138851401840")).toBe(true);
-    expect(isRoleplayChannel("1529259038079058020")).toBe(true);
     expect(isRoleplayChannel("1529259778864316608")).toBe(true);
-    expect(isRoleplayChannel("1515881109878214746")).toBe(true);
-    expect(isRoleplayChannel("canal-qualquer")).toBe(false);
+    expect(isRoleplayChannel("1537492104819900427")).toBe(false);
+    expect(isRoleplayChannel("1539984596584632430")).toBe(false);
   });
 });
