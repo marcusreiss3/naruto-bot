@@ -17,6 +17,8 @@ describe("balanceamento de nível", () => {
 
   it("inclui os canais de RP informados e os canais de mapa", () => {
     expect(isRoleplayChannel("1537470138851401840")).toBe(true);
+    expect(isRoleplayChannel("1529259038079058020")).toBe(true);
+    expect(isRoleplayChannel("1529259778864316608")).toBe(true);
     expect(isRoleplayChannel("1515881109878214746")).toBe(true);
     expect(isRoleplayChannel("canal-qualquer")).toBe(false);
   });
