@@ -119,7 +119,7 @@ export const CLAN_ABILITIES: Ability[] = [
     scalingAttribute: "genjutsu",
     range: 3,
     shape: "SINGLE_TARGET",
-    effects: [{ effectId: "STUN", duration: 1, chance: 0.7 }, { effectId: "CHAKRA_DRAIN", duration: 2, chance: 0.7 }],
+    effects: [{ effectId: "STUN", duration: 1, chance: 0.6 }, { effectId: "CHAKRA_DRAIN", duration: 2, chance: 0.6 }],
     requiresActiveDoujutsu: { flag: "sharinganTomoe", value: 3, label: "Sharingan de três tomoe" },
     requirements: { clanId: "uchiha", manualOnly: true, attributes: { dojutsu: 22 }, level: 26 },
     tags: ["cla", "uchiha", "genjutsu", "controle", "sharingan"],

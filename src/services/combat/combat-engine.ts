@@ -1402,8 +1402,19 @@ export async function useAbility(
       abilityId: ability.id,
       radius: ability.deathTrigger.radius,
       effects: ability.deathTrigger.effects,
+      executeBelowHpPercent: ability.deathTrigger.executeBelowHpPercent,
+      sealDojutsuOnDeath: ability.deathTrigger.sealDojutsuOnDeath,
     });
-    logs.push(`🔒 ${actor.name} preparou uma fórmula que será ativada se for derrotado.`);
+    logs.push(
+      ability.deathTrigger.sacrificeOnUse
+        ? `🔒 ${actor.name} fechou uma fórmula de sacrifício.`
+        : `🔒 ${actor.name} preparou uma fórmula que será ativada se for derrotado.`,
+    );
+    if (ability.deathTrigger.sacrificeOnUse) {
+      await applyDamage(s.id, actor, actor.hpCurrent, logs);
+      logs.push(`☠️ ${actor.name} se sacrificou para concluir o selamento.`);
+      return { ok: true, logs, hits: [] };
+    }
   }
   if (carelessAttackTriggered) {
     await setFlag(actionOwner.id, "nextNoReaction", true);
@@ -3136,17 +3147,22 @@ async function applyDamage(
   return newHp;
 }
 
-// Fórmulas preparadas em SELF (hoje, o Selo de Quatro Símbolos Reverso).
-// O estado fica no participante, não no jutsu que o derrotou: assim funciona
-// para dano direto, contra-ataque, dano refletido e qualquer outra morte que
-// passe pelo ponto único de dano da engine.
+// Fórmulas preparadas em SELF. O estado fica no participante, não no jutsu que
+// o derrota: assim funciona para dano direto, contra-ataque, dano refletido e
+// para técnicas que encerram a vida do próprio usuário no momento do uso.
 async function triggerArmedDeathSeal(sessionId: string, participantId: string, logs: string[]): Promise<void> {
   const current = await getSessionById(sessionId);
   const dead = current?.participants.find((p) => p.id === participantId);
   const trigger = dead?.flags.armedDeathTrigger as
-    | { abilityId: string; radius: number; effects: Ability["effects"] }
+    | {
+        abilityId: string;
+        radius: number;
+        effects?: Ability["effects"];
+        executeBelowHpPercent?: number;
+        sealDojutsuOnDeath?: boolean;
+      }
     | undefined;
-  if (!current || !dead || !trigger?.effects?.length) return;
+  if (!current || !dead || !trigger) return;
 
   await setFlag(dead.id, "armedDeathTrigger", undefined);
   const scenario = getScenarioById(current.scenarioId);
@@ -3156,20 +3172,44 @@ async function triggerArmedDeathSeal(sessionId: string, participantId: string, l
   const targets = current.participants.filter(
     (p) => p.hpCurrent > 0 && p.teamId !== dead.teamId && cells.has(p.cell),
   );
-  for (const target of targets) {
-    for (const effect of trigger.effects) {
-      await applyEffect(
-        target.id,
-        effect.effectId,
-        effect.stacks ?? 1,
-        effect.duration ?? defaultDurationFor(effect.effectId),
-      );
+  if (trigger.effects?.length) {
+    for (const target of targets) {
+      for (const effect of trigger.effects) {
+        await applyEffect(
+          target.id,
+          effect.effectId,
+          effect.stacks ?? 1,
+          effect.duration ?? defaultDurationFor(effect.effectId),
+        );
+      }
     }
   }
-  if (targets.length) {
-    logs.push(`⚫ O selo final de ${dead.name} se fechou e atingiu ${targets.map((p) => p.name).join(", ")}.`);
+
+  const executed = trigger.executeBelowHpPercent === undefined
+    ? []
+    : targets.filter((target) => target.hpCurrent / Math.max(1, target.hpMax) <= trigger.executeBelowHpPercent!);
+  for (const target of executed) await applyDamage(sessionId, target, target.hpCurrent, logs);
+
+  if (trigger.sealDojutsuOnDeath && dead.charId) {
+    const attrs = dead.flags.attrs as Record<string, number> | undefined;
+    if (Number(attrs?.dojutsu ?? 0) > 0) {
+      // Nó técnico e invisível: a futura mecânica de roubo de dōjutsu deve
+      // consultar esta marca e jamais oferecer olhos selados como espólio.
+      await prisma.characterSkillNode.upsert({
+        where: { charId_nodeId: { charId: dead.charId, nodeId: "dojutsu_sealed_by_four_symbols" } },
+        create: { charId: dead.charId, nodeId: "dojutsu_sealed_by_four_symbols" },
+        update: {},
+      });
+      logs.push(`👁️ Os dōjutsus de ${dead.name} foram selados com o corpo e não poderão ser roubados.`);
+    }
+  }
+
+  if (executed.length) {
+    logs.push(`⚫ O selo final de ${dead.name} sacrificou o usuário e selou ${executed.map((p) => p.name).join(", ")}.`);
+  } else if (targets.length) {
+    logs.push(`⚫ O selo final de ${dead.name} se fechou, mas nenhum inimigo atingido estava vulnerável ao selamento.`);
   } else {
-    logs.push(`⚫ O selo final de ${dead.name} se fechou sem inimigos próximos.`);
+    logs.push(`⚫ O selo final de ${dead.name} se fechou sem inimigos no alcance.`);
   }
 }
 

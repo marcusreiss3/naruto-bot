@@ -9,7 +9,7 @@ import {
   kazekageSandVariantNodeId,
   rollKazekageSandVariant,
 } from "../src/services/characters/kazekage-sand.js";
-import { viewClanTree, type CharSnapshot } from "../src/services/characters/skill-tree.js";
+import { viewClanTree, viewKazekageSandPreview, type CharSnapshot } from "../src/services/characters/skill-tree.js";
 
 const IDS = [
   "kazekage_chuva_areia", "kazekage_mao_areia", "kazekage_escudo_areia", "kazekage_prisao_areia", "kazekage_caixao_areia", "kazekage_enterro_prisao_areia",
@@ -44,6 +44,19 @@ describe("Kazekage: manipulação exclusiva de areia", () => {
       const view = viewClanTree({ ...base, kazekageSandVariant: variant }, "kazekage");
       expect(view[0]!.id).toBe("kazekage_despertar_areia");
       expect(view.slice(1).every((node) => node.requiresKazekageSand === variant)).toBe(true);
+    }
+  });
+
+  it("oferece prévias separadas dos três ramos sem transformar nós em compras", () => {
+    const base: CharSnapshot = {
+      charId: "char", name: "Kazekage", level: 50, spentByPool: {}, pointsByPool: { ninjutsu: 99 }, elements: ["TERRA"], fightingStyles: new Set(),
+      owned: new Set(), clanId: "kazekage", attributes: { ninjutsu: 99 },
+    };
+    for (const variant of KAZEKAGE_SAND_VARIANTS) {
+      const preview = viewKazekageSandPreview(base, variant);
+      expect(preview).toContainEqual(expect.objectContaining({ id: "kazekage_despertar_areia" }));
+      expect(preview.filter((node) => node.id !== "kazekage_despertar_areia").every((node) => node.requiresKazekageSand === variant)).toBe(true);
+      expect(preview.every((node) => node.status === "LOCKED")).toBe(true);
     }
   });
 

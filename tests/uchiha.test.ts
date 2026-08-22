@@ -99,6 +99,13 @@ describe("Uchiha: árvore do Sharingan", () => {
     }
   });
 
+  it("reduz para 60% as duas aplicações da Repressão com Estacas", () => {
+    expect(getAbility("uchiha_repressao_estacas")!.effects).toEqual([
+      { effectId: "STUN", duration: 1, chance: 0.6 },
+      { effectId: "CHAKRA_DRAIN", duration: 2, chance: 0.6 },
+    ]);
+  });
+
   it("cada estágio aumenta esquiva e manutenção de chakra", () => {
     for (const tomoe of [1, 2, 3] as const) {
       const ability = getAbility(SHARINGAN_ABILITY_BY_TOMOE[tomoe])!;

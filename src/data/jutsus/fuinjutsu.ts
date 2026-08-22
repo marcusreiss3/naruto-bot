@@ -21,11 +21,11 @@ export const FUINJUTSU_ABILITIES: Ability[] = [
     description: "Ao tocar o peito do alvo, rompe temporariamente contratos de invocação e veda o chakra associado a Bijuu.",
   },
   {
-    id: "fuin_selo_quatro_simbolos_reverso", name: "Selo de Quatro Símbolos Reverso", category: "NINJUTSU", tier: 3, resource: "chakra", cost: 22, actionType: "BONUS",
+    id: "fuin_selo_quatro_simbolos_reverso", name: "Selo de Quatro Símbolos Reverso", category: "NINJUTSU", tier: 4, resource: "chakra", cost: 40, actionType: "BONUS",
     range: 0, shape: "SELF", scalingAttribute: "fuinjutsu", oncePerCombat: true,
-    deathTrigger: { radius: 2, effects: [{ effectId: "ROOT", duration: 1 }, { effectId: "NINJUTSU_BLOCK", duration: 2 }] },
-    requirements: { manualOnly: true, attributes: { fuinjutsu: 28 }, level: 30 }, tags: ["fuinjutsu", "selamento", "sacrificio", "controle"],
-    description: "Arma no próprio corpo um selo que, ao ser derrotado, imobiliza inimigos próximos e bloqueia o Ninjutsu deles por duas rodadas.",
+    deathTrigger: { radius: 5, sacrificeOnUse: true, executeBelowHpPercent: 0.25, radiusUnit: "METERS", sealDojutsuOnDeath: true },
+    requirements: { manualOnly: true, attributes: { fuinjutsu: 40 }, level: 42 }, tags: ["fuinjutsu", "selamento", "sacrificio", "execucao", "apice"],
+    description: "O usuário se sacrifica e fecha uma esfera de selamento em 5 metros. Inimigos dentro dela com até 25% de Vida são selados no corpo do usuário e morrem.",
   },
   {
     // 24 -> 20 em 09/08/2026: era -8 na regua, o unico Fuinjutsu caro SEM
@@ -41,20 +41,20 @@ export const FUINJUTSU_ABILITIES: Ability[] = [
   },
   {
     id: "fuin_ligacao_pano", name: "Técnica da Ligação de Pano", category: "NINJUTSU", tier: 2, resource: "chakra", cost: 20, actionType: "COMUM",
-    baseDamage: 8, scalingAttribute: "fuinjutsu", range: 3, shape: "SINGLE_TARGET", effects: [{ effectId: "ROOT", duration: 2, chance: 0.8 }, { effectId: "NINJUTSU_BLOCK", duration: 1, chance: 0.8 }],
+    baseDamage: 8, scalingAttribute: "fuinjutsu", range: 3, shape: "SINGLE_TARGET", effects: [{ effectId: "ROOT", duration: 2, chance: 0.85 }],
     requirements: { manualOnly: true, attributes: { fuinjutsu: 20 }, level: 20 }, tags: ["fuinjutsu", "selamento", "controle", "pano"],
-    description: "Um rolo de pano marcado por selos imobiliza o alvo e pode impedi-lo de usar Ninjutsu.",
+    description: "Um rolo de pano marcado por selos prende fisicamente o alvo e pode Imobilizá-lo.",
   },
   {
     id: "fuin_rugido_confinamento_leao", name: "Rugido do Confinamento do Leão", category: "NINJUTSU", tier: 3, resource: "chakra", cost: 24, actionType: "COMUM",
-    baseDamage: 10, scalingAttribute: "fuinjutsu", range: 3, shape: "SINGLE_TARGET", effects: [{ effectId: "NINJUTSU_BLOCK", duration: 2, chance: 0.85 }, { effectId: "ROOT", duration: 1, chance: 0.75 }],
+    baseDamage: 10, scalingAttribute: "fuinjutsu", range: 4, shape: "RADIUS", effects: [{ effectId: "NINJUTSU_BLOCK", duration: 2, chance: 0.85 }],
     requirements: { manualOnly: true, attributes: { fuinjutsu: 25 }, level: 26 }, tags: ["fuinjutsu", "selamento", "controle", "leao"],
-    description: "Uma fórmula de leão pode bloquear o Ninjutsu do alvo e imobilizá-lo brevemente. Não sela tenketsu nem impede o uso de Genjutsu, Iryō Ninjutsu ou Portões.",
+    description: "Uma fórmula de leão fecha o fluxo de Ninjutsu dos inimigos na área. Não sela tenketsu nem impede Genjutsu, Iryō Ninjutsu ou Portões.",
   },
   {
     id: "fuin_selo_auto_amaldicoamento", name: "Selo de Auto-Amaldiçoamento", category: "NINJUTSU", tier: 3, resource: "chakra", cost: 22, actionType: "COMUM",
-    baseDamage: 8, scalingAttribute: "fuinjutsu", range: 3, shape: "SINGLE_TARGET", effects: [{ effectId: "ROOT", duration: 2, chance: 0.75 }, { effectId: "NINJUTSU_BLOCK", duration: 1, chance: 0.75 }],
+    baseDamage: 8, scalingAttribute: "fuinjutsu", range: 3, shape: "SINGLE_TARGET", effects: [{ effectId: "MARKED", duration: 3, chance: 0.9 }, { effectId: "STUN", duration: 1, chance: 0.75 }],
     requirements: { manualOnly: true, attributes: { fuinjutsu: 30 }, level: 32 }, tags: ["fuinjutsu", "selamento", "controle", "amaldicoado"],
-    description: "Uma marca amaldiçoada se espalha pelo alvo e pode Imobilizá-lo, além de interromper o Ninjutsu por uma rodada.",
+    description: "Uma marca amaldiçoada se espalha pelo alvo e pode Atordoá-lo quando o selo se manifesta.",
   },
 ];

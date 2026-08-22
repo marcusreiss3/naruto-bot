@@ -425,6 +425,24 @@ export function viewClanTree(snap: CharSnapshot, clanId: string): NodeView[] {
     });
 }
 
+// As três manipulações do Kazekage são mutuamente exclusivas no personagem,
+// mas podem ser consultadas no site antes do despertar. A prévia nunca expõe
+// nós compráveis: a compra continua passando apenas pela árvore real.
+export function viewKazekageSandPreview(snap: CharSnapshot, variant: KazekageSandVariant): NodeView[] {
+  return (CLAN_TREES.kazekage ?? [])
+    .filter((node) => node.id === "kazekage_despertar_areia" || node.requiresKazekageSand === variant)
+    .map((node) => ({
+      ...node,
+      combat: combatOf(node),
+      mechanics: mechanicsOf(node),
+      visualDescription: visualDescriptionOf(node),
+      effectiveReqPool: effectiveReqPool(node),
+      cost: effectiveNodeCost(node, snap),
+      status: "LOCKED" as const,
+      reason: "Prévia de uma manipulação exclusiva do Kazekage.",
+    }));
+}
+
 export function viewBukijutsuTree(snap: CharSnapshot): NodeView[] {
   return BUKIJUTSU_TREE.map((node) => {
     const combat = combatOf(node);

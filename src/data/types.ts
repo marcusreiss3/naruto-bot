@@ -195,10 +195,17 @@ export interface Ability {
   // bate com a chave em ParticipantRow.flags que /combate byakugan|ketsuryuugan
   // liga/desliga (ex: "byakuganActive"); `label` e' so' pra mensagem de erro.
   requiresActiveDoujutsu?: { flag: string; label: string; value?: unknown };
-  // Fórmula preparada no próprio corpo. Quando o usuário for derrotado, ela
-  // dispara uma última área de selamento; a técnica ainda precisa ser usada
-  // antes da morte, portanto não transforma uma derrota em ação gratuita.
-  deathTrigger?: { radius: number; effects: AppliedEffect[] };
+  // Fórmula preparada no próprio corpo. Pode disparar ao morrer normalmente
+  // ou se sacrificar no momento do uso. `sealDojutsuOnDeath` grava uma marca
+  // técnica persistente para a futura mecânica de roubo de dōjutsu respeitar.
+  deathTrigger?: {
+    radius: number;
+    effects?: AppliedEffect[];
+    sacrificeOnUse?: boolean;
+    executeBelowHpPercent?: number;
+    radiusUnit?: "CELLS" | "METERS";
+    sealDojutsuOnDeath?: boolean;
+  };
   // pode ser usada uma unica vez por combate
   oncePerCombat?: boolean;
   reactionKind?: "BLOCK" | "DODGE" | "PARRY" | "JUTSU";

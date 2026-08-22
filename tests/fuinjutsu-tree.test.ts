@@ -16,19 +16,32 @@ describe("árvore de Fuinjutsu", () => {
     const rugido = getAbility("fuin_rugido_confinamento_leao")!;
     expect(rugido.effects).toEqual([
       { effectId: "NINJUTSU_BLOCK", duration: 2, chance: 0.85 },
-      { effectId: "ROOT", duration: 1, chance: 0.75 },
     ]);
+    expect(rugido.shape).toBe("RADIUS");
     expect(rugido.effects!.some((effect) => effect.effectId === "TENKETSU_SEAL")).toBe(false);
   });
 
-  it("arma o Selo Reverso antes da derrota e sela Ninjutsu apenas em inimigos próximos", () => {
+  it("faz do Selo Reverso um sacrifício de Rank S com execução em área", () => {
     const selo = getAbility("fuin_selo_quatro_simbolos_reverso")!;
     expect(selo.actionType).toBe("BONUS");
+    expect(selo.tier).toBe(4);
     expect(selo.oncePerCombat).toBe(true);
     expect(selo.deathTrigger).toEqual({
-      radius: 2,
-      effects: [{ effectId: "ROOT", duration: 1 }, { effectId: "NINJUTSU_BLOCK", duration: 2 }],
+      radius: 5,
+      sacrificeOnUse: true,
+      executeBelowHpPercent: 0.25,
+      radiusUnit: "METERS",
+      sealDojutsuOnDeath: true,
     });
+    expect(buildMechanicsSummary(selo)).toMatch(/5 metros.*25% de Vida/i);
+  });
+
+  it("mantém papéis distintos para pano, rugido e auto-amaldiçoamento", () => {
+    expect(getAbility("fuin_ligacao_pano")!.effects).toEqual([{ effectId: "ROOT", duration: 2, chance: 0.85 }]);
+    expect(getAbility("fuin_selo_auto_amaldicoamento")!.effects).toEqual([
+      { effectId: "MARKED", duration: 3, chance: 0.9 },
+      { effectId: "STUN", duration: 1, chance: 0.75 },
+    ]);
   });
 
   it("mantém o Selamento de Contrato como controle de contrato sem dano bruto", () => {

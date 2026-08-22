@@ -46,8 +46,10 @@ const ELEMENTS = [
   { id: "YAMANAKA", name: "Yamanaka", icon: "🧠", color: "#c9a6d9", clanGate: "yamanaka" },
   // ---- Sunagakure ----
   { id: "KAMAITACHI", name: "Kamaitachi", icon: "🌪️", color: "#8fae8f", clanGate: "kamaitachi" },
-  // Sem nós ainda (arvore vazia em src/data/clans/index.ts) — so' icone e fundo.
   { id: "KAZEKAGE", name: "Kazekage", icon: "🏜️", color: "#c9974f", clanGate: "kazekage" },
+  { id: "KAZEKAGE_AREIA", name: "Areia — prévia", icon: "🏜️", color: "#c9974f", clanGate: "kazekage", backgroundOf: "KAZEKAGE" },
+  { id: "KAZEKAGE_FERRO", name: "Areia de Ferro — prévia", icon: "🧲", color: "#8e99a8", clanGate: "kazekage", backgroundOf: "KAZEKAGE" },
+  { id: "KAZEKAGE_OURO", name: "Pó de Ouro — prévia", icon: "✨", color: "#d6ad4b", clanGate: "kazekage", backgroundOf: "KAZEKAGE" },
   { id: "SHIROGANE", name: "Shirogane", icon: "🪆", color: "#9a8f7a", clanGate: "shirogane" },
   // ---- Kirigakure ----
   { id: "HOSHIGAKI", name: "Hoshigaki", icon: "🦈", color: "#4a7d8c", clanGate: "hoshigaki" },
@@ -918,7 +920,8 @@ function renderTree(elId) {
   }
   if (stage) {
     const isClanTree = Boolean(meta?.clanGate);
-    stage.style.setProperty("--elBg", ELEMENT_BG[elId] || CLAN_BACKGROUNDS[elId] || (isClanTree ? CLAN_BG : "none"));
+    const backgroundId = meta?.backgroundOf || elId;
+    stage.style.setProperty("--elBg", ELEMENT_BG[backgroundId] || CLAN_BACKGROUNDS[backgroundId] || (isClanTree ? CLAN_BG : "none"));
     // Padrão único para toda árvore. A arte já é desenhada escura, com o centro
     // quase preto e o personagem na margem direita, então não precisa apanhar de
     // opacidade pra árvore continuar legível — os nós ficam sobre o preto.

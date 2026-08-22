@@ -151,8 +151,16 @@ export function buildMechanicsSummary(ability: Ability): string {
   if (ability.clearsTerrain) parts.push(`Remove terreno de ${terrainName(ability.clearsTerrain)}.`);
   if (ability.oncePerCombat) parts.push("Pode ser usada somente uma vez por combate.");
   if (ability.deathTrigger) {
-    const effects = ability.deathTrigger.effects.map((effect) => effectText(effect)).join(" ");
-    parts.push(`Ao ser derrotado, afeta inimigos em um raio de ${ability.deathTrigger.radius} casas: ${effects}`);
+    const unit = ability.deathTrigger.radiusUnit === "METERS" ? "metros" : "casas";
+    const radius = `em um raio de ${ability.deathTrigger.radius} ${unit}`;
+    if (ability.deathTrigger.sacrificeOnUse) {
+      const threshold = Math.round((ability.deathTrigger.executeBelowHpPercent ?? 0) * 100);
+      parts.push(`Ao usar, você é derrotado. Inimigos ${radius} com até ${threshold}% de Vida são selados e derrotados.`);
+      if (ability.deathTrigger.sealDojutsuOnDeath) parts.push("Se possuir dōjutsu, seus olhos também são selados e não poderão ser roubados.");
+    } else if (ability.deathTrigger.effects?.length) {
+      const effects = ability.deathTrigger.effects.map((effect) => effectText(effect)).join(" ");
+      parts.push(`Ao ser derrotado, afeta inimigos ${radius}: ${effects}`);
+    }
   }
   if (ability.requiresStorm) {
     parts.push(

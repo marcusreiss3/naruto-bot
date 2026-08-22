@@ -8,7 +8,7 @@ import { ELEMENT_TREES } from "../data/element-trees/index.js";
 import { CLAN_TREES } from "../data/clan-trees/index.js";
 import { CLANS, getAbility } from "../data/index.js";
 import { getTrait } from "../data/traits.js";
-import { loadSnapshot, viewTree, viewFundamentosTree, viewClanTree, viewBukijutsuTree, viewIryoNinjutsuTree, viewGenjutsuTree, viewFuinjutsuTree, viewKugutsuTree, viewTaijutsuTree, viewArhatTree, viewAdamantinoTree, viewTaijutsuPassivesTree, viewAssassinatoNinjaTree, viewTaijutsuAgitacaoTree, buyNode } from "../services/characters/skill-tree.js";
+import { loadSnapshot, viewTree, viewFundamentosTree, viewClanTree, viewKazekageSandPreview, viewBukijutsuTree, viewIryoNinjutsuTree, viewGenjutsuTree, viewFuinjutsuTree, viewKugutsuTree, viewTaijutsuTree, viewArhatTree, viewAdamantinoTree, viewTaijutsuPassivesTree, viewAssassinatoNinjaTree, viewTaijutsuAgitacaoTree, buyNode } from "../services/characters/skill-tree.js";
 import { villageForDiscordUser } from "../services/village-service.js";
 import { buildMechanicsSummary, buildVisualDescription } from "../services/characters/skill-description.js";
 import { MANGEKYO_VARIANT_LABEL } from "../services/characters/mangekyo.js";
@@ -54,6 +54,9 @@ export function registerApi(app: FastifyInstance): void {
     for (const clanId of Object.keys(CLAN_TREES)) {
       trees[clanId.toUpperCase()] = viewClanTree(snap, clanId);
     }
+    trees.KAZEKAGE_AREIA = viewKazekageSandPreview(snap, "AREIA");
+    trees.KAZEKAGE_FERRO = viewKazekageSandPreview(snap, "FERRO");
+    trees.KAZEKAGE_OURO = viewKazekageSandPreview(snap, "OURO");
     return reply.send({
       authenticated: true,
       hasChar: true,
