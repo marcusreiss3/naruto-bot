@@ -4,7 +4,6 @@ import {
   SlashCommandBuilder,
   type ButtonInteraction,
   type ChatInputCommandInteraction,
-  type Message,
 } from "discord.js";
 import type { TrainingSession } from "@prisma/client";
 import type { Command } from "./types.js";
@@ -21,6 +20,7 @@ import { log } from "../utils/logger.js";
 
 const PREFIX = "treino";
 const timers = new Map<string, ReturnType<typeof setTimeout>>();
+type TrainingInteraction = ChatInputCommandInteraction | ButtonInteraction;
 
 function clearTrainingTimer(sessionId: string): void {
   const timer = timers.get(sessionId);
@@ -97,13 +97,13 @@ function panel(session: TrainingSession, feedback?: string): TopLevel[] {
   ]);
 }
 
-async function armAndScheduleTarget(session: TrainingSession, message: Message): Promise<void> {
+async function armAndScheduleTarget(session: TrainingSession, interaction: TrainingInteraction): Promise<void> {
   if (!session.activeToken) return;
   const armed = await armTrainingTarget(session.id, session.activeToken);
-  if (armed) scheduleTargetExpiry(armed, message);
+  if (armed) scheduleTargetExpiry(armed, interaction);
 }
 
-function scheduleTargetExpiry(session: TrainingSession, message: Message): void {
+function scheduleTargetExpiry(session: TrainingSession, interaction: TrainingInteraction): void {
   clearTrainingTimer(session.id);
   if (session.status !== "ACTIVE" || !session.activeToken || !session.expiresAt) return;
 
@@ -114,8 +114,10 @@ function scheduleTargetExpiry(session: TrainingSession, message: Message): void 
     try {
       const next = await issueTrainingTarget(session.id, new Date(), expectedToken);
       if (!next || next.status !== "ACTIVE" || !next.activeToken) return;
-      await message.edit(v2Edit(panel(next)));
-      await armAndScheduleTarget(next, message);
+      // Respostas efêmeras só podem ser atualizadas de forma confiável pelo
+      // webhook da interação; Message#edit pode falhar silenciosamente nelas.
+      await interaction.editReply(v2Edit(panel(next)));
+      await armAndScheduleTarget(next, interaction);
     } catch (error) {
       log.error("Falha ao trocar o alvo do treino:", error);
     }
@@ -124,7 +126,7 @@ function scheduleTargetExpiry(session: TrainingSession, message: Message): void 
   timers.set(session.id, timer);
 }
 
-function scheduleIntroduction(session: TrainingSession, message: Message): void {
+function scheduleIntroduction(session: TrainingSession, interaction: ChatInputCommandInteraction): void {
   clearTrainingTimer(session.id);
   if (session.status !== "INTRO" || !session.introEndsAt) return;
 
@@ -136,8 +138,8 @@ function scheduleIntroduction(session: TrainingSession, message: Message): void 
       if (!started || started.status !== "ACTIVE") return;
       const target = await issueTrainingTarget(started.id);
       if (!target || !target.activeToken) return;
-      await message.edit(v2Edit(panel(target)));
-      await armAndScheduleTarget(target, message);
+      await interaction.editReply(v2Edit(panel(target)));
+      await armAndScheduleTarget(target, interaction);
     } catch (error) {
       log.error("Falha ao iniciar o treino de reflexos:", error);
     }
@@ -164,8 +166,7 @@ export const treino: Command = {
     }
 
     await interaction.reply(v2Payload(introductionPanel(), true));
-    const message = await interaction.fetchReply();
-    scheduleIntroduction(started.session, message);
+    scheduleIntroduction(started.session, interaction);
   },
 
   async handleButton(interaction: ButtonInteraction) {
@@ -196,7 +197,7 @@ export const treino: Command = {
 
     await interaction.update(v2Edit(panel(session, feedback)));
     if (result.kind === "BLUE" && session.status === "ACTIVE") {
-      await armAndScheduleTarget(session, interaction.message);
+      await armAndScheduleTarget(session, interaction);
     }
   },
 };
