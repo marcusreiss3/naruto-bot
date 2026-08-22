@@ -74,16 +74,19 @@ O despertar sorteia permanentemente Areia, Areia de Ferro ou Pó de Ouro. Cada
 personagem acessa somente um ramo. Os valores abaixo contam as passivas do
 ramo, mas não contam a árvore externa de Terra.
 
-Manipulação       PN   Passivas próprias     Dano médio   Melhor golpe
------------------------------------------------------------------------
-Areia             32        +10%                 21,56       30,80
-Areia de Ferro    32        +10% / +10%          28,56       38,72
-Pó de Ouro        28        +10%                 25,58       30,80
+Manipulação       PN   Passivas próprias     Dano médio   Melhor   Custo/dano   Pico/PN
+                                                  nv.45       golpe
+------------------------------------------------------------------------------------------
+Areia             32        +10%                 27,28       37,40       1,10        1,17
+Areia de Ferro    32        +10% / +10%          28,56       38,72       0,88        1,21
+Pó de Ouro        28        +10%                 28,33       35,20       0,93        1,26
 
 Areia prioriza contenção, Barreira e finalização de alvos Imobilizados. Areia
 de Ferro é o ramo ofensivo, com penetração parcial de Bloqueio/Aparo e ápice
 de área de uso único por combate. Pó de Ouro troca parte do pico por Vida e
-Barreira mais fortes, sem deixar de ter controle e finalização.
+Barreira mais fortes, sem deixar de ter controle e finalização. Os três ramos
+chegam a um jutsu Rank S: Enterro da Prisão de Areia e Esfera do Pó de Ouro no
+nível 30, e Ordem Mundial da Areia de Ferro no nível 32.
 
 
 4. CLÃS COM AFINIDADES NATURAIS
@@ -104,9 +107,9 @@ Hoshigaki     Água                                  55,41             79,69
 Chinoike      Água em parte do arsenal              45,21             51,48
 Kamaitachi    Vento                                 61,36             80,40
 Hozuki        Água                                  48,15             56,45
-Kazekage      Terra — Areia                          43,45             62,06
+Kazekage      Terra — Areia                          54,97             75,36
 Kazekage      Terra — Areia de Ferro                 57,55             78,02
-Kazekage      Terra — Pó de Ouro                     51,54             62,06
+Kazekage      Terra — Pó de Ouro                     57,07             70,93
 
 
 5. INVESTIMENTOS COMBINADOS CAROS
@@ -284,61 +287,62 @@ seu ápice reduz em 10% o Chakra dos mecanismos que aplicam esses efeitos.
 
 DANO REAL — arsenal médio com passivas próprias, sem transformação
 
-  Nível   Bukijutsu   Elemental   Clã   Estilo   Kekkei Genkai*   Kugutsu**
-  ---------------------------------------------------------------------------
-  nv 10      25,91       20,62    22,57   18,30       23,71          23,10
-  nv 20      33,54       30,86    32,16   22,70       32,70          31,79
-  nv 30      36,37       34,78    36,77   27,37       47,25          36,62
-  nv 45      36,37       37,96    37,17   32,85       57,02          36,62
+  Nível   Bukijutsu   Elemental   Clã   Clã*   Estilo   Kekkei Genkai**   Kugutsu***
+  ------------------------------------------------------------------------------------
+  nv 10      25,91       20,62    22,32  25,50   18,30       23,71           23,10
+  nv 20      33,54       30,86    31,26  37,82   22,70       32,70           31,79
+  nv 30      36,37       34,78    35,81  47,14   27,37       47,25           36,62
+  nv 45      36,37       37,96    36,26  51,60   32,85       57,02           36,62
 
 HIERARQUIA POR FAIXA DE NÍVEL — DANO REAL
 
-  nv 10   Bukijutsu > Kekkei Genkai* > Clã > Kugutsu > Elemental > Estilo
-  nv 20   Bukijutsu > Kekkei Genkai* > Clã > Kugutsu > Elemental > Estilo
-  nv 30   Kekkei Genkai* > Clã > Kugutsu > Bukijutsu > Elemental > Estilo
-  nv 45   Kekkei Genkai* > Elemental > Clã > Kugutsu > Bukijutsu > Estilo
+  nv 10   Bukijutsu > Clã* > Kekkei Genkai** > Kugutsu*** > Clã > Elemental > Estilo
+  nv 20   Clã* > Bukijutsu > Kekkei Genkai** > Kugutsu*** > Clã > Elemental > Estilo
+  nv 30   Kekkei Genkai** > Clã* > Kugutsu*** > Bukijutsu > Clã > Elemental > Estilo
+  nv 45   Kekkei Genkai** > Clã* > Elemental > Kugutsu*** > Bukijutsu > Clã > Estilo
 
 Esta ordem compara somente o dano médio das tabelas, sem modos, transformações
-ou afinidades externas. Kugutsu pressupõe oficina, materiais, construção e uma
-marionete ativa. Kekkei Genkai* permanece como projeção teórica por nível nas
-faixas em que a fusão ainda não é obtida normalmente.
+ou afinidades externas, exceto na coluna Clã*. Kugutsu pressupõe oficina,
+materiais, construção e uma marionete ativa. Kekkei Genkai** permanece como
+projeção teórica por nível nas faixas em que a fusão ainda não é obtida normalmente.
 
 MELHOR GOLPE DISPONÍVEL — com passivas próprias, sem transformação
 
-  Nível   Bukijutsu   Elemental   Clã   Estilo   Kekkei Genkai*   Kugutsu**
-  ---------------------------------------------------------------------------
-  nv 10      29,90       24,34    25,02   23,04       28,41          33,00
-  nv 20      38,09       41,51    40,35   29,84       39,56          47,50
-  nv 30      50,25       52,48    49,20   40,23       60,25          52,65
-  nv 45      50,25       63,07    50,20   48,27       82,54          52,65
+  Nível   Bukijutsu   Elemental   Clã   Clã*   Estilo   Kekkei Genkai**   Kugutsu***
+  ------------------------------------------------------------------------------------
+  nv 10      29,90       24,34    24,66  28,58   23,04       28,41           33,00
+  nv 20      38,09       41,51    38,93  46,34   29,84       39,56           47,50
+  nv 30      50,25       52,48    47,67  61,36   40,23       60,25           52,65
+  nv 45      50,25       63,07    48,89  68,72   48,27       82,54           52,65
 
 CUSTO / DANO REAL — menor é melhor
 
-  Nível   Bukijutsu   Elemental   Clã   Estilo   Kekkei Genkai*   Kugutsu**
-  ---------------------------------------------------------------------------
-  nv 10       0,92        0,99     0,91    1,03        1,39          1,23
-  nv 20       1,05        0,80     0,92    1,03        1,22          1,22
-  nv 30       1,08        0,81     0,90    1,00        0,94          1,15
-  nv 45       1,08        0,82     0,91    0,83        0,87          1,15
+  Nível   Bukijutsu   Elemental   Clã   Clã*   Estilo   Kekkei Genkai**   Kugutsu***
+  ------------------------------------------------------------------------------------
+  nv 10       0,92        0,99     0,92   0,72   1,03        1,39           1,23
+  nv 20       1,05        0,80     0,92   0,76   1,03        1,22           1,22
+  nv 30       1,08        0,81     0,91   0,72   1,00        0,94           1,15
+  nv 45       1,08        0,82     0,92   0,66   0,83        0,87           1,15
 
-* Kekkei Genkai usa uma projeção teórica por nível: as fusões têm requisitos
+* Clã* mede a mesma amostra de clãs com todas as passivas de sua afinidade
+natural. Clã, sem asterisco, considera somente as passivas da própria árvore.
+
+** Kekkei Genkai usa uma projeção teórica por nível: as fusões têm requisitos
 de obtenção próprios e não estão disponíveis desde o início da progressão.
 
-** Kugutsu usa carapaça ofensiva, sem Shirogane. A categoria exige oficina,
+*** Kugutsu usa carapaça ofensiva, sem Shirogane. A categoria exige oficina,
 materiais, construção e marionete ativa; os números não representam uma técnica
 comprada diretamente na árvore. O combo completo de Shirogane é detalhado no
 capítulo 9 e não entra nesta coluna para não misturar categoria e clã.
 
 COMO AS TABELAS SÃO CALCULADAS
 
-Clã: média dos nove clãs ofensivos da tabela do capítulo 3, apenas com
-passivas próprias permanentes e sem afinidade externa ou transformação.
+Clã: média dos clãs ofensivos da tabela do capítulo 3, incluindo a média das
+três manipulações de Kazekage, apenas com passivas próprias permanentes e sem
+afinidade externa ou transformação.
 
-Kazekage: não entra nessa média única, pois o despertar entrega somente uma
-das três manipulações exclusivas. Para o dano final, use a linha da
-manipulação sorteada na tabela do capítulo 4: Areia (43,45 / 62,06), Areia de
-Ferro (57,55 / 78,02) ou Pó de Ouro (51,54 / 62,06), respectivamente dano
-médio combinado e melhor golpe com Terra completa.
+Clã*: a mesma média, agora com as passivas completas da afinidade natural de
+cada clã. Nas manipulações de Kazekage, isso inclui a árvore de Terra.
 
 Estilo de luta: média de Punho Forte, Punho Arhat e Punho Adamantino, com a
 árvore própria e as passivas genéricas de Taijutsu, sem modos ou Portões.

@@ -82,6 +82,7 @@ for (const clanId of CLANS) {
         costPerDamage: Number(own.costPerDamage.toFixed(3)),
         best: `${own.best.id}:${own.best.damage.toFixed(2)}`,
         crossAverageDamage: Number(cross.averageDamage.toFixed(2)),
+        crossCostPerDamage: Number(cross.costPerDamage.toFixed(3)),
         crossBest: `${cross.best.id}:${cross.best.damage.toFixed(2)}`,
       };
     }),

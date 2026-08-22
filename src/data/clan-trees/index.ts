@@ -2434,31 +2434,31 @@ const KAZEKAGE: SkillNodeDef[] = [
 
   // Areia comum: domínio de área, contenção e execução sobre alvo já preso.
   sandBranch("AREIA", KZ.pass("kazekage_areia_instinto", "Instinto da Areia", "🛡️", "Areia", 0, 1, ["kazekage_despertar_areia"], 4, 4, "Passiva: a areia reage ao perigo. +5 pontos percentuais de esquiva contra Ninjutsu.")),
-  sandBranch("AREIA", KZ.jutsu("kazekage_chuva_areia", "Chuva de Areia", "🌪️", "C", "Areia", 0, 2, ["kazekage_areia_instinto"], 5, 6, "Dispara uma infinidade de balas de areia em linha contra o adversário.")),
-  sandBranch("AREIA", KZ.jutsu("kazekage_mao_areia", "Mão de Areia", "✋", "B", "Areia", -1.25, 3, ["kazekage_chuva_areia"], 9, 10, "Mãos de areia surgem ao redor do alvo e fecham os dedos sobre ele.")),
-  sandBranch("AREIA", KZ.jutsu("kazekage_escudo_areia", "Escudo de Areia", "🛡️", "B", "Areia", 1.25, 3, ["kazekage_chuva_areia"], 10, 11, "A areia se ergue ao redor do próprio corpo em uma muralha compacta.")),
+  sandBranch("AREIA", KZ.jutsu("kazekage_chuva_areia", "Chuva de Areia", "🌪️", "C", "Areia", 0, 2, ["kazekage_areia_instinto"], 5, 6, "Uma rajada de grãos de areia corta o campo em linha e pressiona todos à frente.")),
+  sandBranch("AREIA", KZ.jutsu("kazekage_mao_areia", "Mão de Areia", "✋", "B", "Areia", -1.25, 3, ["kazekage_chuva_areia"], 9, 10, "Mãos compactas emergem da areia, golpeiam o alvo e podem prendê-lo no lugar.")),
+  sandBranch("AREIA", KZ.jutsu("kazekage_escudo_areia", "Escudo de Areia", "🛡️", "B", "Areia", 1.25, 3, ["kazekage_chuva_areia"], 10, 11, "A areia se ergue ao seu redor como uma muralha compacta e concede Barreira por três rodadas.")),
   sandBranch("AREIA", KZ.pass("kazekage_areia_dominio", "Domínio do Deserto", "🏜️", "Areia", 0, 4, ["kazekage_mao_areia", "kazekage_escudo_areia"], 13, 14, "Passiva: seus jutsus de areia causam +10% de dano e a Imobilização aplicada por eles dura 1 rodada a mais.")),
-  sandBranch("AREIA", KZ.jutsu("kazekage_prisao_areia", "Prisão de Areia", "⛓️", "B", "Confinamento", 0, 5, ["kazekage_areia_dominio"], 16, 16, "Uma onda voraz de areia cerca os inimigos por todos os lados.")),
-  sandBranch("AREIA", KZ.jutsu("kazekage_caixao_areia", "Caixão de Areia", "⚰️", "A", "Confinamento", 0, 6, ["kazekage_prisao_areia"], 22, 22, "A areia se fecha como um caixão e esmaga quem ficou em seu interior.")),
-  sandBranch("AREIA", KZ.jutsu("kazekage_enterro_prisao_areia", "Enterro da Prisão de Areia", "🌫️", "S", "Ápice", 0, 7, ["kazekage_caixao_areia"], 30, 28, "Um redemoinho de areia cobre o campo e engole os inimigos em seu centro.")),
+  sandBranch("AREIA", KZ.jutsu("kazekage_prisao_areia", "Prisão de Areia", "⛓️", "B", "Confinamento", 0, 5, ["kazekage_areia_dominio"], 16, 16, "Uma onda voraz de areia se fecha sobre a área, atingindo e podendo Imobilizar os inimigos.")),
+  sandBranch("AREIA", KZ.jutsu("kazekage_caixao_areia", "Caixão de Areia", "⚰️", "A", "Confinamento", 0, 6, ["kazekage_prisao_areia"], 22, 22, "A areia que já aprisiona o alvo se comprime como um caixão e o esmaga.")),
+  sandBranch("AREIA", KZ.jutsu("kazekage_enterro_prisao_areia", "Enterro da Prisão de Areia", "🌫️", "S", "Ápice", 0, 7, ["kazekage_caixao_areia"], 30, 28, "Um redemoinho violento toma a área, sepulta os inimigos sob a areia e pode Imobilizá-los.")),
 
   // Areia de Ferro: pressão ofensiva e magnetismo para perfurar defesa.
   sandBranch("FERRO", KZ.pass("kazekage_ferro_magnetismo", "Magnetismo de Ferro", "🧲", "Areia de Ferro", 0, 1, ["kazekage_despertar_areia"], 4, 4, "Passiva: suas técnicas de Areia de Ferro causam +10% de dano.")),
-  sandBranch("FERRO", KZ.jutsu("kazekage_assalto_areia_ferro", "Assalto da Areia de Ferro", "⚔️", "C", "Areia de Ferro", 0, 2, ["kazekage_ferro_magnetismo"], 5, 6, "Comprime areia de ferro numa arma metálica gigantesca e golpeia o alvo.")),
-  sandBranch("FERRO", KZ.jutsu("kazekage_martelo_ferro", "Martelo", "🔨", "B", "Areia de Ferro", -1, 3, ["kazekage_assalto_areia_ferro"], 10, 11, "Forma um bloco pesado de areia de ferro e o desaba sobre o alvo.")),
-  sandBranch("FERRO", KZ.jutsu("kazekage_pregos_longos", "Areia de Ferro: Pregos Longos", "📌", "B", "Areia de Ferro", 1, 3, ["kazekage_assalto_areia_ferro"], 12, 13, "Dispara várias lanças de areia de ferro em diferentes direções.")),
+  sandBranch("FERRO", KZ.jutsu("kazekage_assalto_areia_ferro", "Assalto da Areia de Ferro", "⚔️", "C", "Areia de Ferro", 0, 2, ["kazekage_ferro_magnetismo"], 5, 6, "A areia de ferro se condensa numa arma colossal e desaba sobre o alvo.")),
+  sandBranch("FERRO", KZ.jutsu("kazekage_martelo_ferro", "Martelo", "🔨", "B", "Areia de Ferro", -1, 3, ["kazekage_assalto_areia_ferro"], 10, 11, "Uma massa de areia de ferro despenca como um martelo e esmaga o alvo.")),
+  sandBranch("FERRO", KZ.jutsu("kazekage_pregos_longos", "Areia de Ferro: Pregos Longos", "📌", "B", "Areia de Ferro", 1, 3, ["kazekage_assalto_areia_ferro"], 12, 13, "Lanças de areia de ferro rasgam uma linha do campo em direções implacáveis.")),
   sandBranch("FERRO", KZ.pass("kazekage_ferro_polaridade", "Polaridade Oposta", "🧲", "Areia de Ferro", 0, 4, ["kazekage_martelo_ferro", "kazekage_pregos_longos"], 18, 18, "Passiva: suas técnicas de Areia de Ferro causam mais 10% de dano e ignoram 15% da redução de Bloqueio e Aparo.")),
-  sandBranch("FERRO", KZ.jutsu("kazekage_chuva_areia_ferro", "Chuva da Areia de Ferro", "🌧️", "A", "Areia de Ferro", 0, 5, ["kazekage_ferro_polaridade"], 22, 23, "Espalha pequenos grãos de areia de ferro por toda a área em segundos.")),
-  sandBranch("FERRO", KZ.jutsu("kazekage_ordem_mundial_ferro", "Ordem Mundial da Areia de Ferro", "☄️", "S", "Ápice", 0, 6, ["kazekage_chuva_areia_ferro"], 32, 30, "Colide duas massas de areia de ferro com campos magnéticos opostos em uma grande área.")),
+  sandBranch("FERRO", KZ.jutsu("kazekage_chuva_areia_ferro", "Chuva da Areia de Ferro", "🌧️", "A", "Areia de Ferro", 0, 5, ["kazekage_ferro_polaridade"], 22, 23, "Uma chuva de grãos metálicos açoita toda a área.")),
+  sandBranch("FERRO", KZ.jutsu("kazekage_ordem_mundial_ferro", "Ordem Mundial da Areia de Ferro", "☄️", "S", "Ápice", 0, 6, ["kazekage_chuva_areia_ferro"], 32, 30, "Massas de areia de ferro com polaridades opostas colidem e devastam a área.")),
 
   // Pó de Ouro: defesa pesada, controle por densidade e arremesso.
   sandBranch("OURO", KZ.pass("kazekage_ouro_densidade", "Densidade Dourada", "✨", "Pó de Ouro", 0, 1, ["kazekage_despertar_areia"], 4, 4, "Passiva: +8% de vida máxima. Sua Barreira de Pó de Ouro recebe mais 8 pontos.")),
-  sandBranch("OURO", KZ.jutsu("kazekage_escudo_po_ouro", "Escudo de Pó de Ouro", "🛡️", "C", "Pó de Ouro", 0, 2, ["kazekage_ouro_densidade"], 5, 6, "Eleva o pó de ouro ao redor do usuário em uma barricada espessa.")),
-  sandBranch("OURO", KZ.jutsu("kazekage_enterro_po_ouro", "Enterro de Pó de Ouro", "🌊", "B", "Pó de Ouro", -1, 3, ["kazekage_escudo_po_ouro"], 10, 11, "Uma maré de pó de ouro emerge do chão e avança pelo campo.")),
-  sandBranch("OURO", KZ.jutsu("kazekage_quadrado_perfeito_ouro", "Quadrado Perfeito do Pó de Ouro", "⬛", "B", "Pó de Ouro", 1, 3, ["kazekage_escudo_po_ouro"], 12, 13, "Forma uma massa quadrada de pó de ouro acima do alvo e a faz despencar.")),
+  sandBranch("OURO", KZ.jutsu("kazekage_escudo_po_ouro", "Escudo de Pó de Ouro", "🛡️", "C", "Pó de Ouro", 0, 2, ["kazekage_ouro_densidade"], 5, 6, "O pó de ouro sobe em uma barricada densa e concede Barreira por três rodadas.")),
+  sandBranch("OURO", KZ.jutsu("kazekage_enterro_po_ouro", "Enterro de Pó de Ouro", "🌊", "B", "Pó de Ouro", -1, 3, ["kazekage_escudo_po_ouro"], 10, 11, "Uma maré de pó de ouro irrompe do chão, atravessa a linha e pode Imobilizar os inimigos.")),
+  sandBranch("OURO", KZ.jutsu("kazekage_quadrado_perfeito_ouro", "Quadrado Perfeito do Pó de Ouro", "⬛", "B", "Pó de Ouro", 1, 3, ["kazekage_escudo_po_ouro"], 12, 13, "Uma massa perfeita de pó de ouro despenca sobre o alvo.")),
   sandBranch("OURO", KZ.pass("kazekage_ouro_gravidade", "Gravidade do Ouro", "⚖️", "Pó de Ouro", 0, 4, ["kazekage_enterro_po_ouro", "kazekage_quadrado_perfeito_ouro"], 18, 18, "Passiva: seus jutsus de Pó de Ouro causam +10% de dano e a Imobilização aplicada por eles dura 1 rodada a mais.")),
-  sandBranch("OURO", KZ.jutsu("kazekage_funeral_imperial_ouro", "Funeral Imperial do Pó de Ouro", "⚰️", "A", "Pó de Ouro", 0, 5, ["kazekage_ouro_gravidade"], 22, 23, "O pó de ouro engole o alvo e se comprime sob uma pressão esmagadora.")),
-  sandBranch("OURO", KZ.jutsu("kazekage_esfera_po_ouro", "Esfera do Pó de Ouro", "🟡", "S", "Ápice", 0, 6, ["kazekage_funeral_imperial_ouro"], 30, 28, "Arremessa uma esfera pesada de pó de ouro contra o alvo.")),
+  sandBranch("OURO", KZ.jutsu("kazekage_funeral_imperial_ouro", "Funeral Imperial do Pó de Ouro", "⚰️", "A", "Pó de Ouro", 0, 5, ["kazekage_ouro_gravidade"], 22, 23, "O pó de ouro engole o alvo já Imobilizado e o esmaga sob uma pressão implacável.")),
+  sandBranch("OURO", KZ.jutsu("kazekage_esfera_po_ouro", "Esfera do Pó de Ouro", "🟡", "S", "Ápice", 0, 6, ["kazekage_funeral_imperial_ouro"], 30, 28, "Uma esfera colossal de pó de ouro atravessa o campo, impacta o alvo e o lança para trás.")),
 ];
 
 // -------------------------------------------------------------- SHIROGANE

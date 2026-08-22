@@ -82,4 +82,29 @@ describe("Kazekage: manipulação exclusiva de areia", () => {
     expect(getAbility("kazekage_caixao_areia")!.requiresTargetEffect).toEqual(["ROOT"]);
     expect(getAbility("kazekage_funeral_imperial_ouro")!.requiresTargetEffect).toEqual(["ROOT"]);
   });
+
+  it("mantém os ápices S como golpes de dano sem inventar dreno de chakra", () => {
+    const enterro = getAbility("kazekage_enterro_prisao_areia")!;
+    const esfera = getAbility("kazekage_esfera_po_ouro")!;
+
+    expect(enterro.baseDamage).toBe(34);
+    expect(enterro.cost).toBe(49);
+    expect(enterro.effects).toEqual([{ effectId: "ROOT", duration: 2, chance: 0.75 }]);
+    expect(esfera.baseDamage).toBe(32);
+    expect(esfera.cost).toBe(35);
+  });
+
+  it("usa a grade padronizada de Barreira e não adiciona efeitos sem base às técnicas", () => {
+    expect(getAbility("kazekage_escudo_areia")!.effects).toEqual([
+      { effectId: "SHIELD", stacks: 7, hpPercentStacks: 0.09, duration: 3 },
+    ]);
+    expect(getAbility("kazekage_escudo_po_ouro")!.effects).toEqual([
+      { effectId: "SHIELD", stacks: 5, hpPercentStacks: 0.06, duration: 3 },
+    ]);
+    expect(getAbility("kazekage_martelo_ferro")!.effects).toBeUndefined();
+    expect(getAbility("kazekage_chuva_areia_ferro")!.effects).toBeUndefined();
+    expect(getAbility("kazekage_ordem_mundial_ferro")!.effects).toBeUndefined();
+    expect(getAbility("kazekage_quadrado_perfeito_ouro")!.effects).toBeUndefined();
+    expect(getAbility("kazekage_esfera_po_ouro")!.push).toBe(3);
+  });
 });
