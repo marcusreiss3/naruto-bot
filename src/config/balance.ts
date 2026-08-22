@@ -337,7 +337,26 @@ export const BALANCE = {
   },
 
   // ---- Progressao / XP ----
-  xpPerLevel: (level: number) => 100 + level * 50,
+  // A curva inteira (nível 1 -> 50) soma 95.550 XP. Com a rotina-base de um
+  // ninja ativo — uma missão D + uma C (≈350), dois treinos futuros (2 × 250)
+  // e cerca de uma hora de RP (≈108) — a chegada ao nível 50 fica pouco acima
+  // de 99 dias. RP complementa a jornada; missão continua sendo a fonte mais
+  // eficiente de progresso, inclusive no rank D.
+  xpPerLevel: (level: number) => 200 + level * 70,
+  xp: {
+    // Reserva para o sistema de treinos. Ainda não há treino com recompensa,
+    // mas quando entrar cada conclusão deve usar exatamente este valor.
+    trainingReward: 250,
+    trainingDailyLimit: 2,
+    roleplay: {
+      rewardMin: 2,
+      rewardMax: 4,
+      cooldownMinMs: 20_000,
+      cooldownMaxMs: 3 * 60_000,
+      // Mensagem muito curta não é uma ação de RP e não reinicia o intervalo.
+      minimumContentLength: 8,
+    },
+  },
 
   // ---- Formula de custo sugerido de jutsu ----
   // Ferramenta de AUTORIA (services/characters/jutsu-balance.ts): dado

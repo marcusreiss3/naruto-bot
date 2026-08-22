@@ -27,6 +27,7 @@ import {
 } from "./services/appearance/appearance-service.js";
 import { startHpRegenScheduler, stopHpRegenScheduler } from "./services/characters/hp-regen-service.js";
 import { startDailyQuestScheduler, stopDailyQuestScheduler } from "./services/daily-quests/daily-quest-service.js";
+import { awardRoleplayXp } from "./services/characters/roleplay-xp-service.js";
 
 const client = new Client({
   intents: [
@@ -118,6 +119,12 @@ client.on(Events.MessageCreate, async (message) => {
     }
     if (await handleSheetMessage(message)) return;
     await dispatchMissionMessage(message);
+    await awardRoleplayXp({
+      discordId: message.author.id,
+      guildId: message.guildId ?? "global",
+      channelId: message.channelId,
+      content: message.content,
+    });
   } catch (err) {
     log.error("Erro ao processar mensagem do diálogo:", err);
   }

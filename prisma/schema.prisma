@@ -56,6 +56,7 @@ model UserCharacter {
   taxActivities   WeeklyTaxActivity[]
   taxCharges      WeeklyTaxCharge[]
   gatherCooldowns GatheringCooldown[]
+  roleplayXpCooldown RoleplayXpCooldown?
   economyActions  EconomyActionLog[]
   puppets         Puppet[]
   puppetOrders    PuppetCraftOrder[]
@@ -520,6 +521,16 @@ model DailyMissionClaim {
 
   @@unique([charId, dayKey, rank])
   @@index([charId, dayKey])
+}
+
+// O próximo momento elegível para XP de RP. Persistir a trava evita que um
+// restart do bot transforme o intervalo aleatório em uma fonte de farm.
+model RoleplayXpCooldown {
+  id            String        @id @default(cuid())
+  character     UserCharacter @relation(fields: [charId], references: [id], onDelete: Cascade)
+  charId        String        @unique
+  nextAwardAt   DateTime
+  updatedAt     DateTime      @updatedAt
 }
 
 // Missões diárias de atividade: a rotação é compartilhada pela guild, mas o

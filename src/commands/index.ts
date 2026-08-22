@@ -1,5 +1,6 @@
 import type { Command } from "./types.js";
 import { perfil } from "./perfil.js";
+import { nivel } from "./nivel.js";
 import { atributos } from "./atributos.js";
 import { mapa } from "./mapa.js";
 import { combate } from "./combate.js";
@@ -29,6 +30,7 @@ import { arremessar, atacar, darItem, desequipar, equipar, largarItem, restaurar
 
 export const commands: Command[] = [
   perfil,
+  nivel,
   atributos,
   inventario,
   acao,

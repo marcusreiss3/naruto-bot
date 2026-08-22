@@ -49,6 +49,7 @@ window.__BLOB_ASSETS = {
   "/assets/bg/uzumaki.webp": "https://public-blob.squarecloud.dev/7d832704f601b901e94bbc61ac38256dcbc8439d/bg_/uzumaki.webp",
   "/assets/bg/vapor.webp": "https://public-blob.squarecloud.dev/7d832704f601b901e94bbc61ac38256dcbc8439d/bg_/vapor.webp",
   "/assets/bg/vento.webp": "https://public-blob.squarecloud.dev/7d832704f601b901e94bbc61ac38256dcbc8439d/bg_/vento.webp",
+  "/assets/bg/xp-banner.png": "https://public-blob.squarecloud.dev/7d832704f601b901e94bbc61ac38256dcbc8439d/bg_/xp_banner.png",
   "/assets/bg/yamanaka.webp": "https://public-blob.squarecloud.dev/7d832704f601b901e94bbc61ac38256dcbc8439d/bg_/yamanaka.webp",
   "/assets/bg/yotsuki.webp": "https://public-blob.squarecloud.dev/7d832704f601b901e94bbc61ac38256dcbc8439d/bg_/yotsuki.webp",
   "/assets/bg/yuki.webp": "https://public-blob.squarecloud.dev/7d832704f601b901e94bbc61ac38256dcbc8439d/bg_/yuki.webp",
