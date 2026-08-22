@@ -52,4 +52,8 @@ describe("missões diárias de atividade", () => {
     expect(Math.max(...quantities.values())).toBeLessThanOrEqual(DAILY_QUEST_MAX_PER_CATEGORY);
     expect(rotation.every((quest) => WEEKLY_QUESTS.includes(quest) && quest.target >= 7)).toBe(true);
   });
+
+  it("limita as metas semanais de coleta a 65 recursos", () => {
+    expect(WEEKLY_QUESTS.filter((quest) => quest.kind === "GATHER").every((quest) => quest.target === 65)).toBe(true);
+  });
 });
