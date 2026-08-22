@@ -144,7 +144,7 @@ async function diarias(interaction: ChatInputCommandInteraction): Promise<void> 
     return `${emoji(done ? "sucesso" : "pendente")} ${done ? "~~" : ""}${quest.description}${done ? "~~" : ""}${andamento}${done ? " — concluída" : ""}`;
   });
   await interaction.reply(v2Payload(singleCard("cofre", [
-    titleBlock("missoes", "Missões diárias", "As mesmas 3 missões para todo o servidor"),
+    titleBlock("missoes", "Missões diárias"),
     text(`Cada missão concluída rende ${emoji("ingots")} **${DAILY_QUEST_REWARD_INGOTS} Ingots**.`),
     divider(),
     listBlock(null, lines, "Nenhuma missão diária disponível."),

@@ -96,11 +96,8 @@ export const criar: Command = {
   data: new SlashCommandBuilder()
     .setName("criar")
     .setDescription("Fabricação pessoal com os materiais da sua mochila")
-    .addSubcommand((s) => s.setName("listar").setDescription("Mostra as receitas que você pode fazer"))
-    .addSubcommand((s) => s.setName("criar").setDescription("Fabrica uma receita")
-      .addStringOption((o) => o.setName("receita").setDescription("Receita").setAutocomplete(true).setRequired(true))
-      .addIntegerOption((o) => o.setName("quantidade").setDescription("Quantas vezes (padrão: 1)").setMinValue(1)))
-    .addSubcommand((s) => s.setName("marionete").setDescription("Abre a oficina de marionetes")),
+    .addStringOption((o) => o.setName("receita").setDescription("Receita a fabricar").setAutocomplete(true).setRequired(true))
+    .addIntegerOption((o) => o.setName("quantidade").setDescription("Quantas vezes (padrão: 1)").setMinValue(1)),
 
   async autocomplete(interaction: AutocompleteInteraction) {
     const q = interaction.options.getFocused().toLocaleLowerCase("pt-BR");
@@ -110,24 +107,7 @@ export const criar: Command = {
 
   async execute(interaction: ChatInputCommandInteraction) {
     const char = await getOrCreateCharacter(interaction.user.id, interaction.guildId ?? "global", interaction.user.username);
-    const subcommand = interaction.options.getSubcommand();
-    if (subcommand === "marionete") {
-      const workshop = await listPuppetWorkshop(char.id);
-      if (!workshop) { await interaction.reply({ content: "❌ Personagem não encontrado.", ephemeral: true }); return; }
-      await interaction.reply(v2Payload(puppetCraftPanel(workshop, "OFFENSE")));
-      return;
-    }
     await interaction.deferReply({ ephemeral: true });
-    if (subcommand === "listar") {
-      const workshop = await listPuppetWorkshop(char.id);
-      const ownsWorkshop = workshop?.skillNodes.some((node) => node.nodeId === "kugutsu_oficina_inicial");
-      await interaction.editReply(v2Edit([economyContainer("estoque", [
-        titleBlock("manutencao", "Fabricação pessoal", "Consome a sua mochila e entrega na hora"), divider(),
-        listBlock(null, PERSONAL_RECIPES.map(describeRecipe), "Nenhuma receita disponível."),
-        ...(ownsWorkshop ? [divider(), text(`-# Para construir uma marionete, use ${emoji("marionete")} **/criar marionete**.`)] : []),
-      ])]));
-      return;
-    }
     const outcome = await craftPersonal(char.id, interaction.options.getString("receita", true), interaction.options.getInteger("quantidade") ?? 1);
     if (!outcome.ok) { await interaction.editReply(`❌ ${outcome.error}`); return; }
     const { recipe, consumido, produzido } = outcome.result;
