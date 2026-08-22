@@ -10,11 +10,14 @@ import type { TrainingSession } from "@prisma/client";
 import type { Command } from "./types.js";
 import { getOrCreateCharacter } from "../services/characters/character-service.js";
 import {
+  armTrainingTarget,
+  beginTrainingSession,
   hitTrainingTarget,
   issueTrainingTarget,
   startTrainingSession,
 } from "../services/characters/reaction-training-service.js";
 import { buttonRow, divider, singleCard, text, titleBlock, v2Edit, v2Payload, type TopLevel } from "../ui/economy-components-v2.js";
+import { log } from "../utils/logger.js";
 
 const PREFIX = "treino";
 const timers = new Map<string, ReturnType<typeof setTimeout>>();
@@ -23,6 +26,29 @@ function clearTrainingTimer(sessionId: string): void {
   const timer = timers.get(sessionId);
   if (timer) clearTimeout(timer);
   timers.delete(sessionId);
+}
+
+function introductionPanel(): TopLevel[] {
+  return singleCard("aviso", [
+    titleBlock("tempo", "Treino de Reflexos", "Preparação"),
+    text("🔵 Clique no alvo azul para ganhar XP.\n⚫ Clicar no alvo preto encerra o treino, mas você mantém o XP conquistado."),
+    divider(),
+    text("-# O treino começa em 5 segundos. Cada alvo ficará disponível por 1,25 s."),
+  ]);
+}
+
+function alreadyUsedPanel(session: TrainingSession): TopLevel[] {
+  const status = session.status === "COMPLETED"
+    ? "Você já concluiu o treino de hoje."
+    : session.status === "FAILED"
+      ? "Sua tentativa de treino de hoje já foi encerrada."
+      : "Você já iniciou a tentativa de treino de hoje.";
+  return singleCard("aviso", [
+    titleBlock("aviso", "Treino indisponível"),
+    text(status),
+    divider(),
+    text("-# Uma única tentativa é permitida por dia. O próximo treino abre à 00:00 (horário de Brasília)."),
+  ]);
 }
 
 function panel(session: TrainingSession, feedback?: string): TopLevel[] {
@@ -66,10 +92,15 @@ function panel(session: TrainingSession, feedback?: string): TopLevel[] {
   return singleCard("cofre", [
     titleBlock("tempo", "Treino de Reflexos", "Acerte os alvos azuis. O preto encerra a tentativa."),
     text(`**Progresso:** 🔵 **${session.xpEarned}/${session.xpGoal} XP**${feedback ? `\n${feedback}` : ""}`),
-    text("-# O alvo muda de posição a cada 1,25 s. Não clicar apenas troca o alvo; clicar no preto falha."),
     divider(),
     ...rows,
   ]);
+}
+
+async function armAndScheduleTarget(session: TrainingSession, message: Message): Promise<void> {
+  if (!session.activeToken) return;
+  const armed = await armTrainingTarget(session.id, session.activeToken);
+  if (armed) scheduleTargetExpiry(armed, message);
 }
 
 function scheduleTargetExpiry(session: TrainingSession, message: Message): void {
@@ -82,12 +113,33 @@ function scheduleTargetExpiry(session: TrainingSession, message: Message): void 
     timers.delete(session.id);
     try {
       const next = await issueTrainingTarget(session.id, new Date(), expectedToken);
-      if (!next) return;
+      if (!next || next.status !== "ACTIVE" || !next.activeToken) return;
       await message.edit(v2Edit(panel(next)));
-      scheduleTargetExpiry(next, message);
-    } catch {
-      // Se a mensagem/canal sumiu, o estado continua no banco e /treino pode
-      // retomar a tentativa depois, sem abrir um segundo uso no mesmo dia.
+      await armAndScheduleTarget(next, message);
+    } catch (error) {
+      log.error("Falha ao trocar o alvo do treino:", error);
+    }
+  }, delay);
+  timer.unref();
+  timers.set(session.id, timer);
+}
+
+function scheduleIntroduction(session: TrainingSession, message: Message): void {
+  clearTrainingTimer(session.id);
+  if (session.status !== "INTRO" || !session.introEndsAt) return;
+
+  const delay = Math.max(0, session.introEndsAt.getTime() - Date.now());
+  const timer = setTimeout(async () => {
+    timers.delete(session.id);
+    try {
+      const started = await beginTrainingSession(session.id);
+      if (!started || started.status !== "ACTIVE") return;
+      const target = await issueTrainingTarget(started.id);
+      if (!target || !target.activeToken) return;
+      await message.edit(v2Edit(panel(target)));
+      await armAndScheduleTarget(target, message);
+    } catch (error) {
+      log.error("Falha ao iniciar o treino de reflexos:", error);
     }
   }, delay);
   timer.unref();
@@ -106,16 +158,14 @@ export const treino: Command = {
     }
     const character = await getOrCreateCharacter(interaction.user.id, interaction.guildId, interaction.user.username);
     const started = await startTrainingSession(character.id);
-    let session = started.session;
-
-    if (session.status === "ACTIVE" && (!session.activeToken || !session.expiresAt || session.expiresAt <= new Date())) {
-      const issued = await issueTrainingTarget(session.id);
-      if (issued) session = issued;
+    if (!started.created) {
+      await interaction.reply(v2Payload(alreadyUsedPanel(started.session), true));
+      return;
     }
 
-    await interaction.reply(v2Payload(panel(session), true));
+    await interaction.reply(v2Payload(introductionPanel(), true));
     const message = await interaction.fetchReply();
-    scheduleTargetExpiry(session, message);
+    scheduleIntroduction(started.session, message);
   },
 
   async handleButton(interaction: ButtonInteraction) {
@@ -145,6 +195,8 @@ export const treino: Command = {
     }
 
     await interaction.update(v2Edit(panel(session, feedback)));
-    scheduleTargetExpiry(session, interaction.message);
+    if (result.kind === "BLUE" && session.status === "ACTIVE") {
+      await armAndScheduleTarget(session, interaction.message);
+    }
   },
 };

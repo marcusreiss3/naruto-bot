@@ -17,6 +17,11 @@ describe("treino de reflexos", () => {
     expect(target.expiresAt.getTime() - now.getTime()).toBe(1_250);
   });
 
+  it("não repete a posição do alvo imediatamente", () => {
+    const target = rollTrainingTarget(new Date(), () => 0, 0);
+    expect(target.slot).not.toBe(0);
+  });
+
   it("não ultrapassa a meta diária ao clicar no alvo azul", () => {
     expect(rollTrainingBlueXp(235, 250, () => 0.99)).toBe(15);
   });

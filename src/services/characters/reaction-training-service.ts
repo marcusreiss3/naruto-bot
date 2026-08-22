@@ -14,11 +14,22 @@ export interface TrainingTarget {
   expiresAt: Date;
 }
 
-export function rollTrainingTarget(now = new Date(), rng: () => number = Math.random): TrainingTarget {
+const INTRO_DURATION_MS = 5_000;
+// O alvo é salvo antes da mensagem ser editada. Esta margem só cobre o tempo
+// dessa edição; armTrainingTarget troca pela janela real de 1,25 s logo depois.
+const TARGET_SETUP_GRACE_MS = 10_000;
+
+export function rollTrainingTarget(
+  now = new Date(),
+  rng: () => number = Math.random,
+  previousSlot?: number,
+): TrainingTarget {
+  const slots = Array.from({ length: BALANCE.xp.training.gridSize ** 2 }, (_, index) => index)
+    .filter((slot) => slot !== previousSlot);
   return {
     token: randomUUID(),
     kind: rng() < BALANCE.xp.training.blackChance ? "BLACK" : "BLUE",
-    slot: Math.floor(rng() * (BALANCE.xp.training.gridSize ** 2)),
+    slot: slots[Math.min(slots.length - 1, Math.floor(rng() * slots.length))]!,
     expiresAt: new Date(now.getTime() + BALANCE.xp.training.targetLifetimeMs),
   };
 }
@@ -37,7 +48,13 @@ export async function startTrainingSession(charId: string, now = new Date()) {
 
   try {
     const session = await prisma.trainingSession.create({
-      data: { charId, dayKey, xpGoal: BALANCE.xp.trainingReward },
+      data: {
+        charId,
+        dayKey,
+        status: "INTRO",
+        xpGoal: BALANCE.xp.trainingReward,
+        introEndsAt: new Date(now.getTime() + INTRO_DURATION_MS),
+      },
     });
     return { session, created: true };
   } catch (error) {
@@ -50,13 +67,24 @@ export async function startTrainingSession(charId: string, now = new Date()) {
   }
 }
 
+export async function beginTrainingSession(sessionId: string, now = new Date()) {
+  await prisma.trainingSession.updateMany({
+    where: { id: sessionId, status: "INTRO", introEndsAt: { lte: now } },
+    data: { status: "ACTIVE", introEndsAt: null },
+  });
+  return prisma.trainingSession.findUnique({ where: { id: sessionId } });
+}
+
 export async function issueTrainingTarget(
   sessionId: string,
   now = new Date(),
   expectedToken?: string,
   rng: () => number = Math.random,
 ) {
-  const target = rollTrainingTarget(now, rng);
+  const session = await prisma.trainingSession.findUnique({ where: { id: sessionId } });
+  if (!session || session.status !== "ACTIVE") return session;
+
+  const target = rollTrainingTarget(now, rng, session.activeSlot ?? undefined);
   const eligibility = expectedToken
     ? { activeToken: expectedToken, expiresAt: { lte: now } }
     : { OR: [{ activeToken: null }, { expiresAt: { lte: now } }] };
@@ -66,10 +94,23 @@ export async function issueTrainingTarget(
       activeToken: target.token,
       activeKind: target.kind,
       activeSlot: target.slot,
-      expiresAt: target.expiresAt,
+      // O prazo real começa só depois que o Discord confirmou a edição da
+      // mensagem. Sem isso, a latência da API roubava parte dos 1,25 s.
+      expiresAt: new Date(now.getTime() + TARGET_SETUP_GRACE_MS),
     },
   });
   if (updated.count === 0) return prisma.trainingSession.findUnique({ where: { id: sessionId } });
+  return prisma.trainingSession.findUnique({ where: { id: sessionId } });
+}
+
+/** Começa a contagem do alvo depois que ele já está visível no container. */
+export async function armTrainingTarget(sessionId: string, token: string, now = new Date()) {
+  const expiresAt = new Date(now.getTime() + BALANCE.xp.training.targetLifetimeMs);
+  const armed = await prisma.trainingSession.updateMany({
+    where: { id: sessionId, status: "ACTIVE", activeToken: token },
+    data: { expiresAt },
+  });
+  if (armed.count === 0) return prisma.trainingSession.findUnique({ where: { id: sessionId } });
   return prisma.trainingSession.findUnique({ where: { id: sessionId } });
 }
 
